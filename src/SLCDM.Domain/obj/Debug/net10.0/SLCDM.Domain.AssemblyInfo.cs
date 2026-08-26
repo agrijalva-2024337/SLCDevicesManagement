@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SLCDM.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3505e8c5e2b0152bf9eed3b74a70babee9bab54a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+35ae37ab79de1e984575a5d0578eb9c63dd3ca88")]
 [assembly: System.Reflection.AssemblyProductAttribute("SLCDM.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SLCDM.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
