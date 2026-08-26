@@ -1,0 +1,17 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-navy: #0b1f33;
+  --color-gold: #c9a227;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+}
