@@ -11,6 +11,9 @@ public abstract class BaseAuditableEntity : BaseEntity
 {
     public bool Habilitado { get; set; } = true;
 
+    public void Habilitar() => Habilitado = true;
+    public void Deshabilitar() => Habilitado = false;
+
     public DateTime FechaCreacion { get; set; }
 
     public DateTime? FechaModificacion { get; set; }
