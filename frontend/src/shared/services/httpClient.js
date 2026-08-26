@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { env } from '@/shared/config/env';
+import { publishHttpError } from '@/shared/services/httpErrorBus';
 import { clearAccessToken, getAccessToken } from '@/shared/services/tokenStorage';
 
 const httpClient = axios.create({
@@ -24,6 +25,10 @@ httpClient.interceptors.request.use((config) => {
 httpClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.code !== 'ERR_CANCELED') {
+      publishHttpError(error);
+    }
+
     if (error.response?.status === 401) {
       clearAccessToken();
     }

@@ -1,11 +1,17 @@
-import { HomePage } from '@/app/pages/HomePage';
-import { AppLayout } from '@/shared/layout/AppLayout';
+import { BrowserRouter } from 'react-router-dom';
+import { AppRoutes } from '@/app/router';
+import { AuthProvider } from '@/shared/auth/AuthProvider';
+import { ToastProvider } from '@/shared/feedback/ToastProvider';
 
 function App() {
   return (
-    <AppLayout>
-      <HomePage />
-    </AppLayout>
+    <BrowserRouter>
+      <AuthProvider>
+        <ToastProvider>
+          <AppRoutes />
+        </ToastProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

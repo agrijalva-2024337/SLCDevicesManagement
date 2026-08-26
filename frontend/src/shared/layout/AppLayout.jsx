@@ -1,25 +1,26 @@
-export function AppLayout({ children }) {
+import { useState } from 'react';
+import { Outlet } from 'react-router-dom';
+import { ToastHost } from '@/shared/feedback/ToastHost';
+import { Header } from '@/shared/layout/Header';
+import { Sidebar } from '@/shared/layout/Sidebar';
+
+export function AppLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
-              SLC
-            </p>
-            <p className="text-lg font-semibold">SLCDevicesManagement</p>
-          </div>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-            Sprint 1 · andamiaje
-          </span>
-        </div>
-      </header>
+    <div className="min-h-screen bg-surface">
+      <div className="fixed inset-x-0 top-0 z-40">
+        <Header onMenuClick={() => setSidebarOpen((open) => !open)} />
+      </div>
 
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-10">{children}</main>
+      <div className="flex min-h-screen pt-header">
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <main className="min-w-0 flex-1 p-6">
+          <Outlet />
+        </main>
+      </div>
 
-      <footer className="border-t border-slate-200 bg-white py-4 text-center text-xs text-slate-500">
-        Sistemas Logísticos y Corporativos, S.A.
-      </footer>
+      <ToastHost />
     </div>
   );
 }
