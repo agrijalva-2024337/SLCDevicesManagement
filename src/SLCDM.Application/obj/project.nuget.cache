@@ -1,51 +1,15 @@
 {
   "version": 2,
-  "dgSpecHash": "kN8uqvI/PLU=",
-  "success": false,
-  "projectFilePath": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\SLCDM.Application.csproj",
+  "dgSpecHash": "NmJW0LGZRYU=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\SLCDM.Application.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\JoseMendez\\.nuget\\packages\\fluentvalidation\\2.0.0\\fluentvalidation.2.0.0.nupkg.sha512",
-    "C:\\Users\\JoseMendez\\.nuget\\packages\\fluentvalidation.dependencyinjectionextensions\\11.9.2\\fluentvalidation.dependencyinjectionextensions.11.9.2.nupkg.sha512",
-    "C:\\Users\\JoseMendez\\.nuget\\packages\\mapster\\7.4.0\\mapster.7.4.0.nupkg.sha512",
-    "C:\\Users\\JoseMendez\\.nuget\\packages\\mapster.core\\1.2.1\\mapster.core.1.2.1.nupkg.sha512",
-    "C:\\Users\\JoseMendez\\.nuget\\packages\\mapster.dependencyinjection\\1.0.1\\mapster.dependencyinjection.1.0.1.nupkg.sha512",
-    "C:\\Users\\JoseMendez\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\6.0.0\\microsoft.extensions.dependencyinjection.abstractions.6.0.0.nupkg.sha512"
+    "C:\\Users\\AngelGrijalva\\.nuget\\packages\\fluentvalidation\\11.9.2\\fluentvalidation.11.9.2.nupkg.sha512",
+    "C:\\Users\\AngelGrijalva\\.nuget\\packages\\fluentvalidation.dependencyinjectionextensions\\11.9.2\\fluentvalidation.dependencyinjectionextensions.11.9.2.nupkg.sha512",
+    "C:\\Users\\AngelGrijalva\\.nuget\\packages\\mapster\\7.4.0\\mapster.7.4.0.nupkg.sha512",
+    "C:\\Users\\AngelGrijalva\\.nuget\\packages\\mapster.core\\1.2.1\\mapster.core.1.2.1.nupkg.sha512",
+    "C:\\Users\\AngelGrijalva\\.nuget\\packages\\mapster.dependencyinjection\\1.0.1\\mapster.dependencyinjection.1.0.1.nupkg.sha512",
+    "C:\\Users\\AngelGrijalva\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\6.0.0\\microsoft.extensions.dependencyinjection.abstractions.6.0.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1603",
-      "level": "Warning",
-      "message": "SLCDM.Application depende de FluentValidation (>= 1.9.2), pero no se encontró FluentValidation 1.9.2. FluentValidation 2.0.0 se resolvió en su lugar.",
-      "projectPath": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\SLCDM.Application.csproj",
-      "warningLevel": 1,
-      "filePath": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\SLCDM.Application.csproj",
-      "libraryId": "FluentValidation",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1701",
-      "level": "Warning",
-      "message": "El paquete \"FluentValidation 2.0.0\" se restauró con \".NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1\" en lugar de la plataforma de destino del proyecto \"net10.0\". Puede que el paquete no sea totalmente compatible con el proyecto.",
-      "projectPath": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\SLCDM.Application.csproj",
-      "warningLevel": 1,
-      "filePath": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\SLCDM.Application.csproj",
-      "libraryId": "FluentValidation",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1605",
-      "level": "Error",
-      "message": "Advertencia como error: Degradación del paquete detectada: FluentValidation de 11.9.2 a 2.0.0.0. Haga referencia al paquete directamente desde el proyecto para seleccionar una versión diferente. \r\n SLCDM.Application -> FluentValidation.DependencyInjectionExtensions 11.9.2 -> FluentValidation (>= 11.9.2) \r\n SLCDM.Application -> FluentValidation (>= 1.9.2)",
-      "projectPath": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\SLCDM.Application.csproj",
-      "filePath": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\SLCDM.Application.csproj",
-      "libraryId": "FluentValidation",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    }
-  ]
+  "logs": []
 }

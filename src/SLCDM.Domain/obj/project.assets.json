@@ -8,19 +8,19 @@
     "net10.0": []
   },
   "packageFolders": {
-    "C:\\Users\\JoseMendez\\.nuget\\packages\\": {}
+    "C:\\Users\\AngelGrijalva\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\SLCDM.Domain.csproj",
+      "projectUniqueName": "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\SLCDM.Domain.csproj",
       "projectName": "SLCDM.Domain",
-      "projectPath": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\SLCDM.Domain.csproj",
-      "packagesPath": "C:\\Users\\JoseMendez\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\obj\\",
+      "projectPath": "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\SLCDM.Domain.csproj",
+      "packagesPath": "C:\\Users\\AngelGrijalva\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\JoseMendez\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\AngelGrijalva\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"

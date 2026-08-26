@@ -1,0 +1,16 @@
+C:\Users\AngelGrijalva\Documents\SLCDevicesManagement\src\SLCDM.Application\bin\Debug\net10.0\SLCDM.Application.deps.json
+C:\Users\AngelGrijalva\Documents\SLCDevicesManagement\src\SLCDM.Application\bin\Debug\net10.0\SLCDM.Application.dll
+C:\Users\AngelGrijalva\Documents\SLCDevicesManagement\src\SLCDM.Application\bin\Debug\net10.0\SLCDM.Application.pdb
+C:\Users\AngelGrijalva\Documents\SLCDevicesManagement\src\SLCDM.Application\bin\Debug\net10.0\SLCDM.Domain.dll
+C:\Users\AngelGrijalva\Documents\SLCDevicesManagement\src\SLCDM.Application\bin\Debug\net10.0\SLCDM.Domain.pdb
+C:\Users\AngelGrijalva\Documents\SLCDevicesManagement\src\SLCDM.Application\obj\Debug\net10.0\SLCDM.Application.csproj.AssemblyReference.cache
+C:\Users\AngelGrijalva\Documents\SLCDevicesManagement\src\SLCDM.Application\obj\Debug\net10.0\SLCDM.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\AngelGrijalva\Documents\SLCDevicesManagement\src\SLCDM.Application\obj\Debug\net10.0\SLCDM.Application.AssemblyInfoInputs.cache
+C:\Users\AngelGrijalva\Documents\SLCDevicesManagement\src\SLCDM.Application\obj\Debug\net10.0\SLCDM.Application.AssemblyInfo.cs
+C:\Users\AngelGrijalva\Documents\SLCDevicesManagement\src\SLCDM.Application\obj\Debug\net10.0\SLCDM.Application.csproj.CoreCompileInputs.cache
+C:\Users\AngelGrijalva\Documents\SLCDevicesManagement\src\SLCDM.Application\obj\Debug\net10.0\SLCDM.Application.sourcelink.json
+C:\Users\AngelGrijalva\Documents\SLCDevicesManagement\src\SLCDM.Application\obj\Debug\net10.0\SLCDM.Ap.89D8FDAA.Up2Date
+C:\Users\AngelGrijalva\Documents\SLCDevicesManagement\src\SLCDM.Application\obj\Debug\net10.0\SLCDM.Application.dll
+C:\Users\AngelGrijalva\Documents\SLCDevicesManagement\src\SLCDM.Application\obj\Debug\net10.0\refint\SLCDM.Application.dll
+C:\Users\AngelGrijalva\Documents\SLCDevicesManagement\src\SLCDM.Application\obj\Debug\net10.0\SLCDM.Application.pdb
+C:\Users\AngelGrijalva\Documents\SLCDevicesManagement\src\SLCDM.Application\obj\Debug\net10.0\ref\SLCDM.Application.dll

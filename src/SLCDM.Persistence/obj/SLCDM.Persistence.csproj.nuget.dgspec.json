@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Persistence\\SLCDM.Persistence.csproj": {}
+    "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Persistence\\SLCDM.Persistence.csproj": {}
   },
   "projects": {
-    "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\SLCDM.Application.csproj": {
+    "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\SLCDM.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\SLCDM.Application.csproj",
+        "projectUniqueName": "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\SLCDM.Application.csproj",
         "projectName": "SLCDM.Application",
-        "projectPath": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\SLCDM.Application.csproj",
-        "packagesPath": "C:\\Users\\JoseMendez\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\obj\\",
+        "projectPath": "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\SLCDM.Application.csproj",
+        "packagesPath": "C:\\Users\\AngelGrijalva\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\JoseMendez\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\AngelGrijalva\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
@@ -27,8 +27,8 @@
             "framework": "net10.0",
             "targetAlias": "net10.0",
             "projectReferences": {
-              "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\SLCDM.Domain.csproj": {
-                "projectPath": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\SLCDM.Domain.csproj"
+              "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\SLCDM.Domain.csproj": {
+                "projectPath": "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\SLCDM.Domain.csproj"
               }
             }
           }
@@ -52,7 +52,7 @@
           "dependencies": {
             "FluentValidation": {
               "target": "Package",
-              "version": "[1.9.2, )"
+              "version": "[11.9.2, )"
             },
             "FluentValidation.DependencyInjectionExtensions": {
               "target": "Package",
@@ -361,17 +361,17 @@
         }
       }
     },
-    "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\SLCDM.Domain.csproj": {
+    "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\SLCDM.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\SLCDM.Domain.csproj",
+        "projectUniqueName": "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\SLCDM.Domain.csproj",
         "projectName": "SLCDM.Domain",
-        "projectPath": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\SLCDM.Domain.csproj",
-        "packagesPath": "C:\\Users\\JoseMendez\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\obj\\",
+        "projectPath": "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\SLCDM.Domain.csproj",
+        "packagesPath": "C:\\Users\\AngelGrijalva\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\JoseMendez\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\AngelGrijalva\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
@@ -696,17 +696,17 @@
         }
       }
     },
-    "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Persistence\\SLCDM.Persistence.csproj": {
+    "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Persistence\\SLCDM.Persistence.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Persistence\\SLCDM.Persistence.csproj",
+        "projectUniqueName": "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Persistence\\SLCDM.Persistence.csproj",
         "projectName": "SLCDM.Persistence",
-        "projectPath": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Persistence\\SLCDM.Persistence.csproj",
-        "packagesPath": "C:\\Users\\JoseMendez\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Persistence\\obj\\",
+        "projectPath": "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Persistence\\SLCDM.Persistence.csproj",
+        "packagesPath": "C:\\Users\\AngelGrijalva\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Persistence\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\JoseMendez\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\AngelGrijalva\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
@@ -719,11 +719,11 @@
             "framework": "net10.0",
             "targetAlias": "net10.0",
             "projectReferences": {
-              "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\SLCDM.Application.csproj": {
-                "projectPath": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\SLCDM.Application.csproj"
+              "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\SLCDM.Application.csproj": {
+                "projectPath": "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Application\\SLCDM.Application.csproj"
               },
-              "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\SLCDM.Domain.csproj": {
-                "projectPath": "C:\\Users\\JoseMendez\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\SLCDM.Domain.csproj"
+              "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\SLCDM.Domain.csproj": {
+                "projectPath": "C:\\Users\\AngelGrijalva\\Documents\\SLCDevicesManagement\\src\\SLCDM.Domain\\SLCDM.Domain.csproj"
               }
             }
           }
@@ -745,6 +745,10 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "dependencies": {
+            "Azure.Identity": {
+              "target": "Package",
+              "version": "[1.11.4, )"
+            },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
               "version": "[8.0.10, )"
@@ -772,6 +776,10 @@
             "Microsoft.Extensions.Configuration.Abstractions": {
               "target": "Package",
               "version": "[8.0.0, )"
+            },
+            "Microsoft.Identity.Client": {
+              "target": "Package",
+              "version": "[4.61.3, )"
             }
           },
           "imports": [
