@@ -21,7 +21,7 @@ public class Asignacion: SLCDM.Domain.Common.BaseAuditableEntity {
     public int IdResponsable { get; set; }
 
     [ForeignKey("IdResponsable")]
-    public Usuario? Responsable { get; set; }
+    public Responsable? Responsable { get; set; }
 
     [Required(ErrorMessage = "El campo estado es obligatorio")]
     public int IdEstado { get; set; }
@@ -37,6 +37,8 @@ public class Asignacion: SLCDM.Domain.Common.BaseAuditableEntity {
     [DataType(DataType.Date)]
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
     public DateTime FechaDevolucion { get; set; }
+
+    public bool Activa { get; set; } = true;
 
     [MaxLength(500, ErrorMessage = "El campo observaciones no debe superar los 500 caracteres")]
     public string? Observaciones {get; set; } = string.Empty;
@@ -57,3 +59,4 @@ public class Asignacion: SLCDM.Domain.Common.BaseAuditableEntity {
     public DateTime DocumentoPdfGenerardoEn { get; set; }
 
 }
+

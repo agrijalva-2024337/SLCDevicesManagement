@@ -6,10 +6,10 @@ namespace SLCDM.Domain.Entities;
 public class Activo: SLCDM.Domain.Common.BaseAuditableEntity {
 
     [Required(ErrorMessage = "El campo categoria es obligatorio")]
-    public int IdCategoria { get; set; }
+    public int IdCategoriaActivo { get; set; }
 
-    [ForeignKey("IdCategoria")]
-    public Categoria? CategoriaActivo { get; set; }
+    [ForeignKey("IdCategoriaActivo")]
+    public CategoriaActivo? CategoriaActivo { get; set; }
     
     [Required(ErrorMessage = "El campo proveedor es obligatorio")]
     public int IdProveedor { get; set; }
