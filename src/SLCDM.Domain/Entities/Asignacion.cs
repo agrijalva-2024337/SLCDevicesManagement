@@ -40,29 +40,23 @@ public class Asignacion: SLCDM.Domain.Common.BaseEntity {
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
     public DateTime FechaAsignacion { get; set; }
 
-    [DataType(DataType.Date)]
-    [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
-    public DateTime FechaDevolucion { get; set; }
+    public DateTime? FechaDevolucion { get; set; }
 
     public bool Activa { get; set; } = true;
 
-    [MaxLength(500, ErrorMessage = "El campo observaciones no debe superar los 500 caracteres")]
+    [MaxLength(300, ErrorMessage = "El campo observaciones no debe superar los 300 caracteres")]
     public string? Observaciones {get; set; } = string.Empty;
 
     public byte[]? FirmaEntrega { get; set; }
 
-    [DataType(DataType.Date)]
-    [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
-    public DateTime FechaFirmaEntrega { get; set; }
+    public DateTime? FechaFirmaEntrega { get; set; }
 
     public byte[]? FirmaDevolucion { get; set; }
 
     [MaxLength(300, ErrorMessage = "El campo documento pdf url no debe superar los 300 caracteres")]
     public string? DocumentoPdfUrl { get; set; } = string.Empty;
 
-    [DataType(DataType.Date)]
-    [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
-    public DateTime DocumentoPdfGenerardoEn { get; set; }
+    public DateTime? DocumentoPdfGenerardoEn { get; set; }
 
 }
 
