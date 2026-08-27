@@ -13,7 +13,7 @@ public class Empresa : SLCDM.Domain.Common.BaseAuditableEntity
 
     [Required(ErrorMessage = "El campo nit codigo es obligatorio")]
     [MaxLength(50, ErrorMessage = "El campo nit codigo no debe superar los 50 caracteres")]
-    public string? NitCodigo { get; set; }
+    public string NitCodigo { get; set; } = string.Empty;
 
     [MaxLength(150, ErrorMessage = "El campo direccion no debe superar los 150 caracteres")]
     public string? Direccion { get; set; }
