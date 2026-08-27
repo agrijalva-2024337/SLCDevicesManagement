@@ -3,7 +3,7 @@ using SLCDM.Domain.Common;
 
 namespace SLCDM.Domain.Entities;
 
-public class Pais : BaseAuditableEntity
+public class Pais : BaseEntity
 {
     [Required(ErrorMessage = "El campo nombre es obligatorio")]
     [MaxLength(100, ErrorMessage = "El campo nombre no debe superar los 100 caracteres")]
@@ -14,6 +14,6 @@ public class Pais : BaseAuditableEntity
     [Required(ErrorMessage = "El campo codigo iso3 es obligatorio")]
     [MaxLength(3, ErrorMessage = "El campo codigo iso 3 no debe superar los 3 caracteres")]
     public string CodigoIso3 {get; set;} = string.Empty;
-    [MaxLength(3, ErrorMessage = "El campo codigo telefonico no debe superar los 5 caracteres")]
+    [MaxLength(5, ErrorMessage = "El campo codigo telefonico no debe superar los 5 caracteres")]
     public string? CodigoTelefonico {get; set;}
 }

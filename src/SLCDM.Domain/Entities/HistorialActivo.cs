@@ -3,12 +3,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SLCDM.Domain.Entities;
 
-public class HistorialActivo: SLCDM.Domain.Common.BaseAuditableEntity {
-    [Required(ErrorMessage = "El campo activo es obligatorio")]
-    public int IdActivo { get; set; }
+public class HistorialActivo: SLCDM.Domain.Common.BaseEntity {
 
     [ForeignKey("IdActivo")]
     public Activo? Activo { get; set; }
+
+    public int? IdAsignacion { get; set; }
 
     [Required(ErrorMessage = "El campo detalle es obligatorio")]
     public int IdDetalleActivo { get; set; }

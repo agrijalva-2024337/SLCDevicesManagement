@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SLCDM.Domain.Entities;
 
-public class Asignacion: SLCDM.Domain.Common.BaseAuditableEntity {
+public class Asignacion: SLCDM.Domain.Common.BaseEntity {
 
     [Required(ErrorMessage = "El campo activo es obligatorio")]
     public int IdActivo { get; set; }
@@ -28,6 +28,12 @@ public class Asignacion: SLCDM.Domain.Common.BaseAuditableEntity {
 
     [ForeignKey("IdEstado")]
     public Estado? Estado { get; set; }
+
+    [Required(ErrorMessage = "El campo tipo asignacion es obligatorio")]
+    public int IdTipoAsignacion { get; set; }
+
+    [ForeignKey("IdTipoAsignacion")]
+    public TipoAsignacion? TipoAsignacion { get; set; }
 
     [Required(ErrorMessage = "El campo fecha asignacion es obligatorio")]
     [DataType(DataType.Date)]

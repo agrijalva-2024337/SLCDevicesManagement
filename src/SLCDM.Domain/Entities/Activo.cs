@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SLCDM.Domain.Entities;
 
-public class Activo: SLCDM.Domain.Common.BaseAuditableEntity {
+public class Activo: SLCDM.Domain.Common.BaseEntity {
 
     [Required(ErrorMessage = "El campo categoria es obligatorio")]
     public int IdCategoriaActivo { get; set; }

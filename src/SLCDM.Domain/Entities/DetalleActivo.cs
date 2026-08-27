@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SLCDM.Domain.Entities;
 
-public class DetalleActivo: SLCDM.Domain.Common.BaseAuditableEntity {
+public class DetalleActivo: SLCDM.Domain.Common.BaseEntity {
     [Required(ErrorMessage = "El campo activo es obligatorio")]
     public int IdActivo { get; set; }
 
@@ -15,6 +15,10 @@ public class DetalleActivo: SLCDM.Domain.Common.BaseAuditableEntity {
 
     [ForeignKey("IdHistoricoInventario")]
     public HistoricoInventario? HistoricoInventario { get; set; }
+
+    public bool Encontrado { get; set; } 
+
+    public bool BuenEstado { get; set; }
 
     [MaxLength(300, ErrorMessage = "El campo observaciones debe tener como maximo 300 caracteres")]
     public string? Observaciones { get; set; } = string.Empty;
