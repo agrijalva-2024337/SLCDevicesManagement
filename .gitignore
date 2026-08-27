@@ -2,6 +2,8 @@
 #Template for AL projects for Dynamics 365 Business Central
 #launch.json folder
 .vscode/
+[Bb]in/
+[Oo]bj/
 #Cache folder
 .alcache/
 #Symbols folder
@@ -21,3 +23,10 @@ rad.json
 *.flf
 #Test results file
 TestResults.xml
+
+### Node / frontend (Vite) ###
+node_modules/
+dist/
+.env
+.env.*
+!.env.example

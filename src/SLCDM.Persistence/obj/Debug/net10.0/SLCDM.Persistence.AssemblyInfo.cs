@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SLCDM.Persistence")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+65317d41cb835faabe2897140fe0f54d60dd7a63")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d2d43559a85c417a91f03a65c48174a470403b45")]
 [assembly: System.Reflection.AssemblyProductAttribute("SLCDM.Persistence")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SLCDM.Persistence")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
