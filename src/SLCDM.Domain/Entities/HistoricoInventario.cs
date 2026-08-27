@@ -20,9 +20,7 @@ public class HistoricoInventario: SLCDM.Domain.Common.BaseEntity {
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
     public DateTime FechaInicio { get; set; }
 
-    [DataType(DataType.Date)]
-    [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
-    public DateTime FechaCierre { get; set; }
+    public DateTime? FechaCierre { get; set; }
 
     [MaxLength(300, ErrorMessage = "El campo observaciones debe tener como maximo 300 caracteres")]
     public string? Observaciones { get; set; } = string.Empty;
