@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using SLCDM.Domain.Enums;
 
 namespace SLCDM.Domain.Entities;
 
@@ -30,7 +31,5 @@ public class Usuario : SLCDM.Domain.Common.BaseAuditableEntity
     [MaxLength(255, ErrorMessage = "El campo password hash no debe superar los 255 caracteres")]
     public string PasswordHash { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "El campo rol es obligatorio")]
-    [MaxLength(50, ErrorMessage = "El campo rol no debe superar los 50 caracteres")]
-    public string Rol { get; set; } = string.Empty;
+    public RolUsuario Rol { get; set; } = RolUsuario.Consulta;
 }
