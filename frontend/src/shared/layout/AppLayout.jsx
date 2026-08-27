@@ -1,25 +1,21 @@
-export function AppLayout({ children }) {
+import { useState } from 'react';
+import { Outlet } from 'react-router';
+import { Sidebar } from '@/shared/layout/Sidebar';
+import { Topbar } from '@/shared/layout/Topbar';
+
+export function AppLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
-              SLC
-            </p>
-            <p className="text-lg font-semibold">SLCDevicesManagement</p>
-          </div>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-            Sprint 1 · andamiaje
-          </span>
-        </div>
-      </header>
+    <div className="flex min-h-screen bg-surface text-navy">
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-10">{children}</main>
-
-      <footer className="border-t border-slate-200 bg-white py-4 text-center text-xs text-slate-500">
-        Sistemas Logísticos y Corporativos, S.A.
-      </footer>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <Topbar onMenuToggle={() => setSidebarOpen((open) => !open)} />
+        <main id="contenido" className="flex-1 px-4 py-8 sm:px-6">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

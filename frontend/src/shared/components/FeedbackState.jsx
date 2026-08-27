@@ -1,7 +1,7 @@
 const STATUS_STYLES = {
-  loading: 'border-slate-200 bg-slate-50 text-slate-600',
-  error: 'border-red-200 bg-red-50 text-red-800',
-  empty: 'border-slate-200 bg-slate-50 text-slate-600',
+  loading: 'border-border bg-lavender text-text-muted',
+  error: 'border-error/30 bg-error-soft text-error',
+  empty: 'border-border bg-lavender text-text-muted',
 };
 
 export function FeedbackState({

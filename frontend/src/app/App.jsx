@@ -1,11 +1,12 @@
-import { HomePage } from '@/app/pages/HomePage';
-import { AppLayout } from '@/shared/layout/AppLayout';
+import { PrimeReactProvider } from 'primereact/api';
+import { RouterProvider } from 'react-router';
+import { router } from '@/app/routes';
 
 function App() {
   return (
-    <AppLayout>
-      <HomePage />
-    </AppLayout>
+    <PrimeReactProvider>
+      <RouterProvider router={router} />
+    </PrimeReactProvider>
   );
 }
 
