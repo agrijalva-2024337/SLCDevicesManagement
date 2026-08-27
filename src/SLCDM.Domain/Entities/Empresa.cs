@@ -3,9 +3,10 @@ using System.ComponentModel.DataAnnotations;
 namespace SLCDM.Domain.Entities;
 
 /// <summary>
-/// Tabla `Empresa` del ERD DERCAS (17 entidades, grupo empresarial y organizacion — BE-02).
+/// Tabla `Empresa` del ERD DERCAS. Solo lleva `habilitado` — sin fechas de
+/// auditoria (no estan en el diagrama).
 /// </summary>
-public class Empresa : SLCDM.Domain.Common.BaseAuditableEntity
+public class Empresa : SLCDM.Domain.Common.BaseHabilitadoEntity
 {
     [Required(ErrorMessage = "El campo nombre es obligatorio")]
     [MaxLength(150, ErrorMessage = "El campo nombre no debe superar los 150 caracteres")]
@@ -17,7 +18,7 @@ public class Empresa : SLCDM.Domain.Common.BaseAuditableEntity
 
     [MaxLength(150, ErrorMessage = "El campo direccion no debe superar los 150 caracteres")]
     public string? Direccion { get; set; }
-    
+
     [MaxLength(30, ErrorMessage = "El campo telefono no debe superar los 30 caracteres")]
     public string? Telefono { get; set; }
 }

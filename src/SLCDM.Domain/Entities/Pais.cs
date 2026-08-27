@@ -3,7 +3,7 @@ using SLCDM.Domain.Common;
 
 namespace SLCDM.Domain.Entities;
 
-public class Pais : BaseAuditableEntity
+public class Pais : BaseEntity
 {
     [Required(ErrorMessage = "El campo nombre es obligatorio")]
     [MaxLength(100, ErrorMessage = "El campo nombre no debe superar los 100 caracteres")]
