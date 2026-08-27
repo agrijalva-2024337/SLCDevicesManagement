@@ -5,7 +5,7 @@ namespace SLCDM.Domain.Entities;
 /// <summary>
 /// Tabla `Bitacora` del ERD DERCAS (17 entidades, grupo empresarial y organizacion — BE-02).
 /// </summary>
-public class Bitacora : SLCDM.Domain.Common.BaseAuditableEntity
+public class Bitacora : SLCDM.Domain.Common.BaseEntity
 {
     public int IdUsuario { get; set; }
 

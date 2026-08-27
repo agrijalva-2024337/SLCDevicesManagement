@@ -5,7 +5,7 @@ namespace SLCDM.Domain.Entities;
 /// <summary>
 /// Tabla `Estado` del ERD DERCAS (17 entidades, grupo empresarial y organizacion — BE-02).
 /// </summary>
-public class Estado : SLCDM.Domain.Common.BaseAuditableEntity
+public class Estado : SLCDM.Domain.Common.BaseEntity
 {
     [Required(ErrorMessage = "El campo nombre es obligatorio")]
     [MaxLength(50, ErrorMessage = "El campo nombre no debe superar los 50 caracteres")]
