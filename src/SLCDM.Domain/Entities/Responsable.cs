@@ -3,9 +3,10 @@ using System.ComponentModel.DataAnnotations;
 namespace SLCDM.Domain.Entities;
 
 /// <summary>
-/// Tabla `Responsable` del ERD DERCAS (17 entidades, grupo empresarial y organizacion — BE-02).
+/// Tabla `Responsable` del ERD DERCAS. Solo lleva `habilitado` — sin
+/// fechas de auditoria (no estan en el diagrama).
 /// </summary>
-public class Responsable : SLCDM.Domain.Common.BaseAuditableEntity
+public class Responsable : SLCDM.Domain.Common.BaseHabilitadoEntity
 {
     public int IdArea { get; set; }
 
