@@ -28,6 +28,14 @@ public interface IApplicationDbContext
     DbSet<Bitacora> Bitacoras { get; }
     DbSet<Estado> Estados { get; }
     DbSet<TipoAsignacion> TiposAsignacion { get; }
+    DbSet<CategoriaActivo> CategoriasActivo { get; }
+    DbSet<Proveedor> Proveedores { get; }
+    DbSet<Ubicacion> Ubicaciones { get; }
+    DbSet<Activo> Activos { get; }
+    DbSet<Asignacion> Asignaciones { get; }
+    DbSet<HistoricoInventario> HistoricosInventario { get; }
+    DbSet<DetalleActivo> DetallesActivos { get; }
+    DbSet<HistorialActivo> HistorialActivos { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }
