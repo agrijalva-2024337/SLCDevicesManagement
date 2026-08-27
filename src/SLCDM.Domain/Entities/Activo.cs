@@ -17,7 +17,6 @@ public class Activo: SLCDM.Domain.Common.BaseEntity {
     [ForeignKey("IdProveedor")]
     public Proveedor? Proveedor { get; set; }
 
-    [Required(ErrorMessage = "El campo ubicacion es obligatorio")]
     public int IdUbicacion { get; set; }
 
     [ForeignKey("IdUbicacion")]
