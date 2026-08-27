@@ -2,9 +2,14 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SLCDM.Domain.Entities;
 
-public class Area : SLCDM.Domain.Common.BaseAuditableEntity
+/// <summary>
+/// Tabla `Area` del ERD DERCAS. Solo lleva `habilitado` — sin fechas de
+/// auditoria (no estan en el diagrama).
+/// </summary>
+public class Area : SLCDM.Domain.Common.BaseHabilitadoEntity
 {
     public int IdSede { get; set; }
+
     [Required(ErrorMessage = "El campo nombre es obligatorio")]
     [MaxLength(100, ErrorMessage = "El campo nombre no debe superar los 100 caracteres")]
     public string Nombre { get; set; } = string.Empty;

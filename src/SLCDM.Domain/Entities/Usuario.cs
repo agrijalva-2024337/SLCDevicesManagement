@@ -4,9 +4,13 @@ using SLCDM.Domain.Enums;
 namespace SLCDM.Domain.Entities;
 
 /// <summary>
-/// Tabla `Usuario` del ERD DERCAS (17 entidades, grupo empresarial y organizacion — BE-02).
+/// Tabla `Usuario` del ERD DERCAS. Unica entidad del diagrama con
+/// `habilitado` + `fecha_creacion`, pero SIN `fecha_modificacion` — por
+/// eso hereda de BaseHabilitadoEntity (le da Habilitado) y declara
+/// FechaCreacion directo aca, en vez de usar una clase comun para un caso
+/// que ninguna otra entidad repite.
 /// </summary>
-public class Usuario : SLCDM.Domain.Common.BaseAuditableEntity
+public class Usuario : SLCDM.Domain.Common.BaseHabilitadoEntity
 {
     public int? IdEmpresa { get; set; }
 
@@ -32,4 +36,6 @@ public class Usuario : SLCDM.Domain.Common.BaseAuditableEntity
     public string PasswordHash { get; set; } = string.Empty;
 
     public RolUsuario Rol { get; set; } = RolUsuario.Consulta;
+
+    public DateTime FechaCreacion { get; set; }
 }
