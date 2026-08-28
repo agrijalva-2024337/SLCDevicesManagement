@@ -14,6 +14,7 @@ export function TextField({
   disabled = false,
   type = 'text',
   placeholder,
+  ...rest
 }) {
   const id = useId();
 
@@ -34,6 +35,7 @@ export function TextField({
         placeholder={placeholder}
         className={inputClassName}
         aria-invalid={Boolean(error)}
+        {...rest}
       />
       {error ? <p className="mt-1 text-xs text-red-600">{error}</p> : null}
     </div>
