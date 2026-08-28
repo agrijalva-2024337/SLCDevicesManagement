@@ -19,7 +19,7 @@ public class EmpresaConfiguration : IEntityTypeConfiguration<Empresa>
 
         builder.Property(e => e.Nombre)
             .HasColumnName("nombre")
-            .HasColumnType("varchar(100)")
+            .HasColumnType("varchar(150)")
             .IsRequired();
 
         builder.Property(e => e.NitCodigo)
