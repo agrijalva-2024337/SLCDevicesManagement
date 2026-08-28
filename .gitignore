@@ -37,4 +37,4 @@ obj/
 *.user
 *.suo
 .vs/
-appsetting.Development.json
+appsettings.Development.json
