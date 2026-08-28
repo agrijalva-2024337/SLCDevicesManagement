@@ -66,6 +66,7 @@ export function DataTable({
   errorMessage = null,
   emptyMessage = 'No hay datos para mostrar.',
   onRowClick,
+  rowClassName,
   searchPlaceholder = 'Buscar...',
   pageSize = 10,
 }) {
@@ -176,7 +177,12 @@ export function DataTable({
               {pageRows.map((row) => (
                 <tr
                   key={row[keyField]}
-                  className={onRowClick ? 'cursor-pointer hover:bg-slate-50' : ''}
+                  className={[
+                    onRowClick ? 'cursor-pointer hover:bg-slate-50' : '',
+                    typeof rowClassName === 'function' ? rowClassName(row) : (rowClassName ?? ''),
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                 >
                   {columns.map((column) => {
