@@ -26,13 +26,17 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Bitacora> Bitacoras => Set<Bitacora>();
     public DbSet<Estado> Estados => Set<Estado>();
     public DbSet<TipoAsignacion> TiposAsignacion => Set<TipoAsignacion>();
+    public DbSet<CategoriaActivo> CategoriasActivo => Set<CategoriaActivo>();
+    public DbSet<Proveedor> Proveedores => Set<Proveedor>();
+    public DbSet<Ubicacion> Ubicaciones => Set<Ubicacion>();
+    public DbSet<Activo> Activos => Set<Activo>();
+    public DbSet<Asignacion> Asignaciones => Set<Asignacion>();
+    public DbSet<HistoricoInventario> HistoricosInventario => Set<HistoricoInventario>();
+    public DbSet<DetalleActivo> DetallesActivos => Set<DetalleActivo>();
+    public DbSet<HistorialActivo> HistoricosActivos => Set<HistorialActivo>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Aplica TODAS las clases IEntityTypeConfiguration<T> del ensamblado
-        // automaticamente (las mias y las de Gerardo) — evita tener que
-        // listar cada Configuration a mano aca y que los dos peleemos por
-        // las mismas lineas de este metodo.
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
         base.OnModelCreating(modelBuilder);
