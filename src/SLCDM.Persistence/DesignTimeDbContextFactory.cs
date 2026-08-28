@@ -1,33 +1,29 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 
 namespace SLCDM.Persistence;
 
-/// <summary>
-/// Le permite a `dotnet ef` construir un ApplicationDbContext SIN depender
-/// de que SLCDM.Api ya tenga el DbContext registrado en Program.cs (eso es
-/// BE-07/BE-08, todavia no esta hecho). Gracias a esto, BE-06 (migracion +
-/// script SQL) se puede generar corriendo el comando solo contra este
-/// proyecto, sin --startup-project:
-///
-///   dotnet ef migrations add InitialCreate --project src/SLCDM.Persistence
-///
-/// La cadena de conexion NO se sube al repo: se lee de la variable de
-/// entorno CONNECTIONSTRINGS__DEFAULTCONNECTION, y si no existe usa un
-/// placeholder valido solo para que EF pueda generar el modelo (no hace
-/// falta una base real corriendo para `migrations add` o `migrations
-/// script` — si hace falta para `database update`).
-/// </summary>
 public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
 {
     public ApplicationDbContext CreateDbContext(string[] args)
     {
-        var connectionString = Environment.GetEnvironmentVariable("CONNECTIONSTRINGS__DEFAULTCONNECTION")
-            ?? "Server=localhost;Database=DercasInventario;Trusted_Connection=True;TrustServerCertificate=True;";
+        var apiPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "SLCDM.Api");
+        
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.Exists(apiPath) ? apiPath : Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true)
+            .AddJsonFile("appsettings.Development.json", optional: true)
+            .AddEnvironmentVariables()
+            .Build();
+
+        var connectionString = configuration.GetConnectionString("DefaultConnection")
+            ?? Environment.GetEnvironmentVariable("CONNECTIONSTRINGS_DEFAULTCONNECTION")
+            ?? "Server=localhost;Database=SLCDevicesManagement; Trusted_Connection=True; TrustServerCertificate=True;";
 
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
         optionsBuilder.UseSqlServer(connectionString);
 
-        return new ApplicationDbContext(optionsBuilder.Options);
+                return new ApplicationDbContext(optionsBuilder.Options);
     }
 }
