@@ -21,7 +21,7 @@ public class AsignacionConfiguration : IEntityTypeConfiguration<Asignacion>
 
         builder.Property(a => a.FechaAsignacion)
             .HasColumnName("fecha_asignacion")
-            .HasColumnType("date")
+            .HasColumnType("datetime")
             .IsRequired();
 
         builder.Property(a => a.FechaDevolucion).HasColumnName("fecha_devolucion");

@@ -17,7 +17,7 @@ public class ActivoConfiguration : IEntityTypeConfiguration<Activo>
 
         builder.Property(a => a.IdProveedor).HasColumnName("id_proveedor").IsRequired();
 
-        builder.Property(a => a.IdUbicacion).HasColumnName("id_ubicacion").IsRequired();
+        builder.Property(a => a.IdUbicacion).HasColumnName("id_ubicacion");
 
         builder.Property(a => a.Nombre)
             .HasColumnName("nombre")
@@ -27,6 +27,10 @@ public class ActivoConfiguration : IEntityTypeConfiguration<Activo>
         builder.Property(a => a.Descripcion)
             .HasColumnName("descripcion")
             .HasColumnType("varchar(300)");
+
+        builder.Property(a => a.Marca)
+            .HasColumnName("marca")
+            .HasColumnType("varchar(100)");
 
         builder.Property(a => a.Modelo)
             .HasColumnName("modelo")

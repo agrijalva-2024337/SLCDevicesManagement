@@ -8,7 +8,7 @@ public class CategoriaActivoConfiguration : IEntityTypeConfiguration<CategoriaAc
 {
     public void Configure(EntityTypeBuilder<CategoriaActivo> builder)
     {
-        builder.ToTable("Categoria_Activo");
+        builder.ToTable("categoria_activo");
 
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Id).HasColumnName("id_categoria");

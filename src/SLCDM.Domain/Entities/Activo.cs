@@ -17,7 +17,7 @@ public class Activo: SLCDM.Domain.Common.BaseEntity {
     [ForeignKey("IdProveedor")]
     public Proveedor? Proveedor { get; set; }
 
-    public int IdUbicacion { get; set; }
+    public int? IdUbicacion { get; set; }
 
     [ForeignKey("IdUbicacion")]
     public Ubicacion? Ubicacion { get; set; }
