@@ -27,7 +27,7 @@ public class UbicacionConfiguration : IEntityTypeConfiguration<Ubicacion>
             .HasColumnType("varchar(200)");
 
         builder.Property(u => u.Latitud)
-            .HasColumName("latitud")
+            .HasColumnName("latitud")
             .HasColumnType("decimal(9,6)")
             .IsRequired();
 

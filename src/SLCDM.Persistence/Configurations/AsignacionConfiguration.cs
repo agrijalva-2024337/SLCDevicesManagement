@@ -13,11 +13,11 @@ public class AsignacionConfiguration : IEntityTypeConfiguration<Asignacion>
         builder.HasKey(a => a.Id);
         builder.Property(a => a.Id).HasColumnName("id_asignacion");
 
-        builder.Property(a => a.IdActivo).HasColumnName(id_activo).IsRequired();
-        builder.Property(a => a.IdUsuario).HasColumnName(id_usuario).IsRequired();
-        builder.Property(a => a => IdResponsable).HasColumnName(id_responsable).IsRequired();
-        builder.Property(a => a => IdEstado).HasColumnName(id_estado).IsRequired();
-        builder.Property(a => a => IdAsignacion).HasColumnName(id_tipo_asignacion).IsRequired();
+        builder.Property(a => a.IdActivo).HasColumnName("id_activo").IsRequired();
+        builder.Property(a => a.IdUsuario).HasColumnName("id_usuario").IsRequired();
+        builder.Property(a => a.IdResponsable).HasColumnName("id_responsable").IsRequired();
+        builder.Property(a => a.IdEstado).HasColumnName("id_estado").IsRequired();
+        builder.Property(a => a.IdTipoAsignacion).HasColumnName("id_tipo_asignacion").IsRequired();
 
         builder.Property(a => a.FechaAsignacion)
             .HasColumnName("fecha_asignacion")
@@ -48,7 +48,7 @@ public class AsignacionConfiguration : IEntityTypeConfiguration<Asignacion>
             .HasColumnName("documento_pdf_url")
             .HasColumnType("varchar(300)");
 
-        builder.Property(a => a.DocumentoPdfGeneradoEn).HasColumnName("documento_pdf_generado_en");
+        builder.Property(a => a.DocumentoPdfGenerardoEn).HasColumnName("documento_pdf_generado_en");
 
         builder.HasOne(a => a.Activo)
             .WithMany()
@@ -72,12 +72,12 @@ public class AsignacionConfiguration : IEntityTypeConfiguration<Asignacion>
 
         builder.HasOne(a => a.TipoAsignacion)
             .WithMany()
-            .HasForeignKey(a => a.IdAsignacion)
+            .HasForeignKey(a => a.IdTipoAsignacion)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(a => a.IdActivo);
-            .IsUnique();
-            .HasFilter("[activa] = 1");
+        builder.HasIndex(a => a.IdActivo)
+            .IsUnique()
+            .HasFilter("[activa] = 1")
             .HasDatabaseName("ix_asignacion_activo_unica_activa");
     }
 }

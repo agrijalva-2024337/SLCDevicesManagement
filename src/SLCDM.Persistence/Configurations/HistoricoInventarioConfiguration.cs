@@ -30,7 +30,7 @@ public class HistoricoInventarioConfiguration : IEntityTypeConfiguration<Histori
 
         builder.Property(h => h.FechaCierre).HasColumnName("fecha_cierre");
 
-        builder.Property(h => obsevaciones)
+        builder.Property(h => h.Observaciones)
             .HasColumnName("observaciones")
             .HasColumnType("varchar(300)");
 
