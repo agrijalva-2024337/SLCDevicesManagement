@@ -34,7 +34,7 @@ public class DetalleActivoConfiguration : IEntityTypeConfiguration<DetalleActivo
 
         builder.HasOne(d => d.Activo)
             .WithMany()
-            .HasForeingKey(d => d.IdActivo)
+            .HasForeignKey(d => d.IdActivo)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(d => d.HistoricoInventario)

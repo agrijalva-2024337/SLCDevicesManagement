@@ -62,17 +62,17 @@ public class ActivoConfiguration : IEntityTypeConfiguration<Activo>
             .HasColumnName("observaciones")
             .HasColumnType("varchar(500)");
 
-        builder.Property(a => a.IdCategoriaActivo)
+        builder.HasOne(a => a.CategoriaActivo)
             .WithMany()
             .HasForeignKey(a => a.IdCategoriaActivo)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.Property(a => a.IdProveedor)
+        builder.HasOne(a => a.Proveedor)
             .WithMany()
             .HasForeignKey(a => a.IdProveedor)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.Property(a => a.IdUbicacion)
+        builder.HasOne(a => a.Ubicacion)
             .WithMany()
             .HasForeignKey(a => a.IdUbicacion)
             .OnDelete(DeleteBehavior.Restrict);

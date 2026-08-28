@@ -33,7 +33,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Asignacion> Asignaciones => Set<Asignacion>();
     public DbSet<HistoricoInventario> HistoricosInventario => Set<HistoricoInventario>();
     public DbSet<DetalleActivo> DetallesActivos => Set<DetalleActivo>();
-    public DbSet<HistorialActivo> HistoricosActivos => Set<HistorialActivo>();
+    public DbSet<HistorialActivo> HistorialActivos => Set<HistorialActivo>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

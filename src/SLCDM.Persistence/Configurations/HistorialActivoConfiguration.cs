@@ -16,8 +16,8 @@ public class HistorialActivoConfiguration : IEntityTypeConfiguration<HistorialAc
         builder.HasKey(h => h.Id);
         builder.Property(h => h.Id).HasColumnName("id_historial_activo");
 
-        builder.Property(h => id.Asignacion).HasColumnName("id_asignacion");
-        builder.Property(h => id.DetalleActivo).HasColumnName("id_detalle_activo");
+        builder.Property(h => h.IdAsignacion).HasColumnName("id_asignacion");
+        builder.Property(h => h.IdDetalleActivo).HasColumnName("id_detalle_activo");
 
         builder.Property(h => h.FechaHora)
             .HasColumnName("fecha_hora")

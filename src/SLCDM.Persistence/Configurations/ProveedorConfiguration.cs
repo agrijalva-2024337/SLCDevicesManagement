@@ -15,7 +15,7 @@ public class ProveedorConfiguration : IEntityTypeConfiguration<Proveedor>
 
         builder.Property(p => p.IdEmpresa).HasColumnName("id_empresa").IsRequired();
 
-        builder.Property(p =p.Habilitado)
+        builder.Property(p => p.Habilitado)
             .HasColumnName("habilitado")
             .HasDefaultValue(true);
 
@@ -31,23 +31,22 @@ public class ProveedorConfiguration : IEntityTypeConfiguration<Proveedor>
 
         builder.Property(p => p.NombreContacto)
             .HasColumnName("nombre_contacto")
-            .HasColumnType("varchar(100)")
-            .
+            .HasColumnType("varchar(100)");
 
         builder.Property(p => p.Telefono)
             .HasColumnName("telefono")
-            .HasColumnType("varchar(30)")
+            .HasColumnType("varchar(30)");
 
         builder.Property(p => p.Correo)
             .HasColumnName("correo")
-            .HasColumnType("varchar(150)")
+            .HasColumnType("varchar(150)");
         
-        builder.Property(p => p.Empresa)
+        builder.HasOne(p => p.Empresa)
             .WithMany()
             .HasForeignKey(p => p.IdEmpresa)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasIndex(p => p.IdEmpresa).IsUnique();
-        builder.HasIndex(p => p.Nit)  
+        builder.HasIndex(p => p.IdEmpresa);
+        builder.HasIndex(p => p.Nit);  
     }
 }
