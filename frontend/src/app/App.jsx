@@ -11,8 +11,8 @@ import { AppLayout } from '@/shared/layout/AppLayout';
 
 function App() {
   return (
-    <AppLayout>
-      <Routes>
+    <Routes>
+      <Route element={<AppLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/catalogos/empresas" element={<EmpresasPage />} />
         <Route path="/catalogos/sedes" element={<SedesPage />} />
@@ -28,8 +28,8 @@ function App() {
         {/* <Route path="/inventario" element={<InventarioPage />} /> */}
         {/* <Route path="/reportes" element={<ReportesPage />} /> */}
         <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </AppLayout>
+      </Route>
+    </Routes>
   );
 }
 
