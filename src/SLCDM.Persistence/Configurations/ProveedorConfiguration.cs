@@ -44,7 +44,7 @@ public class ProveedorConfiguration : IEntityTypeConfiguration<Proveedor>
         builder.HasOne(p => p.Empresa)
             .WithMany()
             .HasForeignKey(p => p.IdEmpresa)
-            .OnDelete(Restrict);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(p => p.IdEmpresa);
         builder.HasIndex(p => p.Nit);  
