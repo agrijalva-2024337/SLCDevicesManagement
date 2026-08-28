@@ -25,7 +25,7 @@ public class HistoricoInventarioConfiguration : IEntityTypeConfiguration<Histori
 
         builder.Property(h => h.FechaInicio)
             .HasColumnName("fecha_inicio")
-            .HasColumnType("date")
+            .HasColumnType("datetime")
             .IsRequired();
 
         builder.Property(h => h.FechaCierre).HasColumnName("fecha_cierre");

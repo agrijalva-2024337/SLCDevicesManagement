@@ -10,7 +10,7 @@ public class HistorialActivoConfiguration : IEntityTypeConfiguration<HistorialAc
     {
         builder.ToTable("historial_activo", t => t.HasCheckConstraint(
             "ck_historial_activo_una_sola_fuente",
-            "([id_asignacion] IS NOT NULL AND [id_detalle_activo] IS NOT NULL) " +
+            "([id_asignacion] IS NOT NULL AND [id_detalle_activo] IS NULL) " +
             "OR ([id_asignacion] IS NULL AND [id_detalle_activo] IS NOT NULL)"));
 
         builder.HasKey(h => h.Id);
@@ -21,7 +21,7 @@ public class HistorialActivoConfiguration : IEntityTypeConfiguration<HistorialAc
 
         builder.Property(h => h.FechaHora)
             .HasColumnName("fecha_hora")
-            .HasColumnType("date")
+            .HasColumnType("datetime")
             .IsRequired();
 
         builder.Property(h => h.TipoOperacion)

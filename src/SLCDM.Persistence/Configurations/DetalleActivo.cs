@@ -30,7 +30,7 @@ public class DetalleActivoConfiguration : IEntityTypeConfiguration<DetalleActivo
 
         builder.Property(d => d.FechaVerificacion)
             .HasColumnName("fecha_verificacion")
-            .HasColumnType("date");
+            .HasColumnType("datetime");
 
         builder.HasOne(d => d.Activo)
             .WithMany()
