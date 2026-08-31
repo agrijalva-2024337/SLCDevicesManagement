@@ -13,6 +13,8 @@ public class UbicacionConfiguration : IEntityTypeConfiguration<Ubicacion>
         builder.HasKey(u => u.Id);
         builder.Property(u => u.Id).HasColumnName("id_ubicacion");
 
+        builder.Property(u => u.IdSede).HasColumnName("id_sede").IsRequired();
+
         builder.Property(u => u.Habilitado)
             .HasColumnName("habilitado")
             .HasDefaultValue(true);
