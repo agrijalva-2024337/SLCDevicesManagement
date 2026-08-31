@@ -644,3 +644,46 @@ GO
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260831205422_AddIdSedeUbicacion'
+)
+BEGIN
+    ALTER TABLE [ubicacion] ADD [id_sede] int NOT NULL DEFAULT 0;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260831205422_AddIdSedeUbicacion'
+)
+BEGIN
+    CREATE INDEX [IX_ubicacion_id_sede] ON [ubicacion] ([id_sede]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260831205422_AddIdSedeUbicacion'
+)
+BEGIN
+    ALTER TABLE [ubicacion] ADD CONSTRAINT [FK_ubicacion_sede_id_sede] FOREIGN KEY ([id_sede]) REFERENCES [sede] ([id_sede]) ON DELETE NO ACTION;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260831205422_AddIdSedeUbicacion'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260831205422_AddIdSedeUbicacion', N'8.0.10');
+END;
+GO
+
+COMMIT;
+GO
+
