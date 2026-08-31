@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertBanner } from '@/shared/components/AlertBanner';
 import { Badge } from '@/shared/components/Badge';
 import { Button } from '@/shared/components/Button';
@@ -12,8 +12,10 @@ import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 import { UbicacionForm } from '@/features/catalogos/ubicaciones/UbicacionForm';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
+import * as sedeService from '@/features/organizacion/sedes/sedeService';
 
 const EMPTY_UBICACION = {
+  idSede: '',
   nombre: '',
   descripcion: '',
   latitud: '',
@@ -22,6 +24,7 @@ const EMPTY_UBICACION = {
 
 function toUbicacionFormValues(row) {
   return {
+    idSede: row.idSede ?? '',
     nombre: row.nombre ?? '',
     descripcion: row.descripcion ?? '',
     latitud: row.latitud ?? '',
@@ -32,11 +35,40 @@ function toUbicacionFormValues(row) {
 export function UbicacionesPage() {
   const { visibleRows, isLoading, errorMessage, filter, setFilter, banner, setBanner, reload } =
     useCatalogCollection(ubicacionService.getAll);
+  const [sedes, setSedes] = useState([]);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [confirmRow, setConfirmRow] = useState(null);
   const [confirming, setConfirming] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadLookups() {
+      try {
+        const sedeRows = await sedeService.getAll();
+        if (!cancelled) {
+          setSedes(sedeRows);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setBanner({ variant: 'error', message: getErrorMessage(error) });
+        }
+      }
+    }
+
+    loadLookups();
+    return () => {
+      cancelled = true;
+    };
+  }, [setBanner]);
+
+  const sedeById = new Map(sedes.map((item) => [item.id, item.nombre]));
+  const tableRows = visibleRows.map((row) => ({
+    ...row,
+    sedeNombre: sedeById.get(row.idSede) ?? row.idSede,
+  }));
 
   function openCreate() {
     setEditing(null);
@@ -61,6 +93,7 @@ export function UbicacionesPage() {
     try {
       const payload = {
         ...values,
+        idSede: Number(values.idSede),
         latitud: Number(values.latitud),
         longitud: Number(values.longitud),
       };
@@ -110,6 +143,7 @@ export function UbicacionesPage() {
 
   const columns = [
     { key: 'nombre', header: 'Nombre' },
+    { key: 'sedeNombre', header: 'Sede' },
     { key: 'descripcion', header: 'Descripción' },
     { key: 'latitud', header: 'Latitud', align: 'right' },
     { key: 'longitud', header: 'Longitud', align: 'right' },
@@ -142,7 +176,7 @@ export function UbicacionesPage() {
     <section className="space-y-6">
       <PageHeader
         title="Ubicaciones"
-        description="Puntos geográficos de resguardo o operación de activos."
+        description="Puntos geográficos de resguardo o operación de activos, asociados a una sede."
         actions={
           <Button onClick={openCreate} type="button">
             Nueva
@@ -162,7 +196,7 @@ export function UbicacionesPage() {
 
       <DataTable
         columns={columns}
-        rows={visibleRows}
+        rows={tableRows}
         isLoading={isLoading}
         errorMessage={errorMessage}
         emptyMessage="No hay ubicaciones para mostrar."
@@ -178,6 +212,9 @@ export function UbicacionesPage() {
         <UbicacionForm
           key={editing ? `edit-${editing.id}` : 'new'}
           initialValues={editing ? toUbicacionFormValues(editing) : EMPTY_UBICACION}
+          sedeOptions={sedes
+            .filter((item) => item.habilitado !== false)
+            .map((item) => ({ value: item.id, label: item.nombre }))}
           onSubmit={handleSave}
           onCancel={closeForm}
           isSubmitting={saving}
