@@ -39,13 +39,14 @@ Copiar `.env.example` a `.env`. Nunca hardcodear la URL de la API.
 
 ### Mocks vs API real
 
-Los seis catálogos (y País, usado como lookup) corren contra datos de prueba **en memoria** mientras `VITE_USE_API_MOCK=true`. Cada servicio ya tiene la rama HTTP escrita (`GET/POST/PUT/DELETE` a `/api/empresas`, `/api/sedes`, `/api/areas`, `/api/categorias`, `/api/proveedores`, `/api/ubicaciones`, `/api/paises`).
+Los seis catálogos (y País, usado como lookup) corren contra datos de prueba **en memoria** mientras `VITE_USE_API_MOCK=true`. Las rutas viven en `src/shared/api/paths.js`. Cada `*Service.js` ya tiene la rama HTTP escrita.
 
-Cuando el backend publique esos controllers (FE-05):
+Cuando el backend publique controllers y DTOs (siguiente sprint, FE-05):
 
 1. Poné `VITE_USE_API_MOCK=false` en `.env`.
-2. Confirmá que las rutas coincidan con los controllers.
-3. No hace falta reescribir las pantallas: el componente no sabe si la respuesta vino del mock o de Axios.
+2. Ajustá `src/shared/api/paths.js` si las rutas reales difieren.
+3. Ajustá `src/shared/api/contracts.js` cuando salgan los DTOs de BE-07 / BE-08 / BE-09.
+4. No hace falta reescribir las pantallas: el componente no sabe si la respuesta vino del mock o de Axios.
 
 Los cambios de crear/editar/inactivar **no se persisten al recargar** en modo mock: viven en un array a nivel de módulo durante la sesión.
 
@@ -85,20 +86,30 @@ frontend/src/
     pages/NotFoundPage.jsx
   features/
     organizacion/
-      mocks/{empresas,sedes,areas}.js
+      mocks/{empresas,sedes,areas,usuarios,responsables,bitacoras,estados,tiposAsignacion}.js
       empresas/{EmpresasPage,EmpresaForm,empresaService}.js(x)
       sedes/{SedesPage,SedeForm,sedeService}.js(x)
       areas/{AreasPage,AreaForm,areaService}.js(x)
+      usuarios/usuarioService.js
+      responsables/responsableService.js
+      bitacoras/bitacoraService.js
+      estados/estadoService.js
+      tiposAsignacion/tipoAsignacionService.js
     catalogos/
       mocks/{paises,categorias,proveedores,ubicaciones}.js
       paises/paisService.js          lookup; sin pantalla CRUD
       categorias/{CategoriasPage,CategoriaForm,categoriaService}.js(x)
       proveedores/{ProveedoresPage,ProveedorForm,proveedorService}.js(x)
       ubicaciones/{UbicacionesPage,UbicacionForm,ubicacionService}.js(x)
-    auth/ activos/ asignaciones/ inventario/ mantenimientos/ bajas/ reportes/
+    auth/        authService.js, useAuth.js (sin pantalla de login todavía)
+    activos/     activoService.js, historialActivoService.js
+    asignaciones/asignacionService.js
+    inventario/  historicoInventarioService.js, detalleActivoService.js
+    mantenimientos/ bajas/ reportes/
   shared/
+    api/               paths.js, contracts.js, errors.js
     components/
-    hooks/
+    hooks/             useForm, useCatalogCollection, useResource, useApiHealth
     layout/AppLayout.jsx + navConfig.js
     services/httpClient.js, tokenStorage.js, healthService.js, createMockCrudService.js
     utils/
@@ -107,7 +118,21 @@ frontend/src/
 
 Los componentes no llaman a Axios directo: pasan por servicios (`shared/services` o `*Service.js` del feature, que a su vez usan `httpClient` o el mock).
 
-Los campos de cada catálogo coinciden con `SLCDM.Domain` (camelCase): `id`, `habilitado` y los propios de la entidad. No hay `fechaCreacion` / `fechaModificacion` en estos catálogos. Proveedor usa `correo`, no `email`. País no tiene `habilitado`.
+Los campos de cada catálogo coinciden con `SLCDM.Domain` (camelCase): `id`, `habilitado` y los propios de la entidad. No hay `fechaCreacion` / `fechaModificacion` en estos catálogos (salvo `Usuario.fechaCreacion`). Proveedor usa `correo`, no `email`. País no tiene `habilitado`. **Ubicación** lleva `idSede` (filtro multiempresa, BE-05).
+
+Application todavía no publicó DTOs (BE-07 / BE-08 / BE-09). Los typedefs de `shared/api/contracts.js` copian el Domain hasta que existan.
+
+## Capa de servicios (FE-04)
+
+| Servicio                          | API                                   | Notas                                                                              |
+| --------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------- |
+| Catálogos ya con pantalla         | `getAll/getById/create/update/remove` | Soft delete con `habilitado`                                                       |
+| `authService`                     | `login`, `getMe`, `logout`            | Mock: clave `Practica2026` y 4 perfiles en `features/auth/mocks/usuariosSesion.js` |
+| `useAuth`                         | sesión en memoria + `tokenStorage`    | Listo para una pantalla de login posterior                                         |
+| Bitácora / historial de activo    | `getAll`, `getById`                   | Solo lectura (`createReadService`)                                                 |
+| Activos, asignaciones, inventario | CRUD mock                             | Sin pantallas en este sprint                                                       |
+
+Hook `useResource(loadFn)` → `{ data, isLoading, errorMessage, reload }` para lookups y listados que no son catálogo con filtro de habilitado.
 
 ## Componentes compartidos
 

@@ -31,7 +31,12 @@ export function getApiErrorMessage(error) {
       return firstField;
     }
 
-    return data?.detail || data?.message || data?.title || `La API respondió con HTTP ${error.response.status}.`;
+    return (
+      data?.detail ||
+      data?.message ||
+      data?.title ||
+      `La API respondió con HTTP ${error.response.status}.`
+    );
   }
 
   if (error.request) {
