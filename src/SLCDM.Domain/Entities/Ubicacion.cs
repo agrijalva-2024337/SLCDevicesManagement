@@ -8,6 +8,9 @@ namespace SLCDM.Domain.Entities;
 /// </summary>
 public class Ubicacion : SLCDM.Domain.Common.BaseHabilitadoEntity
 {
+    [Required(ErrorMessage = "El campo id sede es obligatorio")]
+    public int IdSede { get; set; }
+
     [Required(ErrorMessage = "El campo nombre es obligatorio")]
     [MaxLength(100, ErrorMessage = "El campo nombre no debe superar los 100 caracteres")]
     public string Nombre { get; set; } = string.Empty;
