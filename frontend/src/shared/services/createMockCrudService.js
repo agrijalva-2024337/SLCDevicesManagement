@@ -107,3 +107,8 @@ export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS 
 
   return { getAll, getById, create, update, remove };
 }
+
+export function createReadService(options) {
+  const { getAll, getById } = createMockCrudService(options);
+  return { getAll, getById };
+}
