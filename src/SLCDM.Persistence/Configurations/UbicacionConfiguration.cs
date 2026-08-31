@@ -14,6 +14,12 @@ public class UbicacionConfiguration : IEntityTypeConfiguration<Ubicacion>
         builder.Property(u => u.Id).HasColumnName("id_ubicacion");
 
         builder.Property(u => u.IdSede).HasColumnName("id_sede").IsRequired();
+        builder.HasOne<Sede>()
+            .WithMany()
+            .HasForeignKey(u => u.IdSede)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(u => u.IdSede);
 
         builder.Property(u => u.Habilitado)
             .HasColumnName("habilitado")
@@ -39,5 +45,7 @@ public class UbicacionConfiguration : IEntityTypeConfiguration<Ubicacion>
             .IsRequired();
 
         builder.HasIndex(u => u.Nombre);
+
+        
     }
 }
