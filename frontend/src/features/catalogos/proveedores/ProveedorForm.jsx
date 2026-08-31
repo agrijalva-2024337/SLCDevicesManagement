@@ -4,26 +4,6 @@ import { TextField } from '@/shared/components/TextField';
 import { useForm } from '@/shared/hooks/useForm';
 import { enforceMaxLength, enforceRequired } from '@/shared/utils/fieldErrors';
 
-export const EMPTY_PROVEEDOR = {
-  idEmpresa: '',
-  nombre: '',
-  nit: '',
-  nombreContacto: '',
-  telefono: '',
-  correo: '',
-};
-
-export function toProveedorFormValues(row) {
-  return {
-    idEmpresa: row.idEmpresa ?? '',
-    nombre: row.nombre ?? '',
-    nit: row.nit ?? '',
-    nombreContacto: row.nombreContacto ?? '',
-    telefono: row.telefono ?? '',
-    correo: row.correo ?? '',
-  };
-}
-
 function validateProveedor(values) {
   const errors = {};
   enforceRequired(errors, values, 'idEmpresa', 'id empresa');
@@ -37,13 +17,7 @@ function validateProveedor(values) {
   return errors;
 }
 
-export function ProveedorForm({
-  initialValues,
-  empresaOptions,
-  onSubmit,
-  onCancel,
-  isSubmitting,
-}) {
+export function ProveedorForm({ initialValues, empresaOptions, onSubmit, onCancel, isSubmitting }) {
   const { values, errors, touched, handleChange, handleBlur, handleSubmit } = useForm({
     initialValues,
     validate: validateProveedor,

@@ -10,8 +10,24 @@ import { Modal } from '@/shared/components/Modal';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
-import { EMPTY_EMPRESA, EmpresaForm, toEmpresaFormValues } from '@/features/organizacion/empresas/EmpresaForm';
+import { EmpresaForm } from '@/features/organizacion/empresas/EmpresaForm';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
+
+const EMPTY_EMPRESA = {
+  nombre: '',
+  nitCodigo: '',
+  direccion: '',
+  telefono: '',
+};
+
+function toEmpresaFormValues(row) {
+  return {
+    nombre: row.nombre ?? '',
+    nitCodigo: row.nitCodigo ?? '',
+    direccion: row.direccion ?? '',
+    telefono: row.telefono ?? '',
+  };
+}
 
 export function EmpresasPage() {
   const { visibleRows, isLoading, errorMessage, filter, setFilter, banner, setBanner, reload } =

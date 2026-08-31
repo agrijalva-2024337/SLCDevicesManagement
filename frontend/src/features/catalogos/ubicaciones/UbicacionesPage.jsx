@@ -10,12 +10,24 @@ import { Modal } from '@/shared/components/Modal';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
-import {
-  EMPTY_UBICACION,
-  toUbicacionFormValues,
-  UbicacionForm,
-} from '@/features/catalogos/ubicaciones/UbicacionForm';
+import { UbicacionForm } from '@/features/catalogos/ubicaciones/UbicacionForm';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
+
+const EMPTY_UBICACION = {
+  nombre: '',
+  descripcion: '',
+  latitud: '',
+  longitud: '',
+};
+
+function toUbicacionFormValues(row) {
+  return {
+    nombre: row.nombre ?? '',
+    descripcion: row.descripcion ?? '',
+    latitud: row.latitud ?? '',
+    longitud: row.longitud ?? '',
+  };
+}
 
 export function UbicacionesPage() {
   const { visibleRows, isLoading, errorMessage, filter, setFilter, banner, setBanner, reload } =

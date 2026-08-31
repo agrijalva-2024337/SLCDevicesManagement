@@ -4,24 +4,6 @@ import { TextField } from '@/shared/components/TextField';
 import { useForm } from '@/shared/hooks/useForm';
 import { enforceMaxLength, enforceRequired } from '@/shared/utils/fieldErrors';
 
-export const EMPTY_SEDE = {
-  idEmpresa: '',
-  idPais: '',
-  nombre: '',
-  direccion: '',
-  ciudad: '',
-};
-
-export function toSedeFormValues(row) {
-  return {
-    idEmpresa: row.idEmpresa ?? '',
-    idPais: row.idPais ?? '',
-    nombre: row.nombre ?? '',
-    direccion: row.direccion ?? '',
-    ciudad: row.ciudad ?? '',
-  };
-}
-
 function validateSede(values) {
   const errors = {};
   enforceRequired(errors, values, 'idEmpresa', 'id empresa');

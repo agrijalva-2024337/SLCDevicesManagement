@@ -4,22 +4,6 @@ import { TextareaField } from '@/shared/components/TextareaField';
 import { useForm } from '@/shared/hooks/useForm';
 import { enforceMaxLength, enforceRequired, requiredError } from '@/shared/utils/fieldErrors';
 
-export const EMPTY_UBICACION = {
-  nombre: '',
-  descripcion: '',
-  latitud: '',
-  longitud: '',
-};
-
-export function toUbicacionFormValues(row) {
-  return {
-    nombre: row.nombre ?? '',
-    descripcion: row.descripcion ?? '',
-    latitud: row.latitud ?? '',
-    longitud: row.longitud ?? '',
-  };
-}
-
 function enforceRequiredDecimal(errors, values, field, fieldLabel) {
   const value = values[field];
   if (value === '' || value == null || Number.isNaN(Number(value))) {

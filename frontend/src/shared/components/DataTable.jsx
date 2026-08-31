@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { FeedbackState } from '@/shared/components/FeedbackState';
 
 function isSortable(column) {
@@ -89,10 +89,6 @@ export function DataTable({
   const currentPage = Math.min(page, pageCount);
   const pageRows = processedRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  useEffect(() => {
-    setPage(1);
-  }, [query, rows, pageSize]);
-
   function handleSort(column) {
     if (!isSortable(column)) {
       return;
@@ -129,7 +125,10 @@ export function DataTable({
           id={searchId}
           type="search"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setPage(1);
+          }}
           placeholder={searchPlaceholder}
           className="w-full max-w-sm rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
         />

@@ -3,22 +3,6 @@ import { TextField } from '@/shared/components/TextField';
 import { useForm } from '@/shared/hooks/useForm';
 import { enforceMaxLength, enforceRequired } from '@/shared/utils/fieldErrors';
 
-export const EMPTY_EMPRESA = {
-  nombre: '',
-  nitCodigo: '',
-  direccion: '',
-  telefono: '',
-};
-
-export function toEmpresaFormValues(row) {
-  return {
-    nombre: row.nombre ?? '',
-    nitCodigo: row.nitCodigo ?? '',
-    direccion: row.direccion ?? '',
-    telefono: row.telefono ?? '',
-  };
-}
-
 function validateEmpresa(values) {
   const errors = {};
   enforceRequired(errors, values, 'nombre', 'nombre');

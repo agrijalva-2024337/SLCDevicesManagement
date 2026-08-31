@@ -10,12 +10,20 @@ import { Modal } from '@/shared/components/Modal';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
-import {
-  CategoriaForm,
-  EMPTY_CATEGORIA,
-  toCategoriaFormValues,
-} from '@/features/catalogos/categorias/CategoriaForm';
+import { CategoriaForm } from '@/features/catalogos/categorias/CategoriaForm';
 import * as categoriaService from '@/features/catalogos/categorias/categoriaService';
+
+const EMPTY_CATEGORIA = {
+  nombre: '',
+  descripcion: '',
+};
+
+function toCategoriaFormValues(row) {
+  return {
+    nombre: row.nombre ?? '',
+    descripcion: row.descripcion ?? '',
+  };
+}
 
 export function CategoriasPage() {
   const { visibleRows, isLoading, errorMessage, filter, setFilter, banner, setBanner, reload } =

@@ -23,8 +23,31 @@ export function useCatalogCollection(loadFn) {
   }, [loadFn]);
 
   useEffect(() => {
-    reload();
-  }, [reload]);
+    let cancelled = false;
+
+    async function run() {
+      try {
+        const data = await loadFn();
+
+        if (!cancelled) {
+          setRows(data);
+          setErrorMessage(null);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setErrorMessage(getErrorMessage(error));
+          setIsLoading(false);
+        }
+      }
+    }
+
+    run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadFn]);
 
   useEffect(() => {
     if (!banner) {

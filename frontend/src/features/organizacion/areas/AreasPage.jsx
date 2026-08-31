@@ -10,9 +10,23 @@ import { Modal } from '@/shared/components/Modal';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
-import { AreaForm, EMPTY_AREA, toAreaFormValues } from '@/features/organizacion/areas/AreaForm';
+import { AreaForm } from '@/features/organizacion/areas/AreaForm';
 import * as areaService from '@/features/organizacion/areas/areaService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
+
+const EMPTY_AREA = {
+  idSede: '',
+  nombre: '',
+  descripcion: '',
+};
+
+function toAreaFormValues(row) {
+  return {
+    idSede: row.idSede ?? '',
+    nombre: row.nombre ?? '',
+    descripcion: row.descripcion ?? '',
+  };
+}
 
 export function AreasPage() {
   const { visibleRows, isLoading, errorMessage, filter, setFilter, banner, setBanner, reload } =

@@ -5,20 +5,6 @@ import { TextareaField } from '@/shared/components/TextareaField';
 import { useForm } from '@/shared/hooks/useForm';
 import { enforceMaxLength, enforceRequired } from '@/shared/utils/fieldErrors';
 
-export const EMPTY_AREA = {
-  idSede: '',
-  nombre: '',
-  descripcion: '',
-};
-
-export function toAreaFormValues(row) {
-  return {
-    idSede: row.idSede ?? '',
-    nombre: row.nombre ?? '',
-    descripcion: row.descripcion ?? '',
-  };
-}
-
 function validateArea(values) {
   const errors = {};
   enforceRequired(errors, values, 'idSede', 'id sede');

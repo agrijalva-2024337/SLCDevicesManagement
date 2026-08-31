@@ -4,18 +4,6 @@ import { TextareaField } from '@/shared/components/TextareaField';
 import { useForm } from '@/shared/hooks/useForm';
 import { enforceMaxLength, enforceRequired } from '@/shared/utils/fieldErrors';
 
-export const EMPTY_CATEGORIA = {
-  nombre: '',
-  descripcion: '',
-};
-
-export function toCategoriaFormValues(row) {
-  return {
-    nombre: row.nombre ?? '',
-    descripcion: row.descripcion ?? '',
-  };
-}
-
 function validateCategoria(values) {
   const errors = {};
   enforceRequired(errors, values, 'nombre', 'nombre');

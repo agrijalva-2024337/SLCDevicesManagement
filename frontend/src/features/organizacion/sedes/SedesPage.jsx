@@ -12,8 +12,26 @@ import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 import * as paisService from '@/features/catalogos/paises/paisService';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
-import { EMPTY_SEDE, SedeForm, toSedeFormValues } from '@/features/organizacion/sedes/SedeForm';
+import { SedeForm } from '@/features/organizacion/sedes/SedeForm';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
+
+const EMPTY_SEDE = {
+  idEmpresa: '',
+  idPais: '',
+  nombre: '',
+  direccion: '',
+  ciudad: '',
+};
+
+function toSedeFormValues(row) {
+  return {
+    idEmpresa: row.idEmpresa ?? '',
+    idPais: row.idPais ?? '',
+    nombre: row.nombre ?? '',
+    direccion: row.direccion ?? '',
+    ciudad: row.ciudad ?? '',
+  };
+}
 
 function toOptions(items) {
   return items

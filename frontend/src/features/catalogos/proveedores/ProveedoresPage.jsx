@@ -10,13 +10,29 @@ import { Modal } from '@/shared/components/Modal';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
-import {
-  EMPTY_PROVEEDOR,
-  ProveedorForm,
-  toProveedorFormValues,
-} from '@/features/catalogos/proveedores/ProveedorForm';
+import { ProveedorForm } from '@/features/catalogos/proveedores/ProveedorForm';
 import * as proveedorService from '@/features/catalogos/proveedores/proveedorService';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
+
+const EMPTY_PROVEEDOR = {
+  idEmpresa: '',
+  nombre: '',
+  nit: '',
+  nombreContacto: '',
+  telefono: '',
+  correo: '',
+};
+
+function toProveedorFormValues(row) {
+  return {
+    idEmpresa: row.idEmpresa ?? '',
+    nombre: row.nombre ?? '',
+    nit: row.nit ?? '',
+    nombreContacto: row.nombreContacto ?? '',
+    telefono: row.telefono ?? '',
+    correo: row.correo ?? '',
+  };
+}
 
 export function ProveedoresPage() {
   const { visibleRows, isLoading, errorMessage, filter, setFilter, banner, setBanner, reload } =
