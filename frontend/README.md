@@ -6,13 +6,13 @@ Stack: React 19 + Vite 8 (JavaScript) + Tailwind CSS 4 + Axios + React Router 7.
 
 ## Cómo levantar el proyecto
 
-Requisito: Node.js 20.19 o superior.
+Requisitos: Node.js 20.19 o superior y **pnpm**.
 
 ```bash
 cd frontend
 cp .env.example .env
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 La app queda en [http://localhost:5173](http://localhost:5173). Debes ver el shell (sidebar + topbar) y el dashboard con el estado del cliente HTTP (por defecto en modo mock).
@@ -21,12 +21,12 @@ Otros comandos:
 
 | Script                 | Qué hace                  |
 | ---------------------- | ------------------------- |
-| `npm run dev`          | Servidor de desarrollo    |
-| `npm run build`        | Build de producción       |
-| `npm run preview`      | Sirve el build localmente |
-| `npm run lint`         | ESLint                    |
-| `npm run format`       | Prettier (escribe)        |
-| `npm run format:check` | Prettier (solo verifica)  |
+| `pnpm dev`             | Servidor de desarrollo    |
+| `pnpm build`           | Build de producción       |
+| `pnpm preview`         | Sirve el build localmente |
+| `pnpm lint`            | ESLint                    |
+| `pnpm format`          | Prettier (escribe)        |
+| `pnpm format:check`    | Prettier (solo verifica)  |
 
 ## Variables de entorno
 
