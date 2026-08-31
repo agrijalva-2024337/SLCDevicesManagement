@@ -1,4 +1,5 @@
 import { env } from '@/shared/config/env';
+import { apiPaths } from '@/shared/api/paths';
 import httpClient from '@/shared/services/httpClient';
 
 const MOCK_DELAY_MS = 500;
@@ -20,7 +21,7 @@ export async function checkApiHealth() {
     };
   }
 
-  const response = await httpClient.get('/weatherforecast');
+  const response = await httpClient.get(apiPaths.health);
 
   return {
     ok: true,

@@ -1,4 +1,5 @@
 import { FormActions } from '@/shared/components/FormActions';
+import { SelectField } from '@/shared/components/SelectField';
 import { TextField } from '@/shared/components/TextField';
 import { TextareaField } from '@/shared/components/TextareaField';
 import { useForm } from '@/shared/hooks/useForm';
@@ -13,6 +14,7 @@ function enforceRequiredDecimal(errors, values, field, fieldLabel) {
 
 function validateUbicacion(values) {
   const errors = {};
+  enforceRequired(errors, values, 'idSede', 'id sede');
   enforceRequired(errors, values, 'nombre', 'nombre');
   enforceMaxLength(errors, values, 'nombre', 'nombre', 100);
   enforceMaxLength(errors, values, 'descripcion', 'descripcion', 200);
@@ -21,7 +23,7 @@ function validateUbicacion(values) {
   return errors;
 }
 
-export function UbicacionForm({ initialValues, onSubmit, onCancel, isSubmitting }) {
+export function UbicacionForm({ initialValues, sedeOptions, onSubmit, onCancel, isSubmitting }) {
   const { values, errors, touched, handleChange, handleBlur, handleSubmit } = useForm({
     initialValues,
     validate: validateUbicacion,
@@ -29,6 +31,16 @@ export function UbicacionForm({ initialValues, onSubmit, onCancel, isSubmitting 
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+      <SelectField
+        label="Sede"
+        name="idSede"
+        value={values.idSede}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        error={touched.idSede ? errors.idSede : undefined}
+        options={sedeOptions}
+        required
+      />
       <TextField
         label="Nombre"
         name="nombre"

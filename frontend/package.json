@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
+  "packageManager": "pnpm@11.22.0",
   "engines": {
     "node": ">=20.19.0"
   },

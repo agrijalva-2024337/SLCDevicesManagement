@@ -16,6 +16,6 @@ Ver la guía en [`frontend/README.md`](frontend/README.md).
 ```bash
 cd frontend
 cp .env.example .env
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```

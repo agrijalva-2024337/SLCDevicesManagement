@@ -1,8 +1,8 @@
-import { paises } from '@/features/catalogos/mocks/paises';
+import { usuarios } from '@/features/organizacion/mocks/usuarios';
 import { apiPaths } from '@/shared/api/paths';
 import { createMockCrudService } from '@/shared/services/createMockCrudService';
 
 export const { getAll, getById, create, update, remove } = createMockCrudService({
-  endpoint: apiPaths.paises,
-  seed: paises,
+  endpoint: apiPaths.usuarios,
+  seed: usuarios,
 });

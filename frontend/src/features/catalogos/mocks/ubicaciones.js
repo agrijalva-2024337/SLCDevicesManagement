@@ -1,6 +1,7 @@
 export const ubicaciones = [
   {
     id: 1,
+    idSede: 1,
     nombre: 'CD Zona 12 — andén 1',
     descripcion: 'Andén de entrada de mercadería en el centro de distribución.',
     latitud: 14.5842,
@@ -9,6 +10,7 @@ export const ubicaciones = [
   },
   {
     id: 2,
+    idSede: 3,
     nombre: 'Oficina Reforma — piso 5',
     descripcion: 'Área de TI y mesas de ayuda.',
     latitud: 14.605,
@@ -17,6 +19,7 @@ export const ubicaciones = [
   },
   {
     id: 3,
+    idSede: 2,
     nombre: 'Puerto Quetzal — patio A',
     descripcion: 'Patio de contenedores y activos de patio.',
     latitud: 13.9247,
@@ -25,6 +28,7 @@ export const ubicaciones = [
   },
   {
     id: 4,
+    idSede: 5,
     nombre: 'Mixco Norte — taller',
     descripcion: 'Taller de flota y montacargas.',
     latitud: 14.6333,
@@ -33,6 +37,7 @@ export const ubicaciones = [
   },
   {
     id: 5,
+    idSede: 6,
     nombre: 'Santa Catarina Pinula — cámara 2',
     descripcion: 'Cámara de frío para perecederos.',
     latitud: 14.5689,
@@ -41,6 +46,7 @@ export const ubicaciones = [
   },
   {
     id: 6,
+    idSede: 7,
     nombre: 'Flores — muelle',
     descripcion: 'Punto de despacho lacustre.',
     latitud: 16.9297,
@@ -49,6 +55,7 @@ export const ubicaciones = [
   },
   {
     id: 7,
+    idSede: 8,
     nombre: 'Santo Tomás de Castilla — recinto',
     descripcion: 'Zona aduanera y resguardo de activos importados.',
     latitud: 15.695,
@@ -57,6 +64,7 @@ export const ubicaciones = [
   },
   {
     id: 8,
+    idSede: 9,
     nombre: 'Villalobos — bodega 12',
     descripcion: 'Bodega de cadena de frío. Registro inactivo.',
     latitud: 14.5269,
@@ -65,6 +73,7 @@ export const ubicaciones = [
   },
   {
     id: 9,
+    idSede: 10,
     nombre: 'Panajachel — oficina lago',
     descripcion: 'Oficina operativa frente al lago de Atitlán.',
     latitud: 14.7419,
@@ -73,6 +82,7 @@ export const ubicaciones = [
   },
   {
     id: 10,
+    idSede: 1,
     nombre: 'Quetzaltenango — sucursal',
     descripcion: 'Punto de apoyo en el altiplano occidental.',
     latitud: 14.8347,
