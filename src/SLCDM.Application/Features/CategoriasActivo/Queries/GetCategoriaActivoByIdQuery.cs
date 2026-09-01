@@ -1,5 +1,5 @@
 using FluentValidation;
-using Maspter;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
@@ -13,7 +13,7 @@ public sealed class GetCategoriaActivoByIdQueryValidator : AbstractValidator<Get
 {
     public GetCategoriaActivoByIdQueryValidator()
     {
-        RuleFor(x => x.Id).Required("id categoria activo");
+        RuleFor(x => x.Id).RequiredId("id categoria activo");
     }
 }
 
@@ -25,21 +25,21 @@ public sealed class GetCategoriaActivoByIdQueryHandler : IQueryHandler<GetCatego
     public GetCategoriaActivoByIdQueryHandler(
         IApplicationDbContext db,
         IValidator<GetCategoriaActivoByIdQuery> validator)
-        {
-            _db = db;
-            _validator = validator;
-        }
+    {
+        _db = db;
+        _validator = validator;
+    }
 
-        public async Task<CategoriaActivoDto> Handle(
-            GetCategoriaActivoByIdQuery query,
-            CancellationToken cancellationToken = default)
-        {
-            await_validator.ValidateAndThrowAsync(query, cancellationToken);
+    public async Task<CategoriaActivoDto> HandleAsync(
+        GetCategoriaActivoByIdQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        await _validator.ValidateAndThrowAsync(query, cancellationToken);
 
-            var entity = await_db-CategoriasActivo.AsNoTracking()
-                .FirstOrDefaultAsync(c => c.Id == query.Id, cancellationToken);
-                ?? throw new NotFoundException("CategoriaActivo", query.Id);
+        var entity = await _db.CategoriasActivo.AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == query.Id, cancellationToken)
+            ?? throw new NotFoundException("CategoriaActivo", query.Id);
 
-            return entity.Adapt<CategoriaActivoDto>();
-        }
+        return entity.Adapt<CategoriaActivoDto>();
+    }
 }
