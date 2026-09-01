@@ -7,6 +7,6 @@ public sealed record HistorialActivoDto(
     DateTime FechaHora,
     string? TipoOperacion,
     string? Descripcion,
-    string? InformacionAnteriorm
+    string? InformacionAnterior,
     string? InformacionNueva
 );
