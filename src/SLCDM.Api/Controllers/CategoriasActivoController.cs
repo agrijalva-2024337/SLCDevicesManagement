@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using SLCDM.Application.Common.Security;
-using SLCDM.Application.Common.Security;
 using SLCDM.Application.Features.CategoriasActivo;
 using SLCDM.Application.Features.CategoriasActivo.Commands;
 using SLCDM.Application.Features.CategoriasActivo.Queries;
