@@ -1,8 +1,9 @@
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Interfaces;
+using SLCDM.Application.Features.CategoriasActivo;
 
-namespace SLCDM.Application.Features.CategoriasActivo.Queries;
+namespace SLCDM.Application.Features.CategoriasActivoB.Queries;
 
 public sealed record GetCategoriasActivoQuery(bool IncluirInhabilitados = false);
 
