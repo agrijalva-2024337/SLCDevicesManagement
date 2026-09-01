@@ -22,7 +22,7 @@ public sealed class CreateCategoriaActivoCommandValidator : AbstractValidator<Cr
             .WithMessage("Ya existe una categoria de activo con el mismo nombre.");
 
         RuleFor(x => x.Descripcion)
-            .MaximumLength(200).WithMessage("El campo descripción no puede tener más de 200 caracteres.");
+            .MaximumLength(200).WithMessage("El campo descripción no puede tener más de 200 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.Descripcion));
     }
 }
