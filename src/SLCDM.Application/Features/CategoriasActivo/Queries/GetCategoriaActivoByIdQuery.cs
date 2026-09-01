@@ -1,37 +1,45 @@
+using FluentValidation;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
-using SLCDM.Application.Features.CategoriasActivo;
+using SLCDM.Application.Common.Validation;
 
-namespace SLCDM.Application.Features.CategoriasActivoB.Queries;
+namespace SLCDM.Application.Features.CategoriasActivo.Queries;
 
-public sealed record GetCategoriasActivoQuery(bool IncluirInhabilitados = false);
+public sealed record GetCategoriaActivoByIdQuery(int Id);
 
-public sealed class GetCategoriasActivoQueryHandler
-    : IQueryHandler<GetCategoriasActivoQuery, IReadOnlyList<CategoriaActivoDto>>
+public sealed class GetCategoriaActivoByIdQueryValidator : AbstractValidator<GetCategoriaActivoByIdQuery>
+{
+    public GetCategoriaActivoByIdQueryValidator()
+    {
+        RuleFor(x => x.Id).RequiredId("id categoria activo");
+    }
+}
+
+public sealed class GetCategoriaActivoByIdQueryHandler : IQueryHandler<GetCategoriaActivoByIdQuery, CategoriaActivoDto>
 {
     private readonly IApplicationDbContext _db;
+    private readonly IValidator<GetCategoriaActivoByIdQuery> _validator;
 
-    public GetCategoriasActivoQueryHandler(IApplicationDbContext db)
+    public GetCategoriaActivoByIdQueryHandler(
+        IApplicationDbContext db,
+        IValidator<GetCategoriaActivoByIdQuery> validator)
     {
         _db = db;
+        _validator = validator;
     }
 
-    public async Task<IReadOnlyList<CategoriaActivoDto>> HandleAsync(
-        GetCategoriasActivoQuery query,
+    public async Task<CategoriaActivoDto> HandleAsync(
+        GetCategoriaActivoByIdQuery query,
         CancellationToken cancellationToken = default)
     {
-        var itemsQuery = _db.CategoriasActivo.AsNoTracking();
+        await _validator.ValidateAndThrowAsync(query, cancellationToken);
 
-        if (!query.IncluirInhabilitados)
-        {
-            itemsQuery = itemsQuery.Where(c => c.Habilitado);
-        }
+        var entity = await _db.CategoriasActivo.AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == query.Id, cancellationToken)
+            ?? throw new NotFoundException("CategoriaActivo", query.Id);
 
-        var items = await itemsQuery
-            .OrderBy(c => c.Nombre)
-            .ToListAsync(cancellationToken);
-
-        return items.Adapt<List<CategoriaActivoDto>>();
+        return entity.Adapt<CategoriaActivoDto>();
     }
 }
