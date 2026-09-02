@@ -34,7 +34,15 @@ export const router = createBrowserRouter([
       { index: true, ...named(loadHome, 'HomePage') },
       { path: 'catalogos/empresas', ...named(loadEmpresas, 'EmpresasPage') },
       { path: 'catalogos/sedes', ...named(loadSedes, 'SedesPage') },
-      { path: 'catalogos/:slug', ...named(loadCatalogo, 'CatalogoPage') },
+      {
+        path: 'catalogos/:slug',
+        ...named(loadCatalogo, 'CatalogoPage'),
+        children: [
+          { path: 'nueva', ...named(loadCatalogo, 'MaestroFormPage') },
+          { path: ':id/editar', ...named(loadCatalogo, 'MaestroFormPage') },
+          { path: ':id', ...named(loadCatalogo, 'MaestroDetallePage') },
+        ],
+      },
     ],
   },
   {
