@@ -32,8 +32,24 @@ export const router = createBrowserRouter([
     ...named(loadAppLayout, 'AppLayout'),
     children: [
       { index: true, ...named(loadHome, 'HomePage') },
-      { path: 'catalogos/empresas', ...named(loadEmpresas, 'EmpresasPage') },
-      { path: 'catalogos/sedes', ...named(loadSedes, 'SedesPage') },
+      {
+        path: 'catalogos/empresas',
+        ...named(loadEmpresas, 'EmpresasPage'),
+        children: [
+          { path: 'nueva', ...named(loadEmpresas, 'EmpresaFormPage') },
+          { path: ':id/editar', ...named(loadEmpresas, 'EmpresaFormPage') },
+          { path: ':id', ...named(loadEmpresas, 'EmpresaDetallePage') },
+        ],
+      },
+      {
+        path: 'catalogos/sedes',
+        ...named(loadSedes, 'SedesPage'),
+        children: [
+          { path: 'nueva', ...named(loadSedes, 'SedeFormPage') },
+          { path: ':id/editar', ...named(loadSedes, 'SedeFormPage') },
+          { path: ':id', ...named(loadSedes, 'SedeDetallePage') },
+        ],
+      },
       {
         path: 'catalogos/:slug',
         ...named(loadCatalogo, 'CatalogoPage'),
