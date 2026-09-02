@@ -10,7 +10,7 @@ function named(importer, exportName) {
 }
 
 const loadHome = () => import('@/app/pages/HomePage');
-const loadLogin = () => import('@/app/pages/LoginPlaceholder');
+const loadLogin = () => import('@/features/auth/LoginPage');
 const loadNotFound = () => import('@/app/pages/NotFoundPage');
 const loadAppLayout = () => import('@/shared/layout/AppLayout');
 const loadEmpresas = () => import('@/features/organizacion/empresas/EmpresasPage');
@@ -27,7 +27,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/login',
-    ...named(loadLogin, 'LoginPlaceholder'),
+    ...named(loadLogin, 'LoginPage'),
   },
   {
     path: '/app',
