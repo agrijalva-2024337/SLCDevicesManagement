@@ -262,6 +262,16 @@
   box-shadow: 0 0 0 1px rgb(253 253 255 / 0.06) inset;
 }
 
+.app-nav-link.is-disabled {
+  cursor: not-allowed;
+  color: rgb(253 253 255 / 0.34);
+}
+
+.app-nav-link.is-disabled:hover {
+  background: transparent;
+  color: rgb(253 253 255 / 0.34);
+}
+
 .app-icon-btn {
   display: inline-flex;
   height: 2.5rem;
