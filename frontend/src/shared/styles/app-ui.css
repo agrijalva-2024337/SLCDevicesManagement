@@ -25,6 +25,22 @@
   padding-inline: var(--content-gutter);
 }
 
+.app-empresa-select {
+  min-width: 0;
+}
+
+.app-empresa-select .app-input {
+  max-width: 11rem;
+  padding-block: 0.35rem;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .app-empresa-select .app-input {
+    max-width: 16rem;
+  }
+}
+
 .app-sidebar-backdrop {
   display: none;
 }

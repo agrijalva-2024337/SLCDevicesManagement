@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import { getMaestro, nameById } from '@/features/catalogos/maestros';
+import { filterRowsByEmpresa, useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { PaisesGrid } from '@/features/catalogos/paises/PaisesGrid';
 import * as paisService from '@/features/catalogos/paises/paisService';
 import { UbicacionesMapPage } from '@/features/catalogos/ubicaciones/UbicacionesMapPage';
@@ -38,6 +39,7 @@ function CatalogBanner({ banner }) {
 export function CatalogoPage() {
   const { slug } = useParams();
   const { canWrite } = useAuth();
+  const { idActiva } = useEmpresaActiva();
   const allowWrite = canWrite(slug);
   const maestro = getMaestro(slug);
   const loadAll = maestro?.service.getAll ?? emptyList;
@@ -57,7 +59,11 @@ export function CatalogoPage() {
     [empresas.data, sedes.data, paises.data],
   );
 
-  const items = maestro?.hasHabilitado === false ? rows : visibleRows;
+  const catalogRows = maestro?.hasHabilitado === false ? rows : visibleRows;
+  const items = useMemo(
+    () => filterRowsByEmpresa(catalogRows, idActiva, { sedes: sedes.data }),
+    [catalogRows, idActiva, sedes.data],
+  );
   const outletContext = useMemo(
     () => ({ reload, rows, lookups }),
     [reload, rows, lookups],
