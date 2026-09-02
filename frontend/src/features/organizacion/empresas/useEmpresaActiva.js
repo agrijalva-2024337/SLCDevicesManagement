@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/features/auth/useAuth';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import { RolUsuario } from '@/shared/api/contracts';
@@ -97,7 +97,7 @@ export function EmpresaActivaProvider({ children }) {
     [empresas, idActiva, isAdminGeneral, isLoading, selectEmpresa],
   );
 
-  return <EmpresaActivaContext.Provider value={value}>{children}</EmpresaActivaContext.Provider>;
+  return createElement(EmpresaActivaContext.Provider, { value }, children);
 }
 
 export function useEmpresaActiva() {

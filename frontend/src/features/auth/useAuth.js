@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { decodeJwt, isJwtExpired } from '@/features/auth/decodeJwt';
 import * as authService from '@/features/auth/authService';
 import { AuthClaimTypes, RolUsuario, rolFromClaim } from '@/shared/api/contracts';
@@ -155,7 +155,7 @@ function useAuthState() {
 
 export function AuthProvider({ children }) {
   const value = useAuthState();
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return createElement(AuthContext.Provider, { value }, children);
 }
 
 export function useAuth() {
