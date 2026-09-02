@@ -1,32 +1,28 @@
 /**
- * Rutas REST que el frontend va a consumir.
- *
- * Todavía no hay controllers (eso es el siguiente sprint). Los paths siguen
- * la convención `/api/{recurso}` en camelCase JSON, alineada al Domain y a
- * lo que ya usaban los catálogos de FE-03. Cuando BE-07 / BE-08 / BE-09
- * publiquen DTOs y endpoints, se ajusta solo este archivo.
+ * Rutas REST alineadas a los controllers de SLCDM.Api
+ * (`[Route("api/[controller]")]` y rutas explícitas de Auth/Health).
  */
 export const apiPaths = {
-  health: '/weatherforecast',
+  health: '/api/health',
   auth: {
     login: '/api/auth/login',
-    me: '/api/auth/me',
+    me: '/api/auth/profile',
   },
-  paises: '/api/paises',
-  empresas: '/api/empresas',
-  sedes: '/api/sedes',
-  areas: '/api/areas',
-  usuarios: '/api/usuarios',
-  responsables: '/api/responsables',
-  bitacoras: '/api/bitacoras',
-  estados: '/api/estados',
-  tiposAsignacion: '/api/tipos-asignacion',
-  categoriasActivo: '/api/categorias',
-  proveedores: '/api/proveedores',
-  ubicaciones: '/api/ubicaciones',
-  activos: '/api/activos',
-  asignaciones: '/api/asignaciones',
-  historicosInventario: '/api/historicos-inventario',
-  detallesActivo: '/api/detalles-activo',
-  historialActivos: '/api/historial-activos',
+  paises: '/api/Paises',
+  empresas: '/api/Empresas',
+  sedes: '/api/Sedes',
+  areas: '/api/Areas',
+  usuarios: '/api/Usuarios',
+  responsables: '/api/Responsables',
+  bitacoras: '/api/Bitacoras',
+  estados: '/api/Estados',
+  tiposAsignacion: '/api/TiposAsignacion',
+  categoriasActivo: '/api/CategoriasActivo',
+  proveedores: '/api/Proveedores',
+  ubicaciones: '/api/Ubicaciones',
+  activos: '/api/Activos',
+  asignaciones: '/api/Asignaciones',
+  historicosInventario: '/api/HistoricosInventario',
+  detallesActivo: '/api/DetallesActivos',
+  historialActivos: '/api/HistorialActivos',
 };
