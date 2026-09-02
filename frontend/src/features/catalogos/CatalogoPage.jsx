@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
 import { getMaestro, nameById } from '@/features/catalogos/maestros';
+import { PaisesGrid } from '@/features/catalogos/paises/PaisesGrid';
 import * as paisService from '@/features/catalogos/paises/paisService';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
@@ -74,6 +75,16 @@ export function CatalogoPage() {
         <div className="app-feedback app-feedback--error" role="alert">
           {errorMessage}
         </div>
+      </section>
+    );
+  }
+
+  if (slug === 'paises') {
+    return (
+      <section>
+        <CatalogBanner banner={banner} />
+        <PaisesGrid items={items} loading={isLoading} />
+        <OverlayOutlet context={outletContext} />
       </section>
     );
   }
