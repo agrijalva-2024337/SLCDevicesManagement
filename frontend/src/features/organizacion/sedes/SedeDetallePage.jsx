@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useOutletContext, useParams } from 'react-router';
+import { useAuth } from '@/features/auth/useAuth';
 import * as paisService from '@/features/catalogos/paises/paisService';
 import * as areaService from '@/features/organizacion/areas/areaService';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
@@ -12,6 +13,7 @@ import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 
 export function SedeDetallePage() {
   const { id } = useParams();
+  const { canWrite } = useAuth();
   const navigate = useNavigate();
   const outlet = useOutletContext() ?? {};
   const close = () => navigate('/app/catalogos/sedes');
@@ -113,9 +115,11 @@ export function SedeDetallePage() {
         ) : null}
       </div>
 
-      <div className="flex flex-wrap gap-3">
-        <EditRecordButton to={`/app/catalogos/sedes/${sede.id}/editar`} />
-      </div>
+      {canWrite('sedes') ? (
+        <div className="flex flex-wrap gap-3">
+          <EditRecordButton to={`/app/catalogos/sedes/${sede.id}/editar`} />
+        </div>
+      ) : null}
 
       <section>
         <h3 className="font-display text-xl font-bold text-navy">Áreas</h3>

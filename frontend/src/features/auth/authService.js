@@ -18,38 +18,59 @@ function wait(ms) {
   });
 }
 
-function persistSession(session) {
-  setAccessToken(session.accessToken);
-  setSessionUser(session.usuario);
-  return session;
+export function mapAuthenticatedUser(details) {
+  if (!details) {
+    return null;
+  }
+
+  return {
+    id: details.id,
+    idEmpresa: details.idEmpresa ?? null,
+    nombres: details.nombre ?? details.nombres ?? '',
+    correo: details.email ?? details.correo ?? '',
+    username: details.username,
+    rol: details.rol,
+    role: details.role,
+    habilitado: details.habilitado !== false,
+  };
 }
 
-export async function login({ correo, clave }) {
+function persistSession({ token, expiresAt, usuario }) {
+  setAccessToken(token);
+  setSessionUser(usuario);
+  return { token, expiresAt, usuario };
+}
+
+export async function login(credentials) {
+  const emailOrUsername = String(credentials.emailOrUsername ?? credentials.correo ?? '').trim();
+  const password = String(credentials.password ?? credentials.clave ?? '');
+
   if (env.useApiMock) {
     await wait(MOCK_DELAY_MS);
     const usuario = usuariosSesion.find(
-      (item) =>
-        item.correo.toLowerCase() ===
-        String(correo ?? '')
-          .trim()
-          .toLowerCase(),
+      (item) => item.correo.toLowerCase() === emailOrUsername.toLowerCase(),
     );
 
-    if (!usuario || clave !== DEMO_PASSWORD || !usuario.habilitado) {
+    if (!usuario || password !== DEMO_PASSWORD || !usuario.habilitado) {
       const error = new Error('Correo o contraseña incorrectos.');
       error.status = 401;
       throw error;
     }
 
     return persistSession({
-      accessToken: `mock-jwt-${usuario.id}`,
-      expiresIn: 3600,
+      token: `mock-jwt-${usuario.id}`,
+      expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
       usuario,
     });
   }
 
-  const response = await httpClient.post(apiPaths.auth.login, { correo, clave });
-  return persistSession(response.data);
+  const response = await httpClient.post(apiPaths.auth.login, { emailOrUsername, password });
+  const data = response.data;
+  return persistSession({
+    token: data.token,
+    expiresAt: data.expiresAt,
+    usuario: mapAuthenticatedUser(data.userDetails),
+  });
 }
 
 export async function getMe() {
@@ -67,8 +88,9 @@ export async function getMe() {
   }
 
   const response = await httpClient.get(apiPaths.auth.me);
-  setSessionUser(response.data);
-  return response.data;
+  const usuario = mapAuthenticatedUser(response.data);
+  setSessionUser(usuario);
+  return usuario;
 }
 
 export function logout() {

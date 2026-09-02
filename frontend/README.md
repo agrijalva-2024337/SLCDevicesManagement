@@ -21,7 +21,7 @@ pnpm install
 pnpm dev
 ```
 
-La app queda en [http://localhost:5173](http://localhost:5173). `/` es la landing pública, `/login` la pantalla de sesión (solo UI) y `/app` el panel con sidebar, topbar y dashboard.
+La app queda en [http://localhost:5173](http://localhost:5173). `/` es la landing pública, `/login` inicia sesión contra la API (o el mock) y `/app` es el panel protegido.
 
 Otros comandos:
 
@@ -60,32 +60,58 @@ Copiar `.env.example` a `.env`. Nunca hardcodear la URL de la API.
 | Variable            | Descripción                                                                |
 | ------------------- | -------------------------------------------------------------------------- |
 | `VITE_API_URL`      | Base URL de la API .NET (`http://localhost:5139` en el perfil HTTP)        |
-| `VITE_USE_API_MOCK` | `true` (catálogos y health en memoria). `false` para pegarle a la API real |
+| `VITE_USE_API_MOCK` | `true` (catálogos, login y health en memoria). `false` para pegarle a `SLCDM.Api` |
 
 ### Mocks vs API real
 
-Los siete catálogos (empresas, sedes, áreas, categorías, proveedores, ubicaciones, países) corren contra datos de prueba **en memoria** mientras `VITE_USE_API_MOCK=true`. Las rutas viven en `src/shared/api/paths.js`. Cada `*Service.js` ya tiene la rama HTTP escrita.
+En local el frontend apunta a la API real: creá `.env` con `VITE_USE_API_MOCK=false` (ese archivo no se commitea). `.env.example` se queda en `true` para quien no tenga el backend.
 
-Cuando se integre la API real (Prompt 3 / FE-05):
+Para volver al mock:
 
-1. Poné `VITE_USE_API_MOCK=false` en `.env`.
-2. Ajustá `src/shared/api/paths.js` si las rutas reales difieren.
-3. Ajustá `src/shared/api/contracts.js` cuando salgan los DTOs.
-4. No hace falta reescribir las pantallas: el componente no sabe si la respuesta vino del mock o de Axios.
+```bash
+# en frontend/.env
+VITE_USE_API_MOCK=true
+```
+
+Reiniciá `pnpm dev`. Login mock: cualquier usuario de `src/features/auth/mocks/usuariosSesion.js` con clave `Practica2026`.
+
+Con mock en `false`, login, health y los siete catálogos van por Axios. Paths en `src/shared/api/paths.js` (nombres de controller, no kebab-case). `GET` de catálogos manda `incluirInhabilitados=true`. Inactivar empresas/sedes/áreas/categorías/proveedores/ubicaciones es `POST {id}/disable`; países usan `DELETE`. Create responde `{ id }`; update/disable 204.
 
 Los cambios de crear/editar/inactivar **no se persisten al recargar** en modo mock.
 
-`healthService` con mock en `false` sigue llamando a `GET /weatherforecast` hasta que exista un health real.
+`healthService` llama `GET /api/health` → `{ status, timestamp, service }`.
+
+### Perfiles
+
+El JWT trae `role` y `id_empresa`. `RutaProtegida` exige token en `/app`. Sin escritura se ocultan `RegisterButton`, acciones de fila y overlays.
+
+| Perfil | Lectura | Escritura en UI |
+| --- | --- | --- |
+| Consulta | Catálogos | Ninguna |
+| Operador de inventario | Catálogos | Ubicaciones |
+| Administrador de empresa | Catálogos de su empresa | Sedes, áreas, categorías, proveedores; editar/inactivar empresa |
+| Administrador general | Todo | Lo anterior + crear empresa + países |
+
+### Empresa activa
+
+No hay header ni query global de empresa. El selector del topbar es **solo UI**: Admin general filtra filas en el cliente y guarda `slcdm_empresa_activa` en `localStorage`. El resto ve su empresa del token (combo deshabilitado).
+
+### Huecos del backend (no se parchean en FE)
+
+- `ProveedorDto.Corre` (typo) → JSON `corre`. El servicio mapea `corre` ↔ `correo`; la UI sigue diciendo correo.
+- Create de ubicación exige `latitud`/`longitud` no nulos. El form puede mandar `null` y la API responde 400. No se inventan `0,0`.
+- No hay contrato de “empresa activa” para Admin general.
+- Al implementar FE-05, `dotnet run` en `src/SLCDM.Api` falló por `DetalleActivoMappingConfig.cs` (`Commands` no encontrado). Confirmar Swagger en `http://localhost:5139/swagger` cuando compile.
 
 ## Rutas
 
-Definidas en `src/app/routes.jsx` con `createBrowserRouter` + lazy. `App.jsx` solo monta `RouterProvider`.
+Definidas en `src/app/routes.jsx` con `createBrowserRouter` + lazy. `App.jsx` monta `AuthProvider` y `RouterProvider`. `/app` pasa por `RutaProtegida`; `nueva` / `:id/editar` por `RutaEscritura`.
 
 | Ruta | Página | Estado |
 | --- | --- | --- |
 | `/` | Landing pública | Activa |
-| `/login` | Inicio de sesión (solo UI; auth real es FE-05) | Activa |
-| `/app` | Dashboard (`HomePage`) | Activa |
+| `/login` | Inicio de sesión (JWT real o mock) | Activa |
+| `/app` | Dashboard (`HomePage`), envuelto en `RutaProtegida` | Activa |
 | `/app/catalogos/empresas` | Empresas + overlays `nueva` / `:id` / `:id/editar` | Activa |
 | `/app/catalogos/sedes` | Sedes + overlays `nueva` / `:id` / `:id/editar` | Activa |
 | `/app/catalogos/:slug` | Áreas, categorías, proveedores, ubicaciones, países | Activa |
@@ -108,7 +134,7 @@ frontend/src/
     pages/NotFoundPage.jsx
   features/
     landing/           LandingPage, sections, data estáticos, landing.css
-    auth/              LoginPage (UI), authService.js, useAuth.js
+    auth/              LoginPage, authService, useAuth, RutaProtegida, decodeJwt
     organizacion/      empresas, sedes, areas (servicios + detalle/form de empresa y sede)
     catalogos/         maestros.js, CatalogoPage, categorias, proveedores, ubicaciones, paises
     activos/ asignaciones/ inventario/
@@ -128,15 +154,15 @@ frontend/src/
 
 Los componentes no llaman a Axios directo: pasan por servicios.
 
-Los campos de cada catálogo coinciden con `SLCDM.Domain` (camelCase): `id`, `habilitado` y los propios de la entidad. Proveedor usa `correo`, no `email`. País no tiene `habilitado`. **Ubicación** lleva `idSede`.
+Los campos de cada catálogo coinciden con los DTOs de Application (camelCase): `id`, `habilitado` y los propios de la entidad. Proveedor en UI usa `correo`; el JSON real trae `corre` (typo de backend). País no tiene `habilitado`. **Ubicación** lleva `idSede`.
 
 ## Capa de servicios (FE-04)
 
 | Servicio                          | API                                   | Notas                                                                              |
 | --------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------- |
 | Catálogos ya con pantalla         | `getAll/getById/create/update/remove` | Soft delete con `habilitado`                                                       |
-| `authService`                     | `login`, `getMe`, `logout`            | Mock: clave `Practica2026`. `LoginPage` todavía no los llama                       |
-| `useAuth`                         | sesión en memoria + `tokenStorage`    | Listo para FE-05                                                                   |
+| `authService`                     | `login`, `getMe`, `logout`            | Real: `{ emailOrUsername, password }` → `token` + `userDetails`. Mock: `Practica2026` |
+| `useAuth`                         | JWT (`role`, `id_empresa`) + sesión   | Expone `rol`, `idEmpresa`, `canWrite`                                              |
 | Bitácora / historial de activo    | `getAll`, `getById`                   | Solo lectura                                                                       |
 | Activos, asignaciones, inventario | CRUD mock                             | Sin pantallas en este sprint                                                       |
 

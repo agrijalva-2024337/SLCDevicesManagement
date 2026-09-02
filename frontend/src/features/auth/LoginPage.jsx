@@ -1,17 +1,58 @@
 import { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
+import { useAuth } from '@/features/auth/useAuth';
 import { AtmosphereBackdrop } from '@/features/landing/components/AtmosphereBackdrop';
 import { TypeLine } from '@/features/landing/components/TypeLine';
+import { getValidationErrors } from '@/shared/api/errors';
+import { enforceRequired } from '@/shared/utils/fieldErrors';
+import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 import '@/features/landing/landing.css';
 
 export function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
   const [correo, setCorreo] = useState('');
   const [clave, setClave] = useState('');
   const [mostrarClave, setMostrarClave] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [formError, setFormError] = useState(null);
+  const [saving, setSaving] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    // [API] POST de autenticación; validar token y perfil en <RutaProtegida>
+    if (saving) {
+      return;
+    }
+
+    const nextErrors = {};
+    enforceRequired(nextErrors, { correo, clave }, 'correo', 'correo o usuario');
+    enforceRequired(nextErrors, { correo, clave }, 'clave', 'contraseña');
+    setFieldErrors(nextErrors);
+    setFormError(null);
+
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      await login({ emailOrUsername: correo, password: clave });
+      const from = location.state?.from;
+      navigate(typeof from === 'string' && from.startsWith('/') ? from : '/app', { replace: true });
+    } catch (error) {
+      const apiFields = getValidationErrors(error);
+      if (Object.keys(apiFields).length > 0) {
+        setFieldErrors({
+          correo: apiFields.emailOrUsername ?? apiFields.correo,
+          clave: apiFields.password ?? apiFields.clave,
+        });
+      }
+      setFormError(getErrorMessage(error));
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -27,19 +68,29 @@ export function LoginPage() {
           Acceso al inventario de activos de Sistemas Logísticos y Corporativos, S.A.
         </p>
 
-        <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+        {formError ? (
+          <div className="app-feedback app-feedback--error mt-6" role="alert">
+            {formError}
+          </div>
+        ) : null}
+
+        <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
           <div>
             <label htmlFor="correo" className="app-label">
-              Correo institucional
+              Correo o usuario
             </label>
             <input
               id="correo"
-              type="email"
+              type="text"
               autoComplete="username"
               value={correo}
-              onChange={(event) => setCorreo(event.target.value)}
-              className="app-input"
+              onChange={(event) => {
+                setCorreo(event.target.value);
+                setFieldErrors((current) => ({ ...current, correo: undefined }));
+              }}
+              className={fieldErrors.correo ? 'app-input app-input--error' : 'app-input'}
             />
+            {fieldErrors.correo ? <p className="app-field-error">{fieldErrors.correo}</p> : null}
           </div>
 
           <div>
@@ -52,8 +103,11 @@ export function LoginPage() {
                 type={mostrarClave ? 'text' : 'password'}
                 autoComplete="current-password"
                 value={clave}
-                onChange={(event) => setClave(event.target.value)}
-                className="app-input"
+                onChange={(event) => {
+                  setClave(event.target.value);
+                  setFieldErrors((current) => ({ ...current, clave: undefined }));
+                }}
+                className={fieldErrors.clave ? 'app-input app-input--error' : 'app-input'}
               />
               <button
                 type="button"
@@ -65,10 +119,15 @@ export function LoginPage() {
                 <i className={mostrarClave ? 'pi pi-eye-slash' : 'pi pi-eye'} aria-hidden="true" />
               </button>
             </div>
+            {fieldErrors.clave ? <p className="app-field-error">{fieldErrors.clave}</p> : null}
           </div>
 
-          <button type="submit" className="app-btn app-btn--primary w-full landing-auth-submit">
-            Iniciar sesión
+          <button
+            type="submit"
+            className="app-btn app-btn--primary w-full landing-auth-submit"
+            disabled={saving}
+          >
+            {saving ? 'Ingresando…' : 'Iniciar sesión'}
           </button>
         </form>
 

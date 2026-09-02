@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router';
+import { useAuth } from '@/features/auth/useAuth';
 import { getMaestro } from '@/features/catalogos/maestros';
 import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
 import { EditRecordButton } from '@/shared/components/RecordActions';
@@ -9,6 +10,7 @@ import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 
 export function MaestroDetallePage() {
   const { slug, id } = useParams();
+  const { canWrite } = useAuth();
   const navigate = useNavigate();
   const outlet = useOutletContext() ?? {};
   const maestro = getMaestro(slug);
@@ -95,9 +97,11 @@ export function MaestroDetallePage() {
           <DetailField label="Última modificación" value={formatDate(item.fechaModificacion)} />
         ) : null}
       </div>
-      <div className="flex flex-wrap gap-3">
-        <EditRecordButton to={`/app/catalogos/${slug}/${item.id}/editar`} />
-      </div>
+      {canWrite(slug) ? (
+        <div className="flex flex-wrap gap-3">
+          <EditRecordButton to={`/app/catalogos/${slug}/${item.id}/editar`} />
+        </div>
+      ) : null}
     </DetailOverlay>
   );
 }

@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
+import { useAuth } from '@/features/auth/useAuth';
 import { nameById } from '@/features/catalogos/maestros';
+import { filterRowsByEmpresa, useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import { DataTable } from '@/shared/components/DataTable';
@@ -26,8 +28,15 @@ function CatalogBanner({ banner }) {
 }
 
 export function SedesPage() {
+  const { canWrite } = useAuth();
+  const { idActiva } = useEmpresaActiva();
+  const allowWrite = canWrite('sedes');
   const { rows, visibleRows, isLoading, errorMessage, banner, reload } =
     useCatalogCollection(sedeService.getAll);
+  const scopedRows = useMemo(
+    () => filterRowsByEmpresa(visibleRows, idActiva),
+    [visibleRows, idActiva],
+  );
   const empresas = useResource(empresaService.getAll);
   const empresaNombres = useMemo(() => nameById(empresas.data), [empresas.data]);
   const outletContext = useMemo(() => ({ reload, rows }), [reload, rows]);
@@ -62,9 +71,9 @@ export function SedesPage() {
       <DataTable
         title="Sedes"
         description="Instalaciones físicas de cada empresa."
-        primaryAction={<RegisterButton to="nueva" label="Registrar sede" />}
+        primaryAction={allowWrite ? <RegisterButton to="nueva" label="Registrar sede" /> : null}
         columns={columns}
-        rows={visibleRows}
+        rows={scopedRows}
         loading={isLoading}
         searchPlaceholder="Buscar por nombre, empresa o dirección"
         statusFilter={{ key: 'habilitado' }}
@@ -72,7 +81,7 @@ export function SedesPage() {
         emptyDescription="Registre la primera sede para vincularla a una empresa."
         getRowActions={(sede) => ({
           view: { to: `${sede.id}` },
-          edit: { to: `${sede.id}/editar` },
+          edit: allowWrite ? { to: `${sede.id}/editar` } : undefined,
         })}
       />
       <OverlayOutlet context={outletContext} />

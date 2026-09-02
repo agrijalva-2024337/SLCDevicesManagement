@@ -45,11 +45,14 @@ Ubicaciones: `idSede` obligatorio. Lat/lng opcionales; si van, van las dos.
 
 `shared/geo/`: `parseCoordinates`, `geocodeAddress` (Nominatim), `useResolvedPositions`. Prioridad: coordenadas del DTO; geocode solo si faltan.
 
-## `// [API]`
+## Integración API (FE-05)
 
-Pendiente de backend (Prompt 3 / FE-05):
+`RecordFormOverlay` pinta `error.fieldErrors` del interceptor HTTP (400). Escritura según `useAuth().canWrite`. El selector de empresa del topbar filtra filas en cliente (Admin general).
 
-- Errores de campo del save → mapear con `fieldErrors.js` (`MaestroFormPage`, `EmpresaFormPage`, `SedeFormPage`).
+Huecos que siguen en backend:
+
 - `PaisDto` sin `habilitado`: no se puede inactivar un país.
 - `AreaDto` no expone `responsable`; la columna se agrega cuando exista el campo.
+- `ProveedorDto.Corre` → el servicio mapea a `correo`.
+- Create de ubicación exige coords no nulas; el form puede mandar `null`.
 - Geocoding Nominatim vs lat/lng que mande la API (`geocodeAddress.js`, `useResolvedPositions.js`).

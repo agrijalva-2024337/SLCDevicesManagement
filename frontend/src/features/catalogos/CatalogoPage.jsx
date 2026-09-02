@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
+import { useAuth } from '@/features/auth/useAuth';
 import { getMaestro, nameById } from '@/features/catalogos/maestros';
+import { filterRowsByEmpresa, useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { PaisesGrid } from '@/features/catalogos/paises/PaisesGrid';
 import * as paisService from '@/features/catalogos/paises/paisService';
 import { UbicacionesMapPage } from '@/features/catalogos/ubicaciones/UbicacionesMapPage';
@@ -36,6 +38,9 @@ function CatalogBanner({ banner }) {
 
 export function CatalogoPage() {
   const { slug } = useParams();
+  const { canWrite } = useAuth();
+  const { idActiva } = useEmpresaActiva();
+  const allowWrite = canWrite(slug);
   const maestro = getMaestro(slug);
   const loadAll = maestro?.service.getAll ?? emptyList;
   const { rows, visibleRows, isLoading, errorMessage, banner, reload } = useCatalogCollection(loadAll);
@@ -54,7 +59,11 @@ export function CatalogoPage() {
     [empresas.data, sedes.data, paises.data],
   );
 
-  const items = maestro?.hasHabilitado === false ? rows : visibleRows;
+  const catalogRows = maestro?.hasHabilitado === false ? rows : visibleRows;
+  const items = useMemo(
+    () => filterRowsByEmpresa(catalogRows, idActiva, { sedes: sedes.data }),
+    [catalogRows, idActiva, sedes.data],
+  );
   const outletContext = useMemo(
     () => ({ reload, rows, lookups }),
     [reload, rows, lookups],
@@ -107,7 +116,7 @@ export function CatalogoPage() {
         <DataTable
           title={maestro.title}
           description={maestro.description}
-          primaryAction={<RegisterButton to="nueva" label={maestro.registerLabel} />}
+          primaryAction={allowWrite ? <RegisterButton to="nueva" label={maestro.registerLabel} /> : null}
           columns={maestro.listView.columns(lookups)}
           rows={items}
           loading={isLoading}
@@ -117,7 +126,7 @@ export function CatalogoPage() {
           emptyDescription={maestro.listView.emptyDescription}
           getRowActions={(item) => ({
             view: { to: `${item.id}` },
-            edit: { to: `${item.id}/editar` },
+            edit: allowWrite ? { to: `${item.id}/editar` } : undefined,
           })}
         />
         <OverlayOutlet context={outletContext} />
@@ -131,7 +140,7 @@ export function CatalogoPage() {
       <PageHeader
         title={maestro.title}
         description={maestro.description}
-        actions={<RegisterButton to="nueva" label={maestro.registerLabel} />}
+        actions={allowWrite ? <RegisterButton to="nueva" label={maestro.registerLabel} /> : null}
       />
       {isLoading ? (
         <div className="app-feedback app-feedback--loading" role="status">
@@ -148,7 +157,12 @@ export function CatalogoPage() {
               facts={maestro.facts(item, lookups)}
               active={item.habilitado}
               showStatus={maestro.hasHabilitado !== false}
-              actions={<RecordActions viewTo={`${item.id}`} editTo={`${item.id}/editar`} />}
+              actions={
+                <RecordActions
+                  viewTo={`${item.id}`}
+                  editTo={allowWrite ? `${item.id}/editar` : undefined}
+                />
+              }
             />
           ))}
         </MagicBento>

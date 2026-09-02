@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
+import { useAuth } from '@/features/auth/useAuth';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
+import { filterRowsByEmpresa, useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { DataTable } from '@/shared/components/DataTable';
 import { OverlayOutlet } from '@/shared/components/OverlayOutlet';
 import { RegisterButton } from '@/shared/components/RecordActions';
@@ -31,8 +33,16 @@ function CatalogBanner({ banner }) {
 }
 
 export function EmpresasPage() {
+  const { canWrite } = useAuth();
+  const { idActiva } = useEmpresaActiva();
+  const allowCreate = canWrite('empresas-create');
+  const allowEdit = canWrite('empresas');
   const { rows, visibleRows, isLoading, errorMessage, banner, reload } =
     useCatalogCollection(empresaService.getAll);
+  const scopedRows = useMemo(
+    () => filterRowsByEmpresa(visibleRows, idActiva, { idField: 'id' }),
+    [visibleRows, idActiva],
+  );
   const outletContext = useMemo(() => ({ reload, rows }), [reload, rows]);
 
   if (errorMessage) {
@@ -51,9 +61,9 @@ export function EmpresasPage() {
       <DataTable
         title="Empresas"
         description="Registro corporativo."
-        primaryAction={<RegisterButton to="nueva" label="Registrar empresa" />}
+        primaryAction={allowCreate ? <RegisterButton to="nueva" label="Registrar empresa" /> : null}
         columns={columns}
-        rows={visibleRows}
+        rows={scopedRows}
         loading={isLoading}
         searchPlaceholder="Buscar por nombre, NIT, dirección o teléfono"
         statusFilter={{ key: 'habilitado' }}
@@ -61,7 +71,7 @@ export function EmpresasPage() {
         emptyDescription="Registre la primera empresa para comenzar."
         getRowActions={(empresa) => ({
           view: { to: `${empresa.id}` },
-          edit: { to: `${empresa.id}/editar` },
+          edit: allowEdit ? { to: `${empresa.id}/editar` } : undefined,
         })}
       />
       <OverlayOutlet context={outletContext} />

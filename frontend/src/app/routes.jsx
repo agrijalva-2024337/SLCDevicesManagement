@@ -13,10 +13,22 @@ const loadLanding = () => import('@/features/landing/LandingPage');
 const loadHome = () => import('@/app/pages/HomePage');
 const loadLogin = () => import('@/features/auth/LoginPage');
 const loadNotFound = () => import('@/app/pages/NotFoundPage');
+const loadGuard = () => import('@/features/auth/RutaProtegida');
 const loadAppLayout = () => import('@/shared/layout/AppLayout');
 const loadEmpresas = () => import('@/features/organizacion/empresas/EmpresasPage');
 const loadSedes = () => import('@/features/organizacion/sedes/SedesPage');
 const loadCatalogo = () => import('@/features/catalogos/CatalogoPage');
+
+const writeChildren = (loader, formExport, detailExport) => [
+  {
+    ...named(loadGuard, 'RutaEscritura'),
+    children: [
+      { path: 'nueva', ...named(loader, formExport) },
+      { path: ':id/editar', ...named(loader, formExport) },
+    ],
+  },
+  { path: ':id', ...named(loader, detailExport) },
+];
 
 export const router = createBrowserRouter([
   {
@@ -29,34 +41,27 @@ export const router = createBrowserRouter([
   },
   {
     path: '/app',
-    ...named(loadAppLayout, 'AppLayout'),
+    ...named(loadGuard, 'RutaProtegida'),
     children: [
-      { index: true, ...named(loadHome, 'HomePage') },
       {
-        path: 'catalogos/empresas',
-        ...named(loadEmpresas, 'EmpresasPage'),
+        ...named(loadAppLayout, 'AppLayout'),
         children: [
-          { path: 'nueva', ...named(loadEmpresas, 'EmpresaFormPage') },
-          { path: ':id/editar', ...named(loadEmpresas, 'EmpresaFormPage') },
-          { path: ':id', ...named(loadEmpresas, 'EmpresaDetallePage') },
-        ],
-      },
-      {
-        path: 'catalogos/sedes',
-        ...named(loadSedes, 'SedesPage'),
-        children: [
-          { path: 'nueva', ...named(loadSedes, 'SedeFormPage') },
-          { path: ':id/editar', ...named(loadSedes, 'SedeFormPage') },
-          { path: ':id', ...named(loadSedes, 'SedeDetallePage') },
-        ],
-      },
-      {
-        path: 'catalogos/:slug',
-        ...named(loadCatalogo, 'CatalogoPage'),
-        children: [
-          { path: 'nueva', ...named(loadCatalogo, 'MaestroFormPage') },
-          { path: ':id/editar', ...named(loadCatalogo, 'MaestroFormPage') },
-          { path: ':id', ...named(loadCatalogo, 'MaestroDetallePage') },
+          { index: true, ...named(loadHome, 'HomePage') },
+          {
+            path: 'catalogos/empresas',
+            ...named(loadEmpresas, 'EmpresasPage'),
+            children: writeChildren(loadEmpresas, 'EmpresaFormPage', 'EmpresaDetallePage'),
+          },
+          {
+            path: 'catalogos/sedes',
+            ...named(loadSedes, 'SedesPage'),
+            children: writeChildren(loadSedes, 'SedeFormPage', 'SedeDetallePage'),
+          },
+          {
+            path: 'catalogos/:slug',
+            ...named(loadCatalogo, 'CatalogoPage'),
+            children: writeChildren(loadCatalogo, 'MaestroFormPage', 'MaestroDetallePage'),
+          },
         ],
       },
     ],
