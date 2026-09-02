@@ -25,7 +25,7 @@ export function HomePage() {
         <p className="mt-1 text-sm text-text-muted">
           {env.useApiMock
             ? 'Modo mock: no se llama a la API real.'
-            : 'Modo API: GET /weatherforecast (endpoint de plantilla del backend).'}
+            : 'Modo API: GET /api/health.'}
         </p>
 
         <div className="mt-4">

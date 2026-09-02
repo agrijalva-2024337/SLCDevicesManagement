@@ -22,10 +22,16 @@ export async function checkApiHealth() {
   }
 
   const response = await httpClient.get(apiPaths.health);
+  const payload = response.data ?? {};
+  const status = payload.status ?? 'Healthy';
+  const service = payload.service ?? 'SLCDM.Api';
 
   return {
-    ok: true,
+    ok: status === 'Healthy',
     source: 'api',
-    message: `API respondió con HTTP ${response.status}.`,
+    status,
+    timestamp: payload.timestamp,
+    service,
+    message: `${service}: ${status}`,
   };
 }
