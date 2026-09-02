@@ -27,19 +27,16 @@ internal static class AsignacionEmpresaRules
         int idActivo,
         CancellationToken cancellationToken)
     {
-        var idUbicacion = await db.Activos
+        return await db.Activos
             .AsNoTracking()
             .IgnoreQueryFilters()
             .Where(a => a.Id == idActivo)
-            .Select(a => (int?)a.IdUbicacion)
+            .Join(
+                db.Proveedores.AsNoTracking().IgnoreQueryFilters(),
+                a => a.IdProveedor,
+                p => p.Id,
+                (_, p) => (int?)p.IdEmpresa)
             .FirstOrDefaultAsync(cancellationToken);
-
-        if (!idUbicacion.HasValue)
-        {
-            return null;
-        }
-
-        return await EmpresaIdDeUbicacionAsync(db, idUbicacion.Value, cancellationToken);
     }
 
     public static async Task<bool> MismaEmpresaAsync(
