@@ -1,8 +1,5 @@
 /**
- * Contratos del cliente HTTP (FE-04).
- *
- * Application aún no expone DTOs (BE-07 / BE-08 / BE-09). Estos typedefs
- * copian el Domain en camelCase, que es lo que serializa ASP.NET por defecto.
+ * Contratos del cliente HTTP alineados a los DTOs de Application.
  * No se importan en runtime: sirven de referencia para servicios y hooks.
  *
  * @typedef {0 | 1 | 2 | 3} RolUsuario
@@ -12,22 +9,34 @@
  * Creacion = 0, Modificacion = 1, Eliminacion = 2
  *
  * @typedef {object} LoginRequest
- * @property {string} correo
- * @property {string} clave
+ * @property {string} emailOrUsername
+ * @property {string} password
+ *
+ * @typedef {object} AuthenticatedUserDto
+ * @property {number} id
+ * @property {string} username
+ * @property {string} nombre
+ * @property {string} email
+ * @property {RolUsuario} rol
+ * @property {string} role
+ * @property {number | null} idEmpresa
+ *
+ * @typedef {object} LoginResponse
+ * @property {boolean} success
+ * @property {string} message
+ * @property {string} token
+ * @property {string} tokenType
+ * @property {string} expiresAt
+ * @property {AuthenticatedUserDto} userDetails
  *
  * @typedef {object} UsuarioSesion
  * @property {number} id
  * @property {number | null} idEmpresa
  * @property {string} nombres
- * @property {string} apellidos
  * @property {string} correo
  * @property {string} username
  * @property {RolUsuario} rol
- *
- * @typedef {object} LoginResponse
- * @property {string} accessToken
- * @property {number} expiresIn
- * @property {UsuarioSesion} usuario
+ * @property {string} role
  *
  * @typedef {object} PaisDto
  * @property {number} id
@@ -38,37 +47,37 @@
  *
  * @typedef {object} EmpresaDto
  * @property {number} id
+ * @property {boolean} habilitado
  * @property {string} nombre
  * @property {string} nitCodigo
  * @property {string | null} direccion
  * @property {string | null} telefono
- * @property {boolean} habilitado
  *
  * @typedef {object} SedeDto
  * @property {number} id
+ * @property {boolean} habilitado
  * @property {number} idEmpresa
  * @property {number} idPais
  * @property {string} nombre
  * @property {string | null} direccion
  * @property {string | null} ciudad
- * @property {boolean} habilitado
  *
  * @typedef {object} AreaDto
  * @property {number} id
+ * @property {boolean} habilitado
  * @property {number} idSede
  * @property {string} nombre
  * @property {string | null} descripcion
- * @property {boolean} habilitado
  *
  * @typedef {object} UsuarioDto
  * @property {number} id
+ * @property {boolean} habilitado
  * @property {number | null} idEmpresa
  * @property {string} nombres
  * @property {string} apellidos
  * @property {string} correo
  * @property {string} username
  * @property {RolUsuario} rol
- * @property {boolean} habilitado
  * @property {string} fechaCreacion
  *
  * @typedef {object} ResponsableDto
@@ -102,34 +111,35 @@
  *
  * @typedef {object} CategoriaActivoDto
  * @property {number} id
+ * @property {boolean} habilitado
  * @property {string} nombre
  * @property {string | null} descripcion
- * @property {boolean} habilitado
  *
  * @typedef {object} ProveedorDto
  * @property {number} id
+ * @property {boolean} habilitado
  * @property {number} idEmpresa
  * @property {string} nombre
  * @property {string} nit
  * @property {string | null} nombreContacto
  * @property {string | null} telefono
- * @property {string | null} correo
- * @property {boolean} habilitado
+ * @property {string | null} corre
+ * El backend serializa `Corre` (typo de Application). El servicio de catálogo lo mapea a `correo`.
  *
  * @typedef {object} UbicacionDto
  * @property {number} id
+ * @property {boolean} habilitado
  * @property {number} idSede
  * @property {string} nombre
  * @property {string | null} descripcion
  * @property {number} latitud
  * @property {number} longitud
- * @property {boolean} habilitado
  *
  * @typedef {object} ActivoDto
  * @property {number} id
  * @property {number} idCategoriaActivo
  * @property {number} idProveedor
- * @property {number | null} idUbicacion
+ * @property {number} idUbicacion
  * @property {string} nombre
  * @property {string | null} descripcion
  * @property {string | null} marca
@@ -191,6 +201,13 @@ export const RolUsuario = {
   AdministradorGeneral: 3,
 };
 
+export const RolUsuarioClaim = {
+  Consulta: 'Consulta',
+  OperadorInventario: 'OperadorInventario',
+  AdministradorEmpresa: 'AdministradorEmpresa',
+  AdministradorGeneral: 'AdministradorGeneral',
+};
+
 export const TipoOperacionBitacora = {
   Creacion: 0,
   Modificacion: 1,
@@ -203,3 +220,22 @@ export const rolUsuarioLabel = {
   [RolUsuario.AdministradorEmpresa]: 'Administrador de empresa',
   [RolUsuario.AdministradorGeneral]: 'Administrador general',
 };
+
+export const AuthClaimTypes = {
+  role: 'role',
+  idEmpresa: 'id_empresa',
+};
+
+export function rolFromClaim(role) {
+  if (role === RolUsuarioClaim.Consulta || role === RolUsuario.Consulta) return RolUsuario.Consulta;
+  if (role === RolUsuarioClaim.OperadorInventario || role === RolUsuario.OperadorInventario) {
+    return RolUsuario.OperadorInventario;
+  }
+  if (role === RolUsuarioClaim.AdministradorEmpresa || role === RolUsuario.AdministradorEmpresa) {
+    return RolUsuario.AdministradorEmpresa;
+  }
+  if (role === RolUsuarioClaim.AdministradorGeneral || role === RolUsuario.AdministradorGeneral) {
+    return RolUsuario.AdministradorGeneral;
+  }
+  return null;
+}
