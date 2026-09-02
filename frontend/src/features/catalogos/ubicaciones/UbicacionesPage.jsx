@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { AlertBanner } from '@/shared/components/AlertBanner';
-import { Badge } from '@/shared/components/Badge';
-import { Button } from '@/shared/components/Button';
 import { CatalogRowActions } from '@/shared/components/CatalogRowActions';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { DataTable } from '@/shared/components/DataTable';
+import { FeedbackState } from '@/shared/components/FeedbackState';
 import { HabilitadoFilter } from '@/shared/components/HabilitadoFilter';
 import { Modal } from '@/shared/components/Modal';
 import { PageHeader } from '@/shared/components/PageHeader';
+import { RegisterButton } from '@/shared/components/RecordActions';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 import { UbicacionForm } from '@/features/catalogos/ubicaciones/UbicacionForm';
@@ -142,34 +142,12 @@ export function UbicacionesPage() {
   }
 
   const columns = [
-    { key: 'nombre', header: 'Nombre' },
+    { key: 'nombre', header: 'Nombre', primary: true },
     { key: 'sedeNombre', header: 'Sede' },
     { key: 'descripcion', header: 'Descripción' },
-    { key: 'latitud', header: 'Latitud', align: 'right' },
-    { key: 'longitud', header: 'Longitud', align: 'right' },
-    {
-      key: 'habilitado',
-      header: 'Estado',
-      render: (row) => (
-        <Badge variant={row.habilitado ? 'success' : 'ghost'}>
-          {row.habilitado ? 'Activo' : 'Inactivo'}
-        </Badge>
-      ),
-    },
-    {
-      key: 'acciones',
-      header: '',
-      align: 'right',
-      sortable: false,
-      render: (row) => (
-        <CatalogRowActions
-          row={row}
-          onEdit={openEdit}
-          onInactivate={setConfirmRow}
-          onReactivate={setConfirmRow}
-        />
-      ),
-    },
+    { key: 'latitud', header: 'Latitud', numeric: true },
+    { key: 'longitud', header: 'Longitud', numeric: true },
+    { key: 'habilitado', header: 'Estado', type: 'status' },
   ];
 
   return (
@@ -177,11 +155,7 @@ export function UbicacionesPage() {
       <PageHeader
         title="Ubicaciones"
         description="Puntos geográficos de resguardo o operación de activos, asociados a una sede."
-        actions={
-          <Button onClick={openCreate} type="button">
-            Nueva
-          </Button>
-        }
+        actions={<RegisterButton onClick={openCreate} label="Registrar ubicación" />}
       />
 
       {banner ? (
@@ -194,15 +168,30 @@ export function UbicacionesPage() {
 
       <HabilitadoFilter value={filter} onChange={setFilter} />
 
-      <DataTable
-        columns={columns}
-        rows={tableRows}
-        isLoading={isLoading}
-        errorMessage={errorMessage}
-        emptyMessage="No hay ubicaciones para mostrar."
-        searchPlaceholder="Buscar ubicaciones..."
-        rowClassName={(row) => (row.habilitado ? '' : 'bg-slate-50 opacity-70')}
-      />
+      {errorMessage ? (
+        <FeedbackState status="error" errorMessage={errorMessage} />
+      ) : (
+        <DataTable
+          columns={columns}
+          rows={tableRows}
+          loading={isLoading}
+          emptyTitle="No hay ubicaciones"
+          emptyDescription="No hay ubicaciones para mostrar."
+          searchPlaceholder="Buscar ubicaciones..."
+          getRowActions={(row) => ({
+            view: { onClick: () => openEdit(row) },
+            edit: { onClick: () => openEdit(row) },
+          })}
+          renderExpandedContent={(row) => (
+            <CatalogRowActions
+              row={row}
+              onEdit={openEdit}
+              onInactivate={setConfirmRow}
+              onReactivate={setConfirmRow}
+            />
+          )}
+        />
+      )}
 
       <Modal
         isOpen={formOpen}

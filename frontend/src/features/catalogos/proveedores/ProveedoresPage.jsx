@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { AlertBanner } from '@/shared/components/AlertBanner';
-import { Badge } from '@/shared/components/Badge';
-import { Button } from '@/shared/components/Button';
 import { CatalogRowActions } from '@/shared/components/CatalogRowActions';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { DataTable } from '@/shared/components/DataTable';
+import { FeedbackState } from '@/shared/components/FeedbackState';
 import { HabilitadoFilter } from '@/shared/components/HabilitadoFilter';
 import { Modal } from '@/shared/components/Modal';
 import { PageHeader } from '@/shared/components/PageHeader';
+import { RegisterButton } from '@/shared/components/RecordActions';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 import { ProveedorForm } from '@/features/catalogos/proveedores/ProveedorForm';
@@ -139,35 +139,13 @@ export function ProveedoresPage() {
   }
 
   const columns = [
-    { key: 'nombre', header: 'Nombre' },
+    { key: 'nombre', header: 'Nombre', primary: true },
     { key: 'empresaNombre', header: 'Empresa' },
     { key: 'nit', header: 'NIT' },
     { key: 'nombreContacto', header: 'Contacto' },
     { key: 'telefono', header: 'Teléfono' },
     { key: 'correo', header: 'Correo' },
-    {
-      key: 'habilitado',
-      header: 'Estado',
-      render: (row) => (
-        <Badge variant={row.habilitado ? 'success' : 'ghost'}>
-          {row.habilitado ? 'Activo' : 'Inactivo'}
-        </Badge>
-      ),
-    },
-    {
-      key: 'acciones',
-      header: '',
-      align: 'right',
-      sortable: false,
-      render: (row) => (
-        <CatalogRowActions
-          row={row}
-          onEdit={openEdit}
-          onInactivate={setConfirmRow}
-          onReactivate={setConfirmRow}
-        />
-      ),
-    },
+    { key: 'habilitado', header: 'Estado', type: 'status' },
   ];
 
   return (
@@ -175,11 +153,7 @@ export function ProveedoresPage() {
       <PageHeader
         title="Proveedores"
         description="Proveedores de compra y mantenimiento asociados a una empresa."
-        actions={
-          <Button onClick={openCreate} type="button">
-            Nuevo
-          </Button>
-        }
+        actions={<RegisterButton onClick={openCreate} label="Registrar proveedor" />}
       />
 
       {banner ? (
@@ -192,15 +166,30 @@ export function ProveedoresPage() {
 
       <HabilitadoFilter value={filter} onChange={setFilter} />
 
-      <DataTable
-        columns={columns}
-        rows={tableRows}
-        isLoading={isLoading}
-        errorMessage={errorMessage}
-        emptyMessage="No hay proveedores para mostrar."
-        searchPlaceholder="Buscar proveedores..."
-        rowClassName={(row) => (row.habilitado ? '' : 'bg-slate-50 opacity-70')}
-      />
+      {errorMessage ? (
+        <FeedbackState status="error" errorMessage={errorMessage} />
+      ) : (
+        <DataTable
+          columns={columns}
+          rows={tableRows}
+          loading={isLoading}
+          emptyTitle="No hay proveedores"
+          emptyDescription="No hay proveedores para mostrar."
+          searchPlaceholder="Buscar proveedores..."
+          getRowActions={(row) => ({
+            view: { onClick: () => openEdit(row) },
+            edit: { onClick: () => openEdit(row) },
+          })}
+          renderExpandedContent={(row) => (
+            <CatalogRowActions
+              row={row}
+              onEdit={openEdit}
+              onInactivate={setConfirmRow}
+              onReactivate={setConfirmRow}
+            />
+          )}
+        />
+      )}
 
       <Modal
         isOpen={formOpen}
