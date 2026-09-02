@@ -73,6 +73,10 @@ public sealed class CreateAsignacionCommandValidator : AbstractValidator<CreateA
         RuleFor(x => x.DocumentoPdfUrl)
             .MaximumLength(300).WithMessage("El campo documento pdf url no debe superar los 300 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.DocumentoPdfUrl));
+        
+        RuleFor(x => x)
+            .MustAsync((cmd, ct) => AsignacionEmpresaRules.MismaEmpresaAsync(db, cmd.IdActivo, cmd.IdUbicacion, ct))
+            .WithMessage("El activo y la ubicacion deben pertenecer a la misma empresa.");
     }
 
     private static async Task<bool> ActivoTieneAsignacionActivaSiAplica(
@@ -144,7 +148,7 @@ public sealed class CreateAsignacionCommandHandler : ICommandHandler<CreateAsign
         activo.IdUbicacion = command.IdUbicacion;
 
         await _db.SaveChangesAsync(cancellationToken);
-    
+
         _db.HistorialActivos.Add(new HistorialActivo
         {
             IdAsignacion = entity.Id,
