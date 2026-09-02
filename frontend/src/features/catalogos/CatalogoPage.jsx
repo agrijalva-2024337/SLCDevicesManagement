@@ -3,6 +3,7 @@ import { useParams } from 'react-router';
 import { getMaestro, nameById } from '@/features/catalogos/maestros';
 import { PaisesGrid } from '@/features/catalogos/paises/PaisesGrid';
 import * as paisService from '@/features/catalogos/paises/paisService';
+import { UbicacionesMapPage } from '@/features/catalogos/ubicaciones/UbicacionesMapPage';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import { DataTable } from '@/shared/components/DataTable';
@@ -76,6 +77,16 @@ export function CatalogoPage() {
           {errorMessage}
         </div>
       </section>
+    );
+  }
+
+  if (slug === 'ubicaciones') {
+    return (
+      <>
+        <CatalogBanner banner={banner} />
+        <UbicacionesMapPage items={items} loading={isLoading} />
+        <OverlayOutlet context={outletContext} />
+      </>
     );
   }
 
