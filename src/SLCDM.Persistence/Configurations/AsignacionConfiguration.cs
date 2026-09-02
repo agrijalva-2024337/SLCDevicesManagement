@@ -40,7 +40,7 @@ public class AsignacionConfiguration : IEntityTypeConfiguration<Asignacion>
 
         builder.Property(a => a.FechaFirmaEntrega).HasColumnName("fecha_firma_entrega");
 
-        builder.Property(a => a.FirmaDevolucion)
+        builder.Property(a => a.FirmaRecibe)
             .HasColumnName("firma_recibe")
             .HasColumnType("varbinary(max)");
 

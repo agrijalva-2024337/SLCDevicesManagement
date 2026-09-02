@@ -182,7 +182,7 @@ namespace SLCDM.Persistence.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("fecha_firma_entrega");
 
-                    b.Property<byte[]>("FirmaDevolucion")
+                    b.Property<byte[]>("FirmaRecibe")
                         .HasColumnType("varbinary(max)")
                         .HasColumnName("firma_recibe");
 
