@@ -22,8 +22,8 @@ public sealed class PaisesController : ApiControllerBase
         IQueryHandler<GetPaisesQuery, IReadOnlyList<PaisDto>> getAll,
         IQueryHandler<GetPaisByIdQuery, PaisDto> getById,
         ICommandHandler<CreatePaisCommand, int> create,
-        ICommandHandler<UpdatePaisCommand, int> update,
-        ICommandHandler<DeletePaisCommand, int> delete)
+        ICommandHandler<UpdatePaisCommand> update,
+        ICommandHandler<DeletePaisCommand> delete)
     {
         _getAll = getAll;
         _getById = getById;
