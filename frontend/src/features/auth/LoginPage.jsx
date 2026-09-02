@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
-import * as authService from '@/features/auth/authService';
+import { useAuth } from '@/features/auth/useAuth';
 import { AtmosphereBackdrop } from '@/features/landing/components/AtmosphereBackdrop';
 import { TypeLine } from '@/features/landing/components/TypeLine';
 import { getValidationErrors } from '@/shared/api/errors';
@@ -11,6 +11,7 @@ import '@/features/landing/landing.css';
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { login } = useAuth();
   const [correo, setCorreo] = useState('');
   const [clave, setClave] = useState('');
   const [mostrarClave, setMostrarClave] = useState(false);
@@ -37,7 +38,7 @@ export function LoginPage() {
     setSaving(true);
 
     try {
-      await authService.login({ emailOrUsername: correo, password: clave });
+      await login({ emailOrUsername: correo, password: clave });
       const from = location.state?.from;
       navigate(typeof from === 'string' && from.startsWith('/') ? from : '/app', { replace: true });
     } catch (error) {
