@@ -1,4 +1,4 @@
-import { Navigate, createBrowserRouter } from 'react-router';
+import { createBrowserRouter } from 'react-router';
 
 function named(importer, exportName) {
   return {
@@ -9,6 +9,7 @@ function named(importer, exportName) {
   };
 }
 
+const loadLanding = () => import('@/features/landing/LandingPage');
 const loadHome = () => import('@/app/pages/HomePage');
 const loadLogin = () => import('@/features/auth/LoginPage');
 const loadNotFound = () => import('@/app/pages/NotFoundPage');
@@ -23,7 +24,7 @@ const loadUbicaciones = () => import('@/features/catalogos/ubicaciones/Ubicacion
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/app" replace />,
+    ...named(loadLanding, 'LandingPage'),
   },
   {
     path: '/login',
