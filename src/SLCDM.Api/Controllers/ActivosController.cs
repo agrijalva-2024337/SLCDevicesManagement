@@ -4,6 +4,7 @@ using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Security;
 using SLCDM.Application.Features.Activos;
 using SLCDM.Application.Features.Activos.Commands;
+using SLCDM.Application.Features.Asignaciones.Queries;
 using SLCDM.Application.Features.Activos.Queries;
 using SLCDM.Application.Features.Asignaciones;
 using SLCDM.Application.Features.HistorialActivos.Queries;
