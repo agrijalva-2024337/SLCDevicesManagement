@@ -1,5 +1,6 @@
 import { useId, useMemo, useState } from 'react';
 import { Link } from 'react-router';
+import { useAuth } from '@/features/auth/useAuth';
 import { RegisterButton } from '@/shared/components/RecordActions';
 import { matchesSearch } from '@/shared/utils/search';
 import '@/features/catalogos/paises/paises.css';
@@ -14,7 +15,7 @@ function flagClassName(iso2) {
   return `fi fi-${code}`;
 }
 
-function PaisCard({ pais }) {
+function PaisCard({ pais, allowWrite }) {
   const flagClass = flagClassName(pais.codigoIso2);
   const iso2 = String(pais.codigoIso2 ?? '')
     .trim()
@@ -40,20 +41,24 @@ function PaisCard({ pais }) {
           ) : null}
         </span>
       </Link>
-      <Link
-        to={`${pais.id}/editar`}
-        className="paises-card-edit"
-        title="Editar"
-        aria-label={`Editar ${pais.nombre}`}
-      >
-        Editar
-      </Link>
+      {allowWrite ? (
+        <Link
+          to={`${pais.id}/editar`}
+          className="paises-card-edit"
+          title="Editar"
+          aria-label={`Editar ${pais.nombre}`}
+        >
+          Editar
+        </Link>
+      ) : null}
     </article>
   );
 }
 
 export function PaisesGrid({ items, loading = false }) {
   const searchId = useId();
+  const { canWrite } = useAuth();
+  const allowWrite = canWrite('paises');
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
@@ -74,7 +79,7 @@ export function PaisesGrid({ items, loading = false }) {
     <section className="paises-page">
       <header className="paises-head">
         <h2 className="paises-title">Países</h2>
-        <RegisterButton to="nueva" label="Registrar país" />
+        {allowWrite ? <RegisterButton to="nueva" label="Registrar país" /> : null}
       </header>
 
       <div className="paises-toolbar">
@@ -108,7 +113,7 @@ export function PaisesGrid({ items, loading = false }) {
       {!loading && filtered.length > 0 ? (
         <div className="paises-grid">
           {filtered.map((pais) => (
-            <PaisCard key={pais.id} pais={pais} />
+            <PaisCard key={pais.id} pais={pais} allowWrite={allowWrite} />
           ))}
         </div>
       ) : null}

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useAuth } from '@/features/auth/useAuth';
 import { nameById } from '@/features/catalogos/maestros';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
@@ -26,6 +27,8 @@ function CatalogBanner({ banner }) {
 }
 
 export function SedesPage() {
+  const { canWrite } = useAuth();
+  const allowWrite = canWrite('sedes');
   const { rows, visibleRows, isLoading, errorMessage, banner, reload } =
     useCatalogCollection(sedeService.getAll);
   const empresas = useResource(empresaService.getAll);
@@ -62,7 +65,7 @@ export function SedesPage() {
       <DataTable
         title="Sedes"
         description="Instalaciones físicas de cada empresa."
-        primaryAction={<RegisterButton to="nueva" label="Registrar sede" />}
+        primaryAction={allowWrite ? <RegisterButton to="nueva" label="Registrar sede" /> : null}
         columns={columns}
         rows={visibleRows}
         loading={isLoading}
@@ -72,7 +75,7 @@ export function SedesPage() {
         emptyDescription="Registre la primera sede para vincularla a una empresa."
         getRowActions={(sede) => ({
           view: { to: `${sede.id}` },
-          edit: { to: `${sede.id}/editar` },
+          edit: allowWrite ? { to: `${sede.id}/editar` } : undefined,
         })}
       />
       <OverlayOutlet context={outletContext} />

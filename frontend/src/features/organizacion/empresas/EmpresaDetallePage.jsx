@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useOutletContext, useParams } from 'react-router';
+import { useAuth } from '@/features/auth/useAuth';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
@@ -10,6 +11,7 @@ import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 
 export function EmpresaDetallePage() {
   const { id } = useParams();
+  const { canWrite } = useAuth();
   const navigate = useNavigate();
   const outlet = useOutletContext() ?? {};
   const close = () => navigate('/app/catalogos/empresas');
@@ -90,9 +92,11 @@ export function EmpresaDetallePage() {
         ) : null}
       </div>
 
-      <div className="flex flex-wrap gap-3">
-        <EditRecordButton to={`/app/catalogos/empresas/${empresa.id}/editar`} />
-      </div>
+      {canWrite('empresas') ? (
+        <div className="flex flex-wrap gap-3">
+          <EditRecordButton to={`/app/catalogos/empresas/${empresa.id}/editar`} />
+        </div>
+      ) : null}
 
       <section>
         <h3 className="font-display text-xl font-bold text-navy">Sedes de esta empresa</h3>

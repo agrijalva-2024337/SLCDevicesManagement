@@ -4,26 +4,33 @@ const viewClass = 'app-btn app-btn--ghost app-btn--sm';
 const editClass = 'app-btn app-btn--primary app-btn--sm';
 
 export function RecordActions({ viewTo, editTo, onView, onEdit }) {
+  const showView = Boolean(viewTo || onView);
+  const showEdit = Boolean(editTo || onEdit);
+
   return (
     <>
-      {viewTo ? (
-        <Link to={viewTo} className={viewClass}>
-          Ver ficha
-        </Link>
-      ) : (
-        <button type="button" className={viewClass} onClick={onView}>
-          Ver ficha
-        </button>
-      )}
-      {editTo ? (
-        <Link to={editTo} className={editClass}>
-          Editar registro
-        </Link>
-      ) : (
-        <button type="button" className={editClass} onClick={onEdit}>
-          Editar registro
-        </button>
-      )}
+      {showView ? (
+        viewTo ? (
+          <Link to={viewTo} className={viewClass}>
+            Ver ficha
+          </Link>
+        ) : (
+          <button type="button" className={viewClass} onClick={onView}>
+            Ver ficha
+          </button>
+        )
+      ) : null}
+      {showEdit ? (
+        editTo ? (
+          <Link to={editTo} className={editClass}>
+            Editar registro
+          </Link>
+        ) : (
+          <button type="button" className={editClass} onClick={onEdit}>
+            Editar registro
+          </button>
+        )
+      ) : null}
     </>
   );
 }
