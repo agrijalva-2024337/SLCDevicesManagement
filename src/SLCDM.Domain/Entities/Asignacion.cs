@@ -51,7 +51,7 @@ public class Asignacion: SLCDM.Domain.Common.BaseEntity {
 
     public DateTime? FechaFirmaEntrega { get; set; }
 
-    public byte[]? FirmaDevolucion { get; set; }
+    public byte[]? FirmaRecibe { get; set; }
 
     [MaxLength(300, ErrorMessage = "El campo documento pdf url no debe superar los 300 caracteres")]
     public string? DocumentoPdfUrl { get; set; } = string.Empty;
