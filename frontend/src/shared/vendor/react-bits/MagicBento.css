@@ -1,0 +1,98 @@
+.magic-bento.card-grid {
+  --glow-color: 255, 255, 255;
+  display: grid;
+  gap: 1rem;
+  padding: 0;
+  max-width: none;
+  font-size: 1rem;
+}
+
+.magic-bento--list.card-grid {
+  grid-template-columns: 1fr;
+}
+
+.magic-bento-wrap {
+  border-radius: 20px;
+  box-shadow:
+    0 1px 2px rgb(12 20 64 / 0.04),
+    0 12px 32px rgb(12 20 64 / 0.06),
+    0 0 0 1px rgb(12 20 64 / 0.04);
+  transition:
+    box-shadow 0.45s ease,
+    transform 0.45s ease;
+}
+
+.magic-bento-wrap:hover,
+.magic-bento-wrap:focus-within {
+  transform: translateY(-3px);
+  box-shadow:
+    0 8px 20px rgb(12 20 64 / 0.08),
+    0 22px 48px rgb(12 20 64 / 0.1),
+    0 0 0 1px rgb(12 20 64 / 0.05);
+}
+
+.magic-bento-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-height: 0;
+  aspect-ratio: auto;
+  padding: 0;
+  border-radius: 20px;
+  border: 0;
+  background: var(--color-white);
+  font-weight: 400;
+  overflow: hidden;
+  color: var(--color-navy);
+}
+
+.magic-bento-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.magic-bento-card__body {
+  display: flex;
+  width: 100%;
+  flex: 1;
+  flex-direction: column;
+  padding: 1.35rem 1.4rem 1.2rem;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+a.magic-bento-card__body {
+  text-decoration: none;
+}
+
+.magic-bento-card__body--static {
+  cursor: default;
+}
+
+.magic-bento-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: auto;
+  padding-top: 1.1rem;
+}
+
+.magic-bento-card__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-accent-text);
+}
+
+.bento-section {
+  position: relative;
+}

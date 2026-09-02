@@ -1,0 +1,18 @@
+.app-tooltip-anchor {
+  display: inline-flex;
+}
+
+.app-tooltip {
+  position: fixed;
+  z-index: 80;
+  max-width: 16rem;
+  border-radius: 8px;
+  padding: 0.3rem 0.55rem;
+  background: var(--surface-inverse);
+  color: var(--text-on-inverse);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+  pointer-events: none;
+  text-align: center;
+}

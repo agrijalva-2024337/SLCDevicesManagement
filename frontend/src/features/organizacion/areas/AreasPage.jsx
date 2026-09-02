@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { AlertBanner } from '@/shared/components/AlertBanner';
-import { Badge } from '@/shared/components/Badge';
-import { Button } from '@/shared/components/Button';
 import { CatalogRowActions } from '@/shared/components/CatalogRowActions';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { DataTable } from '@/shared/components/DataTable';
+import { FeedbackState } from '@/shared/components/FeedbackState';
 import { HabilitadoFilter } from '@/shared/components/HabilitadoFilter';
 import { Modal } from '@/shared/components/Modal';
 import { PageHeader } from '@/shared/components/PageHeader';
+import { RegisterButton } from '@/shared/components/RecordActions';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 import { AreaForm } from '@/features/organizacion/areas/AreaForm';
@@ -133,32 +133,10 @@ export function AreasPage() {
   }
 
   const columns = [
-    { key: 'nombre', header: 'Nombre' },
+    { key: 'nombre', header: 'Nombre', primary: true },
     { key: 'sedeNombre', header: 'Sede' },
     { key: 'descripcion', header: 'Descripción' },
-    {
-      key: 'habilitado',
-      header: 'Estado',
-      render: (row) => (
-        <Badge variant={row.habilitado ? 'success' : 'ghost'}>
-          {row.habilitado ? 'Activo' : 'Inactivo'}
-        </Badge>
-      ),
-    },
-    {
-      key: 'acciones',
-      header: '',
-      align: 'right',
-      sortable: false,
-      render: (row) => (
-        <CatalogRowActions
-          row={row}
-          onEdit={openEdit}
-          onInactivate={setConfirmRow}
-          onReactivate={setConfirmRow}
-        />
-      ),
-    },
+    { key: 'habilitado', header: 'Estado', type: 'status' },
   ];
 
   return (
@@ -166,11 +144,7 @@ export function AreasPage() {
       <PageHeader
         title="Áreas"
         description="Áreas internas asociadas a una sede."
-        actions={
-          <Button onClick={openCreate} type="button">
-            Nueva
-          </Button>
-        }
+        actions={<RegisterButton onClick={openCreate} label="Registrar área" />}
       />
 
       {banner ? (
@@ -183,15 +157,30 @@ export function AreasPage() {
 
       <HabilitadoFilter value={filter} onChange={setFilter} />
 
-      <DataTable
-        columns={columns}
-        rows={tableRows}
-        isLoading={isLoading}
-        errorMessage={errorMessage}
-        emptyMessage="No hay áreas para mostrar."
-        searchPlaceholder="Buscar áreas..."
-        rowClassName={(row) => (row.habilitado ? '' : 'bg-slate-50 opacity-70')}
-      />
+      {errorMessage ? (
+        <FeedbackState status="error" errorMessage={errorMessage} />
+      ) : (
+        <DataTable
+          columns={columns}
+          rows={tableRows}
+          loading={isLoading}
+          emptyTitle="No hay áreas"
+          emptyDescription="No hay áreas para mostrar."
+          searchPlaceholder="Buscar áreas..."
+          getRowActions={(row) => ({
+            view: { onClick: () => openEdit(row) },
+            edit: { onClick: () => openEdit(row) },
+          })}
+          renderExpandedContent={(row) => (
+            <CatalogRowActions
+              row={row}
+              onEdit={openEdit}
+              onInactivate={setConfirmRow}
+              onReactivate={setConfirmRow}
+            />
+          )}
+        />
+      )}
 
       <Modal isOpen={formOpen} onClose={closeForm} title={editing ? 'Editar área' : 'Nueva área'}>
         <AreaForm
