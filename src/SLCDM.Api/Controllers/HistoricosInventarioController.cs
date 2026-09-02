@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Security;
-using SLCDM.Application.Features.DetallesActivos.Commands;
 using SLCDM.Application.Features.HistoricosInventario;
 using SLCDM.Application.Features.HistoricosInventario.Commands;
 using SLCDM.Application.Features.HistoricosInventario.Queries;
@@ -13,25 +12,16 @@ public sealed class HistoricosInventarioController : ApiControllerBase
 {
     private readonly IQueryHandler<GetHistoricosInventarioQuery, IReadOnlyList<HistoricoInventarioDto>> _getAll;
     private readonly IQueryHandler<GetHistoricoInventarioByIdQuery, HistoricoInventarioDto> _getById;
-    private readonly IQueryHandler<GetDiferenciasInventarioQuery, DiferenciasInventarioDto> _diferencias;
     private readonly ICommandHandler<CreateHistoricoInventarioCommand, int> _create;
-    private readonly ICommandHandler<CerrarHistoricoInventarioCommand> _cerrar;
-    private readonly ICommandHandler<CreateDetalleActivoCommand, int> _crearDetalle;
 
     public HistoricosInventarioController(
         IQueryHandler<GetHistoricosInventarioQuery, IReadOnlyList<HistoricoInventarioDto>> getAll,
         IQueryHandler<GetHistoricoInventarioByIdQuery, HistoricoInventarioDto> getById,
-        IQueryHandler<GetDiferenciasInventarioQuery, DiferenciasInventarioDto> diferencias,
-        ICommandHandler<CreateHistoricoInventarioCommand, int> create,
-        ICommandHandler<CerrarHistoricoInventarioCommand> cerrar,
-        ICommandHandler<CreateDetalleActivoCommand, int> crearDetalle)
+        ICommandHandler<CreateHistoricoInventarioCommand, int> create)
     {
         _getAll = getAll;
         _getById = getById;
-        _diferencias = diferencias;
         _create = create;
-        _cerrar = cerrar;
-        _crearDetalle = crearDetalle;
     }
 
     [HttpGet]
@@ -50,16 +40,6 @@ public sealed class HistoricosInventarioController : ApiControllerBase
     public async Task<ActionResult<HistoricoInventarioDto>> GetById(int id, CancellationToken cancellationToken) =>
         Ok(await _getById.HandleAsync(new GetHistoricoInventarioByIdQuery(id), cancellationToken));
 
-    [HttpGet("{id:int}/diferencias")]
-    [Authorize(Roles = Roles.Lectura)]
-    [ProducesResponseType(typeof(DiferenciasInventarioDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<ActionResult<DiferenciasInventarioDto>> GetDiferencias(
-        int id,
-        [FromQuery] bool incluirAbierta = false,
-        CancellationToken cancellationToken = default) =>
-        Ok(await _diferencias.HandleAsync(new GetDiferenciasInventarioQuery(id, incluirAbierta), cancellationToken));
-
     [HttpPost]
     [Authorize(Roles = Roles.EscrituraOperativa)]
     public async Task<IActionResult> Create(
@@ -70,30 +50,5 @@ public sealed class HistoricosInventarioController : ApiControllerBase
         return CreatedId(nameof(GetById), id);
     }
 
-    [HttpPost("{id:int}/detalles")]
-    [Authorize(Roles = Roles.EscrituraOperativa)]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> RegistrarDetalle(
-        int id,
-        [FromBody] CreateDetalleActivoCommand command,
-        CancellationToken cancellationToken)
-    {
-        var detalleId = await _crearDetalle.HandleAsync(
-            command with { IdHistoricoInventario = id },
-            cancellationToken);
-        return Created($"/api/detallesActivos/{detalleId}", new { id = detalleId });
-    }
-
-    [HttpPost("{id:int}/cerrar")]
-    [Authorize(Roles = Roles.EscrituraOperativa)]
-    public async Task<IActionResult> Cerrar(
-        int id,
-        [FromBody] CerrarHistoricoInventarioCommand command,
-        CancellationToken cancellationToken)
-    {
-        if (id != command.Id) return IdMismatch();
-        await _cerrar.HandleAsync(command, cancellationToken);
-        return NoContent();
-    }
+    // ---- BE-20/21 (Sprint 8): RegistrarDetalle, GetDiferencias, Cerrar ----
 }
