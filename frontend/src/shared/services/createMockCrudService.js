@@ -13,6 +13,13 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function asRecordId(value, fallbackId) {
+  if (value && typeof value === 'object' && value.id != null) {
+    return { ...value, id: Number(value.id) };
+  }
+  return { id: Number(value ?? fallbackId) };
+}
+
 export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS }) {
   let items = clone(seed);
   const usesHabilitado = seed.some((item) => Object.hasOwn(item, 'habilitado'));
@@ -23,7 +30,9 @@ export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS 
       return clone(items);
     }
 
-    const response = await httpClient.get(endpoint, { params });
+    const response = await httpClient.get(endpoint, {
+      params: { incluirInhabilitados: true, ...params },
+    });
     return response.data;
   }
 
@@ -60,7 +69,7 @@ export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS 
     }
 
     const response = await httpClient.post(endpoint, data);
-    return response.data;
+    return asRecordId(response.data, null);
   }
 
   async function update(id, data) {
@@ -80,8 +89,10 @@ export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS 
       return clone(updated);
     }
 
-    const response = await httpClient.put(`${endpoint}/${id}`, data);
-    return response.data;
+    const numericId = Number(id);
+    const payload = { ...data, id: numericId };
+    const response = await httpClient.put(`${endpoint}/${id}`, payload);
+    return asRecordId(response.data ?? payload, numericId);
   }
 
   async function remove(id) {
@@ -101,8 +112,13 @@ export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS 
       return clone(updated);
     }
 
-    const response = await httpClient.delete(`${endpoint}/${id}`);
-    return response.data;
+    const numericId = Number(id);
+    if (usesHabilitado) {
+      await httpClient.post(`${endpoint}/${id}/disable`);
+    } else {
+      await httpClient.delete(`${endpoint}/${id}`);
+    }
+    return { id: numericId };
   }
 
   return { getAll, getById, create, update, remove };
