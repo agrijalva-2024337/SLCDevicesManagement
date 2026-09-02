@@ -1,9 +1,3 @@
-const STATUS_STYLES = {
-  loading: 'border-slate-200 bg-slate-50 text-slate-600',
-  error: 'border-red-200 bg-red-50 text-red-800',
-  empty: 'border-slate-200 bg-slate-50 text-slate-600',
-};
-
 export function FeedbackState({
   status,
   loadingMessage = 'Cargando...',
@@ -13,7 +7,7 @@ export function FeedbackState({
 }) {
   if (status === 'idle' || status === 'loading') {
     return (
-      <div role="status" className={`rounded-md border px-4 py-3 text-sm ${STATUS_STYLES.loading}`}>
+      <div role="status" className="app-feedback app-feedback--loading">
         {loadingMessage}
       </div>
     );
@@ -21,18 +15,14 @@ export function FeedbackState({
 
   if (status === 'error') {
     return (
-      <div role="alert" className={`rounded-md border px-4 py-3 text-sm ${STATUS_STYLES.error}`}>
+      <div role="alert" className="app-feedback app-feedback--error">
         {errorMessage}
       </div>
     );
   }
 
   if (status === 'empty') {
-    return (
-      <div className={`rounded-md border px-4 py-3 text-sm ${STATUS_STYLES.empty}`}>
-        {emptyMessage}
-      </div>
-    );
+    return <div className="app-feedback app-feedback--empty">{emptyMessage}</div>;
   }
 
   return children ?? null;
