@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router';
 import { MOCK_EMPRESAS_ACTIVAS, NAV_SECTIONS } from '@/shared/layout/navConfig';
 
 function linkClassName({ isActive }) {

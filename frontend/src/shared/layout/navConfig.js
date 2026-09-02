@@ -8,18 +8,18 @@ export const NAV_SECTIONS = [
   {
     id: 'inicio',
     label: 'Inicio',
-    items: [{ to: '/', label: 'Dashboard', end: true }],
+    items: [{ to: '/app', label: 'Dashboard', end: true }],
   },
   {
     id: 'catalogos',
     label: 'Catálogos',
     items: [
-      { to: '/catalogos/empresas', label: 'Empresas' },
-      { to: '/catalogos/sedes', label: 'Sedes' },
-      { to: '/catalogos/areas', label: 'Áreas' },
-      { to: '/catalogos/categorias', label: 'Categorías' },
-      { to: '/catalogos/proveedores', label: 'Proveedores' },
-      { to: '/catalogos/ubicaciones', label: 'Ubicaciones' },
+      { to: '/app/catalogos/empresas', label: 'Empresas' },
+      { to: '/app/catalogos/sedes', label: 'Sedes' },
+      { to: '/app/catalogos/areas', label: 'Áreas' },
+      { to: '/app/catalogos/categorias', label: 'Categorías' },
+      { to: '/app/catalogos/proveedores', label: 'Proveedores' },
+      { to: '/app/catalogos/ubicaciones', label: 'Ubicaciones' },
     ],
   },
   {
