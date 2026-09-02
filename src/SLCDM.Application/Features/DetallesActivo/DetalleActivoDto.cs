@@ -1,4 +1,4 @@
-namespace SLCDM.Application.Features.DetallesActivo;
+namespace SLCDM.Application.Features.DetallesActivos;
 
 public sealed record DetalleActivoDto(
     int Id,
