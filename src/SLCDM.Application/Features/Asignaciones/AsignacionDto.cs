@@ -25,7 +25,7 @@ public sealed record AsignacionHistorialDto(
     string UsuarioEntrega,
     int IdResponsable,
     string ResponsableRecibe,
-    int IdUbicacion,
+    int? IdUbicacion,
     string UbicacionUso,
     int IdTipoAsignacion,
     string TipoAsignacion,
