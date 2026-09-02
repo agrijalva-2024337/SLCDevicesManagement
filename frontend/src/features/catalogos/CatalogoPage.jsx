@@ -13,6 +13,7 @@ import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useResource } from '@/shared/hooks/useResource';
 import MagicBento from '@/shared/vendor/react-bits/MagicBento';
 
+export { MaestroDetallePage } from '@/features/catalogos/MaestroDetallePage';
 export { MaestroFormPage } from '@/features/catalogos/MaestroFormPage';
 
 const emptyList = async () => [];
