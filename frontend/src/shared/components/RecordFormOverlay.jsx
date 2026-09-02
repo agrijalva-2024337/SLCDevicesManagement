@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { SchemaForm } from '@/shared/components/RecordForm';
 import { DetailOverlay } from '@/shared/components/DetailOverlay';
+import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 
 export function RecordFormOverlay({
   open,
@@ -17,26 +18,53 @@ export function RecordFormOverlay({
 }) {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
+  const [formError, setFormError] = useState(null);
+  const [saving, setSaving] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
+    if (saving) {
+      return;
+    }
+
     const nextErrors = validate(values) ?? {};
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
-    onSave(values);
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
+    setSaving(true);
+    setFormError(null);
+
+    try {
+      await onSave(values);
+    } catch (error) {
+      if (error?.fieldErrors && typeof error.fieldErrors === 'object') {
+        setErrors(error.fieldErrors);
+      }
+      setFormError(getErrorMessage(error));
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
     <DetailOverlay open={open} title={title} kicker={kicker} badge={badge} onClose={onClose}>
       {hint ? <p className="text-base text-text-muted">{hint}</p> : null}
+      {formError ? (
+        <div className="app-feedback app-feedback--error" role="alert">
+          {formError}
+        </div>
+      ) : null}
       <SchemaForm
         fields={fields}
         values={values}
         errors={errors}
-        submitLabel={submitLabel}
+        submitLabel={saving ? 'Guardando…' : submitLabel}
         onChange={(next) => {
           setValues(next);
           setErrors({});
+          setFormError(null);
         }}
         onSubmit={handleSubmit}
         onCancel={onClose}
