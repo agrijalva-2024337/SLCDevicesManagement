@@ -1,238 +1,81 @@
-import { useEffect, useState } from 'react';
-import { AlertBanner } from '@/shared/components/AlertBanner';
-import { CatalogRowActions } from '@/shared/components/CatalogRowActions';
-import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
+import { useMemo } from 'react';
+import { nameById } from '@/features/catalogos/maestros';
+import * as empresaService from '@/features/organizacion/empresas/empresaService';
+import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import { DataTable } from '@/shared/components/DataTable';
-import { FeedbackState } from '@/shared/components/FeedbackState';
-import { HabilitadoFilter } from '@/shared/components/HabilitadoFilter';
-import { Modal } from '@/shared/components/Modal';
-import { PageHeader } from '@/shared/components/PageHeader';
+import { OverlayOutlet } from '@/shared/components/OverlayOutlet';
 import { RegisterButton } from '@/shared/components/RecordActions';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
-import { getErrorMessage } from '@/shared/utils/getErrorMessage';
-import * as paisService from '@/features/catalogos/paises/paisService';
-import * as empresaService from '@/features/organizacion/empresas/empresaService';
-import { SedeForm } from '@/features/organizacion/sedes/SedeForm';
-import * as sedeService from '@/features/organizacion/sedes/sedeService';
+import { useResource } from '@/shared/hooks/useResource';
 
-const EMPTY_SEDE = {
-  idEmpresa: '',
-  idPais: '',
-  nombre: '',
-  direccion: '',
-  ciudad: '',
-};
+export { SedeDetallePage } from '@/features/organizacion/sedes/SedeDetallePage';
+export { SedeFormPage } from '@/features/organizacion/sedes/SedeFormPage';
 
-function toSedeFormValues(row) {
-  return {
-    idEmpresa: row.idEmpresa ?? '',
-    idPais: row.idPais ?? '',
-    nombre: row.nombre ?? '',
-    direccion: row.direccion ?? '',
-    ciudad: row.ciudad ?? '',
-  };
-}
+function CatalogBanner({ banner }) {
+  if (!banner) {
+    return null;
+  }
 
-function toOptions(items) {
-  return items
-    .filter((item) => item.habilitado !== false)
-    .map((item) => ({ value: item.id, label: item.nombre }));
+  const tone = banner.variant === 'error' ? 'app-feedback--error' : 'app-feedback--empty';
+
+  return (
+    <div className={`app-feedback ${tone}`} role={banner.variant === 'error' ? 'alert' : 'status'}>
+      {banner.message}
+    </div>
+  );
 }
 
 export function SedesPage() {
-  const { visibleRows, isLoading, errorMessage, filter, setFilter, banner, setBanner, reload } =
+  const { rows, visibleRows, isLoading, errorMessage, banner, reload } =
     useCatalogCollection(sedeService.getAll);
-  const [empresas, setEmpresas] = useState([]);
-  const [paises, setPaises] = useState([]);
-  const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [confirmRow, setConfirmRow] = useState(null);
-  const [confirming, setConfirming] = useState(false);
+  const empresas = useResource(empresaService.getAll);
+  const empresaNombres = useMemo(() => nameById(empresas.data), [empresas.data]);
+  const outletContext = useMemo(() => ({ reload, rows }), [reload, rows]);
 
-  useEffect(() => {
-    let cancelled = false;
+  const columns = useMemo(
+    () => [
+      { key: 'nombre', header: 'Nombre', primary: true },
+      {
+        key: 'empresa',
+        header: 'Empresa',
+        getValue: (sede) => empresaNombres[sede.idEmpresa] ?? '—',
+      },
+      { key: 'direccion', header: 'Dirección' },
+      { key: 'habilitado', header: 'Estado', type: 'status' },
+    ],
+    [empresaNombres],
+  );
 
-    async function loadLookups() {
-      try {
-        const [empresaRows, paisRows] = await Promise.all([
-          empresaService.getAll(),
-          paisService.getAll(),
-        ]);
-
-        if (!cancelled) {
-          setEmpresas(empresaRows);
-          setPaises(paisRows);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setBanner({ variant: 'error', message: getErrorMessage(error) });
-        }
-      }
-    }
-
-    loadLookups();
-    return () => {
-      cancelled = true;
-    };
-  }, [setBanner]);
-
-  const empresaById = new Map(empresas.map((item) => [item.id, item.nombre]));
-  const paisById = new Map(paises.map((item) => [item.id, item.nombre]));
-  const tableRows = visibleRows.map((row) => ({
-    ...row,
-    empresaNombre: empresaById.get(row.idEmpresa) ?? row.idEmpresa,
-    paisNombre: paisById.get(row.idPais) ?? row.idPais,
-  }));
-
-  function openCreate() {
-    setEditing(null);
-    setFormOpen(true);
+  if (errorMessage) {
+    return (
+      <section>
+        <div className="app-feedback app-feedback--error" role="alert">
+          {errorMessage}
+        </div>
+      </section>
+    );
   }
-
-  function openEdit(row) {
-    setEditing(row);
-    setFormOpen(true);
-  }
-
-  function closeForm() {
-    if (!saving) {
-      setFormOpen(false);
-      setEditing(null);
-    }
-  }
-
-  async function handleSave(values) {
-    setSaving(true);
-
-    try {
-      const payload = {
-        ...values,
-        idEmpresa: Number(values.idEmpresa),
-        idPais: Number(values.idPais),
-      };
-
-      if (editing) {
-        await sedeService.update(editing.id, { ...editing, ...payload });
-        setBanner({ variant: 'success', message: 'La sede se actualizó correctamente.' });
-      } else {
-        await sedeService.create({ ...payload, habilitado: true });
-        setBanner({ variant: 'success', message: 'La sede se creó correctamente.' });
-      }
-
-      setFormOpen(false);
-      setEditing(null);
-      await reload();
-    } catch (error) {
-      setBanner({ variant: 'error', message: getErrorMessage(error) });
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleConfirm() {
-    if (!confirmRow) {
-      return;
-    }
-
-    setConfirming(true);
-
-    try {
-      if (confirmRow.habilitado) {
-        await sedeService.remove(confirmRow.id);
-        setBanner({ variant: 'success', message: 'La sede se inactivó correctamente.' });
-      } else {
-        await sedeService.update(confirmRow.id, { ...confirmRow, habilitado: true });
-        setBanner({ variant: 'success', message: 'La sede se reactivó correctamente.' });
-      }
-
-      setConfirmRow(null);
-      await reload();
-    } catch (error) {
-      setBanner({ variant: 'error', message: getErrorMessage(error) });
-    } finally {
-      setConfirming(false);
-    }
-  }
-
-  const columns = [
-    { key: 'nombre', header: 'Nombre', primary: true },
-    { key: 'empresaNombre', header: 'Empresa' },
-    { key: 'paisNombre', header: 'País' },
-    { key: 'ciudad', header: 'Ciudad' },
-    { key: 'direccion', header: 'Dirección' },
-    { key: 'habilitado', header: 'Estado', type: 'status' },
-  ];
 
   return (
-    <section className="space-y-6">
-      <PageHeader
+    <section>
+      <CatalogBanner banner={banner} />
+      <DataTable
         title="Sedes"
-        description="Sucursales y centros de operación asociados a una empresa y un país."
-        actions={<RegisterButton onClick={openCreate} label="Registrar sede" />}
+        description="Instalaciones físicas de cada empresa."
+        primaryAction={<RegisterButton to="nueva" label="Registrar sede" />}
+        columns={columns}
+        rows={visibleRows}
+        loading={isLoading}
+        searchPlaceholder="Buscar por nombre, empresa o dirección"
+        statusFilter={{ key: 'habilitado' }}
+        emptyTitle="No hay sedes"
+        emptyDescription="Registre la primera sede para vincularla a una empresa."
+        getRowActions={(sede) => ({
+          view: { to: `${sede.id}` },
+          edit: { to: `${sede.id}/editar` },
+        })}
       />
-
-      {banner ? (
-        <AlertBanner
-          variant={banner.variant}
-          message={banner.message}
-          onDismiss={() => setBanner(null)}
-        />
-      ) : null}
-
-      <HabilitadoFilter value={filter} onChange={setFilter} />
-
-      {errorMessage ? (
-        <FeedbackState status="error" errorMessage={errorMessage} />
-      ) : (
-        <DataTable
-          columns={columns}
-          rows={tableRows}
-          loading={isLoading}
-          emptyTitle="No hay sedes"
-          emptyDescription="No hay sedes para mostrar."
-          searchPlaceholder="Buscar sedes..."
-          getRowActions={(row) => ({
-            view: { onClick: () => openEdit(row) },
-            edit: { onClick: () => openEdit(row) },
-          })}
-          renderExpandedContent={(row) => (
-            <CatalogRowActions
-              row={row}
-              onEdit={openEdit}
-              onInactivate={setConfirmRow}
-              onReactivate={setConfirmRow}
-            />
-          )}
-        />
-      )}
-
-      <Modal isOpen={formOpen} onClose={closeForm} title={editing ? 'Editar sede' : 'Nueva sede'}>
-        <SedeForm
-          key={editing ? `edit-${editing.id}` : 'new'}
-          initialValues={editing ? toSedeFormValues(editing) : EMPTY_SEDE}
-          empresaOptions={toOptions(empresas)}
-          paisOptions={paises.map((item) => ({ value: item.id, label: item.nombre }))}
-          onSubmit={handleSave}
-          onCancel={closeForm}
-          isSubmitting={saving}
-        />
-      </Modal>
-
-      <ConfirmDialog
-        isOpen={Boolean(confirmRow)}
-        onClose={() => (confirming ? null : setConfirmRow(null))}
-        onConfirm={handleConfirm}
-        title={confirmRow?.habilitado ? 'Inactivar sede' : 'Reactivar sede'}
-        message={
-          confirmRow?.habilitado
-            ? `¿Inactivar "${confirmRow?.nombre}"? El registro seguirá visible como inactivo.`
-            : `¿Reactivar "${confirmRow?.nombre}"?`
-        }
-        confirmLabel={confirmRow?.habilitado ? 'Inactivar' : 'Reactivar'}
-        variant={confirmRow?.habilitado ? 'danger' : 'primary'}
-        isConfirming={confirming}
-      />
+      <OverlayOutlet context={outletContext} />
     </section>
   );
 }

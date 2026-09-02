@@ -64,7 +64,7 @@ Copiar `.env.example` a `.env`. Nunca hardcodear la URL de la API.
 
 ### Mocks vs API real
 
-Los seis catálogos (y País, usado como lookup) corren contra datos de prueba **en memoria** mientras `VITE_USE_API_MOCK=true`. Las rutas viven en `src/shared/api/paths.js`. Cada `*Service.js` ya tiene la rama HTTP escrita.
+Los siete catálogos (empresas, sedes, áreas, categorías, proveedores, ubicaciones, países) corren contra datos de prueba **en memoria** mientras `VITE_USE_API_MOCK=true`. Las rutas viven en `src/shared/api/paths.js`. Cada `*Service.js` ya tiene la rama HTTP escrita.
 
 Cuando se integre la API real (Prompt 3 / FE-05):
 
@@ -86,15 +86,15 @@ Definidas en `src/app/routes.jsx` con `createBrowserRouter` + lazy. `App.jsx` so
 | `/` | Landing pública | Activa |
 | `/login` | Inicio de sesión (solo UI; auth real es FE-05) | Activa |
 | `/app` | Dashboard (`HomePage`) | Activa |
-| `/app/catalogos/empresas` | Empresas | Activa |
-| `/app/catalogos/sedes` | Sedes | Activa |
-| `/app/catalogos/areas` | Áreas | Activa |
-| `/app/catalogos/categorias` | Categorías | Activa |
-| `/app/catalogos/proveedores` | Proveedores | Activa |
-| `/app/catalogos/ubicaciones` | Ubicaciones | Activa |
+| `/app/catalogos/empresas` | Empresas + overlays `nueva` / `:id` / `:id/editar` | Activa |
+| `/app/catalogos/sedes` | Sedes + overlays `nueva` / `:id` / `:id/editar` | Activa |
+| `/app/catalogos/:slug` | Áreas, categorías, proveedores, ubicaciones, países | Activa |
+| `/app/catalogos/:slug/nueva` \| `:id` \| `:id/editar` | Ficha y formulario sobre la lista | Activa |
 | `*` | 404 | Activa |
 
-Empresa, Sede y Área viven en `features/organizacion/` pero las URLs quedan bajo `/app/catalogos/...`. Los módulos (activos, asignaciones, etc.) aparecen en el sidebar **deshabilitados**. País aparece en el menú de catálogos también deshabilitado (solo existe como lookup).
+Empresa y sede viven en `features/organizacion/`; el resto de maestros en `features/catalogos/` (`maestros.js` + `CatalogoPage`). Las URLs quedan bajo `/app/catalogos/...`. Deep link de ficha: `/app/catalogos/areas/7`. Países es grilla con banderas; ubicaciones es tabla + mapa. Detalle de la configuración: `src/features/catalogos/README.md`.
+
+Los módulos (activos, asignaciones, etc.) aparecen en el sidebar **deshabilitados**.
 
 ## Estructura de carpetas
 
@@ -109,12 +109,13 @@ frontend/src/
   features/
     landing/           LandingPage, sections, data estáticos, landing.css
     auth/              LoginPage (UI), authService.js, useAuth.js
-    organizacion/      empresas, sedes, areas + servicios restantes
-    catalogos/         categorias, proveedores, ubicaciones, paises (lookup)
+    organizacion/      empresas, sedes, areas (servicios + detalle/form de empresa y sede)
+    catalogos/         maestros.js, CatalogoPage, categorias, proveedores, ubicaciones, paises
     activos/ asignaciones/ inventario/
   shared/
     api/               paths.js, contracts.js, errors.js
     components/        DataTable, PageHeader, FeedbackState, overlays, forms…
+    geo/               parseCoordinates, geocodeAddress, useResolvedPositions
     hooks/             useForm, useCatalogCollection, useResource, useApiHealth, useCrudOverlay
     layout/            AppLayout, Sidebar, Topbar, navigation.js
     styles/            app-ui.css, data-table.css, tooltip.css
@@ -143,9 +144,9 @@ Hook `useResource(loadFn)` → `{ data, isLoading, errorMessage, reload }`.
 
 ## Componentes compartidos
 
-**Nuevos (sistema de diseño):** `PageHeader` (`kicker`, `title`, `description`, `actions`), `StatCard`, `FeedbackState`, `DataTable` (`loading`, `emptyTitle`/`emptyDescription`, `getRowActions`, columnas `type: 'status'`), `DetailOverlay`, `RecordForm` / `SchemaForm`, `RecordFormOverlay`, `StatusBadge`, `RecordActions` (`RegisterButton`), `RowIconActions`, `RecordCard`, `Reveal`, `Tooltip`, `OverlayOutlet`.
+**Sistema de diseño:** `PageHeader` (`kicker`, `title`, `description`, `actions`), `StatCard`, `FeedbackState`, `DataTable` (`loading`, `emptyTitle`/`emptyDescription`, `getRowActions`, columnas `type: 'status'`), `DetailOverlay`, `RecordForm` / `SchemaForm`, `RecordFormOverlay`, `StatusBadge`, `RecordActions` (`RegisterButton`), `RowIconActions`, `RecordCard`, `Reveal`, `Tooltip`, `OverlayOutlet`.
 
-**Obsoletos pero todavía en uso** (se retiran cuando los formularios pasen a `SchemaForm`): `Button`, `Badge`, `TextField`, `SelectField`, `TextareaField`, `CheckboxField`, `FormActions`, `AlertBanner`, `Modal`, `ConfirmDialog`, `HabilitadoFilter`, `CatalogRowActions`.
+Los catálogos usan `SchemaForm` y `app-feedback`. Ya no existen `Button`, `Badge`, `TextField`, `SelectField`, `TextareaField`, `CheckboxField`, `FormActions`, `AlertBanner`, `Modal`, `ConfirmDialog`, `HabilitadoFilter` ni `CatalogRowActions`.
 
 `DataTable.columns[]`: `{ key, header, getValue, render, sortValue, primary, numeric, mono, truncate, sticky, type: 'status' | 'badge', … }`.
 

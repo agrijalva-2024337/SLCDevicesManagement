@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
 import { Outlet } from 'react-router';
 
-export function OverlayOutlet() {
+export function OverlayOutlet({ context }) {
   return (
     <Suspense fallback={null}>
-      <Outlet />
+      <Outlet context={context} />
     </Suspense>
   );
 }

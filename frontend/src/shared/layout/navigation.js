@@ -5,7 +5,7 @@ export const catalogos = [
   { slug: 'categorias', label: 'Categorías' },
   { slug: 'proveedores', label: 'Proveedores' },
   { slug: 'ubicaciones', label: 'Ubicaciones' },
-  { slug: 'paises', label: 'Países', disabled: true },
+  { slug: 'paises', label: 'Países' },
 ];
 
 export const modulosApp = [
