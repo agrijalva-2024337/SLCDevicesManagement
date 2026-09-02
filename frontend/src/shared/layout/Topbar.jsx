@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router';
 import { getPageTitle } from '@/shared/layout/navigation';
+import { ThemeToggle } from '@/shared/theme/ThemeToggle';
 
 export function Topbar({ sidebarOpen, onMenuToggle }) {
   const { pathname } = useLocation();
@@ -23,9 +24,12 @@ export function Topbar({ sidebarOpen, onMenuToggle }) {
         </h1>
       </div>
 
-      <Link to="/" className="app-link-quiet shrink-0 sm:text-sm">
-        Volver al sitio
-      </Link>
+      <div className="flex shrink-0 items-center gap-3">
+        <ThemeToggle />
+        <Link to="/" className="app-link-quiet sm:text-sm">
+          Volver al sitio
+        </Link>
+      </div>
     </header>
   );
 }

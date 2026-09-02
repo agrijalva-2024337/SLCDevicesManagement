@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router';
 import { navigation } from '@/shared/layout/navigation';
+import { ThemeToggle } from '@/shared/theme/ThemeToggle';
 
 function linkClass({ isActive }) {
   return `app-nav-link ${isActive ? 'is-active' : ''}`;
@@ -102,7 +103,9 @@ export function Sidebar({ open, onClose }) {
             })}
           </ul>
         </nav>
-        <div className="app-sidebar-foot" />
+        <div className="app-sidebar-foot">
+          <ThemeToggle inverse />
+        </div>
       </div>
     </aside>
   );
