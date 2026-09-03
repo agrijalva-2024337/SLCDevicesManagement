@@ -16,7 +16,13 @@ export function canWriteCatalog(rol, resource) {
     return rol === RolUsuario.AdministradorGeneral;
   }
 
-  if (resource === 'ubicaciones') {
+  if (
+    resource === 'ubicaciones' ||
+    resource === 'traslados' ||
+    resource === 'mantenimientos' ||
+    resource === 'activos' ||
+    resource === 'asignaciones'
+  ) {
     return rol >= RolUsuario.OperadorInventario;
   }
 

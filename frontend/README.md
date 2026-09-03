@@ -116,11 +116,59 @@ Definidas en `src/app/routes.jsx` con `createBrowserRouter` + lazy. `App.jsx` mo
 | `/app/catalogos/sedes` | Sedes + overlays `nueva` / `:id` / `:id/editar` | Activa |
 | `/app/catalogos/:slug` | Áreas, categorías, proveedores, ubicaciones, países | Activa |
 | `/app/catalogos/:slug/nueva` \| `:id` \| `:id/editar` | Ficha y formulario sobre la lista | Activa |
+| `/app/activos` | Parque: alta, edición, ficha, acciones y línea de tiempo | Activa |
+| `/app/asignaciones` | Entrega y devolución (tipo `Asignacion`) | Activa |
+| `/app/traslados` | Traslados (vista de `Asignacion` tipo Traslado) | Activa |
+| `/app/mantenimientos` | Mantenimientos (vista de `Asignacion` tipo Mantenimiento) | Activa |
 | `*` | 404 | Activa |
 
 Empresa y sede viven en `features/organizacion/`; el resto de maestros en `features/catalogos/` (`maestros.js` + `CatalogoPage`). Las URLs quedan bajo `/app/catalogos/...`. Deep link de ficha: `/app/catalogos/areas/7`. Países es grilla con banderas; ubicaciones es tabla + mapa. Detalle de la configuración: `src/features/catalogos/README.md`.
 
-Los módulos (activos, asignaciones, etc.) aparecen en el sidebar **deshabilitados**.
+Activos, asignaciones, traslados y mantenimientos están habilitados en el sidebar. Bajas, inventario físico, bitácora y reportes siguen deshabilitados.
+
+## Activos y asignaciones (FE-06)
+
+`ActivoDto` no tiene `idEmpresa` ni `idSede`. Empresa y sede se derivan: `Activo.idUbicacion` → `Ubicacion.idSede` → `Sede.idEmpresa`. El código de tabla es `numeroSerie`. Alta y edición mandan `CreateActivoCommand` / `UpdateActivoCommand`.
+
+El estado del activo no viene en el DTO. Se lee de `Activo.idEstado` si el mock o un command lo escribió; si no, de la asignación activa. Nombres del seed: `Disponible`, `Asignado`, `En mantenimiento`, `Dado de baja`. Drill-down: `?estado=<nombre>`. Deep link: `?id=<id>`.
+
+Asignaciones de esta pantalla son **solo entrega**. Se listan filas con tipo `Asignacion` resuelto por nombre. No hay select de Traslado / Mantenimiento / Baja. Crear llama `POST /api/Asignaciones` (`CreateAsignacionCommand` exige `idUbicacion`; se toma del activo). Cerrar llama `POST /api/Asignaciones/{id}/devolver`. No se edita `activa` a mano.
+
+Desde la ficha, **Asignar** navega a `/app/asignaciones` con `state: { idActivo }`. Trasladar y mantenimiento siguen abriendo overlays locales (FE-07). **Dar de baja** está deshabilitado hasta el Sprint 7 (BE-18).
+
+Perfil Consulta: ve listas y fichas; no registra, no edita, no entrega ni devuelve. Operador de inventario o superior escribe en `activos` y `asignaciones`.
+
+## Traslados y mantenimientos (FE-07)
+
+No son entidades propias ni tienen `/api/traslados` o `/api/mantenimientos`. Son **vistas sobre `Asignacion`** filtradas por `Tipo_Asignacion`. Los ids de tipo y estado **nunca se hardcodean**: se resuelven por nombre en runtime (`shared/api/tipoAsignacion.js`) contra `GET /api/TiposAsignacion` y `GET /api/Estados`.
+
+Nombres del seed (`Scripts/SeedCatalogosAddendum.sql`):
+
+| Catálogo | Valores |
+| --- | --- |
+| Tipo_Asignacion | `Asignacion`, `Traslado`, `Mantenimiento`, `Baja` |
+| Estado | `Disponible`, `Asignado`, `En mantenimiento`, `Dado de baja` |
+
+Si un nombre no aparece, la UI muestra «catálogo incompleto» y no manda `undefined` al backend.
+
+El origen de un traslado es la ubicación actual del activo (dato, no input). El destino es un select de ubicaciones de la empresa activa. La ruta `Origen → Destino` se guarda en `observaciones` porque `AsignacionDto` no tiene `idUbicacionOrigen` / `idUbicacionDestino`.
+
+El tipo preventivo/correctivo no existe en el DTO; va en `observaciones` si hace falta. La sede del mantenimiento es `Activo → Ubicacion → Sede`.
+
+Punto de conexión cuando Angel/Gerardo publiquen BE-16 / BE-17 (las rutas ya estaban esbozadas en BE-15 y se recortaron para que compilara):
+
+| Acción | Hoy (mock o API genérica) | Cuando exista el command |
+| --- | --- | --- |
+| Listar | `GET /api/Asignaciones` + filtro por nombre de tipo | Igual |
+| Registrar traslado | `POST /api/Asignaciones` con `idTipoAsignacion` = Traslado e `idUbicacion` destino | `POST /api/Asignaciones/traslado` — cambiar `persistir` en `trasladoService.js` |
+| Abrir mantenimiento | `POST /api/Asignaciones` con tipo Mantenimiento | `POST /api/Asignaciones/mantenimiento` — `persistirApertura` en `mantenimientoService.js` |
+| Finalizar mantenimiento | `POST /api/Asignaciones/{id}/devolver` | `POST /api/Asignaciones/{id}/finalizar-mantenimiento` — `finalizar` |
+
+En local, con `VITE_USE_API_MOCK=true`, el mock respeta `AsignacionDto`, actualiza `Activo.idUbicacion` en el traslado y el estado al abrir/cerrar mantenimiento. Cuando el backend publique: `git pull`, `VITE_USE_API_MOCK=false` y, si ya están los endpoints dedicados, un solo cambio en esas funciones.
+
+Query params de mantenimientos (drill-down de FE-10): `?abiertos=1` y `?estado=<nombre>`. Deep link de ficha: `?id=<id>`.
+
+Perfil Consulta: sin botones de registrar ni finalizar. Un activo dado de baja muestra traslado y mantenimiento deshabilitados, con el motivo en el tooltip.
 
 ## Estructura de carpetas
 
@@ -137,7 +185,10 @@ frontend/src/
     auth/              LoginPage, authService, useAuth, RutaProtegida, decodeJwt
     organizacion/      empresas, sedes, areas (servicios + detalle/form de empresa y sede)
     catalogos/         maestros.js, CatalogoPage, categorias, proveedores, ubicaciones, paises
-    activos/ asignaciones/ inventario/
+    activos/           ActivosPage, ficha, form, activoAcciones, historialActivoService
+    asignaciones/      AsignacionesPage, form, asignacionService (entrega y devolver)
+    inventario/        TrasladosPage, trasladoService (sobre Asignacion)
+    mantenimientos/    MantenimientosPage, mantenimientoService (apertura y cierre)
   shared/
     api/               paths.js, contracts.js, errors.js
     components/        DataTable, PageHeader, FeedbackState, overlays, forms…
@@ -164,7 +215,8 @@ Los campos de cada catálogo coinciden con los DTOs de Application (camelCase): 
 | `authService`                     | `login`, `getMe`, `logout`            | Real: `{ emailOrUsername, password }` → `token` + `userDetails`. Mock: `Practica2026` |
 | `useAuth`                         | JWT (`role`, `id_empresa`) + sesión   | Expone `rol`, `idEmpresa`, `canWrite`                                              |
 | Bitácora / historial de activo    | `getAll`, `getById`                   | Solo lectura                                                                       |
-| Activos, asignaciones, inventario | CRUD mock                             | Sin pantallas en este sprint                                                       |
+| Activos, asignaciones, inventario | CRUD mock / API                       | Activos: alta y edición. Asignaciones: `entregar` + `devolver` |
+| Traslados / mantenimientos        | Vista sobre `asignacionService`       | Lookup por nombre. No hay `/api/traslados` |
 
 Hook `useResource(loadFn)` → `{ data, isLoading, errorMessage, reload }`.
 

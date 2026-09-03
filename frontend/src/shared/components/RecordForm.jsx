@@ -82,6 +82,7 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
                 id={id}
                 className={controlClass(errors[field.name])}
                 value={values[field.name] ?? ''}
+                disabled={Boolean(field.readOnly)}
                 onChange={(event) => setField(field.name, event.target.value)}
               >
                 <option value="">{field.placeholder ?? 'Seleccione…'}</option>
@@ -121,6 +122,7 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
               step={field.step}
               min={field.min}
               autoComplete={field.autoComplete}
+              readOnly={Boolean(field.readOnly)}
               onChange={(event) => setField(field.name, event.target.value)}
             />
           </FormField>
