@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import slcTradeLogo from '@/assets/slc-mark.svg';
+import slcTradeLogo from '@/assets/slc-trade-logo.png';
 import { AtmosphereBackdrop } from '@/features/landing/components/AtmosphereBackdrop';
 import { TypeLine } from '@/features/landing/components/TypeLine';
 import { heroContent } from '@/features/landing/data/contenido';
