@@ -36,6 +36,11 @@ public interface IApplicationDbContext
     DbSet<HistoricoInventario> HistoricosInventario { get; }
     DbSet<DetalleActivo> DetallesActivos { get; }
     DbSet<HistorialActivo> HistorialActivos { get; }
+    DbSet<TipoMantenimiento> TiposMantenimiento { get; }
+    DbSet<MotivoBaja> MotivosBaja { get; }
+    DbSet<DetalleMantenimiento> DetallesMantenimiento { get; }
+    DbSet<DetalleBaja> DetallesBaja { get; }
+    DbSet<DetalleTraslado> DetallesTraslado { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

@@ -45,6 +45,11 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<HistoricoInventario> HistoricosInventario => Set<HistoricoInventario>();
     public DbSet<DetalleActivo> DetallesActivos => Set<DetalleActivo>();
     public DbSet<HistorialActivo> HistorialActivos => Set<HistorialActivo>();
+    public DbSet<TipoMantenimiento> TiposMantenimiento => Set<TipoMantenimiento>();
+    public DbSet<MotivoBaja> MotivosBaja => Set<MotivoBaja>();
+    public DbSet<DetalleMantenimiento> DetallesMantenimiento => Set<DetalleMantenimiento>();
+    public DbSet<DetalleBaja> DetallesBaja => Set<DetalleBaja>();
+    public DbSet<DetalleTraslado> DetallesTraslado => Set<DetalleTraslado>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -99,5 +104,14 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             IgnoreEmpresaFilter
             || (h.IdAsignacion.HasValue && Asignaciones.Any(a => a.Id == h.IdAsignacion))
             || (h.IdDetalleActivo.HasValue && DetallesActivos.Any(d => d.Id == h.IdDetalleActivo)));
+        
+        modelBuilder.Entity<DetalleMantenimiento>().HasQueryFilter(d =>
+            IgnoreEmpresaFilter || Asignaciones.Any(a => a.Id == d.IdAsignacion));
+
+        modelBuilder.Entity<DetalleBaja>().HasQueryFilter(d =>
+            IgnoreEmpresaFilter || Asignaciones.Any(a => a.Id == d.IdAsignacion));
+
+        modelBuilder.Entity<DetalleTraslado>().HasQueryFilter(d =>
+            IgnoreEmpresaFilter || Asignaciones.Any(a => a.Id == d.IdAsignacion));
     }
 }

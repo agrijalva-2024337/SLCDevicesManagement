@@ -147,6 +147,12 @@ public sealed class CreateAsignacionCommandHandler : ICommandHandler<CreateAsign
         var activo = await _db.Activos.FirstAsync(a => a.Id == command.IdActivo, cancellationToken);
         activo.IdUbicacion = command.IdUbicacion;
 
+        var nombreEstado = TipoAsignacionNombres.EsNombre(tipo.Nombre, TipoAsignacionNombres.Mantenimiento)
+            ? EstadoActivoNombres.EnMantenimiento
+            : EstadoActivoNombres.Asignado;
+        var estadoActivo = await EstadoActivoNombres.ObtenerRequeridoAsync(_db, nombreEstado, cancellationToken);
+        activo.IdEstado = estadoActivo.Id;
+
         await _db.SaveChangesAsync(cancellationToken);
 
         _db.HistorialActivos.Add(new HistorialActivo
