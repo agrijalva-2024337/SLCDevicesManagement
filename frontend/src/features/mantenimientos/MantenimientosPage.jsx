@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import * as activoService from '@/features/activos/activoService';
@@ -47,6 +47,7 @@ export function MantenimientosPage() {
   const load = useCallback(() => mantenimientoService.listar(), []);
   const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(load);
   const crud = useCrudOverlay();
+  const [closing, setClosing] = useState(false);
   const activos = useResource(activoService.getAll);
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
@@ -194,6 +195,30 @@ export function MantenimientosPage() {
             <div className="sm:col-span-2">
               <DetailField label="Detalle" value={crud.record.observaciones} />
             </div>
+            {allowWrite && crud.record.abierto ? (
+              <div className="sm:col-span-2">
+                <button
+                  type="button"
+                  className="app-btn app-btn--primary"
+                  disabled={closing}
+                  onClick={async () => {
+                    setClosing(true);
+                    try {
+                      await mantenimientoService.finalizar(crud.record.id);
+                      setBanner({ message: 'Mantenimiento finalizado. El activo vuelve a Disponible.', variant: 'empty' });
+                      crud.close();
+                      await reload();
+                      await activos.reload();
+                    } finally {
+                      setClosing(false);
+                    }
+                  }}
+                >
+                  <i className="pi pi-check" aria-hidden="true" />
+                  {closing ? 'Finalizando…' : 'Finalizar mantenimiento'}
+                </button>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </DetailOverlay>
