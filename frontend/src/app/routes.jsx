@@ -21,6 +21,7 @@ const loadCatalogo = () => import('@/features/catalogos/CatalogoPage');
 const loadTraslados = () => import('@/features/inventario/TrasladosPage');
 const loadMantenimientos = () => import('@/features/mantenimientos/MantenimientosPage');
 const loadActivos = () => import('@/features/activos/ActivosPage');
+const loadAsignaciones = () => import('@/features/asignaciones/AsignacionesPage');
 
 const writeChildren = (loader, formExport, detailExport) => [
   {
@@ -66,6 +67,7 @@ export const router = createBrowserRouter([
             children: writeChildren(loadCatalogo, 'MaestroFormPage', 'MaestroDetallePage'),
           },
           { path: 'activos', ...named(loadActivos, 'ActivosPage') },
+          { path: 'asignaciones', ...named(loadAsignaciones, 'AsignacionesPage') },
           { path: 'traslados', ...named(loadTraslados, 'TrasladosPage') },
           { path: 'mantenimientos', ...named(loadMantenimientos, 'MantenimientosPage') },
         ],

@@ -10,7 +10,7 @@ export const catalogos = [
 
 export const modulosApp = [
   { path: '/app/activos', label: 'Activos', icon: 'pi pi-box' },
-  { path: '/app/asignaciones', label: 'Asignaciones', icon: 'pi pi-users', disabled: true },
+  { path: '/app/asignaciones', label: 'Asignaciones', icon: 'pi pi-users' },
   { path: '/app/traslados', label: 'Traslados', icon: 'pi pi-arrow-right-arrow-left' },
   { path: '/app/mantenimientos', label: 'Mantenimientos', icon: 'pi pi-wrench' },
   { path: '/app/bajas', label: 'Bajas', icon: 'pi pi-times-circle', disabled: true },
