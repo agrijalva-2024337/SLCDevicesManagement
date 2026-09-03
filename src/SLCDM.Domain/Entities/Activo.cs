@@ -21,6 +21,11 @@ public class Activo: SLCDM.Domain.Common.BaseEntity {
 
     [ForeignKey("IdUbicacion")]
     public Ubicacion? Ubicacion { get; set; }
+    
+    public int? IdEstado { get; set; }
+
+    [ForeignKey("IdEstado")]
+    public Estado? Estado { get; set; }
 
     [Required(ErrorMessage = "El campo nombre es obligatorio")]
     [MaxLength(150, ErrorMessage = "El campo nombre no debe superar los 150 caracteres")]
