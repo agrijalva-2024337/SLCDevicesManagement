@@ -82,7 +82,7 @@ public sealed class CreateTrasladoCommandHandler : ICommandHandler<CreateTraslad
     {
         await _validator.ValidateAndThrowAsync(command, cancellationToken);
 
-        var tipo = await TipoAsignacionNombres.ObtenerRequeridoAsync(_db, TipoAsignacion.Traslado, cancellationToken);
+        var tipo = await TipoAsignacionNombres.ObtenerRequeridoAsync(_db, TipoAsignacionNombres.Traslado, cancellationToken);
 
         var activo = await _db.Activos.FirstOrDefaultAsync(a => a.Id == command.IdActivo, cancellationToken)
         ?? throw new NotFoundException("Activo", command.IdActivo);
