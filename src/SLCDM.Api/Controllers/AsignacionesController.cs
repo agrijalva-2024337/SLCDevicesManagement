@@ -16,12 +16,12 @@ public sealed class AsignacionesController : ApiControllerBase
     private readonly ICommandHandler<CreateAsignacionCommand, int> _entregar;
     private readonly ICommandHandler<UpdateAsignacionCommand> _update;
     private readonly ICommandHandler<DevolverAsignacionCommand> _devolver;
+    private readonly ICommandHandler<CreateTrasladoCommand, int> _trasladar;
+    private readonly ICommandHandler<CreateMantenimientoCommand, int> _iniciarMantenimiento;
+    private readonly ICommandHandler<FinalizarMantenimientoCommand> _finalizarMantenimiento;
 
-    // NOTA: cuando lleguen BE-16/17/18, agregar de vuelta aqui:
-    // ICommandHandler<CreateTrasladoCommand, int> trasladar,
-    // ICommandHandler<CreateMantenimientoCommand, int> iniciarMantenimiento,
-    // ICommandHandler<CreateBajaCommand, int> darDeBaja,
-    // ICommandHandler<FinalizarMantenimientoCommand> finalizarMantenimiento
+    // NOTA: cuando llegue BE-18 (Sprint 7), agregar de vuelta aqui:
+    // ICommandHandler<CreateBajaCommand, int> darDeBaja;
 
     public AsignacionesController(
         IQueryHandler<GetAsignacionesQuery, IReadOnlyList<AsignacionDto>> getAll,
@@ -29,7 +29,10 @@ public sealed class AsignacionesController : ApiControllerBase
         IQueryHandler<GetHistorialAsignacionesPorActivoQuery, IReadOnlyList<AsignacionHistorialDto>> historial,
         ICommandHandler<CreateAsignacionCommand, int> entregar,
         ICommandHandler<UpdateAsignacionCommand> update,
-        ICommandHandler<DevolverAsignacionCommand> devolver)
+        ICommandHandler<DevolverAsignacionCommand> devolver,
+        ICommandHandler<CreateTrasladoCommand, int> trasladar,
+        ICommandHandler<CreateMantenimientoCommand, int> iniciarMantenimiento,
+        ICommandHandler<FinalizarMantenimientoCommand> finalizarMantenimiento)
     {
         _getAll = getAll;
         _getById = getById;
@@ -37,6 +40,9 @@ public sealed class AsignacionesController : ApiControllerBase
         _entregar = entregar;
         _update = update;
         _devolver = devolver;
+        _trasladar = trasladar;
+        _iniciarMantenimiento = iniciarMantenimiento;
+        _finalizarMantenimiento = finalizarMantenimiento;
     }
 
     [HttpGet]
@@ -96,6 +102,40 @@ public sealed class AsignacionesController : ApiControllerBase
         await _devolver.HandleAsync(command with { Id = id }, cancellationToken);
         return NoContent();
     }
+    
+     [HttpPost("traslado")]
+    [Authorize(Roles = Roles.EscrituraOperativa)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    public async Task<IActionResult> Trasladar(
+        [FromBody] CreateTrasladoCommand command,
+        CancellationToken cancellationToken)
+    {
+        var id = await _trasladar.HandleAsync(command, cancellationToken);
+        return CreatedId(nameof(GetById), id);
+    }
 
-    // ---- BE-16/17/18: reactivar cuando existan sus commands ----
+    [HttpPost("mantenimiento")]
+    [Authorize(Roles = Roles.EscrituraOperativa)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    public async Task<IActionResult> IniciarMantenimiento(
+        [FromBody] CreateMantenimientoCommand command,
+        CancellationToken cancellationToken)
+    {
+        var id = await _iniciarMantenimiento.HandleAsync(command, cancellationToken);
+        return CreatedId(nameof(GetById), id);
+    }
+
+    [HttpPost("{id:int}/finalizar-mantenimiento")]
+    [Authorize(Roles = Roles.EscrituraOperativa)]
+    public async Task<IActionResult> FinalizarMantenimiento(
+        int id,
+        [FromBody] FinalizarMantenimientoCommand command,
+        CancellationToken cancellationToken)
+    {
+        await _finalizarMantenimiento.HandleAsync(command with { Id = id }, cancellationToken);
+        return NoContent();
+    }
+
+    // ---- BE-18 (Sprint 7): reactivar CreateBajaCommand cuando exista ----
+    
 }
