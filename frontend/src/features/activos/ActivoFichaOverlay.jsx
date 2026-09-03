@@ -1,8 +1,11 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { getAccionesDisponibles } from '@/features/activos/activoAcciones';
+import { ActivoMovimientosTimeline } from '@/features/activos/ActivoMovimientosTimeline';
+import * as historialActivoService from '@/features/activos/historialActivoService';
 import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
 import { RowIconActions } from '@/shared/components/RowIconActions';
 import { ToneBadge } from '@/shared/components/StatusBadge';
+import { useResource } from '@/shared/hooks/useResource';
 import { formatDate, formatMoney, byId } from '@/shared/utils/format';
 import { nombreUbicacion } from '@/features/inventario/trasladoRuta';
 
@@ -38,6 +41,13 @@ export function ActivoFichaOverlay({
 }) {
   const ubicacion = byId(ubicaciones, activo?.idUbicacion);
   const estadoNombre = estadoDelActivo(activo, { asignaciones, estados });
+  const activoId = activo?.id;
+  const revision = `${activoId ?? ''}:${(asignaciones ?? []).length}`;
+  const loadMovimientos = useCallback(
+    () => (activoId ? historialActivoService.listarPorActivo(activoId, revision) : Promise.resolve([])),
+    [activoId, revision],
+  );
+  const movimientos = useResource(loadMovimientos);
   const acciones = useMemo(() => {
     if (!activo || !canWrite) return [];
     return getAccionesDisponibles(activo, { asignaciones, tipos });
@@ -78,6 +88,12 @@ export function ActivoFichaOverlay({
               </div>
             </div>
           ) : null}
+          <div>
+            <p className="app-label">Línea de tiempo</p>
+            <div className="mt-3">
+              <ActivoMovimientosTimeline movimientos={movimientos.data} loading={movimientos.isLoading} />
+            </div>
+          </div>
           {children}
         </>
       ) : null}
