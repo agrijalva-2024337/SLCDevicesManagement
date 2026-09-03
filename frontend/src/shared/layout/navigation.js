@@ -12,7 +12,7 @@ export const modulosApp = [
   { path: '/app/activos', label: 'Activos', icon: 'pi pi-box', disabled: true },
   { path: '/app/asignaciones', label: 'Asignaciones', icon: 'pi pi-users', disabled: true },
   { path: '/app/traslados', label: 'Traslados', icon: 'pi pi-arrow-right-arrow-left' },
-  { path: '/app/mantenimientos', label: 'Mantenimientos', icon: 'pi pi-wrench', disabled: true },
+  { path: '/app/mantenimientos', label: 'Mantenimientos', icon: 'pi pi-wrench' },
   { path: '/app/bajas', label: 'Bajas', icon: 'pi pi-times-circle', disabled: true },
   { path: '/app/inventario-fisico', label: 'Inventario físico', icon: 'pi pi-clipboard', disabled: true },
   { path: '/app/bitacora', label: 'Bitácora', icon: 'pi pi-history', disabled: true },
