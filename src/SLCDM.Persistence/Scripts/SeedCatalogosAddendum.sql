@@ -46,4 +46,4 @@ USING (VALUES
 ON target.[nombre] = source.[nombre]
 WHEN NOT MATCHED BY TARGET THEN
     INSERT ([nombre], [descripcion]) VALUES (source.[nombre], source.[descripcion]);
-+GO
+GO
