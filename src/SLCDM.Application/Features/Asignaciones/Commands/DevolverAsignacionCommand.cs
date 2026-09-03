@@ -59,6 +59,14 @@ public sealed class DevolverAsignacionCommandHandler : ICommandHandler<DevolverA
             entity.Observaciones = command.Observaciones;
         }
 
+        var activo = await _db.Activos.FirstOrDefaultAsync(a => a.Id == entity.IdActivo, cancellationToken);
+        if (activo is not null)
+        {
+            var estadoDisponible = await EstadoActivoNombres.ObtenerRequeridoAsync(
+                _db, EstadoActivoNombres.Disponible, cancellationToken);
+            activo.IdEstado = estadoDisponible.Id;
+        }
+
         _db.HistorialActivos.Add(new HistorialActivo
         {
             IdAsignacion = entity.Id,
