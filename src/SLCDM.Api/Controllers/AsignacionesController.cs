@@ -19,9 +19,7 @@ public sealed class AsignacionesController : ApiControllerBase
     private readonly ICommandHandler<CreateTrasladoCommand, int> _trasladar;
     private readonly ICommandHandler<CreateMantenimientoCommand, int> _iniciarMantenimiento;
     private readonly ICommandHandler<FinalizarMantenimientoCommand> _finalizarMantenimiento;
-
-    // NOTA: cuando llegue BE-18 (Sprint 7), agregar de vuelta aqui:
-    // ICommandHandler<CreateBajaCommand, int> darDeBaja;
+    private readonly ICommandHandler<CreateBajaCommand, int> _darDeBaja;
 
     public AsignacionesController(
         IQueryHandler<GetAsignacionesQuery, IReadOnlyList<AsignacionDto>> getAll,
@@ -32,7 +30,8 @@ public sealed class AsignacionesController : ApiControllerBase
         ICommandHandler<DevolverAsignacionCommand> devolver,
         ICommandHandler<CreateTrasladoCommand, int> trasladar,
         ICommandHandler<CreateMantenimientoCommand, int> iniciarMantenimiento,
-        ICommandHandler<FinalizarMantenimientoCommand> finalizarMantenimiento)
+        ICommandHandler<FinalizarMantenimientoCommand> finalizarMantenimiento,
+        ICommandHandler<CreateBajaCommand, int> darDeBaja)
     {
         _getAll = getAll;
         _getById = getById;
@@ -43,6 +42,7 @@ public sealed class AsignacionesController : ApiControllerBase
         _trasladar = trasladar;
         _iniciarMantenimiento = iniciarMantenimiento;
         _finalizarMantenimiento = finalizarMantenimiento;
+        _darDeBaja = darDeBaja;
     }
 
     [HttpGet]
@@ -102,8 +102,8 @@ public sealed class AsignacionesController : ApiControllerBase
         await _devolver.HandleAsync(command with { Id = id }, cancellationToken);
         return NoContent();
     }
-    
-     [HttpPost("traslado")]
+
+    [HttpPost("traslado")]
     [Authorize(Roles = Roles.EscrituraOperativa)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     public async Task<IActionResult> Trasladar(
@@ -136,6 +136,14 @@ public sealed class AsignacionesController : ApiControllerBase
         return NoContent();
     }
 
-    // ---- BE-18 (Sprint 7): reactivar CreateBajaCommand cuando exista ----
-    
+    [HttpPost("baja")]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    public async Task<IActionResult> DarDeBaja(
+        [FromBody] CreateBajaCommand command,
+        CancellationToken cancellationToken)
+    {
+        var id = await _darDeBaja.HandleAsync(command, cancellationToken);
+        return CreatedId(nameof(GetById), id);
+    }
 }
