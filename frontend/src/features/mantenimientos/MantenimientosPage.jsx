@@ -2,12 +2,14 @@ import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import * as activoService from '@/features/activos/activoService';
+import * as asignacionService from '@/features/asignaciones/asignacionService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import { MantenimientoFormOverlay } from '@/features/mantenimientos/MantenimientoFormOverlay';
 import * as mantenimientoService from '@/features/mantenimientos/mantenimientoService';
 import * as estadoService from '@/features/organizacion/estados/estadoService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
+import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
 import { nombreUbicacion } from '@/features/inventario/trasladoRuta';
 import { DataTable } from '@/shared/components/DataTable';
 import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
@@ -53,6 +55,8 @@ export function MantenimientosPage() {
   const sedes = useResource(sedeService.getAll);
   const estados = useResource(estadoService.getAll);
   const responsables = useResource(responsableService.getAll);
+  const tipos = useResource(tipoAsignacionService.getAll);
+  const asignacionesAll = useResource(asignacionService.getAll);
 
   const lookups = useMemo(
     () => ({
@@ -230,6 +234,8 @@ export function MantenimientosPage() {
         ubicaciones={lookups.ubicaciones}
         sedes={lookups.sedes}
         responsables={lookups.responsables}
+        asignaciones={asignacionesAll.data}
+        tipos={tipos.data}
         onClose={crud.close}
         onSave={async (values) => {
           await mantenimientoService.registrar({

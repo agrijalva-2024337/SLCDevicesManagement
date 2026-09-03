@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import { asOptions, compactErrors, optionalText, requireSelect } from '@/shared/components/recordFormUtils';
+import { isActivoDeBaja, isActivoEnMantenimiento } from '@/features/activos/activoAcciones';
 import { initialTrasladoValues, nombreUbicacion, ubicacionesDeEmpresa } from '@/features/inventario/trasladoRuta';
 import { byId } from '@/shared/utils/format';
 
@@ -11,11 +12,21 @@ export function TrasladoFormOverlay({
   ubicaciones,
   sedes,
   responsables,
+  asignaciones = [],
+  tipos = [],
   idEmpresaActiva,
   onSave,
   onClose,
 }) {
   const lockActivo = Boolean(prefill?.idActivo);
+  const ctx = { asignaciones, tipos };
+  const activosElegibles = useMemo(
+    () =>
+      (activos ?? []).filter(
+        (item) => !isActivoDeBaja(item, { asignaciones, tipos }) && !isActivoEnMantenimiento(item, { asignaciones, tipos }),
+      ),
+    [activos, asignaciones, tipos],
+  );
   const initialValues = useMemo(
     () => initialTrasladoValues(prefill, { activos, ubicaciones }),
     [prefill, activos, ubicaciones],
@@ -34,7 +45,7 @@ export function TrasladoFormOverlay({
         type: 'select',
         required: true,
         readOnly: lockActivo,
-        options: asOptions(activos ?? [], 'nombre'),
+        options: asOptions(lockActivo ? (activos ?? []) : activosElegibles, 'nombre'),
         hint: 'El origen es la ubicación actual del activo. No se edita.',
       },
       {
@@ -71,7 +82,7 @@ export function TrasladoFormOverlay({
         wide: true,
       },
     ],
-    [activos, destinos, lockActivo, responsables],
+    [activos, activosElegibles, destinos, lockActivo, responsables],
   );
 
   return (
@@ -99,6 +110,11 @@ export function TrasladoFormOverlay({
           fecha: requireSelect(values.fecha, 'una fecha'),
           observaciones: optionalText(values.observaciones, 'observaciones', 300),
         };
+        if (activo && isActivoDeBaja(activo, ctx)) {
+          errors.idActivo = 'El activo está dado de baja. No se traslada ni se envía a mantenimiento.';
+        } else if (activo && isActivoEnMantenimiento(activo, ctx)) {
+          errors.idActivo = 'El activo está en mantenimiento. Finalícelo antes de trasladarlo.';
+        }
         if (
           activo &&
           values.idUbicacionDestino &&

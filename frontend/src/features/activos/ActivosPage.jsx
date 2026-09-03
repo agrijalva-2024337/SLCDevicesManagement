@@ -104,6 +104,8 @@ export function ActivosPage() {
         ubicaciones={ubicaciones.data}
         sedes={sedes.data}
         responsables={responsables.data}
+        asignaciones={asignaciones.data}
+        tipos={tipos.data}
         idEmpresaActiva={idActiva}
         onClose={() => setMovimiento(null)}
         onSave={async (values) => {
@@ -129,6 +131,8 @@ export function ActivosPage() {
         ubicaciones={ubicaciones.data}
         sedes={sedes.data}
         responsables={responsables.data}
+        asignaciones={asignaciones.data}
+        tipos={tipos.data}
         onClose={() => setMovimiento(null)}
         onSave={async (values) => {
           await mantenimientoService.registrar({

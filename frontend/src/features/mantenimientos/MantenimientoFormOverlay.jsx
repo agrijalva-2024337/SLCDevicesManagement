@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { isActivoDeBaja, isActivoEnMantenimiento } from '@/features/activos/activoAcciones';
 import { nombreUbicacion } from '@/features/inventario/trasladoRuta';
 import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import { asOptions, compactErrors, optionalText, requireSelect } from '@/shared/components/recordFormUtils';
@@ -22,10 +23,20 @@ export function MantenimientoFormOverlay({
   ubicaciones,
   sedes,
   responsables,
+  asignaciones = [],
+  tipos = [],
   onSave,
   onClose,
 }) {
   const lockActivo = Boolean(prefill?.idActivo);
+  const ctx = { asignaciones, tipos };
+  const activosElegibles = useMemo(
+    () =>
+      (activos ?? []).filter(
+        (item) => !isActivoDeBaja(item, { asignaciones, tipos }) && !isActivoEnMantenimiento(item, { asignaciones, tipos }),
+      ),
+    [activos, asignaciones, tipos],
+  );
   const initialValues = useMemo(() => {
     const idActivo = prefill?.idActivo ? String(prefill.idActivo) : '';
     const activo = byId(activos, idActivo);
@@ -46,7 +57,7 @@ export function MantenimientoFormOverlay({
         type: 'select',
         required: true,
         readOnly: lockActivo,
-        options: asOptions(activos ?? [], 'nombre'),
+        options: asOptions(lockActivo ? (activos ?? []) : activosElegibles, 'nombre'),
       },
       {
         name: 'sede',
@@ -75,7 +86,7 @@ export function MantenimientoFormOverlay({
         hint: 'El DTO no tiene tipo preventivo/correctivo. Si aplica, descríbalo aquí.',
       },
     ],
-    [activos, lockActivo, responsables],
+    [activos, activosElegibles, lockActivo, responsables],
   );
 
   return (
@@ -94,14 +105,21 @@ export function MantenimientoFormOverlay({
           sede: activo ? sedeDeActivo(activo, ubicaciones, sedes) : '',
         };
       }}
-      validate={(values) =>
-        compactErrors({
+      validate={(values) => {
+        const activo = byId(activos, values.idActivo);
+        const errors = {
           idActivo: requireSelect(values.idActivo, 'un activo'),
           idResponsable: requireSelect(values.idResponsable, 'un responsable'),
           fecha: requireSelect(values.fecha, 'una fecha'),
           observaciones: optionalText(values.observaciones, 'detalle', 300),
-        })
-      }
+        };
+        if (activo && isActivoDeBaja(activo, ctx)) {
+          errors.idActivo = 'El activo está dado de baja. No se traslada ni se envía a mantenimiento.';
+        } else if (activo && isActivoEnMantenimiento(activo, ctx)) {
+          errors.idActivo = 'El activo ya está en mantenimiento.';
+        }
+        return compactErrors(errors);
+      }}
       onSave={onSave}
       onClose={onClose}
       submitLabel="Abrir mantenimiento"

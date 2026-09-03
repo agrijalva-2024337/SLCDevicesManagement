@@ -1,11 +1,13 @@
 import { useCallback, useMemo } from 'react';
 import { useAuth } from '@/features/auth/useAuth';
 import * as activoService from '@/features/activos/activoService';
+import * as asignacionService from '@/features/asignaciones/asignacionService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import * as estadoService from '@/features/organizacion/estados/estadoService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
+import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
 import { TrasladoFormOverlay } from '@/features/inventario/TrasladoFormOverlay';
 import * as trasladoService from '@/features/inventario/trasladoService';
 import { parseTrasladoRuta } from '@/features/inventario/trasladoRuta';
@@ -55,6 +57,8 @@ export function TrasladosPage() {
   const sedes = useResource(sedeService.getAll);
   const estados = useResource(estadoService.getAll);
   const responsables = useResource(responsableService.getAll);
+  const tipos = useResource(tipoAsignacionService.getAll);
+  const asignaciones = useResource(asignacionService.getAll);
 
   const lookups = useMemo(
     () => ({
@@ -175,6 +179,8 @@ export function TrasladosPage() {
         ubicaciones={lookups.ubicaciones}
         sedes={lookups.sedes}
         responsables={lookups.responsables}
+        asignaciones={asignaciones.data}
+        tipos={tipos.data}
         idEmpresaActiva={idActiva}
         onClose={crud.close}
         onSave={async (values) => {
