@@ -12,9 +12,12 @@ public sealed record CreateBajaCommand(
     int IdUsuario,
     int IdResponsable,
     int IdEstado,
-    string Motivo,
+    int IdMotivoBaja,
+    int IdAutorizadoPor,
+    string? DocumentoReferencia,
     string DocumentoPdfUrl,
-    DateTime FechaAsignacion);
+    DateTime FechaAsignacion,
+    string? Observaciones);
 
 public sealed class CreateBajaCommandValidator : AbstractValidator<CreateBajaCommand>
 {
@@ -33,20 +36,34 @@ public sealed class CreateBajaCommandValidator : AbstractValidator<CreateBajaCom
         RuleFor(x => x.IdResponsable)
             .RequiredId("id responsable")
             .MustAsync(async (id, ct) => await db.Responsables.AnyAsync(r => r.Id == id, ct))
-            .WithMessage("No se encontro un responsable autorizador con el id informado.");
+            .WithMessage("No se encontro un responsable con el id informado.");
 
         RuleFor(x => x.IdEstado)
             .RequiredId("id estado")
             .MustAsync(async (id, ct) => await db.Estados.AnyAsync(e => e.Id == id, ct))
             .WithMessage("No se encontro un estado con el id informado.");
 
-        RuleFor(x => x.Motivo)
-            .NotEmpty().WithMessage("El campo motivo es obligatorio.")
-            .MaximumLength(300).WithMessage("El campo motivo no debe superar los 300 caracteres.");
+        RuleFor(x => x.IdMotivoBaja)
+            .RequiredId("id motivo de baja")
+            .MustAsync(async (id, ct) => await db.MotivosBaja.AnyAsync(m => m.Id == id, ct))
+            .WithMessage("No se encontro un motivo de baja con el id informado.");
+
+        RuleFor(x => x.IdAutorizadoPor)
+            .RequiredId("id autorizado por")
+            .MustAsync(async (id, ct) => await db.Usuarios.AnyAsync(u => u.Id == id, ct))
+            .WithMessage("No se encontro un usuario autorizador con el id informado.");
+
+        RuleFor(x => x.DocumentoReferencia)
+            .MaximumLength(300).WithMessage("El campo documento de referencia no debe superar los 300 caracteres.")
+            .When(x => !string.IsNullOrWhiteSpace(x.DocumentoReferencia));
 
         RuleFor(x => x.DocumentoPdfUrl)
             .NotEmpty().WithMessage("El campo documento pdf url es obligatorio.")
             .MaximumLength(300).WithMessage("El campo documento pdf url no debe superar los 300 caracteres.");
+
+        RuleFor(x => x.Observaciones)
+            .MaximumLength(300).WithMessage("El campo observaciones no debe superar los 300 caracteres.")
+            .When(x => !string.IsNullOrWhiteSpace(x.Observaciones));
     }
 }
 
@@ -93,11 +110,25 @@ public sealed class CreateBajaCommandHandler : ICommandHandler<CreateBajaCommand
             IdTipoAsignacion = tipo.Id,
             FechaAsignacion = fecha,
             Activa = true,
-            Observaciones = command.Motivo,
+            Observaciones = command.Observaciones,
             DocumentoPdfUrl = command.DocumentoPdfUrl
         };
 
         _db.Asignaciones.Add(entity);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        _db.DetallesBaja.Add(new DetalleBaja
+        {
+            IdAsignacion = entity.Id,
+            IdMotivoBaja = command.IdMotivoBaja,
+            DocumentoReferencia = command.DocumentoReferencia,
+            IdAutorizadoPor = command.IdAutorizadoPor
+        });
+
+        var estadoDadoDeBaja = await EstadoActivoNombres.ObtenerRequeridoAsync(
+            _db, EstadoActivoNombres.DadoDeBaja, cancellationToken);
+        activo.IdEstado = estadoDadoDeBaja.Id;
+
         await _db.SaveChangesAsync(cancellationToken);
 
         _db.HistorialActivos.Add(new HistorialActivo
@@ -108,7 +139,7 @@ public sealed class CreateBajaCommandHandler : ICommandHandler<CreateBajaCommand
             Descripcion = "Baja de activo",
             InformacionAnterior = $"id_activo={command.IdActivo}",
             InformacionNueva =
-                $"motivo={command.Motivo}; documento_pdf_url={command.DocumentoPdfUrl}; id_responsable={command.IdResponsable}"
+                $"id_motivo_baja={command.IdMotivoBaja}; documento_pdf_url={command.DocumentoPdfUrl}; id_autorizado_por={command.IdAutorizadoPor}; id_responsable={command.IdResponsable}"
         });
         await _db.SaveChangesAsync(cancellationToken);
 
