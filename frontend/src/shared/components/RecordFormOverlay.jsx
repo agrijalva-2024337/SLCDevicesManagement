@@ -15,6 +15,7 @@ export function RecordFormOverlay({
   onSave,
   onClose,
   submitLabel,
+  deriveValues,
 }) {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
@@ -62,7 +63,8 @@ export function RecordFormOverlay({
         errors={errors}
         submitLabel={saving ? 'Guardando…' : submitLabel}
         onChange={(next) => {
-          setValues(next);
+          const patched = typeof deriveValues === 'function' ? deriveValues(next, values) : next;
+          setValues(patched);
           setErrors({});
           setFormError(null);
         }}

@@ -18,6 +18,7 @@ const loadAppLayout = () => import('@/shared/layout/AppLayout');
 const loadEmpresas = () => import('@/features/organizacion/empresas/EmpresasPage');
 const loadSedes = () => import('@/features/organizacion/sedes/SedesPage');
 const loadCatalogo = () => import('@/features/catalogos/CatalogoPage');
+const loadTraslados = () => import('@/features/inventario/TrasladosPage');
 
 const writeChildren = (loader, formExport, detailExport) => [
   {
@@ -62,6 +63,7 @@ export const router = createBrowserRouter([
             ...named(loadCatalogo, 'CatalogoPage'),
             children: writeChildren(loadCatalogo, 'MaestroFormPage', 'MaestroDetallePage'),
           },
+          { path: 'traslados', ...named(loadTraslados, 'TrasladosPage') },
         ],
       },
     ],

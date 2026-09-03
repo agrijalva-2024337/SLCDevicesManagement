@@ -39,3 +39,21 @@ export function empresaIdDeActivo(activo, ubicaciones, sedes) {
   const ubicacion = (ubicaciones ?? []).find((item) => Number(item.id) === Number(activo.idUbicacion));
   return empresaIdDeUbicacion(ubicacion, sedes);
 }
+
+export function todayIsoDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export function initialTrasladoValues(prefill, { activos, ubicaciones } = {}) {
+  const idActivo = prefill?.idActivo ? String(prefill.idActivo) : '';
+  const activo = (activos ?? []).find((item) => Number(item.id) === Number(idActivo));
+  const ubicacion = (ubicaciones ?? []).find((item) => Number(item.id) === Number(activo?.idUbicacion));
+  return {
+    idActivo,
+    origen: idActivo ? nombreUbicacion(ubicacion) : '',
+    idUbicacionDestino: '',
+    idResponsable: prefill?.idResponsable ? String(prefill.idResponsable) : '',
+    fecha: todayIsoDate(),
+    observaciones: '',
+  };
+}
