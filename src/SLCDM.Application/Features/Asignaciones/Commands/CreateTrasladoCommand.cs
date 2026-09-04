@@ -4,8 +4,6 @@ using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Validation;
 using SLCDM.Domain.Entities;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Windows.Input;
 
 namespace SLCDM.Application.Features.Asignaciones.Commands;
 
@@ -64,6 +62,24 @@ public sealed class CreateTrasladoCommandValidator : AbstractValidator<CreateTra
         RuleFor(x => x.Observaciones)
              .MaximumLength(300).WithMessage("El campo observaciones no debe superar los 300 caracteres.")
              .When(x => !string.IsNullOrWhiteSpace(x.Observaciones));
+
+        RuleFor(x => x)
+            .MustAsync(async (cmd, ct) =>
+            {
+                var empresaActivo = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(db, cmd.IdActivo, ct);
+                var empresaUsuario = await AsignacionEmpresaRules.EmpresaIdDeUsuarioAsync(db, cmd.IdUsuario, ct);
+                return AsignacionEmpresaRules.EmpresasCoinciden(empresaActivo, empresaUsuario);
+            })
+            .WithMessage("El usuario debe pertenecer a la misma empresa del activo.");
+
+        RuleFor(x => x)
+            .MustAsync(async (cmd, ct) =>
+            {
+                var empresaActivo = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(db, cmd.IdActivo, ct);
+                var empresaResponsable = await AsignacionEmpresaRules.EmpresaIdDeResponsableAsync(db, cmd.IdResponsable, ct);
+                return AsignacionEmpresaRules.EmpresasCoinciden(empresaActivo, empresaResponsable);
+            })
+            .WithMessage("El responsable debe pertenecer a la misma empresa del activo.");
     }
 }
 

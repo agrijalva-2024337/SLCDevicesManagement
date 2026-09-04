@@ -73,10 +73,28 @@ public sealed class CreateAsignacionCommandValidator : AbstractValidator<CreateA
         RuleFor(x => x.DocumentoPdfUrl)
             .MaximumLength(300).WithMessage("El campo documento pdf url no debe superar los 300 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.DocumentoPdfUrl));
-        
+
         RuleFor(x => x)
             .MustAsync((cmd, ct) => AsignacionEmpresaRules.MismaEmpresaAsync(db, cmd.IdActivo, cmd.IdUbicacion, ct))
             .WithMessage("El activo y la ubicacion deben pertenecer a la misma empresa.");
+            
+        RuleFor(x => x)
+            .MustAsync(async (cmd, ct) =>
+            {
+                var empresaActivo = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(db, cmd.IdActivo, ct);
+                var empresaUsuario = await AsignacionEmpresaRules.EmpresaIdDeUsuarioAsync(db, cmd.IdUsuario, ct);
+                return AsignacionEmpresaRules.EmpresasCoinciden(empresaActivo, empresaUsuario);
+            })
+            .WithMessage("El usuario debe pertenecer a la misma empresa del activo.");
+
+        RuleFor(x => x)
+            .MustAsync(async (cmd, ct) =>
+            {
+                var empresaActivo = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(db, cmd.IdActivo, ct);
+                var empresaResponsable = await AsignacionEmpresaRules.EmpresaIdDeResponsableAsync(db, cmd.IdResponsable, ct);
+                return AsignacionEmpresaRules.EmpresasCoinciden(empresaActivo, empresaResponsable);
+            })
+            .WithMessage("El responsable debe pertenecer a la misma empresa del activo.");
     }
 
     private static async Task<bool> ActivoTieneAsignacionActivaSiAplica(
