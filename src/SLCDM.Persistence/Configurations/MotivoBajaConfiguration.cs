@@ -9,6 +9,9 @@ public class MotivoBajaConfiguration : IEntityTypeConfiguration<MotivoBaja>
     public void Configure(EntityTypeBuilder<MotivoBaja> builder)
     {
         builder.ToTable("motivo_baja");
+        
+        builder.HasKey(m => m.Id);
+        builder.Property(m => m.Id).HasColumnName("id_motivo_baja");
 
         builder.Property(m => m.Nombre)
             .HasColumnName("nombre")

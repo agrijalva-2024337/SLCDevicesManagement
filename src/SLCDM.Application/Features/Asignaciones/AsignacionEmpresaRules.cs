@@ -39,6 +39,44 @@ internal static class AsignacionEmpresaRules
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public static async Task<int?> EmpresaIdDeUsuarioAsync(
+        IApplicationDbContext db,
+        int idUsuario,
+        CancellationToken cancellationToken)
+    {
+        return await db.Usuarios
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .Where(u => u.Id == idUsuario)
+            .Select(u => u.IdEmpresa)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public static async Task<int?> EmpresaIdDeResponsableAsync(
+        IApplicationDbContext db,
+        int idResponsable,
+        CancellationToken cancellationToken)
+    {
+        return await db.Responsables
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .Where(r => r.Id == idResponsable)
+            .Join(
+                db.Areas.AsNoTracking().IgnoreQueryFilters(),
+                r => r.IdArea,
+                a => a.Id,
+                (_, a) => a.IdSede)
+            .Join(
+                db.Sedes.AsNoTracking().IgnoreQueryFilters(),
+                idSede => idSede,
+                s => s.Id,
+                (_, s) => (int?)s.IdEmpresa)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public static bool EmpresasCoinciden(int? empresaA, int? empresaB) =>
+        !empresaA.HasValue || !empresaB.HasValue || empresaA.Value == empresaB.Value;
+
     public static async Task<bool> MismaEmpresaAsync(
         IApplicationDbContext db,
         int idActivo,
@@ -48,11 +86,6 @@ internal static class AsignacionEmpresaRules
         var empresaActivo = await EmpresaIdDeActivoAsync(db, idActivo, cancellationToken);
         var empresaDestino = await EmpresaIdDeUbicacionAsync(db, idUbicacionDestino, cancellationToken);
 
-        if (!empresaActivo.HasValue || !empresaDestino.HasValue)
-        {
-            return true;
-        }
-
-        return empresaActivo.Value == empresaDestino.Value;
+        return EmpresasCoinciden(empresaActivo, empresaDestino);
     }
 }

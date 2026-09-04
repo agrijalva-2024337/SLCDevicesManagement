@@ -61,6 +61,24 @@ public sealed class CreateMantenimientoCommandValidator : AbstractValidator<Crea
         RuleFor(x => x)
             .MustAsync(async (cmd, ct) => !await ActivoTieneProcesoOcupandoAsync(db, cmd.IdActivo, ct))
             .WithMessage("El activo ya tiene una asignacion o un mantenimiento activo. Un activo solo puede tener un proceso ocupandolo a la vez.");
+
+        RuleFor(x => x)
+            .MustAsync(async (cmd, ct) =>
+            {
+                var empresaActivo = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(db, cmd.IdActivo, ct);
+                var empresaUsuario = await AsignacionEmpresaRules.EmpresaIdDeUsuarioAsync(db, cmd.IdUsuario, ct);
+                return AsignacionEmpresaRules.EmpresasCoinciden(empresaActivo, empresaUsuario);
+            })
+            .WithMessage("El usuario debe pertenecer a la misma empresa del activo.");
+
+        RuleFor(x => x)
+            .MustAsync(async (cmd, ct) =>
+            {
+                var empresaActivo = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(db, cmd.IdActivo, ct);
+                var empresaResponsable = await AsignacionEmpresaRules.EmpresaIdDeResponsableAsync(db, cmd.IdResponsable, ct);
+                return AsignacionEmpresaRules.EmpresasCoinciden(empresaActivo, empresaResponsable);
+            })
+            .WithMessage("El responsable debe pertenecer a la misma empresa del activo.");
     }
 
     internal static async Task<bool> ActivoTieneProcesoOcupandoAsync(

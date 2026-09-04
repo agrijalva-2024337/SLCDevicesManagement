@@ -64,6 +64,24 @@ public sealed class CreateBajaCommandValidator : AbstractValidator<CreateBajaCom
         RuleFor(x => x.Observaciones)
             .MaximumLength(300).WithMessage("El campo observaciones no debe superar los 300 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.Observaciones));
+
+        RuleFor(x => x)
+            .MustAsync(async (cmd, ct) =>
+            {
+                var empresaActivo = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(db, cmd.IdActivo, ct);
+                var empresaUsuario = await AsignacionEmpresaRules.EmpresaIdDeUsuarioAsync(db, cmd.IdUsuario, ct);
+                return AsignacionEmpresaRules.EmpresasCoinciden(empresaActivo, empresaUsuario);
+            })
+            .WithMessage("El usuario debe pertenecer a la misma empresa del activo.");
+
+        RuleFor(x => x)
+            .MustAsync(async (cmd, ct) =>
+            {
+                var empresaActivo = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(db, cmd.IdActivo, ct);
+                var empresaResponsable = await AsignacionEmpresaRules.EmpresaIdDeResponsableAsync(db, cmd.IdResponsable, ct);
+                return AsignacionEmpresaRules.EmpresasCoinciden(empresaActivo, empresaResponsable);
+            })
+            .WithMessage("El responsable debe pertenecer a la misma empresa del activo.");
     }
 }
 
