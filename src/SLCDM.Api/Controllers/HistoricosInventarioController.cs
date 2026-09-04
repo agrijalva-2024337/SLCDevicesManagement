@@ -13,15 +13,18 @@ public sealed class HistoricosInventarioController : ApiControllerBase
     private readonly IQueryHandler<GetHistoricosInventarioQuery, IReadOnlyList<HistoricoInventarioDto>> _getAll;
     private readonly IQueryHandler<GetHistoricoInventarioByIdQuery, HistoricoInventarioDto> _getById;
     private readonly ICommandHandler<CreateHistoricoInventarioCommand, int> _create;
+    private readonly ICommandHandler<CerrarHistoricoInventarioCommand> _cerrar;
 
     public HistoricosInventarioController(
         IQueryHandler<GetHistoricosInventarioQuery, IReadOnlyList<HistoricoInventarioDto>> getAll,
         IQueryHandler<GetHistoricoInventarioByIdQuery, HistoricoInventarioDto> getById,
-        ICommandHandler<CreateHistoricoInventarioCommand, int> create)
+        ICommandHandler<CreateHistoricoInventarioCommand, int> create,
+        ICommandHandler<CerrarHistoricoInventarioCommand> cerrar)
     {
         _getAll = getAll;
         _getById = getById;
         _create = create;
+        _cerrar = cerrar;
     }
 
     [HttpGet]
@@ -50,5 +53,15 @@ public sealed class HistoricosInventarioController : ApiControllerBase
         return CreatedId(nameof(GetById), id);
     }
 
-    // ---- BE-20/21 (Sprint 8): RegistrarDetalle, GetDiferencias, Cerrar ----
+    [HttpPost("{id:int}/cerrar")]
+    [Authorize(Roles = Roles.EscrituraOperativa)]
+    public async Task<IActionResult> Cerrar(
+        int id,
+        [FromBody] CerrarHistoricoInventarioCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.Id) return IdMismatch();
+        await _cerrar.HandleAsync(command, cancellationToken);
+        return NoContent();
+    }
 }
