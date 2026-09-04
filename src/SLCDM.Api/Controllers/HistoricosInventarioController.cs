@@ -12,17 +12,20 @@ public sealed class HistoricosInventarioController : ApiControllerBase
 {
     private readonly IQueryHandler<GetHistoricosInventarioQuery, IReadOnlyList<HistoricoInventarioDto>> _getAll;
     private readonly IQueryHandler<GetHistoricoInventarioByIdQuery, HistoricoInventarioDto> _getById;
+    private readonly IQueryHandler<GetDiferenciasInventarioQuery, IReadOnlyList<DiferenciaInventarioDto>> _getDiferencias;
     private readonly ICommandHandler<CreateHistoricoInventarioCommand, int> _create;
     private readonly ICommandHandler<CerrarHistoricoInventarioCommand> _cerrar;
 
     public HistoricosInventarioController(
         IQueryHandler<GetHistoricosInventarioQuery, IReadOnlyList<HistoricoInventarioDto>> getAll,
         IQueryHandler<GetHistoricoInventarioByIdQuery, HistoricoInventarioDto> getById,
+        IQueryHandler<GetDiferenciasInventarioQuery, IReadOnlyList<DiferenciaInventarioDto>> getDiferencias,
         ICommandHandler<CreateHistoricoInventarioCommand, int> create,
         ICommandHandler<CerrarHistoricoInventarioCommand> cerrar)
     {
         _getAll = getAll;
         _getById = getById;
+        _getDiferencias = getDiferencias;
         _create = create;
         _cerrar = cerrar;
     }
@@ -43,6 +46,12 @@ public sealed class HistoricosInventarioController : ApiControllerBase
     public async Task<ActionResult<HistoricoInventarioDto>> GetById(int id, CancellationToken cancellationToken) =>
         Ok(await _getById.HandleAsync(new GetHistoricoInventarioByIdQuery(id), cancellationToken));
 
+    [HttpGet("{id:int}/diferencias")]
+    [Authorize(Roles = Roles.Lectura)]
+    public async Task<ActionResult<IReadOnlyList<DiferenciaInventarioDto>>> GetDiferencias(
+        int id, CancellationToken cancellationToken) =>
+        Ok(await _getDiferencias.HandleAsync(new GetDiferenciasInventarioQuery(id), cancellationToken));
+
     [HttpPost]
     [Authorize(Roles = Roles.EscrituraOperativa)]
     public async Task<IActionResult> Create(
@@ -57,11 +66,10 @@ public sealed class HistoricosInventarioController : ApiControllerBase
     [Authorize(Roles = Roles.EscrituraOperativa)]
     public async Task<IActionResult> Cerrar(
         int id,
-        [FromBody] CerrarHistoricoInventarioCommand command,
-        CancellationToken cancellationToken)
+        [FromQuery] DateTime? fechaCierre = null,
+        CancellationToken cancellationToken = default)
     {
-        if (id != command.Id) return IdMismatch();
-        await _cerrar.HandleAsync(command, cancellationToken);
+        await _cerrar.HandleAsync(new CerrarHistoricoInventarioCommand(id, fechaCierre), cancellationToken);
         return NoContent();
     }
 }
