@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Options;
 using SLCDM.Application.Common.Security;
+using Microsoft.AspNetCore.Authentication;
 
 namespace SLCDM.Api.Authentication;
 
@@ -52,6 +53,15 @@ public static class AuthenticationExtensions
             });
 
         services.AddAuthorization();
+        return services;
+    }
+
+    public static IServiceCollection AddDeviceTokenAuthentication(this IServiceCollection services)
+    {
+        services.AddAuthentication()
+            .AddScheme<AuthenticationSchemeOptions, DeviceTokenAuthenticationHandler>(
+                DeviceTokenDefaults.AuthenticationScheme, _ => { });
+
         return services;
     }
 }

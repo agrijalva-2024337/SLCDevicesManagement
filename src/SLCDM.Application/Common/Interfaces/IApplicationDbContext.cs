@@ -41,6 +41,8 @@ public interface IApplicationDbContext
     DbSet<DetalleMantenimiento> DetallesMantenimiento { get; }
     DbSet<DetalleBaja> DetallesBaja { get; }
     DbSet<DetalleTraslado> DetallesTraslado { get; }
+    DbSet<DispositivoToken> DispositivosToken { get; }
+    DbSet<RedConocida> RedesConocidas { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }
