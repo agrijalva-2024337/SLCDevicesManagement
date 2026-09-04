@@ -50,6 +50,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<DetalleMantenimiento> DetallesMantenimiento => Set<DetalleMantenimiento>();
     public DbSet<DetalleBaja> DetallesBaja => Set<DetalleBaja>();
     public DbSet<DetalleTraslado> DetallesTraslado => Set<DetalleTraslado>();
+    public DbSet<DispositivoToken> DispositivosToken => Set<DispositivoToken>();
+    public DbSet<RedConocida> RedesConocidas => Set<RedConocida>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -113,5 +115,11 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
         modelBuilder.Entity<DetalleTraslado>().HasQueryFilter(d =>
             IgnoreEmpresaFilter || Asignaciones.Any(a => a.Id == d.IdAsignacion));
+
+            modelBuilder.Entity<DispositivoToken>().HasQueryFilter(d =>
+            IgnoreEmpresaFilter || Activos.Any(a => a.Id == d.IdActivo));
+
+        modelBuilder.Entity<RedConocida>().HasQueryFilter(r =>
+            IgnoreEmpresaFilter || Ubicaciones.Any(u => u.Id == r.IdUbicacion));
     }
 }

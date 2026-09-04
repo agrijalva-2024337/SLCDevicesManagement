@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<IMapper, ServiceMapper>();
         services.AddSingleton<IPasswordHashService, PasswordHashService>();
         services.AddSingleton<IPasswordGenerator, PasswordGenerator>();
+        services.AddSingleton<IDeviceTokenHashService, DeviceTokenHashService>();
 
         services.AddValidatorsFromAssembly(assembly);
         RegisterHandlers(services, assembly);
