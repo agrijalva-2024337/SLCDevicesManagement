@@ -1,4 +1,5 @@
 using FluentValidation;
+using Mapster;
 using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Validation;
 using SLCDM.Application.Features.Activos;
@@ -87,7 +88,7 @@ public sealed class GetActivosReporteQueryHandler
             .Skip(query.Skip)
             .Take(query.Take)
             .Select(f => new ActivoReporteDto(
-                ActivoDtoFactory.CreateFromRow(f),
+                f.Activo.Adapt<ActivoDto>(),
                 f.EstadoOperativo,
                 f.IdSede,
                 f.NombreSede,

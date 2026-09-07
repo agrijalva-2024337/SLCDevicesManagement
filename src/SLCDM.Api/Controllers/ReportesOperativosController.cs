@@ -14,8 +14,8 @@ public sealed class ReportesController : ApiControllerBase
     private readonly IQueryHandler<GetActivosPorCategoriaQuery, IReadOnlyList<ActivosPorCategoriaDto>> _porCategoria;
     private readonly IQueryHandler<GetActivosPorResponsableQuery, IReadOnlyList<ActivosPorResponsableDto>> _porResponsable;
     private readonly IQueryHandler<GetActivosReporteQuery, IReadOnlyList<ActivoReporteDto>> _activos;
-    private readonly IQueryHandler<GetGarantiasPorVencerQuery, IReadOnlyList<GarantiaPorVencerDto>> _garantias;
     private readonly IQueryHandler<GetActivosPorUbicacionQuery, IReadOnlyList<ActivosPorUbicacionDto>> _porUbicacion;
+    private readonly IQueryHandler<GetGarantiasPorVencerQuery, IReadOnlyList<GarantiaPorVencerDto>> _garantias;
     private readonly IQueryHandler<GetDiferenciasInventariosQuery, IReadOnlyList<DiferenciaInventarioReporteDto>> _diferencias;
 
     public ReportesController(
@@ -24,8 +24,8 @@ public sealed class ReportesController : ApiControllerBase
         IQueryHandler<GetActivosPorCategoriaQuery, IReadOnlyList<ActivosPorCategoriaDto>> porCategoria,
         IQueryHandler<GetActivosPorResponsableQuery, IReadOnlyList<ActivosPorResponsableDto>> porResponsable,
         IQueryHandler<GetActivosReporteQuery, IReadOnlyList<ActivoReporteDto>> activos,
-        IQueryHandler<GetGarantiasPorVencerQuery, IReadOnlyList<GarantiaPorVencerDto>> garantias,
         IQueryHandler<GetActivosPorUbicacionQuery, IReadOnlyList<ActivosPorUbicacionDto>> porUbicacion,
+        IQueryHandler<GetGarantiasPorVencerQuery, IReadOnlyList<GarantiaPorVencerDto>> garantias,
         IQueryHandler<GetDiferenciasInventariosQuery, IReadOnlyList<DiferenciaInventarioReporteDto>> diferencias)
     {
         _inventario = inventario;
@@ -33,8 +33,8 @@ public sealed class ReportesController : ApiControllerBase
         _porCategoria = porCategoria;
         _porResponsable = porResponsable;
         _activos = activos;
-        _garantias = garantias;
         _porUbicacion = porUbicacion;
+        _garantias = garantias;
         _diferencias = diferencias;
     }
 
@@ -82,14 +82,6 @@ public sealed class ReportesController : ApiControllerBase
             new GetActivosReporteQuery(estado, idEmpresa, idSede, idCategoriaActivo, idResponsable, skip, take),
             cancellationToken));
 
-    [HttpGet("garantias-por-vencer")]
-    [Authorize(Roles = Roles.Lectura)]
-    public async Task<ActionResult<IReadOnlyList<GarantiaPorVencerDto>>> GarantiasPorVencer(
-        [FromQuery] int? idEmpresa = null,
-        [FromQuery] int dias = 30,
-        CancellationToken cancellationToken = default) =>
-        Ok(await _garantias.HandleAsync(new GetGarantiasPorVencerQuery(idEmpresa, dias), cancellationToken));
-
     [HttpGet("activos-por-ubicacion")]
     [Authorize(Roles = Roles.Lectura)]
     public async Task<ActionResult<IReadOnlyList<ActivosPorUbicacionDto>>> ActivosPorUbicacion(
@@ -97,6 +89,14 @@ public sealed class ReportesController : ApiControllerBase
         [FromQuery] int? idSede = null,
         CancellationToken cancellationToken = default) =>
         Ok(await _porUbicacion.HandleAsync(new GetActivosPorUbicacionQuery(idEmpresa, idSede), cancellationToken));
+
+    [HttpGet("garantias-por-vencer")]
+    [Authorize(Roles = Roles.Lectura)]
+    public async Task<ActionResult<IReadOnlyList<GarantiaPorVencerDto>>> GarantiasPorVencer(
+        [FromQuery] int? idEmpresa = null,
+        [FromQuery] int dias = 30,
+        CancellationToken cancellationToken = default) =>
+        Ok(await _garantias.HandleAsync(new GetGarantiasPorVencerQuery(idEmpresa, dias), cancellationToken));
 
     [HttpGet("diferencias-inventario")]
     [Authorize(Roles = Roles.Lectura)]
