@@ -1,5 +1,7 @@
 import { useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
+import { HBarChart } from '@/features/reportes/components/ActivityCharts';
 import * as reporteService from '@/features/reportes/reporteService';
 import '@/features/reportes/dashboard.css';
 import { FeedbackState } from '@/shared/components/FeedbackState';
@@ -28,13 +30,31 @@ function consolidar(rows) {
   }), vacio());
 }
 
+const CATEGORY_ICON = {
+  Laptop: 'pi-desktop',
+  Monitor: 'pi-image',
+  Impresora: 'pi-print',
+  'Switch de red': 'pi-wifi',
+  Servidor: 'pi-server',
+  Vehículo: 'pi-car',
+  Tablet: 'pi-tablet',
+};
+
+const CATEGORY_TONE = ['info', 'success', 'warning', 'danger', 'primary'];
+
 export function DashboardPage() {
+  const navigate = useNavigate();
   const { idActiva } = useEmpresaActiva();
   const loadInventario = useCallback(
     () => reporteService.inventarioGeneral({ idEmpresa: idActiva || undefined }),
     [idActiva],
   );
+  const loadCategorias = useCallback(
+    () => reporteService.activosPorCategoria({ idEmpresa: idActiva || undefined }),
+    [idActiva],
+  );
   const inventario = useResource(loadInventario);
+  const categorias = useResource(loadCategorias);
   const resumen = useMemo(() => consolidar(inventario.data), [inventario.data]);
   const variasEmpresas = (inventario.data?.length ?? 0) > 1;
 
@@ -85,6 +105,34 @@ export function DashboardPage() {
           </article>
         ))}
       </div>
+
+      <section className="dash-card">
+        <header className="dash-card-head">
+          <div>
+            <h2>Activos por categoría</h2>
+            <p className="dash-hint">Cada barra abre el reporte detallado de esa categoría.</p>
+          </div>
+        </header>
+        <div className="dash-card-body">
+          {categorias.errorMessage ? (
+            <p className="dash-empty">{categorias.errorMessage}</p>
+          ) : categorias.data.length === 0 ? (
+            <p className="dash-empty">No hay activos por categoría.</p>
+          ) : (
+            <HBarChart
+              items={categorias.data.map((row, index) => ({
+                key: String(row.idCategoriaActivo),
+                label: row.nombreCategoria,
+                value: row.totalActivos,
+                icon: CATEGORY_ICON[row.nombreCategoria],
+                tone: CATEGORY_TONE[index % CATEGORY_TONE.length],
+              }))}
+              total={resumen.totalActivos || undefined}
+              onSelect={(item) => navigate(`/app/reportes/activos?idCategoriaActivo=${item.key}`)}
+            />
+          )}
+        </div>
+      </section>
 
       {variasEmpresas ? (
         <section className="dash-card">
