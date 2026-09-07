@@ -10,7 +10,7 @@ function named(importer, exportName) {
 }
 
 const loadLanding = () => import('@/features/landing/LandingPage');
-const loadHome = () => import('@/app/pages/HomePage');
+const loadDashboard = () => import('@/features/reportes/DashboardPage');
 const loadLogin = () => import('@/features/auth/LoginPage');
 const loadNotFound = () => import('@/app/pages/NotFoundPage');
 const loadGuard = () => import('@/features/auth/RutaProtegida');
@@ -54,7 +54,7 @@ export const router = createBrowserRouter([
       {
         ...named(loadAppLayout, 'AppLayout'),
         children: [
-          { index: true, ...named(loadHome, 'HomePage') },
+          { index: true, ...named(loadDashboard, 'DashboardPage') },
           {
             path: 'catalogos/empresas',
             ...named(loadEmpresas, 'EmpresasPage'),
