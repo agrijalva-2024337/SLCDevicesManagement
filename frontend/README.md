@@ -247,6 +247,19 @@ Los 8 endpoints aceptan `idEmpresa` opcional. Admin general sin ese query ve tod
 
 Las gráficas son SVG propio (`ActivityCharts.jsx`). No hay recharts, chart.js ni d3.
 
+## Pendientes de API (FE-12)
+
+BE-24 / BE-25 no publicaron estos cuatro endpoints. El frontend sigue con workaround. Matriz de roles: `docs/permisos-por-perfil.md`.
+
+| Hueco | Endpoint que lo desbloquea | Workaround |
+| --- | --- | --- |
+| Motivos de baja | `GET /api/MotivosBaja` | `features/bajas/motivoBajaService.js` (mock + seed) |
+| Tipos de mantenimiento | `GET /api/TiposMantenimiento` | `features/mantenimientos/tipoMantenimientoService.js` |
+| Detalle de baja en el DTO | `DetalleBaja` en `AsignacionDto` o endpoint propio | `features/bajas/detalleBajaParser.js` lee `informacionNueva` del historial |
+| Activos esperados de una jornada | `GET /api/HistoricosInventario/{id}/esperados` | `features/inventario/activosEsperados.js` replica las reglas de jornada |
+
+**Hallazgo, no olvido:** `DispositivosController` (rastreo, auto-registro, ping, fuera de rango) no tiene interfaz. No está en las tareas FE. No se construye en este sprint. En `origin/main` el constructor todavía puede fallar el build (`CS1003`: falta una coma tras `_ping` en `DispositivosController.cs`). Eso es backend (BE-25), no un parche de UI.
+
 ## Estructura de carpetas
 
 ```
