@@ -20,6 +20,7 @@ public sealed class AsignacionesController : ApiControllerBase
     private readonly ICommandHandler<CreateMantenimientoCommand, int> _iniciarMantenimiento;
     private readonly ICommandHandler<FinalizarMantenimientoCommand> _finalizarMantenimiento;
     private readonly ICommandHandler<CreateBajaCommand, int> _darDeBaja;
+    private readonly IQueryHandler<GetAsignacionPdfQuery, AsignacionPdfFileDto> _pdf;
 
     public AsignacionesController(
         IQueryHandler<GetAsignacionesQuery, IReadOnlyList<AsignacionDto>> getAll,
@@ -31,7 +32,8 @@ public sealed class AsignacionesController : ApiControllerBase
         ICommandHandler<CreateTrasladoCommand, int> trasladar,
         ICommandHandler<CreateMantenimientoCommand, int> iniciarMantenimiento,
         ICommandHandler<FinalizarMantenimientoCommand> finalizarMantenimiento,
-        ICommandHandler<CreateBajaCommand, int> darDeBaja)
+        ICommandHandler<CreateBajaCommand, int> darDeBaja,
+        IQueryHandler<GetAsignacionPdfQuery, AsignacionPdfFileDto> pdf)
     {
         _getAll = getAll;
         _getById = getById;
@@ -43,6 +45,7 @@ public sealed class AsignacionesController : ApiControllerBase
         _iniciarMantenimiento = iniciarMantenimiento;
         _finalizarMantenimiento = finalizarMantenimiento;
         _darDeBaja = darDeBaja;
+        _pdf = pdf;
     }
 
     [HttpGet]
@@ -58,6 +61,15 @@ public sealed class AsignacionesController : ApiControllerBase
     [Authorize(Roles = Roles.Lectura)]
     public async Task<ActionResult<AsignacionDto>> GetById(int id, CancellationToken cancellationToken) =>
         Ok(await _getById.HandleAsync(new GetAsignacionByIdQuery(id), cancellationToken));
+
+    [HttpGet("{id:int}/pdf")]
+    [Authorize(Roles = Roles.Lectura)]
+    [Produces("application/pdf")]
+    public async Task<IActionResult> GetPdf(int id, CancellationToken cancellationToken)
+    {
+        var file = await _pdf.HandleAsync(new GetAsignacionPdfQuery(id), cancellationToken);
+        return File(file.Content, "application/pdf", file.FileName);
+    }
 
     [HttpGet("activo/{idActivo:int}/historial")]
     [Authorize(Roles = Roles.Lectura)]

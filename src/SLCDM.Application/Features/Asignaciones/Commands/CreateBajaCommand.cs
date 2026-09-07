@@ -89,11 +89,16 @@ public sealed class CreateBajaCommandHandler : ICommandHandler<CreateBajaCommand
 {
     private readonly IApplicationDbContext _db;
     private readonly IValidator<CreateBajaCommand> _validator;
+    private readonly IAsignacionCorreoService _correo;
 
-    public CreateBajaCommandHandler(IApplicationDbContext db, IValidator<CreateBajaCommand> validator)
+    public CreateBajaCommandHandler(
+        IApplicationDbContext db,
+        IValidator<CreateBajaCommand> validator,
+        IAsignacionCorreoService correo)
     {
         _db = db;
         _validator = validator;
+        _correo = correo;
     }
 
     public async Task<int> HandleAsync(CreateBajaCommand command, CancellationToken cancellationToken = default)
@@ -161,6 +166,7 @@ public sealed class CreateBajaCommandHandler : ICommandHandler<CreateBajaCommand
         });
         await _db.SaveChangesAsync(cancellationToken);
 
+        await _correo.NotificarResponsableAsync(entity.Id, cancellationToken);
         return entity.Id;
     }
 

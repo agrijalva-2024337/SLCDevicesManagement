@@ -68,6 +68,13 @@
                 .HasColumnName("observaciones")
                 .HasColumnType("varchar(500)");
 
+            builder.Property(a => a.TokenPublico)
+                .HasColumnName("token_publico")
+                .HasColumnType("varchar(32)")
+                .IsRequired();
+
+            builder.HasIndex(a => a.TokenPublico).IsUnique();
+
             builder.HasOne(a => a.CategoriaActivo)
                 .WithMany()
                 .HasForeignKey(a => a.IdCategoriaActivo)

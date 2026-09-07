@@ -6,32 +6,56 @@ namespace SLCDM.Agent;
 
 public sealed class Worker : BackgroundService
 {
-    private readonly HttpClient _http;
-    private readonly string _installKey;
+    private readonly IHttpClientFactory _httpFactory;
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<Worker> _logger;
     private static readonly TimeSpan Intervalo = TimeSpan.FromMinutes(15);
 
-    public Worker(HttpClient http, string installKey)
+    public Worker(IHttpClientFactory httpFactory, IConfiguration configuration, ILogger<Worker> logger)
     {
-        _http = http;
-        _installKey = installKey;
+        _httpFactory = httpFactory;
+        _configuration = configuration;
+        _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var token = CredencialAlmacen.LeerToken();
 
-        if (token is null)
-        {
-            token = await AutoRegistrarseAsync(stoppingToken);
-            CredencialAlmacen.GuardarToken(token);
-        }
-
         while (!stoppingToken.IsCancellationRequested)
         {
-            var bssid = ObtenerBssidConectado();
-            if (bssid is not null)
+            try
             {
-                await EnviarPingAsync(token, bssid, stoppingToken);
+                if (token is null)
+                {
+                    token = await AutoRegistrarseAsync(stoppingToken);
+                    CredencialAlmacen.GuardarToken(token);
+                    _logger.LogInformation("Dispositivo auto-registrado.");
+                }
+
+                var coords = UbicacionEquipo.Leer();
+                var bssid = ObtenerBssidConectado();
+                if (bssid is null && coords is null)
+                {
+                    _logger.LogWarning("No se pudo leer la ubicacion real ni el BSSID del equipo.");
+                }
+                else
+                {
+                    _logger.LogInformation(
+                        "Ping GPS={Gps} BSSID(respaldo)={Bssid}",
+                        coords is null ? "(no disponible)" : $"{coords.Value.Latitud},{coords.Value.Longitud}",
+                        bssid ?? "(ninguno)");
+                    await EnviarPingAsync(token, bssid, coords, stoppingToken);
+                }
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                token = CredencialAlmacen.LeerToken();
+                _logger.LogError(ex, "El ciclo de rastreo fallo. Se reintenta en {Intervalo}.", Intervalo);
             }
 
             await Task.Delay(Intervalo, stoppingToken);
@@ -43,10 +67,14 @@ public sealed class Worker : BackgroundService
         var numeroSerie = HuellaHardware.LeerNumeroSerieBios()
             ?? throw new InvalidOperationException("No se pudo leer el numero de serie del equipo.");
 
-        var response = await _http.PostAsJsonAsync("api/dispositivos/auto-registro", new
+        var installKey = _configuration["Backend:InstallKey"]
+            ?? throw new InvalidOperationException("Falta Backend:InstallKey en la configuracion.");
+
+        var http = _httpFactory.CreateClient("Backend");
+        var response = await http.PostAsJsonAsync("api/dispositivos/auto-registro", new
         {
             NumeroSerie = numeroSerie,
-            InstallKey = _installKey
+            InstallKey = installKey
         }, cancellationToken);
 
         response.EnsureSuccessStatusCode();
@@ -73,24 +101,48 @@ public sealed class Worker : BackgroundService
         var salida = proceso.StandardOutput.ReadToEnd();
         proceso.WaitForExit();
 
-        var match = Regex.Match(salida, @"BSSID\s*:\s*([0-9a-fA-F:]{17})");
-        return match.Success ? match.Groups[1].Value.ToLowerInvariant() : null;
+        var match = Regex.Match(
+            salida,
+            @"BSSID[^:]*:\s*([0-9a-fA-F]{2}([:\-\s][0-9a-fA-F]{2}){5})",
+            RegexOptions.IgnoreCase);
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        var hex = Regex.Replace(match.Groups[1].Value, "[^0-9a-fA-F]", string.Empty).ToLowerInvariant();
+        if (hex.Length != 12)
+        {
+            return null;
+        }
+
+        return string.Join(":", Enumerable.Range(0, 6).Select(i => hex.Substring(i * 2, 2)));
     }
 
-    private async Task EnviarPingAsync(string token, string bssid, CancellationToken cancellationToken)
+    private async Task EnviarPingAsync(
+        string token, string? bssid, (decimal Latitud, decimal Longitud)? coords, CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, "api/dispositivos/ping");
         request.Headers.Add("X-Device-Token", token);
-        request.Content = JsonContent.Create(new { Bssid = bssid });
+        request.Content = JsonContent.Create(new
+        {
+            Bssid = bssid,
+            Latitud = coords?.Latitud,
+            Longitud = coords?.Longitud
+        });
 
         try
         {
-            using var response = await _http.SendAsync(request, cancellationToken);
+            var http = _httpFactory.CreateClient("Backend");
+            using var response = await http.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Ping fallido: {Status}", response.StatusCode);
+            }
         }
-        catch
+        catch (Exception ex)
         {
-            // Sin conexion al backend: se reintenta en el siguiente ciclo.
-            // No se detiene el servicio por un fallo de red puntual.
+            _logger.LogWarning(ex, "Sin conexion al backend. Se reintenta en el siguiente ciclo.");
         }
     }
 

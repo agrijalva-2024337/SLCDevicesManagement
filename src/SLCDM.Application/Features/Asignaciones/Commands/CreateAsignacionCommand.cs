@@ -121,11 +121,16 @@ public sealed class CreateAsignacionCommandHandler : ICommandHandler<CreateAsign
 {
     private readonly IApplicationDbContext _db;
     private readonly IValidator<CreateAsignacionCommand> _validator;
+    private readonly IAsignacionCorreoService _correo;
 
-    public CreateAsignacionCommandHandler(IApplicationDbContext db, IValidator<CreateAsignacionCommand> validator)
+    public CreateAsignacionCommandHandler(
+        IApplicationDbContext db,
+        IValidator<CreateAsignacionCommand> validator,
+        IAsignacionCorreoService correo)
     {
         _db = db;
         _validator = validator;
+        _correo = correo;
     }
 
     public async Task<int> HandleAsync(CreateAsignacionCommand command, CancellationToken cancellationToken = default)
@@ -183,6 +188,7 @@ public sealed class CreateAsignacionCommandHandler : ICommandHandler<CreateAsign
         });
         await _db.SaveChangesAsync(cancellationToken);
 
+        await _correo.NotificarResponsableAsync(entity.Id, cancellationToken);
         return entity.Id;
     }
 }

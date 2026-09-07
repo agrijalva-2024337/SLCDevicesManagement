@@ -5,6 +5,7 @@ namespace SLCDM.Api.Extensions;
 public static class RateLimitingExtensions
 {
     public const string AuthPolicy = "AuthPolicy";
+    public const string ConsultaPolicy = "ConsultaPolicy";
 
     public static IServiceCollection AddRateLimitingPolicies(this IServiceCollection services)
     {
@@ -17,6 +18,16 @@ public static class RateLimitingExtensions
                     {
                         AutoReplenishment = true,
                         PermitLimit = 5,
+                        Window = TimeSpan.FromMinutes(1)
+                    }));
+
+            options.AddPolicy(ConsultaPolicy, httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        AutoReplenishment = true,
+                        PermitLimit = 40,
                         Window = TimeSpan.FromMinutes(1)
                     }));
 

@@ -20,9 +20,10 @@ public sealed class GetRastreoByActivoQueryHandler
         GetRastreoByActivoQuery query,
         CancellationToken cancellationToken = default)
     {
-        return await _db.DispositivosToken.AsNoTracking()
-            .Where(d => !d.Revocado)
+        var dto = await _db.DispositivosToken.AsNoTracking()
+            .Where(d => !d.Revocado && d.IdActivo == query.IdActivo)
             .Select(d => new DispositivoRastreoDto(
+                d.Id,
                 d.IdActivo,
                 d.Activo!.Nombre,
                 d.FueraDeRango,
@@ -31,7 +32,7 @@ public sealed class GetRastreoByActivoQueryHandler
                 d.OrigenCoordenada,
                 d.UltimaLatitud,
                 d.UltimaLongitud,
-                d.Activo.Ubicacion == null
+                d.Activo.IdUbicacion == null || d.Activo.Ubicacion == null
                     ? null
                     : new UbicacionMapaDto(
                         d.Activo.Ubicacion.Id,
