@@ -5,6 +5,10 @@ import { bssidFormatError, normalizeBssid } from '@/features/catalogos/redesCono
 import * as redConocidaService from '@/features/catalogos/redesConocidas/redConocidaService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import * as areaService from '@/features/organizacion/areas/areaService';
+import * as estadoService from '@/features/organizacion/estados/estadoService';
+import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
+import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
+import { RolUsuario, rolUsuarioLabel } from '@/shared/api/contracts';
 import { asOptions, optionalText, requireSelect, requireText } from '@/shared/components/recordFormUtils';
 
 function switchField() {
@@ -18,6 +22,99 @@ function switchField() {
 
 export function nameById(list) {
   return Object.fromEntries((list ?? []).map((item) => [item.id, item.nombre]));
+}
+
+function requireEmail(value) {
+  const required = requireText(value, 'correo', 150);
+  if (required) return required;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value).trim())) {
+    return 'El formato del correo no es válido.';
+  }
+  return null;
+}
+
+function duplicateNombre(records, nombre, currentId) {
+  const needle = String(nombre ?? '')
+    .trim()
+    .toLowerCase();
+  if (!needle) return false;
+  return records.some(
+    (item) => String(item.nombre).trim().toLowerCase() === needle && String(item.id) !== String(currentId),
+  );
+}
+
+function usuarioNombre(item) {
+  return [item?.nombres, item?.apellidos].filter(Boolean).join(' ') || item?.username || '—';
+}
+
+function rolOptions(rolActual) {
+  return Object.entries(rolUsuarioLabel)
+    .filter(
+      ([value]) =>
+        Number(value) !== RolUsuario.AdministradorGeneral || rolActual === RolUsuario.AdministradorGeneral,
+    )
+    .map(([value, label]) => ({ value, label }));
+}
+
+function nombreDescripcionMaestro({
+  service,
+  title,
+  singular,
+  newTitle,
+  kicker,
+  registerLabel,
+  hint,
+  description,
+  emptyTitle,
+  emptyDescription,
+}) {
+  return {
+    service,
+    hasHabilitado: false,
+    title,
+    singular,
+    newTitle,
+    kicker,
+    registerLabel,
+    hint,
+    description,
+    titleOf: (item) => item.nombre,
+    facts: (item) => [item.descripcion].filter(Boolean),
+    listView: {
+      emptyTitle,
+      emptyDescription,
+      columns: () => [
+        { key: 'nombre', header: 'Nombre', primary: true },
+        { key: 'descripcion', header: 'Descripción' },
+      ],
+    },
+    empty: () => ({ nombre: '', descripcion: '' }),
+    toForm: (item) => ({
+      nombre: item.nombre ?? '',
+      descripcion: item.descripcion ?? '',
+    }),
+    fields: () => [
+      { name: 'nombre', label: 'Nombre', required: true, maxLength: 50, wide: true },
+      { name: 'descripcion', label: 'Descripción', type: 'textarea', maxLength: 150 },
+    ],
+    validate(values, records = [], currentId) {
+      const errors = {
+        nombre: requireText(values.nombre, 'nombre', 50),
+        descripcion: optionalText(values.descripcion, 'descripción', 150),
+      };
+      if (!errors.nombre && duplicateNombre(records, values.nombre, currentId)) {
+        errors.nombre = `Ya existe un ${singular} con el mismo nombre.`;
+      }
+      return errors;
+    },
+    toPayload(values) {
+      return {
+        nombre: values.nombre.trim(),
+        descripcion: values.descripcion.trim() || null,
+      };
+    },
+    detail: (item) => [{ label: 'Descripción', value: item.descripcion }],
+  };
 }
 
 export const maestros = {
@@ -360,7 +457,7 @@ export const maestros = {
   'redes-conocidas': {
     service: redConocidaService,
     hasHabilitado: false,
-    title: 'Redes conocidas',
+    title: 'Redes Wi-Fi',
     singular: 'red conocida',
     kicker: 'Red conocida',
     registerLabel: 'Registrar red',
@@ -422,6 +519,214 @@ export const maestros = {
       { label: 'Ubicación', value: lookups.ubicacionNombres?.[item.idUbicacion] ?? '—' },
     ],
   },
+  usuarios: {
+    service: usuarioService,
+    requiresWriteToList: true,
+    title: 'Usuarios',
+    singular: 'usuario',
+    newTitle: 'Nuevo usuario',
+    kicker: 'Usuario',
+    registerLabel: 'Registrar usuario',
+    hint: 'Nombres, apellidos, correo, usuario y rol son obligatorios. La empresa es obligatoria salvo para el administrador general.',
+    description: 'Cuentas con acceso al sistema. El listado exige perfil de administrador de empresa.',
+    titleOf: usuarioNombre,
+    facts: (item, lookups = {}) =>
+      [item.username, rolUsuarioLabel[item.rol] ?? item.rol, lookups.empresaNombres?.[item.idEmpresa]].filter(Boolean),
+    listView: {
+      emptyTitle: 'No hay usuarios',
+      emptyDescription: 'Registre la primera cuenta para dar acceso al sistema.',
+      columns: (lookups = {}) => [
+        { key: 'nombre', header: 'Nombre', primary: true, getValue: usuarioNombre },
+        { key: 'username', header: 'Usuario' },
+        { key: 'correo', header: 'Correo' },
+        {
+          key: 'rol',
+          header: 'Rol',
+          getValue: (item) => rolUsuarioLabel[item.rol] ?? String(item.rol ?? '—'),
+        },
+        {
+          key: 'empresa',
+          header: 'Empresa',
+          getValue: (item) => lookups.empresaNombres?.[item.idEmpresa] ?? '—',
+        },
+        { key: 'habilitado', header: 'Estado', type: 'status' },
+      ],
+    },
+    empty: ({ idEmpresa } = {}) => ({
+      idEmpresa: idEmpresa == null || idEmpresa === '' ? '' : String(idEmpresa),
+      nombres: '',
+      apellidos: '',
+      correo: '',
+      username: '',
+      password: '',
+      generarPassword: false,
+      rol: String(RolUsuario.Consulta),
+      habilitado: true,
+    }),
+    toForm: (item) => ({
+      idEmpresa: item.idEmpresa == null ? '' : String(item.idEmpresa),
+      nombres: item.nombres ?? '',
+      apellidos: item.apellidos ?? '',
+      correo: item.correo ?? '',
+      username: item.username ?? '',
+      password: '',
+      generarPassword: false,
+      rol: String(item.rol ?? RolUsuario.Consulta),
+      habilitado: Boolean(item.habilitado),
+    }),
+    fields: ({ empresas = [], rol, editing } = {}) => {
+      const lockEmpresa = rol != null && rol < RolUsuario.AdministradorGeneral;
+      return [
+        {
+          name: 'idEmpresa',
+          label: 'Empresa',
+          type: 'select',
+          options: asOptions(empresas),
+          readOnly: lockEmpresa,
+          hint: lockEmpresa
+            ? 'El usuario queda en su empresa.'
+            : 'Obligatoria salvo que el rol sea administrador general.',
+        },
+        { name: 'nombres', label: 'Nombres', required: true, maxLength: 100 },
+        { name: 'apellidos', label: 'Apellidos', required: true, maxLength: 100 },
+        { name: 'correo', label: 'Correo', required: true, maxLength: 150, autoComplete: 'email', type: 'email' },
+        { name: 'username', label: 'Usuario', required: true, maxLength: 50, autoComplete: 'username' },
+        {
+          name: 'generarPassword',
+          type: 'switch',
+          label: 'Generar contraseña',
+          hint: 'El sistema crea una clave temporal. Cópiela al guardar; no se vuelve a mostrar.',
+          hiddenWhen: () => Boolean(editing),
+        },
+        {
+          name: 'password',
+          label: editing ? 'Nueva contraseña' : 'Contraseña',
+          type: 'password',
+          autoComplete: editing ? 'new-password' : 'new-password',
+          required: !editing,
+          hiddenWhen: (values) => !editing && Boolean(values.generarPassword),
+          hint: editing
+            ? 'Deje vacío para no cambiar la clave.'
+            : 'Mínimo 8 caracteres. O marque generar contraseña.',
+        },
+        {
+          name: 'rol',
+          label: 'Rol',
+          type: 'select',
+          required: true,
+          options: rolOptions(rol),
+        },
+        {
+          ...switchField(),
+          hiddenWhen: () => !editing,
+        },
+      ];
+    },
+    validate(values, records = [], currentId) {
+      const editing = currentId != null && currentId !== '';
+      const rol = Number(values.rol);
+      const generar = Boolean(values.generarPassword);
+      const password = String(values.password ?? '');
+      const errors = {
+        nombres: requireText(values.nombres, 'nombres', 100),
+        apellidos: requireText(values.apellidos, 'apellidos', 100),
+        correo: requireEmail(values.correo),
+        username: requireText(values.username, 'username', 50),
+        rol: requireSelect(values.rol, 'un rol'),
+      };
+
+      if (rol !== RolUsuario.AdministradorGeneral) {
+        errors.idEmpresa = requireSelect(values.idEmpresa, 'una empresa');
+      }
+
+      if (!editing && !generar) {
+        errors.password = requireText(password, 'password', 128);
+      } else if (password.trim()) {
+        if (password.trim().length < 8) {
+          errors.password = 'El campo password debe tener al menos 8 caracteres.';
+        } else if (password.trim().length > 128) {
+          errors.password = 'El campo password no debe superar los 128 caracteres.';
+        }
+      }
+
+      const correo = String(values.correo ?? '')
+        .trim()
+        .toLowerCase();
+      if (
+        correo &&
+        records.some((item) => String(item.correo).trim().toLowerCase() === correo && String(item.id) !== String(currentId))
+      ) {
+        errors.correo = 'Ya existe un usuario con el mismo correo.';
+      }
+
+      const username = String(values.username ?? '').trim();
+      if (
+        username &&
+        records.some((item) => String(item.username) === username && String(item.id) !== String(currentId))
+      ) {
+        errors.username = 'Ya existe un usuario con el mismo username.';
+      }
+
+      return errors;
+    },
+    toPayload(values, { editing } = {}) {
+      const rol = Number(values.rol);
+      const idEmpresa =
+        values.idEmpresa === '' || values.idEmpresa == null ? null : Number(values.idEmpresa);
+      const base = {
+        idEmpresa,
+        nombres: values.nombres.trim(),
+        apellidos: values.apellidos.trim(),
+        correo: values.correo.trim().toLowerCase(),
+        username: values.username.trim(),
+        rol,
+      };
+
+      if (editing) {
+        return {
+          ...base,
+          password: String(values.password ?? '').trim() || null,
+          habilitado: Boolean(values.habilitado),
+        };
+      }
+
+      return {
+        ...base,
+        password: values.generarPassword ? null : String(values.password ?? '').trim(),
+        generarPassword: Boolean(values.generarPassword),
+      };
+    },
+    detail: (item, lookups = {}) => [
+      { label: 'Usuario', value: item.username },
+      { label: 'Correo', value: item.correo },
+      { label: 'Rol', value: rolUsuarioLabel[item.rol] ?? String(item.rol ?? '—') },
+      { label: 'Empresa', value: lookups.empresaNombres?.[item.idEmpresa] ?? '—' },
+    ],
+  },
+  estados: nombreDescripcionMaestro({
+    service: estadoService,
+    title: 'Estados',
+    singular: 'estado',
+    newTitle: 'Nuevo estado',
+    kicker: 'Estado',
+    registerLabel: 'Registrar estado',
+    hint: 'El nombre es obligatorio y no puede repetirse.',
+    description: 'Estados operativos del activo: disponible, asignado, mantenimiento o baja.',
+    emptyTitle: 'No hay estados',
+    emptyDescription: 'Registre el primer estado para usarlo en asignaciones.',
+  }),
+  'tipos-asignacion': nombreDescripcionMaestro({
+    service: tipoAsignacionService,
+    title: 'Tipos de asignación',
+    singular: 'tipo de asignación',
+    newTitle: 'Nuevo tipo de asignación',
+    kicker: 'Tipo de asignación',
+    registerLabel: 'Registrar tipo',
+    hint: 'El nombre es obligatorio y no puede repetirse. Asignacion, Traslado, Mantenimiento y Baja alimentan los movimientos.',
+    description: 'Tipos de movimiento de un activo: entrega, traslado, mantenimiento o baja.',
+    emptyTitle: 'No hay tipos de asignación',
+    emptyDescription: 'Registre el primer tipo para clasificar movimientos.',
+  }),
 };
 
 export function getMaestro(slug) {

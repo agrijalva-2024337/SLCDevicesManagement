@@ -65,6 +65,10 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
   return (
     <form className="grid gap-4 sm:grid-cols-2" onSubmit={onSubmit} noValidate>
       {fields.map((field) => {
+        if (field.hiddenWhen?.(values)) {
+          return null;
+        }
+
         if (field.type === 'switch') {
           return (
             <EnabledSwitch

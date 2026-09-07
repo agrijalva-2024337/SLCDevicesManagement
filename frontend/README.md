@@ -116,7 +116,7 @@ Definidas en `src/app/routes.jsx` con `createBrowserRouter` + lazy. `App.jsx` mo
 | `/app` | Dashboard de reportes (`DashboardPage`) | Activa |
 | `/app/catalogos/empresas` | Empresas + overlays `nueva` / `:id` / `:id/editar` | Activa |
 | `/app/catalogos/sedes` | Sedes + overlays `nueva` / `:id` / `:id/editar` | Activa |
-| `/app/catalogos/:slug` | Áreas, categorías, proveedores, ubicaciones, redes conocidas, países | Activa |
+| `/app/catalogos/:slug` | Áreas, proveedores, ubicaciones, países, y en Administración: usuarios, categorías, estados, tipos de asignación, redes Wi-Fi | Activa |
 | `/app/catalogos/:slug/nueva` \| `:id` \| `:id/editar` | Ficha y formulario sobre la lista | Activa |
 | `/app/activos` | Parque + pestañas Asignaciones / Traslados / Mantenimientos / Bajas (`?vista=`) | Activa |
 | `/app/activos/:id` | Ficha del activo a página completa: datos, QR, ubicación e historial | Activa |
@@ -146,7 +146,7 @@ El BSSID es único y se **normaliza a minúsculas** antes de enviarlo (`aa:bb:cc
 
 `// [API]` pendiente: no existe `RedesConocidasController`. La pantalla corre contra mock. La ruta tentativa es `/api/RedesConocidas` en `paths.js` — hay que confirmarla en Swagger, junto con el método de borrado y el rol de escritura.
 
-El sidebar muestra Activos, inventario físico, reportes y bitácora. Asignaciones, traslados, mantenimientos y bajas viven como pestañas de filtro en Activos. La bitácora no se muestra a Consulta ni a Operador.
+El sidebar agrupa **Administración** (usuarios, categorías, estados, tipos de asignación, redes Wi-Fi y bitácora) aparte de Catálogos. Usuarios y bitácora no se muestran a Consulta ni a Operador. Asignaciones, traslados, mantenimientos y bajas viven como pestañas de filtro en Activos.
 
 ## Activos y asignaciones (FE-06)
 

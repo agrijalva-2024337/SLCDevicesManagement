@@ -22,10 +22,10 @@ En el frontend, `Consulta` o rol nulo **nunca** escribe. `RutaProtegida` pide se
 | Health | GET | anónimo | anónimo | Sí |
 | Paises | GET | Lectura | no se oculta la lista | Sí |
 | Paises | POST/PUT/DELETE | AdministradorGeneral | `paises` → solo AdministradorGeneral | Sí |
-| Estados | GET | Lectura | lookups; sin pantalla de escritura | Sí |
-| Estados | POST/PUT/disable | AdministradorGeneral | `estados` → solo AdministradorGeneral | Sí (preventivo; no hay UI) |
-| TiposAsignacion | GET | Lectura | lookups; sin pantalla de escritura | Sí |
-| TiposAsignacion | POST/PUT/disable | AdministradorGeneral | `tipos-asignacion` → solo AdministradorGeneral | Sí (preventivo; no hay UI) |
+| Estados | GET | Lectura | slug `estados`; lista visible a los 4 | Sí |
+| Estados | POST/PUT/DELETE | AdministradorGeneral | `estados` → solo AdministradorGeneral | Sí |
+| TiposAsignacion | GET | Lectura | slug `tipos-asignacion`; lista visible a los 4 | Sí |
+| TiposAsignacion | POST/PUT/DELETE | AdministradorGeneral | `tipos-asignacion` → solo AdministradorGeneral | Sí |
 | Empresas | GET | Lectura | no se oculta la lista | Sí |
 | Empresas | POST | AdministradorGeneral | `empresas-create` | Sí |
 | Empresas | PUT/disable | EscrituraEmpresa | `empresas` → `>= AdministradorEmpresa` | Sí |
@@ -37,14 +37,14 @@ En el frontend, `Consulta` o rol nulo **nunca** escribe. `RutaProtegida` pide se
 | CategoriasActivo | POST/PUT/disable | EscrituraEmpresa | else | Sí |
 | Proveedores | GET | Lectura | slug `proveedores` | Sí |
 | Proveedores | POST/PUT/disable | EscrituraEmpresa | else | Sí |
-| Usuarios | GET | **EscrituraEmpresa** (único GET de catálogo que no es Lectura) | no se llama `getAll` si `!canWrite('usuarios')`; el select se deshabilita con motivo | Sí |
-| Usuarios | POST/PUT/disable | EscrituraEmpresa | else (no hay CRUD de usuarios en UI) | Sí |
+| Usuarios | GET | **EscrituraEmpresa** (único GET de catálogo que no es Lectura) | slug `usuarios`; no se llama `getAll` si `!canWrite('usuarios')`; el menú es `adminOnly` | Sí |
+| Usuarios | POST/PUT/disable | EscrituraEmpresa | `usuarios` → `>= AdministradorEmpresa` | Sí |
 | Responsables | GET | Lectura | lookups en formularios operativos | Sí |
 | Responsables | POST/PUT/disable | EscrituraOperativa | `responsables` → `>= OperadorInventario` | Sí (no hay catálogo propio; `RutaEscritura` y `CatalogoPage` ya resuelven el slug) |
 | Ubicaciones | GET | Lectura | slug `ubicaciones` | Sí |
 | Ubicaciones | POST/PUT/disable | EscrituraOperativa | `ubicaciones` → `>= OperadorInventario` | Sí |
-| Redes conocidas | GET | Lectura (por analogía; **sin controller**) | slug `redes-conocidas`; lista visible a los 4 | Por confirmar |
-| Redes conocidas | POST/PUT/DELETE | EscrituraOperativa esperada; **sin controller** | `redes-conocidas` → `>= OperadorInventario` (igual que Ubicaciones) | Por confirmar |
+| Redes conocidas | GET | Lectura | slug `redes-conocidas`; lista visible a los 4 | Sí |
+| Redes conocidas | POST/PUT/DELETE | EscrituraOperativa | `redes-conocidas` → `>= OperadorInventario` (igual que Ubicaciones) | Sí |
 | Activos | GET | Lectura | lista visible a los 4 | Sí |
 | Activos | POST/PUT/disable | EscrituraOperativa | `activos` | Sí |
 | Asignaciones | GET | Lectura | lista visible a los 4 | Sí |
@@ -72,10 +72,9 @@ En el frontend, `Consulta` o rol nulo **nunca** escribe. `RutaProtegida` pide se
 
 Ninguna desalineación queda abierta entre la matriz de controllers y `canWriteCatalog` después de FE-12.
 
-1. **GET Usuarios ≠ Lectura.** El frontend no trata ese GET como catálogo público: `usuarioService.getAllIfAllowed` solo dispara si `canWrite('usuarios')` (mismo umbral que EscrituraEmpresa). Consulta y OperadorInventario no reciben el 403.
-2. **Estados y tipos de asignación** no tienen pantalla de escritura. La rama explícita existe para que un maestro futuro no le dé el `else` (AdministradorEmpresa) a un recurso que la API reserva a AdministradorGeneral.
+1. **GET Usuarios ≠ Lectura.** El frontend no trata ese GET como catálogo público: `usuarioService.getAllIfAllowed` y `CatalogoPage` (`requiresWriteToList`) solo disparan si `canWrite('usuarios')`. Consulta y OperadorInventario no reciben el 403.
+2. **Estados y tipos de asignación** tienen `CatalogoPage`. La escritura sigue reservada a AdministradorGeneral (`canWriteCatalog`), no al `else` de AdministradorEmpresa.
 3. **Responsables** no tiene `CatalogoPage`. El permiso ya coincide con EscrituraOperativa por si la ruta `/app/catalogos/responsables` se agrega.
 4. **Dispositivos** es API publicada sin tarea FE. No hay recurso en `canWriteCatalog`. Ver `frontend/README.md`.
-5. **Redes conocidas** no tiene controller. El frontend ya pide escritura desde OperadorInventario (igual que Ubicaciones). El `[Authorize]` real queda por confirmar.
 
 Si BE-24 cambia un `[Authorize]`, actualizar esta tabla y `canWriteCatalog` en el mismo cambio.

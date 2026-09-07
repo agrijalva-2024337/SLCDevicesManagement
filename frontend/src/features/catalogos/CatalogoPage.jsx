@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
+import { SinPermiso } from '@/features/auth/RutaProtegida';
 import { getMaestro, nameById } from '@/features/catalogos/maestros';
 import { filterRowsByEmpresa, useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { PaisesGrid } from '@/features/catalogos/paises/PaisesGrid';
@@ -20,8 +21,6 @@ import MagicBento from '@/shared/vendor/react-bits/MagicBento';
 
 export { MaestroDetallePage } from '@/features/catalogos/MaestroDetallePage';
 export { MaestroFormPage } from '@/features/catalogos/MaestroFormPage';
-
-const emptyList = async () => [];
 
 function CatalogBanner({ banner }) {
   if (!banner) {
@@ -43,7 +42,14 @@ export function CatalogoPage() {
   const { idActiva } = useEmpresaActiva();
   const allowWrite = canWrite(slug);
   const maestro = getMaestro(slug);
-  const loadAll = maestro?.service.getAll ?? emptyList;
+  const canList = !maestro?.requiresWriteToList || allowWrite;
+  const loadAll = useCallback(async () => {
+    if (!maestro?.service.getAll || !canList) return [];
+    if (slug === 'usuarios' && idActiva != null) {
+      return maestro.service.getAll({ idEmpresa: idActiva });
+    }
+    return maestro.service.getAll();
+  }, [canList, idActiva, maestro, slug]);
   const { rows, visibleRows, isLoading, errorMessage, banner, reload } = useCatalogCollection(loadAll);
   const empresas = useResource(empresaService.getAll);
   const sedes = useResource(sedeService.getAll);
@@ -84,6 +90,10 @@ export function CatalogoPage() {
         <div className="app-feedback app-feedback--empty">No hay un maestro para esta ruta.</div>
       </section>
     );
+  }
+
+  if (maestro.requiresWriteToList && !allowWrite) {
+    return <SinPermiso />;
   }
 
   if (errorMessage) {

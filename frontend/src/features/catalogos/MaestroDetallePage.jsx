@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useOutletContext, useParams } from 'react-router';
+import { useLocation, useNavigate, useOutletContext, useParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import { getMaestro } from '@/features/catalogos/maestros';
 import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
@@ -12,9 +12,11 @@ export function MaestroDetallePage() {
   const { slug, id } = useParams();
   const { canWrite } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const outlet = useOutletContext() ?? {};
   const maestro = getMaestro(slug);
-  const close = () => navigate(`/app/catalogos/${slug}`);
+  const close = () => navigate(`/app/catalogos/${slug}`, { replace: true });
+  const passwordGenerada = location.state?.passwordGenerada;
 
   const [item, setItem] = useState(() => outlet.rows?.find((row) => String(row.id) === String(id)) ?? null);
   const [loadError, setLoadError] = useState(null);
@@ -97,6 +99,12 @@ export function MaestroDetallePage() {
           <DetailField label="Última modificación" value={formatDate(item.fechaModificacion)} />
         ) : null}
       </div>
+      {passwordGenerada ? (
+        <div className="app-feedback app-feedback--success" role="status">
+          <p className="font-semibold">Contraseña temporal (cópiela ahora; no se vuelve a mostrar):</p>
+          <p className="app-hash mt-2">{passwordGenerada}</p>
+        </div>
+      ) : null}
       {canWrite(slug) ? (
         <div className="flex flex-wrap gap-3">
           <EditRecordButton to={`/app/catalogos/${slug}/${item.id}/editar`} />
