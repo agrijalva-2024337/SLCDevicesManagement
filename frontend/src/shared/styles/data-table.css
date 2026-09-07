@@ -618,6 +618,7 @@
 @media (max-width: 767.98px) {
   .data-table-head-actions {
     width: 100%;
+    flex-wrap: wrap;
   }
 
   .data-table-head-actions .app-btn {

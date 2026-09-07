@@ -216,6 +216,7 @@ function renderCellContent(column, row) {
 
 const ICON_ACTION_META = {
   view: { icon: 'pi pi-eye', tone: 'view', label: 'Ver ficha' },
+  verify: { icon: 'pi pi-verified', tone: 'view', label: 'Verificar documento' },
   edit: { icon: 'pi pi-pencil', tone: 'edit', label: 'Editar' },
   create: { icon: 'pi pi-check-circle', tone: 'view', label: 'Registrar' },
   remove: { icon: 'pi pi-trash', tone: 'danger', label: 'Eliminar' },
@@ -223,7 +224,7 @@ const ICON_ACTION_META = {
 
 function iconActionsFromRow(actions) {
   if (!actions) return [];
-  return ['view', 'create', 'edit', 'remove']
+  return ['view', 'verify', 'create', 'edit', 'remove']
     .filter((key) => actions[key])
     .map((key) => ({
       key,

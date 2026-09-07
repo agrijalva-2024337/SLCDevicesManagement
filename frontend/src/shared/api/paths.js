@@ -22,8 +22,19 @@ export const apiPaths = {
   ubicaciones: '/api/Ubicaciones',
   // [API] ruta no confirmada: no hay RedesConocidasController; verificar contra Swagger
   redesConocidas: '/api/RedesConocidas',
+  dispositivos: {
+    rastreo: '/api/Dispositivos/rastreo',
+    rastreoByActivo: (idActivo) => `/api/Dispositivos/rastreo/${idActivo}`,
+    fueraDeRango: '/api/Dispositivos/fuera-de-rango',
+  },
   activos: '/api/Activos',
+  // [API] imagen QR del activo; confirmar en Swagger (blob o { imageUrl, consultaUrl })
+  activoQr: (id) => `/api/Activos/${id}/qr`,
+  // [API] ficha pública sin login; confirmar path y nombre del código
+  consultaPublica: (codigo) => `/api/Consulta/${codigo}`,
   asignaciones: '/api/Asignaciones',
+  // [API] multipart archivo PDF; confirmar cuando exista el controller
+  asignacionVerificarPdf: (id) => `/api/Asignaciones/${id}/pdf/verificar`,
   historicosInventario: '/api/HistoricosInventario',
   detallesActivo: '/api/DetallesActivos',
   historialActivos: '/api/HistorialActivos',

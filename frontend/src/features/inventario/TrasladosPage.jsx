@@ -13,7 +13,7 @@ import * as trasladoService from '@/features/inventario/trasladoService';
 import { parseTrasladoRuta } from '@/features/inventario/trasladoRuta';
 import { DataTable } from '@/shared/components/DataTable';
 import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
-import { RegisterButton } from '@/shared/components/RecordActions';
+import { EscanearQrButton, RegisterButton } from '@/shared/components/RecordActions';
 import { ToneBadge } from '@/shared/components/StatusBadge';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
@@ -128,7 +128,12 @@ export function TrasladosPage() {
         title="Traslados"
         description="Movimientos entre ubicaciones de la misma empresa. Se registran como filas de Asignación con tipo Traslado."
         primaryAction={
-          allowWrite ? <RegisterButton label="Registrar traslado" onClick={() => crud.openCreate()} /> : null
+          <>
+            <EscanearQrButton />
+            {allowWrite ? (
+              <RegisterButton label="Registrar traslado" onClick={() => crud.openCreate()} />
+            ) : null}
+          </>
         }
         columns={columns}
         rows={tableRows}

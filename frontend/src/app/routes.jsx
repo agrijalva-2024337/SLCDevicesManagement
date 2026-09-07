@@ -19,9 +19,12 @@ const loadEmpresas = () => import('@/features/organizacion/empresas/EmpresasPage
 const loadSedes = () => import('@/features/organizacion/sedes/SedesPage');
 const loadCatalogo = () => import('@/features/catalogos/CatalogoPage');
 const loadActivosHub = () => import('@/features/activos/ActivosHubPage');
+const loadActivoDetalle = () => import('@/features/activos/ActivoDetallePage');
+const loadEscanearActivo = () => import('@/features/consulta/EscanearActivoPage');
 const loadBitacora = () => import('@/features/organizacion/bitacoras/BitacoraPage');
 const loadJornadas = () => import('@/features/inventario/JornadasPage');
 const loadJornadaDetalle = () => import('@/features/inventario/JornadaDetallePage');
+const loadRastreo = () => import('@/features/rastreo/RastreoPage');
 const loadReportes = () => import('@/features/reportes/ReportesPage');
 const loadActivosReporte = () => import('@/features/reportes/ActivosReportePage');
 
@@ -44,6 +47,14 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     ...named(loadLogin, 'LoginPage'),
+  },
+  {
+    path: '/escanear',
+    ...named(() => import('@/features/consulta/EscanearPage'), 'EscanearPage'),
+  },
+  {
+    path: '/consulta/:codigo',
+    ...named(() => import('@/features/consulta/ConsultaActivoPage'), 'ConsultaActivoPage'),
   },
   {
     path: '/app',
@@ -69,12 +80,15 @@ export const router = createBrowserRouter([
             children: writeChildren(loadCatalogo, 'MaestroFormPage', 'MaestroDetallePage'),
           },
           { path: 'activos', ...named(loadActivosHub, 'ActivosHubPage') },
+          { path: 'activos/:id', ...named(loadActivoDetalle, 'ActivoDetallePage') },
+          { path: 'escanear', ...named(loadEscanearActivo, 'EscanearActivoPage') },
           { path: 'asignaciones', ...named(loadActivosHub, 'RedirectToActivosVista') },
           { path: 'traslados', ...named(loadActivosHub, 'RedirectToActivosVista') },
           { path: 'mantenimientos', ...named(loadActivosHub, 'RedirectToActivosVista') },
           { path: 'bajas', ...named(loadActivosHub, 'RedirectToActivosVista') },
           { path: 'inventario-fisico', ...named(loadJornadas, 'JornadasPage') },
           { path: 'inventario-fisico/:id', ...named(loadJornadaDetalle, 'JornadaDetallePage') },
+          { path: 'rastreo', ...named(loadRastreo, 'RastreoPage') },
           { path: 'reportes', ...named(loadReportes, 'ReportesPage') },
           { path: 'reportes/activos', ...named(loadActivosReporte, 'ActivosReportePage') },
           {

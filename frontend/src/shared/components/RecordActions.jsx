@@ -51,6 +51,25 @@ export function EditRecordButton({ to, onClick }) {
   );
 }
 
+export function DescargarActaButton({ url }) {
+  if (!url) return null;
+  return (
+    <a className="app-btn app-btn--ghost" href={url} download target="_blank" rel="noreferrer">
+      <i className="pi pi-download" aria-hidden="true" />
+      Descargar acta en PDF
+    </a>
+  );
+}
+
+export function EscanearQrButton({ label = 'Escanear QR' }) {
+  return (
+    <Link to="/app/escanear" className="app-btn app-btn--ghost">
+      <i className="pi pi-qrcode" aria-hidden="true" />
+      {label}
+    </Link>
+  );
+}
+
 export function RegisterButton({ to, onClick, label }) {
   if (to) {
     return (

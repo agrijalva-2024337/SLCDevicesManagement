@@ -15,7 +15,7 @@ import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/
 import { nombreUbicacion } from '@/features/inventario/trasladoRuta';
 import { DataTable } from '@/shared/components/DataTable';
 import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
-import { RegisterButton } from '@/shared/components/RecordActions';
+import { EscanearQrButton, RegisterButton } from '@/shared/components/RecordActions';
 import { StatusBadge } from '@/shared/components/StatusBadge';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
@@ -143,9 +143,12 @@ export function MantenimientosPage() {
         title="Mantenimientos"
         description="Órdenes sobre Asignación con tipo Mantenimiento. Use ?abiertos=1 o ?estado= para el drill-down del dashboard."
         primaryAction={
-          allowWrite ? (
-            <RegisterButton label="Abrir mantenimiento" onClick={() => crud.openCreate()} />
-          ) : null
+          <>
+            <EscanearQrButton />
+            {allowWrite ? (
+              <RegisterButton label="Abrir mantenimiento" onClick={() => crud.openCreate()} />
+            ) : null}
+          </>
         }
         columns={columns}
         rows={tableRows}

@@ -15,6 +15,7 @@ export const activos = [
     numeroFactura: 'F-8821',
     fechaVencimientoGarantia: '2027-11-04',
     observaciones: null,
+    tokenConsulta: 'slc-act-001',
   },
   {
     id: 2,
@@ -32,6 +33,7 @@ export const activos = [
     numeroFactura: 'F-4410',
     fechaVencimientoGarantia: '2027-06-18',
     observaciones: 'Rack 2, U12',
+    tokenConsulta: 'slc-act-002',
   },
   {
     id: 3,
@@ -49,6 +51,7 @@ export const activos = [
     numeroFactura: 'F-1902',
     fechaVencimientoGarantia: '2026-03-22',
     observaciones: null,
+    tokenConsulta: 'slc-act-003',
   },
   {
     id: 4,
@@ -66,6 +69,7 @@ export const activos = [
     numeroFactura: 'F-9104',
     fechaVencimientoGarantia: '2027-01-09',
     observaciones: null,
+    tokenConsulta: 'slc-act-004',
   },
   {
     id: 5,
@@ -83,5 +87,6 @@ export const activos = [
     numeroFactura: 'F-2201',
     fechaVencimientoGarantia: '2024-04-18',
     observaciones: 'Baja administrativa.',
+    tokenConsulta: 'slc-act-005',
   },
 ];

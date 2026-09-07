@@ -14,6 +14,7 @@ export const catalogos = [
 export const modulosApp = [
   { path: '/app/activos', label: 'Activos', icon: 'pi pi-box' },
   { path: '/app/inventario-fisico', label: 'Inventario físico', icon: 'pi pi-clipboard' },
+  { path: '/app/rastreo', label: 'Rastreo', icon: 'pi pi-map' },
   { path: '/app/bitacora', label: 'Bitácora', icon: 'pi pi-history', adminOnly: true },
   { path: '/app/reportes', label: 'Reportes', icon: 'pi pi-chart-bar' },
 ];
@@ -47,13 +48,18 @@ export const pageTitles = {
 };
 
 export function getPageTitle(pathname, search = '') {
+  if (/^\/app\/activos\/[^/]+/.test(pathname)) return 'Ficha del activo';
   if (pathname === '/app/activos' || pathname.startsWith('/app/activos')) {
     return titleForActivosVista(new URLSearchParams(search).get('vista'));
   }
+  if (pathname.startsWith('/app/escanear')) return 'Escanear QR';
   if (pathname.startsWith('/app/asignaciones')) return 'Asignaciones';
   if (pathname.startsWith('/app/traslados')) return 'Traslados';
   if (pathname.startsWith('/app/mantenimientos')) return 'Mantenimientos';
   if (pathname.startsWith('/app/bajas')) return 'Bajas';
+  if (pathname.startsWith('/app/rastreo') && new URLSearchParams(search).get('vista') === 'fuera-de-rango') {
+    return 'Fuera de rango';
+  }
   if (pageTitles[pathname]) {
     return pageTitles[pathname];
   }
@@ -102,7 +108,9 @@ export function getPageKicker(pathname) {
     pathname.startsWith('/app/traslados') ||
     pathname.startsWith('/app/mantenimientos') ||
     pathname.startsWith('/app/bajas') ||
-    pathname.startsWith('/app/inventario-fisico')
+    pathname.startsWith('/app/inventario-fisico') ||
+    pathname.startsWith('/app/rastreo') ||
+    pathname.startsWith('/app/escanear')
   ) {
     return 'Inventario';
   }

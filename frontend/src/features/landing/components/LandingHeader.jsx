@@ -9,6 +9,7 @@ export function LandingHeader() {
   const items = useMemo(
     () => [
       ...headerNav.map((item) => ({ label: item.label, href: `#${item.id}` })),
+      { label: 'Escanear QR', href: '/escanear', ariaLabel: 'Escanear código QR de un equipo' },
       { label: 'Iniciar sesión', href: '/login' },
     ],
     [],

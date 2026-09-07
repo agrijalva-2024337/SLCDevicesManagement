@@ -10,7 +10,7 @@ import * as historialActivoService from '@/features/activos/historialActivoServi
 import * as asignacionService from '@/features/asignaciones/asignacionService';
 import { DataTable } from '@/shared/components/DataTable';
 import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
-import { RegisterButton } from '@/shared/components/RecordActions';
+import { DescargarActaButton, EscanearQrButton, RegisterButton } from '@/shared/components/RecordActions';
 import { ToneBadge } from '@/shared/components/StatusBadge';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
@@ -125,7 +125,10 @@ export function BajasPage() {
         title="Bajas"
         description="Retiro definitivo. Son filas de Asignación con tipo Baja. No existe /api/bajas."
         primaryAction={
-          allowWrite ? <RegisterButton label="Registrar baja" onClick={() => crud.openCreate()} /> : null
+          <>
+            <EscanearQrButton />
+            {allowWrite ? <RegisterButton label="Registrar baja" onClick={() => crud.openCreate()} /> : null}
+          </>
         }
         columns={[
           { key: 'activoNombre', header: 'Activo', primary: true },
@@ -175,6 +178,9 @@ export function BajasPage() {
             <div className="sm:col-span-2">
               <DetailField label="Observaciones" value={crud.record.observaciones} />
             </div>
+            <div className="sm:col-span-2">
+              <DescargarActaButton url={crud.record.documentoPdfUrl} />
+            </div>
           </div>
         ) : null}
       </DetailOverlay>
@@ -202,6 +208,8 @@ export function BajasPage() {
               documentoPdfUrl: values.documentoPdfUrl,
               fecha: values.fecha,
               observaciones: values.observaciones,
+              firmaEntrega: values.firmaEntrega,
+              firmaRecibe: values.firmaRecibe,
             });
             setBanner({ message: 'Baja registrada. El activo queda dado de baja.', variant: 'empty' });
             crud.close();

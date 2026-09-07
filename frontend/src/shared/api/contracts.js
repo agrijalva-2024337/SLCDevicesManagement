@@ -158,6 +158,20 @@
  * @property {string | null} numeroFactura
  * @property {string} fechaVencimientoGarantia
  * @property {string | null} observaciones
+ * @property {string | null} [tokenConsulta] código público del QR; [API] nombre por confirmar
+ *
+ * @typedef {object} DispositivoRastreoDto
+ * `GET /api/Dispositivos/rastreo`. Coordenadas salen de Ubicacion (asignada o detectada).
+ * @property {number} id
+ * @property {number} idActivo
+ * @property {string} nombreActivo
+ * @property {number | null} idUbicacionAsignada
+ * @property {number | null} idUbicacionDetectada
+ * @property {string | null} ultimoUsoEn
+ * @property {boolean} fueraDeRango
+ * @property {boolean} revocado
+ * @property {string} creadoEn
+ * @property {string | null} expiraEn
  *
  * @typedef {object} AsignacionDto
  * @property {number} id
@@ -171,6 +185,29 @@
  * @property {boolean} activa
  * @property {string | null} observaciones
  * @property {string | null} documentoPdfUrl
+ * @property {string | null} [documentoPdfGeneradoEn]
+ * @property {string | null} [hashDocumento] SHA-256 hex del acta original; [API] nombre por confirmar
+ *
+ * @typedef {object} VerificacionPdfDto
+ * Resultado de `POST /api/Asignaciones/{id}/pdf/verificar`. [API] forma por confirmar.
+ * @property {boolean} coincide
+ * @property {string | null} hashRegistro
+ * @property {string | null} firmaDocumento
+ * @property {string | null} fechaGenerado
+ *
+ * @typedef {object} ConsultaPublicaActivoDto
+ * Ficha anónima del QR. Sin costos ni factura.
+ * @property {string} nombre
+ * @property {string | null} marca
+ * @property {string | null} modelo
+ * @property {string | null} numeroSerie
+ * @property {string | null} categoria
+ * @property {string | null} empresa
+ * @property {string | null} sede
+ * @property {string | null} ubicacion
+ * @property {string | null} estado
+ * @property {string | null} responsable
+ * @property {string | null} area
  *
  * @typedef {object} HistoricoInventarioDto
  * @property {number} id

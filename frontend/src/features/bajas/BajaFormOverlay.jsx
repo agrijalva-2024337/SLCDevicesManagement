@@ -111,6 +111,18 @@ export function BajaFormOverlay({
         maxLength: 300,
         wide: true,
       },
+      {
+        name: 'firmaEntrega',
+        label: 'Firma de quien entrega',
+        type: 'signature',
+        hint: 'Opcional. Se puede guardar sin firmar.',
+      },
+      {
+        name: 'firmaRecibe',
+        label: 'Firma de quien autoriza',
+        type: 'signature',
+        hint: 'Opcional. Se puede guardar sin firmar.',
+      },
     ],
     [activos, activosElegibles, lockActivo, motivos, responsables, usuarioOptions, usuariosUnavailableReason],
   );
@@ -132,6 +144,8 @@ export function BajaFormOverlay({
         documentoReferencia: '',
         documentoPdfUrl: '',
         observaciones: '',
+        firmaEntrega: '',
+        firmaRecibe: '',
       }}
       validate={(values) => {
         const activo = byId(activos, values.idActivo);

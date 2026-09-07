@@ -111,19 +111,26 @@ Definidas en `src/app/routes.jsx` con `createBrowserRouter` + lazy. `App.jsx` mo
 | --- | --- | --- |
 | `/` | Landing pública | Activa |
 | `/login` | Inicio de sesión (JWT real o mock) | Activa |
+| `/escanear` | Lector de QR público (sin login) | Activa |
+| `/consulta/:codigo` | Ficha pública del activo (QR, sin login) | Activa |
 | `/app` | Dashboard de reportes (`DashboardPage`) | Activa |
 | `/app/catalogos/empresas` | Empresas + overlays `nueva` / `:id` / `:id/editar` | Activa |
 | `/app/catalogos/sedes` | Sedes + overlays `nueva` / `:id` / `:id/editar` | Activa |
 | `/app/catalogos/:slug` | Áreas, categorías, proveedores, ubicaciones, redes conocidas, países | Activa |
 | `/app/catalogos/:slug/nueva` \| `:id` \| `:id/editar` | Ficha y formulario sobre la lista | Activa |
 | `/app/activos` | Parque + pestañas Asignaciones / Traslados / Mantenimientos / Bajas (`?vista=`) | Activa |
+| `/app/activos/:id` | Ficha del activo a página completa: datos, QR, ubicación e historial | Activa |
+| `/app/escanear` | Lector de QR con sesión; abre la ficha del activo | Activa |
 | `/app/activos?vista=asignaciones` | Entrega y devolución (tipo `Asignacion`) | Activa |
+| `/app/activos?vista=asignaciones&verificar=:id` | Verificar PDF de esa asignación | Activa |
 | `/app/activos?vista=traslados` | Traslados (vista de `Asignacion` tipo Traslado) | Activa |
 | `/app/activos?vista=mantenimientos` | Mantenimientos (vista de `Asignacion` tipo Mantenimiento) | Activa |
 | `/app/activos?vista=bajas` | Bajas (vista de `Asignacion` tipo Baja) | Activa |
 | `/app/asignaciones` `/traslados` `/mantenimientos` `/bajas` | Redirigen a la pestaña de Activos | Redirect |
 | `/app/inventario-fisico` | Jornadas de inventario físico | Activa |
 | `/app/inventario-fisico/:id` | Hoja de conteo, hallazgos y diferencias | Activa |
+| `/app/rastreo` | Última ubicación de equipos con agente | Activa |
+| `/app/rastreo?vista=fuera-de-rango` | Solo equipos fuera de rango | Activa |
 | `/app/bitacora` | Bitácora de auditoría, solo lectura | Activa |
 | `/app/reportes` | Catálogo de los 8 informes operativos | Activa |
 | `/app/reportes/activos` | Listado paginado `GET /api/Reportes/activos` | Activa |
@@ -152,6 +159,43 @@ Asignaciones de esta pantalla son **solo entrega**. Se listan filas con tipo `As
 Desde la ficha, **Asignar** abre la pestaña `?vista=asignaciones` con `state: { idActivo }`. Trasladar, mantenimiento y dar de baja abren overlays locales. **Dar de baja** exige `canWrite('bajas')` (Administrador de empresa o superior). El operador ve la acción deshabilitada, no oculta.
 
 Perfil Consulta: ve listas y fichas; no registra, no edita, no entrega ni devuelve. Operador de inventario o superior escribe en `activos` y `asignaciones`.
+
+## Rastreo de equipos
+
+`GET /api/Dispositivos/rastreo` (Lectura). La tabla muestra activo, ubicación asignada, última detectada, si está fuera de rango, hace cuánto se vio y el origen (el ping del agente es por BSSID → inferida por Wi-Fi). **Ver en el mapa** abre Google Maps con lat/lng de la ubicación detectada. La pestaña **Fuera de rango** filtra `fueraDeRango`. Visible para los mismos perfiles que ven reportes (sesión). En mock hay 4 filas; 2 están fuera de rango.
+
+## Verificar documento PDF
+
+Compara el **hash del registro** (`hashDocumento` de la asignación) con la **firma del PDF** (SHA-256 del archivo subido). El botón vive en la **tabla de Asignaciones** (y también en la ficha). Solo lo ven quienes pueden crear una asignación (`canWrite('asignaciones')`). Consulta no lo ve.
+
+Arrastre o elija un PDF y pulse **Verificar documento**. Verde: `Documento válido — generado el [fecha]`. Rojo: `Este documento no coincide con nuestros registros`. Debajo se muestran los dos hashes.
+
+`// [API]` pendiente: `POST /api/Asignaciones/{id}/pdf/verificar` (`multipart/form-data`, campo `archivo`). En mock, la asignación #1 coincide con `public/mocks/acta-asignacion-1.pdf`. El QR impreso en el acta (más adelante) puede apuntar a `?vista=asignaciones&verificar=:id`.
+
+## Ficha del activo y código QR
+
+La ficha **no** es una tarjeta flotante: vive en `/app/activos/:id`. «Ver ficha» y «Ver código QR» de la tabla llevan a esa página, que trae los datos a la izquierda, el **QR embebido** a la derecha (imagen, URL pública y descarga), la última ubicación reportada por el agente, los botones de movimiento y el historial del equipo.
+
+En mock el código es `tokenConsulta` (`slc-act-001` …) y la imagen sale de un generador público; la URL real de la imagen la confirma el backend.
+
+## Escanear QR
+
+`QrScanner` (`shared/components/QrScanner.jsx`) resuelve los tres caminos en un solo componente: **cámara en vivo**, **foto subida** y **código escrito a mano**. Decodifica con [`jsqr`](https://github.com/cozmo/jsQR) sobre un canvas, así que funciona igual en Chrome, Safari y Firefox — a diferencia de `BarcodeDetector`, que solo existe en navegadores Chromium.
+
+Lo usan dos páginas, con el mismo lector pero distinto destino:
+
+| Página | Acceso | Al reconocer el código |
+| --- | --- | --- |
+| `/app/escanear` | Con sesión; botón **Escanear QR** junto a *Registrar* en las cinco tablas de Activos | Abre `/app/activos/:id` |
+| `/escanear` | Público; enlace en el navbar de la landing y en la consulta | Abre `/consulta/:codigo` |
+
+`codigoDesdeQr()` acepta la URL completa que trae el QR o el código suelto. En la versión autenticada, `activoService.buscarPorCodigo()` resuelve además por número de serie o id, porque las etiquetas viejas del parque traen la serie impresa.
+
+## Consulta pública por QR
+
+`/consulta/:codigo` está **fuera** de `RutaProtegida`: no pide login ni muestra el menú de la app. Usa `ConsultaShell` (barra con la marca, *Escanear QR* e *Iniciar sesión*, y pie de página) y muestra código interno, serie, estado, categoría, marca/modelo, empresa, sede, ubicación, área, responsable, garantía y descripción. **No** muestra costo, factura ni historial. Código inexistente → «No encontrado».
+
+`// [API]` pendiente: `GET /api/Consulta/{codigo}` y `GET /api/Activos/{id}/qr`.
 
 ## Traslados y mantenimientos (FE-07)
 

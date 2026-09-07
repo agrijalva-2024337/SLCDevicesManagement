@@ -63,6 +63,7 @@ export function getAccionesDisponibles(activo, ctx = {}) {
 
   return [
     { key: 'view', label: 'Ver ficha', icon: 'pi pi-eye', tone: 'view', enabled: true },
+    { key: 'qr', label: 'Ver código QR', icon: 'pi pi-qrcode', tone: 'view', enabled: true },
     {
       key: 'edit',
       label: 'Editar',

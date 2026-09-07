@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import * as activoService from '@/features/activos/activoService';
 import { AsignacionFormOverlay } from '@/features/asignaciones/AsignacionFormOverlay';
+import { VerificarDocumentoOverlay } from '@/features/asignaciones/VerificarDocumentoOverlay';
 import * as asignacionService from '@/features/asignaciones/asignacionService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import { empresaIdDeActivo, nombreUbicacion } from '@/features/inventario/trasladoRuta';
@@ -13,7 +14,7 @@ import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
 import { DataTable } from '@/shared/components/DataTable';
 import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
-import { RegisterButton } from '@/shared/components/RecordActions';
+import { DescargarActaButton, EscanearQrButton, RegisterButton } from '@/shared/components/RecordActions';
 import { ToneBadge } from '@/shared/components/StatusBadge';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
@@ -50,6 +51,7 @@ export function AsignacionesPage() {
   const { idActiva } = useEmpresaActiva();
   const location = useLocation();
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
   const load = useCallback(() => asignacionService.listarEntregas(), []);
   const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(load);
   const crud = useCrudOverlay();
@@ -84,6 +86,24 @@ export function AsignacionesPage() {
 
   const tableRows = useMemo(() => scopedRows.map((row) => hydrate(row, lookups)), [lookups, scopedRows]);
   useRecordDeepLink(tableRows, crud.openView);
+
+  const verificarId = allowWrite ? params.get('verificar') : null;
+  const verifying = tableRows.find((item) => String(item.id) === String(verificarId)) ?? null;
+
+  const openVerify = useCallback(
+    (row) => {
+      const next = new URLSearchParams(params);
+      next.set('verificar', String(row.id));
+      setParams(next, { replace: true });
+    },
+    [params, setParams],
+  );
+
+  const closeVerify = useCallback(() => {
+    const next = new URLSearchParams(params);
+    next.delete('verificar');
+    setParams(next, { replace: true });
+  }, [params, setParams]);
 
   useEffect(() => {
     if (prefillOpened.current || !allowWrite) return;
@@ -130,7 +150,12 @@ export function AsignacionesPage() {
         title="Asignaciones"
         description="Entrega y devolución. Solo filas de tipo Asignacion. Traslado y mantenimiento están en las pestañas de Activos."
         primaryAction={
-          allowWrite ? <RegisterButton label="Registrar asignación" onClick={() => crud.openCreate()} /> : null
+          <>
+            <EscanearQrButton />
+            {allowWrite ? (
+              <RegisterButton label="Registrar asignación" onClick={() => crud.openCreate()} />
+            ) : null}
+          </>
         }
         columns={[
           { key: 'activoNombre', header: 'Activo', primary: true },
@@ -177,6 +202,7 @@ export function AsignacionesPage() {
         emptyDescription="Registre la primera entrega para asignar un activo a un responsable."
         getRowActions={(row) => ({
           view: { onClick: () => crud.openView(row) },
+          ...(allowWrite ? { verify: { onClick: () => openVerify(row) } } : {}),
         })}
       />
 
@@ -202,34 +228,55 @@ export function AsignacionesPage() {
             <div className="sm:col-span-2">
               <DetailField label="Observaciones" value={crud.record.observaciones} />
             </div>
-            {allowWrite && asignacionService.estaVigente(crud.record) ? (
-              <div className="sm:col-span-2">
+            <div className="sm:col-span-2 flex flex-wrap gap-3">
+              <DescargarActaButton url={crud.record.documentoPdfUrl} />
+            {allowWrite ? (
+              <>
                 <button
                   type="button"
-                  className="app-btn app-btn--primary"
-                  disabled={closing}
-                  onClick={async () => {
-                    setClosing(true);
-                    try {
-                      await asignacionService.devolver(crud.record.id);
-                      setBanner({ message: 'Activo devuelto. El estado vuelve a Disponible.', variant: 'empty' });
-                      crud.close();
-                      await reload();
-                      await activos.reload();
-                      await asignacionesAll.reload();
-                    } finally {
-                      setClosing(false);
-                    }
+                  className="app-btn app-btn--ghost"
+                  onClick={() => {
+                    const row = crud.record;
+                    crud.close();
+                    openVerify(row);
                   }}
                 >
-                  <i className="pi pi-undo" aria-hidden="true" />
-                  {closing ? 'Devolviendo…' : 'Registrar devolución'}
+                  <i className="pi pi-verified" aria-hidden="true" />
+                  Verificar documento
                 </button>
-              </div>
+                {asignacionService.estaVigente(crud.record) ? (
+                  <button
+                    type="button"
+                    className="app-btn app-btn--primary"
+                    disabled={closing}
+                    onClick={async () => {
+                      setClosing(true);
+                      try {
+                        await asignacionService.devolver(crud.record.id);
+                        setBanner({ message: 'Activo devuelto. El estado vuelve a Disponible.', variant: 'empty' });
+                        crud.close();
+                        await reload();
+                        await activos.reload();
+                        await asignacionesAll.reload();
+                      } finally {
+                        setClosing(false);
+                      }
+                    }}
+                  >
+                    <i className="pi pi-undo" aria-hidden="true" />
+                    {closing ? 'Devolviendo…' : 'Registrar devolución'}
+                  </button>
+                ) : null}
+              </>
             ) : null}
+            </div>
           </div>
         ) : null}
       </DetailOverlay>
+
+      {verifying ? (
+        <VerificarDocumentoOverlay key={verifying.id} open asignacion={verifying} onClose={closeVerify} />
+      ) : null}
 
       <AsignacionFormOverlay
         open={crud.isCreate}
@@ -247,6 +294,8 @@ export function AsignacionesPage() {
             idResponsable: Number(values.idResponsable),
             fecha: values.fecha,
             observaciones: values.observaciones,
+            firmaEntrega: values.firmaEntrega,
+            firmaRecibe: values.firmaRecibe,
           });
           setBanner({ message: 'Entrega registrada.', variant: 'empty' });
           crud.close();
