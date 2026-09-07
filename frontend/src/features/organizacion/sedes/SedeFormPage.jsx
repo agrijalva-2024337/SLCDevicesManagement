@@ -15,6 +15,7 @@ import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import { compactErrors } from '@/shared/components/recordFormUtils';
 import { StatusBadge } from '@/shared/components/StatusBadge';
 import { useResource } from '@/shared/hooks/useResource';
+import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 
 function enabledRecords(list) {
@@ -102,12 +103,15 @@ function SedeFormEditor({ id }) {
       validate={(values) => compactErrors(validateSedeForm(values))}
       onSave={async (values) => {
         const payload = sedeToPayload(values);
-        // [API] mapear errores de campo del backend con fieldErrors.js
-        const saved = editing
-          ? await sedeService.update(Number(id), payload)
-          : await sedeService.create(payload);
-        await outlet.reload?.();
-        navigate(`/app/catalogos/sedes/${saved.id}`);
+        try {
+          const saved = editing
+            ? await sedeService.update(Number(id), payload)
+            : await sedeService.create(payload);
+          await outlet.reload?.();
+          navigate(`/app/catalogos/sedes/${saved.id}`);
+        } catch (error) {
+          throw applyApiFieldErrors(error);
+        }
       }}
       onClose={close}
     />

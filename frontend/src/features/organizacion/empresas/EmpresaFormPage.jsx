@@ -12,6 +12,7 @@ import { DetailOverlay } from '@/shared/components/DetailOverlay';
 import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import { compactErrors } from '@/shared/components/recordFormUtils';
 import { StatusBadge } from '@/shared/components/StatusBadge';
+import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 
 function EmpresaFormEditor({ id }) {
@@ -98,12 +99,15 @@ function EmpresaFormEditor({ id }) {
       validate={(values) => compactErrors(validateEmpresaForm(values, records, id))}
       onSave={async (values) => {
         const payload = empresaToPayload(values);
-        // [API] mapear errores de campo del backend con fieldErrors.js
-        const saved = editing
-          ? await empresaService.update(Number(id), payload)
-          : await empresaService.create(payload);
-        await outlet.reload?.();
-        navigate(`/app/catalogos/empresas/${saved.id}`);
+        try {
+          const saved = editing
+            ? await empresaService.update(Number(id), payload)
+            : await empresaService.create(payload);
+          await outlet.reload?.();
+          navigate(`/app/catalogos/empresas/${saved.id}`);
+        } catch (error) {
+          throw applyApiFieldErrors(error);
+        }
       }}
       onClose={close}
     />
