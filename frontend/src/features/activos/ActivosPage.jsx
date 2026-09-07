@@ -13,6 +13,9 @@ import * as asignacionService from '@/features/asignaciones/asignacionService';
 import * as categoriaService from '@/features/catalogos/categorias/categoriaService';
 import * as proveedorService from '@/features/catalogos/proveedores/proveedorService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
+import { BajaFormOverlay } from '@/features/bajas/BajaFormOverlay';
+import * as bajaService from '@/features/bajas/bajaService';
+import * as motivoBajaService from '@/features/bajas/motivoBajaService';
 import { TrasladoFormOverlay } from '@/features/inventario/TrasladoFormOverlay';
 import { empresaIdDeActivo, nombreUbicacion } from '@/features/inventario/trasladoRuta';
 import * as trasladoService from '@/features/inventario/trasladoService';
@@ -23,6 +26,7 @@ import * as estadoService from '@/features/organizacion/estados/estadoService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
+import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import { DataTable } from '@/shared/components/DataTable';
 import { RegisterButton } from '@/shared/components/RecordActions';
 import { RowIconActions } from '@/shared/components/RowIconActions';
@@ -46,6 +50,7 @@ export function ActivosPage() {
   const [params] = useSearchParams();
   const { canWrite, usuario } = useAuth();
   const allowWrite = canWrite('activos');
+  const canRetire = canWrite('bajas');
   const { idActiva, empresas } = useEmpresaActiva();
   const load = useCallback(() => activoService.getAll(), []);
   const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(load);
@@ -59,10 +64,12 @@ export function ActivosPage() {
   const responsables = useResource(responsableService.getAll);
   const tipos = useResource(tipoAsignacionService.getAll);
   const asignaciones = useResource(asignacionService.getAll);
+  const usuarios = useResource(usuarioService.getAll);
+  const motivos = useResource(motivoBajaService.getAll);
 
   const ctx = useMemo(
-    () => ({ asignaciones: asignaciones.data, tipos: tipos.data, estados: estados.data }),
-    [asignaciones.data, estados.data, tipos.data],
+    () => ({ asignaciones: asignaciones.data, tipos: tipos.data, estados: estados.data, canRetire }),
+    [asignaciones.data, canRetire, estados.data, tipos.data],
   );
 
   const scopedRows = useMemo(() => {
@@ -121,6 +128,10 @@ export function ActivosPage() {
     }
     if (action.key === 'maintenance') {
       setMovimiento({ tipo: 'mantenimiento', idActivo: activo.id });
+      return;
+    }
+    if (action.key === 'retire') {
+      setMovimiento({ tipo: 'baja', idActivo: activo.id });
     }
   }
 
@@ -196,11 +207,13 @@ export function ActivosPage() {
         tipos={tipos.data}
         estados={estados.data}
         canWrite={allowWrite}
+        canRetire={canRetire}
         onClose={crud.close}
         onEditar={(activo) => crud.openEdit(activo)}
         onAsignar={(activo) => navigate('/app/asignaciones', { state: { idActivo: activo.id } })}
         onTrasladar={(activo) => setMovimiento({ tipo: 'traslado', idActivo: activo.id })}
         onMantenimiento={(activo) => setMovimiento({ tipo: 'mantenimiento', idActivo: activo.id })}
+        onRetirar={(activo) => setMovimiento({ tipo: 'baja', idActivo: activo.id })}
       />
 
       {crud.isForm ? (
@@ -276,6 +289,42 @@ export function ActivosPage() {
           setMovimiento(null);
           await refreshAll();
           crud.openView(await activoService.getById(values.idActivo));
+        }}
+      />
+
+      <BajaFormOverlay
+        open={movimiento?.tipo === 'baja'}
+        prefill={movimiento?.tipo === 'baja' ? { idActivo: movimiento.idActivo } : null}
+        activos={rows}
+        motivos={motivos.data}
+        usuarios={usuarios.data}
+        responsables={responsables.data}
+        asignaciones={asignaciones.data}
+        tipos={tipos.data}
+        onClose={() => setMovimiento(null)}
+        onSave={async (values) => {
+          try {
+            await bajaService.registrar({
+              idActivo: Number(values.idActivo),
+              idUsuario: usuario?.id,
+              idResponsable: Number(values.idResponsable),
+              idMotivoBaja: Number(values.idMotivoBaja),
+              idAutorizadoPor: Number(values.idAutorizadoPor),
+              documentoReferencia: values.documentoReferencia,
+              documentoPdfUrl: values.documentoPdfUrl,
+              fecha: values.fecha,
+              observaciones: values.observaciones,
+            });
+            setBanner({ message: 'Baja registrada. El activo queda dado de baja.' });
+            setMovimiento(null);
+            await refreshAll();
+            crud.openView(await activoService.getById(values.idActivo));
+          } catch (error) {
+            if (error.response?.status === 409 || error.status === 409) {
+              setBanner({ message: error.message, variant: 'error' });
+            }
+            throw error;
+          }
         }}
       />
     </section>

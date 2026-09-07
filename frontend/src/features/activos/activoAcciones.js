@@ -106,8 +106,16 @@ export function getAccionesDisponibles(activo, ctx = {}) {
       label: 'Dar de baja',
       icon: 'pi pi-times-circle',
       tone: 'danger',
-      enabled: false,
-      disabledReason: 'La baja se registra en el Sprint 7 (BE-18).',
+      enabled: Boolean(ctx.canRetire) && !baja && !mantenimiento && !asignado,
+      disabledReason: !ctx.canRetire
+        ? 'Solo un administrador de empresa puede dar de baja.'
+        : baja
+          ? `${bajaReason} Ya está dada de baja.`
+          : asignado
+            ? 'El activo tiene una asignación activa. Cierren el proceso antes de dar de baja.'
+            : mantenimiento
+              ? 'El activo está en mantenimiento. Finalícelo antes de dar de baja.'
+              : undefined,
     },
   ];
 }
