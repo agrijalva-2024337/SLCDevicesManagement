@@ -1,9 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { TIPO_DIFERENCIA_LABEL, TIPO_DIFERENCIA_TONE } from '@/features/inventario/tipoDiferencia';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { HBarChart } from '@/features/reportes/components/ActivityCharts';
+import { DrillDownPanel } from '@/features/reportes/components/DrillDownPanel';
+import { CATEGORY_ICON } from '@/features/reportes/dashboardParams';
 import * as reporteService from '@/features/reportes/reporteService';
+import { ESTADO_ACTIVO } from '@/shared/api/tipoAsignacion';
 import '@/features/reportes/dashboard.css';
 import { FeedbackState } from '@/shared/components/FeedbackState';
 import { ToneBadge } from '@/shared/components/StatusBadge';
@@ -31,16 +34,6 @@ function consolidar(rows) {
     costoAdquisicionTotal: acc.costoAdquisicionTotal + Number(row.costoAdquisicionTotal ?? 0),
   }), vacio());
 }
-
-const CATEGORY_ICON = {
-  Laptop: 'pi-desktop',
-  Monitor: 'pi-image',
-  Impresora: 'pi-print',
-  'Switch de red': 'pi-wifi',
-  Servidor: 'pi-server',
-  Vehículo: 'pi-car',
-  Tablet: 'pi-tablet',
-};
 
 const CATEGORY_TONE = ['info', 'success', 'warning', 'danger', 'primary'];
 
@@ -103,17 +96,46 @@ export function DashboardPage() {
   const variasEmpresas = (inventario.data?.length ?? 0) > 1;
 
   const widgets = [
-    { key: 'total', label: 'Activos', value: resumen.totalActivos, icon: 'pi-box', tone: 'primary' },
-    { key: 'disp', label: 'Disponibles', value: resumen.disponibles, icon: 'pi-check-circle', tone: 'success' },
-    { key: 'asig', label: 'Asignados', value: resumen.asignados, icon: 'pi-users', tone: 'info' },
-    { key: 'mant', label: 'En mantenimiento', value: resumen.enMantenimiento, icon: 'pi-wrench', tone: 'warning' },
-    { key: 'baja', label: 'Dados de baja', value: resumen.dadosDeBaja, icon: 'pi-times-circle', tone: 'danger' },
+    { key: 'total', label: 'Activos', value: resumen.totalActivos, icon: 'pi-box', tone: 'primary', to: '/app/activos' },
+    {
+      key: 'disp',
+      label: 'Disponibles',
+      value: resumen.disponibles,
+      icon: 'pi-check-circle',
+      tone: 'success',
+      to: `/app/activos?estado=${encodeURIComponent(ESTADO_ACTIVO.Disponible)}`,
+    },
+    {
+      key: 'asig',
+      label: 'Asignados',
+      value: resumen.asignados,
+      icon: 'pi-users',
+      tone: 'info',
+      to: `/app/activos?estado=${encodeURIComponent(ESTADO_ACTIVO.Asignado)}`,
+    },
+    {
+      key: 'mant',
+      label: 'En mantenimiento',
+      value: resumen.enMantenimiento,
+      icon: 'pi-wrench',
+      tone: 'warning',
+      to: '/app/mantenimientos?abiertos=1',
+    },
+    {
+      key: 'baja',
+      label: 'Dados de baja',
+      value: resumen.dadosDeBaja,
+      icon: 'pi-times-circle',
+      tone: 'danger',
+      to: '/app/bajas',
+    },
     {
       key: 'costo',
       label: 'Costo de adquisición',
       value: formatMoney(resumen.costoAdquisicionTotal, 'GTQ'),
       icon: 'pi-wallet',
       tone: 'primary',
+      to: '/app/reportes',
     },
   ];
 
@@ -142,41 +164,38 @@ export function DashboardPage() {
 
       <div className="dash-widgets">
         {widgets.map((widget) => (
-          <article key={widget.key} className={`dash-widget dash-widget--${widget.tone}`}>
+          <Link key={widget.key} to={widget.to} className={`dash-widget dash-widget--${widget.tone}`}>
             <i className={`pi ${widget.icon} dash-widget-icon`} aria-hidden />
             <p className="dash-widget-value tabular-nums">{widget.value}</p>
             <p className="dash-widget-title">{widget.label}</p>
-          </article>
+          </Link>
         ))}
       </div>
 
-      <section className="dash-card">
-        <header className="dash-card-head">
-          <div>
-            <h2>Activos por categoría</h2>
-            <p className="dash-hint">Cada barra abre el reporte detallado de esa categoría.</p>
-          </div>
-        </header>
-        <div className="dash-card-body">
-          {categorias.errorMessage ? (
-            <p className="dash-empty">{categorias.errorMessage}</p>
-          ) : categorias.data.length === 0 ? (
-            <p className="dash-empty">No hay activos por categoría.</p>
-          ) : (
-            <HBarChart
-              items={categorias.data.map((row, index) => ({
-                key: String(row.idCategoriaActivo),
-                label: row.nombreCategoria,
-                value: row.totalActivos,
-                icon: CATEGORY_ICON[row.nombreCategoria],
-                tone: CATEGORY_TONE[index % CATEGORY_TONE.length],
-              }))}
-              total={resumen.totalActivos || undefined}
-              onSelect={(item) => navigate(`/app/reportes/activos?idCategoriaActivo=${item.key}`)}
-            />
-          )}
-        </div>
-      </section>
+      <DrillDownPanel
+        title="Activos por categoría"
+        hint="Cada barra abre el reporte detallado de esa categoría."
+        stack={[]}
+        onChange={() => {}}
+        empty={!categorias.errorMessage && categorias.data.length === 0}
+        emptyMessage="No hay activos por categoría."
+      >
+        {categorias.errorMessage ? (
+          <p className="dash-empty">{categorias.errorMessage}</p>
+        ) : (
+          <HBarChart
+            items={categorias.data.map((row, index) => ({
+              key: String(row.idCategoriaActivo),
+              label: row.nombreCategoria,
+              value: row.totalActivos,
+              icon: CATEGORY_ICON[row.nombreCategoria],
+              tone: CATEGORY_TONE[index % CATEGORY_TONE.length],
+            }))}
+            total={resumen.totalActivos || undefined}
+            onSelect={(item) => navigate(`/app/reportes/activos?idCategoriaActivo=${item.key}`)}
+          />
+        )}
+      </DrillDownPanel>
 
       <div className="dash-split">
         <section className="dash-table-card">
@@ -338,9 +357,12 @@ export function DashboardPage() {
             <p className="dash-empty">No hay diferencias en jornadas cerradas.</p>
           ) : (
             diferenciasPorJornada.map((grupo) => (
-              <div key={grupo.id} className="dash-mini-wrap" style={{ marginBottom: '1rem' }}>
+              <div key={grupo.id} className="dash-mini-wrap">
                 <h3 className="dash-subhead">
-                  {grupo.nombreSede} · {formatDate(grupo.fechaInicio)}
+                  <Link to={`/app/inventario-fisico/${grupo.id}`}>
+                    {grupo.nombreSede} · {formatDate(grupo.fechaInicio)}
+                    <i className="pi pi-chevron-right" aria-hidden />
+                  </Link>
                 </h3>
                 <table className="dash-mini">
                   <thead>
