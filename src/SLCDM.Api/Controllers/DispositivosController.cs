@@ -26,7 +26,7 @@ public sealed class DispositivosController : ApiControllerBase
         ICommandHandler<RegistrarDispositivoCommand, DispositivoTokenDto> registrar,
         ICommandHandler<AutoRegistrarDispositivoCommand, DispositivoTokenDto> autoRegistrar,
         ICommandHandler<RevocarDispositivoCommand> revocar,
-        ICommandHandler<RegistrarUbicacionCommand> ping
+        ICommandHandler<RegistrarUbicacionCommand> ping,
         IQueryHandler<GetDispositivosFueraDeRangoQuery, IReadOnlyList<DispositivoFueraDeRangoDto>> fueraDeRango,
         IQueryHandler<GetDispositivosRastreoQuery, IReadOnlyList<DispositivoRastreoDto>> rastreo,
         IQueryHandler<GetRastreoByActivoQuery, DispositivoRastreoDto> rastreoByActivo)
@@ -45,6 +45,18 @@ public sealed class DispositivosController : ApiControllerBase
     public async Task<ActionResult<IReadOnlyList<DispositivoFueraDeRangoDto>>> FueraDeRango(
         CancellationToken cancellationToken) =>
         Ok(await _fueraDeRango.HandleAsync(new GetDispositivosFueraDeRangoQuery(), cancellationToken));
+
+    [HttpGet("rastreo")]
+    [Authorize(Roles = Roles.Lectura)]
+    public async Task<ActionResult<IReadOnlyList<DispositivoRastreoDto>>> Rastreo(
+        CancellationToken cancellationToken) =>
+        Ok(await _rastreo.HandleAsync(new GetDispositivosRastreoQuery(), cancellationToken));
+
+    [HttpGet("rastreo/{idActivo:int}")]
+    [Authorize(Roles = Roles.Lectura)]
+    public async Task<ActionResult<DispositivoRastreoDto>> RastreoByActivo(
+        int idActivo, CancellationToken cancellationToken) =>
+        Ok(await _rastreoByActivo.HandleAsync(new GetRastreoByActivoQuery(idActivo), cancellationToken));
 
     [HttpPost]
     [Authorize(Roles = Roles.EscrituraOperativa)]
