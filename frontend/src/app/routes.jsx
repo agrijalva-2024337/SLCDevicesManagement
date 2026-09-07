@@ -22,6 +22,7 @@ const loadTraslados = () => import('@/features/inventario/TrasladosPage');
 const loadMantenimientos = () => import('@/features/mantenimientos/MantenimientosPage');
 const loadActivos = () => import('@/features/activos/ActivosPage');
 const loadAsignaciones = () => import('@/features/asignaciones/AsignacionesPage');
+const loadBajas = () => import('@/features/bajas/BajasPage');
 
 const writeChildren = (loader, formExport, detailExport) => [
   {
@@ -70,6 +71,7 @@ export const router = createBrowserRouter([
           { path: 'asignaciones', ...named(loadAsignaciones, 'AsignacionesPage') },
           { path: 'traslados', ...named(loadTraslados, 'TrasladosPage') },
           { path: 'mantenimientos', ...named(loadMantenimientos, 'MantenimientosPage') },
+          { path: 'bajas', ...named(loadBajas, 'BajasPage') },
         ],
       },
     ],
