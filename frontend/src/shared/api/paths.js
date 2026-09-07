@@ -27,4 +27,14 @@ export const apiPaths = {
   historialActivos: '/api/HistorialActivos',
   motivosBaja: '/api/MotivosBaja',
   tiposMantenimiento: '/api/TiposMantenimiento',
+  reportes: {
+    inventarioGeneral: '/api/Reportes/inventario-general',
+    activosPorSede: '/api/Reportes/activos-por-sede',
+    activosPorUbicacion: '/api/Reportes/activos-por-ubicacion',
+    activosPorCategoria: '/api/Reportes/activos-por-categoria',
+    activosPorResponsable: '/api/Reportes/activos-por-responsable',
+    activos: '/api/Reportes/activos',
+    garantiasPorVencer: '/api/Reportes/garantias-por-vencer',
+    diferenciasInventario: '/api/Reportes/diferencias-inventario',
+  },
 };
