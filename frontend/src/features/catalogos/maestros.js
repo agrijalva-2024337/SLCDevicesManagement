@@ -8,6 +8,7 @@ import * as areaService from '@/features/organizacion/areas/areaService';
 import * as estadoService from '@/features/organizacion/estados/estadoService';
 import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
+import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import { RolUsuario, rolUsuarioLabel } from '@/shared/api/contracts';
 import { asOptions, optionalText, requireSelect, requireText } from '@/shared/components/recordFormUtils';
 
@@ -31,6 +32,11 @@ function requireEmail(value) {
     return 'El formato del correo no es válido.';
   }
   return null;
+}
+
+function optionalEmail(value) {
+  if (!String(value ?? '').trim()) return null;
+  return requireEmail(value);
 }
 
 function duplicateNombre(records, nombre, currentId) {
@@ -701,6 +707,87 @@ export const maestros = {
       { label: 'Correo', value: item.correo },
       { label: 'Rol', value: rolUsuarioLabel[item.rol] ?? String(item.rol ?? '—') },
       { label: 'Empresa', value: lookups.empresaNombres?.[item.idEmpresa] ?? '—' },
+    ],
+  },
+  responsables: {
+    service: responsableService,
+    title: 'Responsables',
+    singular: 'responsable',
+    newTitle: 'Nuevo responsable',
+    kicker: 'Responsable',
+    registerLabel: 'Registrar responsable',
+    hint: 'El nombre y el área son obligatorios. Correo y teléfono son opcionales.',
+    description: 'Personas que reciben activos. El área determina sede y empresa.',
+    titleOf: (item) => item.nombreCompleto,
+    facts: (item, lookups = {}) =>
+      [lookups.areaNombres?.[item.idArea], item.cargo, item.correo].filter(Boolean),
+    listView: {
+      emptyTitle: 'No hay responsables',
+      emptyDescription: 'Registre el primer responsable para asignarle equipos.',
+      columns: (lookups = {}) => [
+        { key: 'nombreCompleto', header: 'Nombre', primary: true },
+        {
+          key: 'area',
+          header: 'Área',
+          getValue: (item) => lookups.areaNombres?.[item.idArea] ?? '—',
+        },
+        { key: 'cargo', header: 'Cargo' },
+        { key: 'correo', header: 'Correo' },
+        { key: 'telefono', header: 'Teléfono' },
+        { key: 'habilitado', header: 'Estado', type: 'status' },
+      ],
+    },
+    empty: () => ({
+      idArea: '',
+      nombreCompleto: '',
+      cargo: '',
+      correo: '',
+      telefono: '',
+      habilitado: true,
+    }),
+    toForm: (item) => ({
+      idArea: String(item.idArea ?? ''),
+      nombreCompleto: item.nombreCompleto ?? '',
+      cargo: item.cargo ?? '',
+      correo: item.correo ?? '',
+      telefono: item.telefono ?? '',
+      habilitado: Boolean(item.habilitado),
+    }),
+    fields: ({ areas, editing } = {}) => [
+      { name: 'idArea', label: 'Área', type: 'select', required: true, options: asOptions(areas ?? []) },
+      { name: 'nombreCompleto', label: 'Nombre completo', required: true, maxLength: 150, wide: true },
+      { name: 'cargo', label: 'Cargo', maxLength: 100 },
+      { name: 'correo', label: 'Correo', maxLength: 150, type: 'email', autoComplete: 'email' },
+      { name: 'telefono', label: 'Teléfono', maxLength: 30, autoComplete: 'tel' },
+      { ...switchField(), hiddenWhen: () => !editing },
+    ],
+    validate(values) {
+      return {
+        idArea: requireSelect(values.idArea, 'un área'),
+        nombreCompleto: requireText(values.nombreCompleto, 'nombre completo', 150),
+        cargo: optionalText(values.cargo, 'cargo', 100),
+        correo: optionalEmail(values.correo),
+        telefono: optionalText(values.telefono, 'teléfono', 30),
+      };
+    },
+    toPayload(values, { editing } = {}) {
+      const base = {
+        idArea: Number(values.idArea),
+        nombreCompleto: values.nombreCompleto.trim(),
+        cargo: values.cargo.trim() || null,
+        correo: values.correo.trim() || null,
+        telefono: values.telefono.trim() || null,
+      };
+      if (editing) {
+        return { ...base, habilitado: Boolean(values.habilitado) };
+      }
+      return base;
+    },
+    detail: (item, lookups = {}) => [
+      { label: 'Área', value: lookups.areaNombres?.[item.idArea] ?? '—' },
+      { label: 'Cargo', value: item.cargo },
+      { label: 'Correo', value: item.correo },
+      { label: 'Teléfono', value: item.telefono },
     ],
   },
   estados: nombreDescripcionMaestro({

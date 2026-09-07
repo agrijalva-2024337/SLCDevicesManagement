@@ -17,7 +17,7 @@ Empresas y sedes se registran **antes** de `:slug` en `src/app/routes.jsx`.
 
 Deep link de ficha: `/app/catalogos/areas/7` es un `:id` de ruta, no `?id=`.
 
-Slugs de `maestros.js`: `areas`, `categorias`, `proveedores`, `ubicaciones`, `redes-conocidas`, `paises`, `usuarios`, `estados`, `tipos-asignacion`.
+Slugs de `maestros.js`: `areas`, `categorias`, `proveedores`, `ubicaciones`, `redes-conocidas`, `paises`, `usuarios`, `responsables`, `estados`, `tipos-asignacion`.
 
 ## Configuración (`maestros.js`)
 
@@ -34,6 +34,7 @@ Lookups (`sedeNombre`, `empresaNombre`) no leen stores. `fields({ empresas, sede
 | `paises` | `paisService` | `PaisesGrid` (banderas `fi fi-${codigoIso2}`) |
 | `redes-conocidas` | `redConocidaService` | DataTable (BSSID + ubicación; sin `habilitado`) |
 | `usuarios` | `usuarioService` | DataTable (nombre, rol, empresa). GET exige AdministradorEmpresa. Alta puede devolver `passwordGenerada`. |
+| `responsables` | `responsableService` | DataTable (nombre, área, cargo). Escritura: OperadorInventario. |
 | `estados` | `estadoService` | DataTable (nombre + descripción; `DELETE`, no `habilitado`). Escritura: AdministradorGeneral. |
 | `tipos-asignacion` | `tipoAsignacionService` | DataTable (nombre + descripción; `DELETE`, no `habilitado`). Escritura: AdministradorGeneral. |
 

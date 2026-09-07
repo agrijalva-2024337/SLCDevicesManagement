@@ -39,8 +39,8 @@ En el frontend, `Consulta` o rol nulo **nunca** escribe. `RutaProtegida` pide se
 | Proveedores | POST/PUT/disable | EscrituraEmpresa | else | Sí |
 | Usuarios | GET | **EscrituraEmpresa** (único GET de catálogo que no es Lectura) | slug `usuarios`; no se llama `getAll` si `!canWrite('usuarios')`; el menú es `adminOnly` | Sí |
 | Usuarios | POST/PUT/disable | EscrituraEmpresa | `usuarios` → `>= AdministradorEmpresa` | Sí |
-| Responsables | GET | Lectura | lookups en formularios operativos | Sí |
-| Responsables | POST/PUT/disable | EscrituraOperativa | `responsables` → `>= OperadorInventario` | Sí (no hay catálogo propio; `RutaEscritura` y `CatalogoPage` ya resuelven el slug) |
+| Responsables | GET | Lectura | slug `responsables`; lista visible a los 4 | Sí |
+| Responsables | POST/PUT/disable | EscrituraOperativa | `responsables` → `>= OperadorInventario` | Sí |
 | Ubicaciones | GET | Lectura | slug `ubicaciones` | Sí |
 | Ubicaciones | POST/PUT/disable | EscrituraOperativa | `ubicaciones` → `>= OperadorInventario` | Sí |
 | Redes conocidas | GET | Lectura | slug `redes-conocidas`; lista visible a los 4 | Sí |
@@ -74,7 +74,7 @@ Ninguna desalineación queda abierta entre la matriz de controllers y `canWriteC
 
 1. **GET Usuarios ≠ Lectura.** El frontend no trata ese GET como catálogo público: `usuarioService.getAllIfAllowed` y `CatalogoPage` (`requiresWriteToList`) solo disparan si `canWrite('usuarios')`. Consulta y OperadorInventario no reciben el 403.
 2. **Estados y tipos de asignación** tienen `CatalogoPage`. La escritura sigue reservada a AdministradorGeneral (`canWriteCatalog`), no al `else` de AdministradorEmpresa.
-3. **Responsables** no tiene `CatalogoPage`. El permiso ya coincide con EscrituraOperativa por si la ruta `/app/catalogos/responsables` se agrega.
+3. **Responsables** tiene `CatalogoPage` en `/app/catalogos/responsables`. La escritura coincide con EscrituraOperativa.
 4. **Dispositivos** es API publicada sin tarea FE. No hay recurso en `canWriteCatalog`. Ver `frontend/README.md`.
 
 Si BE-24 cambia un `[Authorize]`, actualizar esta tabla y `canWriteCatalog` en el mismo cambio.

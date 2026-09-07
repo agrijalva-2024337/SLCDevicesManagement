@@ -7,6 +7,7 @@ import * as paisService from '@/features/catalogos/paises/paisService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
+import * as areaService from '@/features/organizacion/areas/areaService';
 import { invalidateCatalogoAsignacionCache } from '@/shared/api/tipoAsignacion';
 import { DetailOverlay } from '@/shared/components/DetailOverlay';
 import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
@@ -28,6 +29,7 @@ function MaestroFormEditor({ slug, id }) {
   const maestro = getMaestro(slug);
   const empresas = useResource(empresaService.getAll);
   const sedes = useResource(sedeService.getAll);
+  const areas = useResource(areaService.getAll);
   const paises = useResource(paisService.getAll);
   const ubicaciones = useResource(ubicacionService.getAll);
   const editing = Boolean(id);
@@ -103,6 +105,7 @@ function MaestroFormEditor({ slug, id }) {
   const lookups = {
     empresas: enabledRecords(empresas.data),
     sedes: enabledRecords(sedes.data),
+    areas: enabledRecords(areas.data),
     paises: paises.data,
     ubicaciones: enabledRecords(ubicaciones.data),
     rol,

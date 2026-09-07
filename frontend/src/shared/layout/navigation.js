@@ -11,6 +11,7 @@ export const catalogos = [
 
 export const administracion = [
   { slug: 'usuarios', label: 'Usuarios', icon: 'pi pi-users', adminOnly: true },
+  { slug: 'responsables', label: 'Responsables', icon: 'pi pi-id-card' },
   { slug: 'categorias', label: 'Categorías', icon: 'pi pi-tags' },
   { slug: 'estados', label: 'Estados', icon: 'pi pi-flag' },
   { slug: 'tipos-asignacion', label: 'Tipos de asignación', icon: 'pi pi-list' },
@@ -124,6 +125,7 @@ export function getPageTitle(pathname, search = '') {
 export function getPageKicker(pathname) {
   if (pathname === '/app') return 'Panel';
   if (pathname.startsWith('/app/catalogos/usuarios')) return 'Administración';
+  if (pathname.startsWith('/app/catalogos/responsables')) return 'Administración';
   if (pathname.startsWith('/app/catalogos/categorias')) return 'Administración';
   if (pathname.startsWith('/app/catalogos/estados')) return 'Administración';
   if (pathname.startsWith('/app/catalogos/tipos-asignacion')) return 'Administración';
