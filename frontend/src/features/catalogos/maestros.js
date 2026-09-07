@@ -371,6 +371,16 @@ export const maestros = {
     listView: {
       emptyTitle: 'No hay redes conocidas',
       emptyDescription: 'Registre el primer BSSID para mapearlo a una ubicación.',
+      filters: (lookups = {}) => [
+        {
+          key: 'idUbicacion',
+          label: 'Ubicación',
+          options: [
+            { value: 'all', label: 'Todas' },
+            ...asOptions(lookups.ubicaciones ?? []),
+          ],
+        },
+      ],
       columns: (lookups = {}) => [
         { key: 'bssid', header: 'BSSID', primary: true, mono: true },
         {
