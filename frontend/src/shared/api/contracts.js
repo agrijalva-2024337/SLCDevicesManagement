@@ -192,6 +192,77 @@
  * @property {string | null} descripcion
  * @property {string | null} informacionAnterior
  * @property {string | null} informacionNueva
+ *
+ * estadoOperativo en Reportes: "disponible" | "asignado" | "mantenimiento" | "baja"
+ *
+ * @typedef {object} InventarioEmpresaResumenDto
+ * @property {number} idEmpresa
+ * @property {string} nombreEmpresa
+ * @property {number} totalActivos
+ * @property {number} disponibles
+ * @property {number} asignados
+ * @property {number} enMantenimiento
+ * @property {number} dadosDeBaja
+ * @property {number} costoAdquisicionTotal
+ *
+ * @typedef {object} ActivosPorSedeDto
+ * @property {number} idSede
+ * @property {string} nombreSede
+ * @property {number} idEmpresa
+ * @property {number} totalActivos
+ * @property {number} disponibles
+ * @property {number} asignados
+ * @property {number} enMantenimiento
+ * @property {number} dadosDeBaja
+ *
+ * @typedef {object} ActivosPorUbicacionDto
+ * @property {number} idUbicacion
+ * @property {string} nombreUbicacion
+ * @property {number} idSede
+ * @property {string} nombreSede
+ * @property {number} idEmpresa
+ * @property {number} totalActivos
+ * @property {number} disponibles
+ * @property {number} asignados
+ * @property {number} enMantenimiento
+ * @property {number} dadosDeBaja
+ *
+ * @typedef {object} ActivosPorCategoriaDto
+ * @property {number} idCategoriaActivo
+ * @property {string} nombreCategoria
+ * @property {number} totalActivos
+ * @property {number} disponibles
+ * @property {number} asignados
+ * @property {number} enMantenimiento
+ * @property {number} dadosDeBaja
+ *
+ * @typedef {object} ActivosPorResponsableDto
+ * @property {number} idResponsable
+ * @property {string} nombreResponsable
+ * @property {number} totalAsignados
+ *
+ * @typedef {object} ActivoReporteDto
+ * @property {ActivoDto} activo
+ * @property {'disponible' | 'asignado' | 'mantenimiento' | 'baja'} estadoOperativo
+ * @property {number} idSede
+ * @property {string} nombreSede
+ * @property {number | null} idResponsable
+ *
+ * @typedef {object} GarantiaPorVencerDto
+ * @property {ActivoDto} activo
+ * @property {string} fechaVencimientoGarantia
+ * @property {number} diasRestantes
+ * @property {number} idSede
+ * @property {string} nombreSede
+ *
+ * @typedef {object} DiferenciaInventarioReporteDto
+ * @property {number} idHistoricoInventario
+ * @property {string} nombreSede
+ * @property {string} fechaInicio
+ * @property {string} tipoDiferencia
+ * @property {number} idActivo
+ * @property {string} nombreActivo
+ * @property {string | null} observaciones
  */
 
 export const RolUsuario = {
@@ -224,6 +295,27 @@ export const rolUsuarioLabel = {
 export const AuthClaimTypes = {
   role: 'role',
   idEmpresa: 'id_empresa',
+};
+
+export const ESTADO_OPERATIVO = {
+  Disponible: 'disponible',
+  Asignado: 'asignado',
+  Mantenimiento: 'mantenimiento',
+  Baja: 'baja',
+};
+
+export const ESTADO_OPERATIVO_LABEL = {
+  [ESTADO_OPERATIVO.Disponible]: 'Disponible',
+  [ESTADO_OPERATIVO.Asignado]: 'Asignado',
+  [ESTADO_OPERATIVO.Mantenimiento]: 'En mantenimiento',
+  [ESTADO_OPERATIVO.Baja]: 'Dado de baja',
+};
+
+export const ESTADO_OPERATIVO_TONE = {
+  [ESTADO_OPERATIVO.Disponible]: 'success',
+  [ESTADO_OPERATIVO.Asignado]: 'info',
+  [ESTADO_OPERATIVO.Mantenimiento]: 'warning',
+  [ESTADO_OPERATIVO.Baja]: 'danger',
 };
 
 export function rolFromClaim(role) {

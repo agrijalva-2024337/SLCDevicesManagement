@@ -16,7 +16,7 @@ export const modulosApp = [
   { path: '/app/bajas', label: 'Bajas', icon: 'pi pi-times-circle' },
   { path: '/app/inventario-fisico', label: 'Inventario físico', icon: 'pi pi-clipboard' },
   { path: '/app/bitacora', label: 'Bitácora', icon: 'pi pi-history', adminOnly: true },
-  { path: '/app/reportes', label: 'Reportes', icon: 'pi pi-chart-bar', disabled: true },
+  { path: '/app/reportes', label: 'Reportes', icon: 'pi pi-chart-bar' },
 ];
 
 export const navigation = [
@@ -79,6 +79,9 @@ export function getPageTitle(pathname) {
   }
   if (/^\/app\/inventario-fisico\/\d+/.test(pathname)) {
     return 'Jornada';
+  }
+  if (/^\/app\/reportes\/activos/.test(pathname)) {
+    return 'Activos detallados';
   }
   return 'SLCDM';
 }

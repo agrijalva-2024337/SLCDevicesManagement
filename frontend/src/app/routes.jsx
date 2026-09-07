@@ -10,7 +10,7 @@ function named(importer, exportName) {
 }
 
 const loadLanding = () => import('@/features/landing/LandingPage');
-const loadHome = () => import('@/app/pages/HomePage');
+const loadDashboard = () => import('@/features/reportes/DashboardPage');
 const loadLogin = () => import('@/features/auth/LoginPage');
 const loadNotFound = () => import('@/app/pages/NotFoundPage');
 const loadGuard = () => import('@/features/auth/RutaProtegida');
@@ -26,6 +26,8 @@ const loadBajas = () => import('@/features/bajas/BajasPage');
 const loadBitacora = () => import('@/features/organizacion/bitacoras/BitacoraPage');
 const loadJornadas = () => import('@/features/inventario/JornadasPage');
 const loadJornadaDetalle = () => import('@/features/inventario/JornadaDetallePage');
+const loadReportes = () => import('@/features/reportes/ReportesPage');
+const loadActivosReporte = () => import('@/features/reportes/ActivosReportePage');
 
 const writeChildren = (loader, formExport, detailExport) => [
   {
@@ -54,7 +56,7 @@ export const router = createBrowserRouter([
       {
         ...named(loadAppLayout, 'AppLayout'),
         children: [
-          { index: true, ...named(loadHome, 'HomePage') },
+          { index: true, ...named(loadDashboard, 'DashboardPage') },
           {
             path: 'catalogos/empresas',
             ...named(loadEmpresas, 'EmpresasPage'),
@@ -77,6 +79,8 @@ export const router = createBrowserRouter([
           { path: 'bajas', ...named(loadBajas, 'BajasPage') },
           { path: 'inventario-fisico', ...named(loadJornadas, 'JornadasPage') },
           { path: 'inventario-fisico/:id', ...named(loadJornadaDetalle, 'JornadaDetallePage') },
+          { path: 'reportes', ...named(loadReportes, 'ReportesPage') },
+          { path: 'reportes/activos', ...named(loadActivosReporte, 'ActivosReportePage') },
           {
             path: 'bitacora',
             ...named(loadGuard, 'RutaAdministrador'),
