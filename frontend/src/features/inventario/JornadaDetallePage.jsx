@@ -5,6 +5,7 @@ import { listarAgrupadosPorUbicacion } from '@/features/inventario/activosEspera
 import * as detalleActivoService from '@/features/inventario/detalleActivoService';
 import { HallazgoFormOverlay } from '@/features/inventario/HallazgoFormOverlay';
 import * as historicoInventarioService from '@/features/inventario/historicoInventarioService';
+import { todayIsoDate } from '@/features/inventario/trasladoRuta';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import { DataTable } from '@/shared/components/DataTable';
 import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
@@ -59,6 +60,8 @@ export function JornadaDetallePage() {
   const [banner, setBanner] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
+  const [pendingClose, setPendingClose] = useState(false);
+  const [closeError, setCloseError] = useState(null);
 
   const reload = useCallback(async () => {
     try {
@@ -144,12 +147,27 @@ export function JornadaDetallePage() {
         title={sede?.nombre ?? `Jornada #${jornada?.id}`}
         description={jornada?.observaciones || 'Hoja de conteo agrupada por ubicación.'}
         actions={
-          <StatusBadge
-            active={!jornada?.cerrado}
-            activeLabel="Abierta"
-            inactiveLabel="Cerrada"
-            tone={jornada?.cerrado ? 'default' : 'warning'}
-          />
+          <>
+            <StatusBadge
+              active={!jornada?.cerrado}
+              activeLabel="Abierta"
+              inactiveLabel="Cerrada"
+              tone={jornada?.cerrado ? 'default' : 'warning'}
+            />
+            {allowWrite && !jornada?.cerrado ? (
+              <button
+                type="button"
+                className="app-btn app-btn--primary"
+                onClick={() => {
+                  setCloseError(null);
+                  setPendingClose(true);
+                }}
+              >
+                <i className="pi pi-lock" aria-hidden="true" />
+                Cerrar jornada
+              </button>
+            ) : null}
+          </>
         }
       />
 
@@ -327,6 +345,62 @@ export function JornadaDetallePage() {
             onClick={() => {
               setPendingDelete(null);
               setDeleteError(null);
+            }}
+          >
+            Cancelar
+          </button>
+        </div>
+      </DetailOverlay>
+
+      <DetailOverlay
+        open={pendingClose}
+        title="Cerrar jornada"
+        kicker="Confirmación"
+        onClose={() => {
+          setPendingClose(false);
+          setCloseError(null);
+        }}
+      >
+        <p className="text-base text-navy">
+          {pendientes > 0
+            ? `Hay ${pendientes} activo${pendientes === 1 ? '' : 's'} pendiente${pendientes === 1 ? '' : 's'} de verificar. `
+            : 'Todos los activos esperados ya tienen hallazgo. '}
+          Al cerrar no se podrán registrar, editar ni eliminar hallazgos. Esta acción no se puede deshacer.
+        </p>
+        {closeError ? (
+          <div className="app-feedback app-feedback--error" role="alert">
+            {closeError}
+          </div>
+        ) : null}
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            className="app-btn app-btn--primary"
+            onClick={async () => {
+              try {
+                await historicoInventarioService.cerrar(jornada.id, todayIsoDate());
+                setBanner({ message: 'Jornada cerrada.', variant: 'empty' });
+                setPendingClose(false);
+                setCloseError(null);
+                crud.close();
+                setPendingDelete(null);
+                await reload();
+              } catch (error) {
+                const message = getErrorMessage(error);
+                setCloseError(message);
+                setBanner({ message, variant: 'error' });
+              }
+            }}
+          >
+            <i className="pi pi-lock" aria-hidden="true" />
+            Cerrar jornada
+          </button>
+          <button
+            type="button"
+            className="app-btn app-btn--ghost"
+            onClick={() => {
+              setPendingClose(false);
+              setCloseError(null);
             }}
           >
             Cancelar
