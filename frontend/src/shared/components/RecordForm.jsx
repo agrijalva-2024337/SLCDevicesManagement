@@ -1,3 +1,5 @@
+import { SignaturePad } from '@/shared/components/SignaturePad';
+
 export function FormField({ id, label, required, error, hint, children, wide = false }) {
   return (
     <div className={wide ? 'sm:col-span-2' : undefined}>
@@ -96,6 +98,26 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
                   </option>
                 ))}
               </select>
+            </FormField>
+          );
+        }
+
+        if (field.type === 'signature') {
+          return (
+            <FormField
+              key={field.name}
+              id={id}
+              label={field.label}
+              required={field.required}
+              error={errors[field.name]}
+              hint={field.hint}
+              wide
+            >
+              <SignaturePad
+                value={values[field.name] ?? ''}
+                disabled={Boolean(field.readOnly)}
+                onChange={(next) => setField(field.name, next)}
+              />
             </FormField>
           );
         }

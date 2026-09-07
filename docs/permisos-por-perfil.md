@@ -49,6 +49,9 @@ En el frontend, `Consulta` o rol nulo **nunca** escribe. `RutaProtegida` pide se
 | Activos | POST/PUT/disable | EscrituraOperativa | `activos` | Sí |
 | Asignaciones | GET | Lectura | lista visible a los 4 | Sí |
 | Asignaciones entrega/PUT/devolver | POST/PUT | EscrituraOperativa | `asignaciones` | Sí |
+| Asignaciones `/{id}/pdf/verificar` | POST | EscrituraOperativa esperada; **sin endpoint** | botón solo si `canWrite('asignaciones')` | Por confirmar |
+| Consulta pública `/consulta/:codigo` | GET | anónimo esperado; **sin endpoint** | ruta pública, sin login | Por confirmar |
+| Activos `/{id}/qr` | GET | Lectura esperada; **sin endpoint** | botón en ficha autenticada | Por confirmar |
 | Asignaciones `/traslado` | POST | EscrituraOperativa | `traslados` | Sí |
 | Asignaciones `/mantenimiento` y finalizar | POST | EscrituraOperativa | `mantenimientos` | Sí |
 | Asignaciones `/baja` | POST | EscrituraEmpresa | `bajas` → else | Sí |
@@ -60,7 +63,7 @@ En el frontend, `Consulta` o rol nulo **nunca** escribe. `RutaProtegida` pide se
 | HistorialActivos | POST | EscrituraOperativa | no hay alta directa en UI | Sí |
 | Bitacoras | GET/POST | EscrituraEmpresa | `RutaAdministrador` + `adminOnly` | Sí |
 | Reportes (8) | GET | Lectura | sin escritura | Sí |
-| Dispositivos | GET `fuera-de-rango` | Lectura | **sin interfaz** | N/A — decisión: no construir en FE-12 |
+| Dispositivos | GET `rastreo` y `fuera-de-rango` | Lectura | `/app/rastreo` (misma visibilidad que reportes) | Sí |
 | Dispositivos | POST / revocar | EscrituraOperativa | **sin interfaz** | N/A |
 | Dispositivos | POST auto-registro | anónimo | **sin interfaz** | N/A |
 | Dispositivos | POST ping | token de dispositivo | **sin interfaz** | N/A |

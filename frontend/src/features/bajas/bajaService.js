@@ -5,6 +5,7 @@ import { ESTADO_ACTIVO, TIPO_ASIGNACION, getIdEstado, getIdTipoAsignacion } from
 import { apiPaths } from '@/shared/api/paths';
 import { env } from '@/shared/config/env';
 import httpClient from '@/shared/services/httpClient';
+import { signatureToPayload } from '@/shared/utils/signaturePayload';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 
 export async function listar() {
@@ -28,7 +29,11 @@ function toCommand({
   documentoPdfUrl,
   fecha,
   observaciones,
+  firmaEntrega,
+  firmaRecibe,
 }) {
+  const entrega = signatureToPayload(firmaEntrega);
+  const recibe = signatureToPayload(firmaRecibe);
   return {
     idActivo: Number(idActivo),
     idUsuario: Number(idUsuario),
@@ -40,6 +45,9 @@ function toCommand({
     documentoPdfUrl: String(documentoPdfUrl ?? '').trim(),
     fechaAsignacion: fecha,
     observaciones: String(observaciones ?? '').trim() || null,
+    firmaEntrega: entrega,
+    firmaRecibe: recibe,
+    fechaFirmaEntrega: entrega || recibe ? new Date().toISOString() : null,
   };
 }
 

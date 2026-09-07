@@ -19,6 +19,8 @@ function initialValues(prefill, { activos, ubicaciones } = {}) {
     idResponsable: prefill?.idResponsable ? String(prefill.idResponsable) : '',
     fecha: todayIsoDate(),
     observaciones: '',
+    firmaEntrega: '',
+    firmaRecibe: '',
   };
 }
 
@@ -83,6 +85,18 @@ export function AsignacionFormOverlay({
         type: 'textarea',
         maxLength: 300,
         wide: true,
+      },
+      {
+        name: 'firmaEntrega',
+        label: 'Firma de quien entrega',
+        type: 'signature',
+        hint: 'Opcional. Se puede guardar sin firmar.',
+      },
+      {
+        name: 'firmaRecibe',
+        label: 'Firma de quien recibe',
+        type: 'signature',
+        hint: 'Opcional. Se puede guardar sin firmar.',
       },
     ],
     [activos, activosElegibles, lockActivo, responsables],

@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
-import { ActivoFichaOverlay } from '@/features/activos/ActivoFichaOverlay';
 import { ActivoFormOverlay } from '@/features/activos/ActivoFormOverlay';
 import {
   asignacionActivaDe,
@@ -30,11 +29,10 @@ import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import { DataTable } from '@/shared/components/DataTable';
-import { RegisterButton } from '@/shared/components/RecordActions';
+import { EscanearQrButton, RegisterButton } from '@/shared/components/RecordActions';
 import { RowIconActions } from '@/shared/components/RowIconActions';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
-import { useRecordDeepLink } from '@/shared/hooks/useRecordDeepLink';
 import { useResource } from '@/shared/hooks/useResource';
 import { byId } from '@/shared/utils/format';
 
@@ -54,7 +52,7 @@ export function ActivosPage() {
   const allowWrite = canWrite('activos');
   const canRetire = canWrite('bajas');
   const canReadUsuarios = canWrite('usuarios');
-  const { idActiva, empresas } = useEmpresaActiva();
+  const { idActiva } = useEmpresaActiva();
   const load = useCallback(() => activoService.getAll(), []);
   const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(load);
   const crud = useCrudOverlay();
@@ -102,8 +100,6 @@ export function ActivosPage() {
     [asignaciones.data, categorias.data, ctx, responsables.data, scopedRows, ubicaciones.data],
   );
 
-  useRecordDeepLink(tableRows, crud.openView);
-
   const estadoInicial = params.get('estado');
   const estadoOptions = useMemo(() => {
     const names = [...new Set(tableRows.map((row) => row.estadoNombre).filter(Boolean))];
@@ -115,8 +111,9 @@ export function ActivosPage() {
   }
 
   function handleAccion(action, activo) {
-    if (action.key === 'view') {
-      crud.openView(activo);
+    // La ficha y el QR viven en /app/activos/:id, ya no en una tarjeta flotante.
+    if (action.key === 'view' || action.key === 'qr') {
+      navigate(`/app/activos/${activo.id}`);
       return;
     }
     if (action.key === 'edit') {
@@ -161,7 +158,10 @@ export function ActivosPage() {
         title="Activos"
         description="Parque tecnológico. Empresa y sede se leen de la ubicación. Use ?estado= para el drill-down."
         primaryAction={
-          allowWrite ? <RegisterButton label="Registrar activo" onClick={() => crud.openCreate()} /> : null
+          <>
+            <EscanearQrButton />
+            {allowWrite ? <RegisterButton label="Registrar activo" onClick={() => crud.openCreate()} /> : null}
+          </>
         }
         columns={[
           { key: 'codigo', header: 'Código', primary: true },
@@ -192,32 +192,11 @@ export function ActivosPage() {
             actions={
               allowWrite
                 ? getAccionesDisponibles(row, ctx)
-                : getAccionesDisponibles(row, ctx).filter((item) => item.key === 'view')
+                : getAccionesDisponibles(row, ctx).filter((item) => item.key === 'view' || item.key === 'qr')
             }
             onAction={(action) => handleAccion(action, row)}
           />
         )}
-      />
-
-      <ActivoFichaOverlay
-        open={crud.isView}
-        activo={crud.record}
-        categorias={categorias.data}
-        proveedores={proveedores.data}
-        ubicaciones={ubicaciones.data}
-        sedes={sedes.data}
-        empresas={empresas}
-        asignaciones={asignaciones.data}
-        tipos={tipos.data}
-        estados={estados.data}
-        canWrite={allowWrite}
-        canRetire={canRetire}
-        onClose={crud.close}
-        onEditar={(activo) => crud.openEdit(activo)}
-        onAsignar={(activo) => navigate(activosVistaPath('asignaciones'), { state: { idActivo: activo.id } })}
-        onTrasladar={(activo) => setMovimiento({ tipo: 'traslado', idActivo: activo.id })}
-        onMantenimiento={(activo) => setMovimiento({ tipo: 'mantenimiento', idActivo: activo.id })}
-        onRetirar={(activo) => setMovimiento({ tipo: 'baja', idActivo: activo.id })}
       />
 
       {crud.isForm ? (
@@ -238,8 +217,9 @@ export function ActivosPage() {
             setBanner({
               message: crud.isEdit ? 'Activo actualizado.' : 'Activo registrado.',
             });
+            crud.close();
             await refreshAll();
-            crud.openView(await activoService.getById(saved.id ?? crud.record.id));
+            navigate(`/app/activos/${saved.id ?? crud.record.id}`);
           }}
         />
       ) : null}
@@ -267,7 +247,6 @@ export function ActivosPage() {
           setBanner({ message: 'Traslado registrado desde la ficha.' });
           setMovimiento(null);
           await refreshAll();
-          crud.openView(await activoService.getById(values.idActivo));
         }}
       />
 
@@ -295,7 +274,6 @@ export function ActivosPage() {
           setBanner({ message: 'Mantenimiento abierto desde la ficha.' });
           setMovimiento(null);
           await refreshAll();
-          crud.openView(await activoService.getById(values.idActivo));
         }}
       />
 
@@ -322,11 +300,12 @@ export function ActivosPage() {
               documentoPdfUrl: values.documentoPdfUrl,
               fecha: values.fecha,
               observaciones: values.observaciones,
+              firmaEntrega: values.firmaEntrega,
+              firmaRecibe: values.firmaRecibe,
             });
             setBanner({ message: 'Baja registrada. El activo queda dado de baja.' });
             setMovimiento(null);
             await refreshAll();
-            crud.openView(await activoService.getById(values.idActivo));
           } catch (error) {
             if (error.response?.status === 409 || error.status === 409) {
               setBanner({ message: error.message, variant: 'error' });

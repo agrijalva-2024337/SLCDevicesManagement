@@ -10,7 +10,9 @@ export const asignaciones = [
     fechaDevolucion: null,
     activa: true,
     observaciones: 'Asignada a jefatura de TI Reforma.',
-    documentoPdfUrl: null,
+    documentoPdfUrl: '/mocks/acta-asignacion-1.pdf',
+    documentoPdfGeneradoEn: '2026-01-10T15:32:00.000Z',
+    hashDocumento: 'a57ad20f1f43e3aa40cda9a3fce58ec00ebd6117e9795d1db38381eaf4ac21a0',
   },
   {
     id: 2,
@@ -24,6 +26,8 @@ export const asignaciones = [
     activa: false,
     observaciones: 'Préstamo cerrado. Vehículo de vuelta a patio.',
     documentoPdfUrl: null,
+    documentoPdfGeneradoEn: '2026-05-02T09:10:00.000Z',
+    hashDocumento: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
   },
   {
     id: 3,

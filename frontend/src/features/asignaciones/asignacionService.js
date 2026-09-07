@@ -5,6 +5,14 @@ import { apiPaths } from '@/shared/api/paths';
 import { env } from '@/shared/config/env';
 import httpClient from '@/shared/services/httpClient';
 import { createMockCrudService } from '@/shared/services/createMockCrudService';
+import { signatureToPayload } from '@/shared/utils/signaturePayload';
+import { sha256File } from '@/shared/utils/sha256';
+
+function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
 
 const crud = createMockCrudService({
   endpoint: apiPaths.asignaciones,
@@ -57,11 +65,22 @@ async function assertActivoLibre(idActivo) {
   }
 }
 
-export async function entregar({ idActivo, idUsuario, idResponsable, fecha, observaciones }) {
+export async function entregar({
+  idActivo,
+  idUsuario,
+  idResponsable,
+  fecha,
+  observaciones,
+  firmaEntrega,
+  firmaRecibe,
+}) {
   await assertActivoLibre(idActivo);
   const idTipoAsignacion = await getIdTipoAsignacion(TIPO_ASIGNACION.Asignacion);
   const idEstado = await getIdEstado(ESTADO_ACTIVO.Asignado);
   const activo = await activoService.getById(idActivo);
+  const entrega = signatureToPayload(firmaEntrega);
+  const recibe = signatureToPayload(firmaRecibe);
+  const firmo = Boolean(entrega || recibe);
 
   const created = await create({
     idActivo: Number(idActivo),
@@ -73,7 +92,12 @@ export async function entregar({ idActivo, idUsuario, idResponsable, fecha, obse
     fechaDevolucion: null,
     activa: true,
     observaciones: String(observaciones ?? '').trim() || null,
-    documentoPdfUrl: null,
+    firmaEntrega: entrega,
+    firmaRecibe: recibe,
+    fechaFirmaEntrega: firmo ? new Date().toISOString() : null,
+    documentoPdfUrl: env.useApiMock && firmo ? '/mocks/acta-asignacion-1.pdf' : null,
+    documentoPdfGeneradoEn: env.useApiMock && firmo ? new Date().toISOString() : null,
+    hashDocumento: null,
     idUbicacion: activo.idUbicacion,
   });
 
@@ -128,4 +152,37 @@ export async function devolver(id, data = {}) {
     observaciones: data.observaciones ?? null,
   });
   return { id: numericId, ...patch };
+}
+
+export async function verificarDocumento(id, file) {
+  if (!file) {
+    const error = new Error('Seleccione un archivo PDF.');
+    error.fieldErrors = { archivo: error.message };
+    throw error;
+  }
+
+  const isPdf = file.type === 'application/pdf' || String(file.name ?? '').toLowerCase().endsWith('.pdf');
+  if (!isPdf) {
+    const error = new Error('Solo se aceptan archivos PDF.');
+    error.fieldErrors = { archivo: error.message };
+    throw error;
+  }
+
+  if (env.useApiMock) {
+    await wait(400);
+    const row = await getById(id);
+    const firmaDocumento = await sha256File(file);
+    const hashRegistro = row.hashDocumento ? String(row.hashDocumento).toLowerCase() : null;
+    return {
+      coincide: Boolean(hashRegistro) && hashRegistro === firmaDocumento,
+      hashRegistro,
+      firmaDocumento,
+      fechaGenerado: row.documentoPdfGeneradoEn ?? null,
+    };
+  }
+
+  const form = new FormData();
+  form.append('archivo', file);
+  const response = await httpClient.post(apiPaths.asignacionVerificarPdf(id), form);
+  return response.data;
 }

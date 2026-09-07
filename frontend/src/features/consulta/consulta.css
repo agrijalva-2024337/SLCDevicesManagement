@@ -1,0 +1,103 @@
+/* Vistas públicas del QR: sin sesión, sin menú y con la marca en chico. */
+.consulta-page {
+  display: flex;
+  min-height: 100svh;
+  flex-direction: column;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.consulta-topbar {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-elevated);
+}
+
+.consulta-shell {
+  width: 100%;
+  max-width: 44rem;
+  margin-inline: auto;
+  padding-inline: var(--content-gutter);
+}
+
+.consulta-topbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.85rem;
+}
+
+.consulta-brand-kicker {
+  margin: 0;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.consulta-brand-name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.consulta-topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.consulta-main {
+  flex: 1 1 auto;
+  padding-block: 2.5rem 3rem;
+}
+
+.consulta-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.consulta-lead {
+  margin: 0.4rem 0 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.consulta-card {
+  margin-top: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-elevated);
+  padding: 1.5rem;
+}
+
+.consulta-grid {
+  display: grid;
+  gap: 1.15rem 2rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 639.98px) {
+  .consulta-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.consulta-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+  font-size: 0.875rem;
+}
+
+.consulta-footer {
+  border-top: 1px solid var(--border);
+  padding-block: 1.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
