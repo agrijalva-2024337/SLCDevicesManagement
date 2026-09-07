@@ -1,0 +1,32 @@
+export const activosPorSede = [
+  {
+    idSede: 1,
+    nombreSede: 'Centro de Distribución Zona 12',
+    idEmpresa: 1,
+    totalActivos: 1,
+    disponibles: 0,
+    asignados: 0,
+    enMantenimiento: 0,
+    dadosDeBaja: 1,
+  },
+  {
+    idSede: 3,
+    nombreSede: 'Oficina Central Reforma',
+    idEmpresa: 1,
+    totalActivos: 2,
+    disponibles: 1,
+    asignados: 1,
+    enMantenimiento: 0,
+    dadosDeBaja: 0,
+  },
+  {
+    idSede: 5,
+    nombreSede: 'Patio Mixco Norte',
+    idEmpresa: 5,
+    totalActivos: 2,
+    disponibles: 1,
+    asignados: 0,
+    enMantenimiento: 1,
+    dadosDeBaja: 0,
+  },
+];
