@@ -14,8 +14,6 @@ public sealed record UpdateActivoCommand(
     int IdUbicacion,
     string Nombre,
     string? Descripcion,
-    string? EspecificacionesHardware,
-    string? PerifericosAdicionales,
     string? Marca,
     string? Modelo,
     string? NumeroSerie,
@@ -24,7 +22,9 @@ public sealed record UpdateActivoCommand(
     string? Moneda,
     string? NumeroFactura,
     DateTime FechaVencimientoGarantia,
-    string? Observaciones);
+    string? Observaciones,
+    string? EspecificacionesHardware,
+    string? PerifericosAdicionales);
 
 public sealed class UpdateActivoCommandValidator : AbstractValidator<UpdateActivoCommand>
 {
@@ -55,14 +55,6 @@ public sealed class UpdateActivoCommandValidator : AbstractValidator<UpdateActiv
             .MaximumLength(300).WithMessage("El campo descripcion no debe superar los 300 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.Descripcion));
 
-        RuleFor(x => x.EspecificacionesHardware)
-            .MaximumLength(300).WithMessage("El campo especificaciones de hardware no debe superar los 300 caracteres.")
-            .When(x => !string.IsNullOrWhiteSpace(x.EspecificacionesHardware));
-
-        RuleFor(x => x.PerifericosAdicionales)
-            .MaximumLength(300).WithMessage("El campo perifericos adicionales no debe superar los 300 caracteres.")
-            .When(x => !string.IsNullOrWhiteSpace(x.PerifericosAdicionales));
-
         RuleFor(x => x.Marca)
             .MaximumLength(100).WithMessage("El campo marca no debe superar los 100 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.Marca));
@@ -74,6 +66,14 @@ public sealed class UpdateActivoCommandValidator : AbstractValidator<UpdateActiv
         RuleFor(x => x.NumeroSerie)
             .MaximumLength(100).WithMessage("El campo numero serie no debe superar los 100 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.NumeroSerie));
+
+        RuleFor(x => x.EspecificacionesHardware)
+            .MaximumLength(500).WithMessage("El campo especificaciones de hardware no debe superar los 500 caracteres.")
+            .When(x => !string.IsNullOrWhiteSpace(x.EspecificacionesHardware));
+
+        RuleFor(x => x.PerifericosAdicionales)
+            .MaximumLength(500).WithMessage("El campo perifericos adicionales no debe superar los 500 caracteres.")
+            .When(x => !string.IsNullOrWhiteSpace(x.PerifericosAdicionales));
 
         RuleFor(x => x.CostoAdquisicion)
             .GreaterThanOrEqualTo(0).WithMessage("El campo costo adquisicion debe ser mayor o igual a 0.");

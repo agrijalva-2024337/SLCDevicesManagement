@@ -135,14 +135,14 @@ export function ActivoFormOverlay({
         name: 'especificacionesHardware',
         label: 'Especificaciones de hardware',
         type: 'textarea',
-        maxLength: 300,
+        maxLength: 500,
         wide: true,
       },
       {
         name: 'perifericosAdicionales',
         label: 'Periféricos adicionales',
         type: 'textarea',
-        maxLength: 300,
+        maxLength: 500,
         wide: true,
       },
       { name: 'observaciones', label: 'Observaciones', type: 'textarea', maxLength: 500, wide: true },
@@ -175,12 +175,12 @@ export function ActivoFormOverlay({
           especificacionesHardware: optionalText(
             values.especificacionesHardware,
             'especificaciones de hardware',
-            300,
+            500,
           ),
           perifericosAdicionales: optionalText(
             values.perifericosAdicionales,
             'periféricos adicionales',
-            300,
+            500,
           ),
           observaciones: optionalText(values.observaciones, 'observaciones', 500),
         })

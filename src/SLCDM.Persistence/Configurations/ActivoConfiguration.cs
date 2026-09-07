@@ -30,14 +30,6 @@
                 .HasColumnName("descripcion")
                 .HasColumnType("varchar(300)");
 
-            builder.Property(a => a.EspecificacionesHardware)
-                .HasColumnName("especificaciones_hardware")
-                .HasColumnType("varchar(300)");
-
-            builder.Property(a => a.PerifericosAdicionales)
-                .HasColumnName("perifericos_adicionales")
-                .HasColumnType("varchar(300)");
-
             builder.Property(a => a.Marca)
                 .HasColumnName("marca")
                 .HasColumnType("varchar(100)");
@@ -102,6 +94,14 @@
                 .WithMany()
                 .HasForeignKey(a => a.IdEstado)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Property(a => a.EspecificacionesHardware)
+                .HasColumnName("especificaciones_hardware")
+                .HasColumnType("varchar(500)");
+
+            builder.Property(a => a.PerifericosAdicionales)
+                .HasColumnName("perifericos_adicionales")
+                .HasColumnType("varchar(500)");
 
             builder.HasIndex(a => a.NumeroSerie);
             builder.HasIndex(a => a.IdCategoriaActivo);

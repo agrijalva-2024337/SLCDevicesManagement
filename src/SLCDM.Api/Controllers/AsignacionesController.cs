@@ -164,15 +164,24 @@ public sealed class AsignacionesController : ApiControllerBase
 
     [HttpPost("{id:int}/pdf/verificar")]
     [Authorize(Roles = Roles.EscrituraOperativa)]
-        public async Task<ActionResult<VerificacionPdfDto>> VerificarPdf(
-            int id, IFormFile archivo, CancellationToken cancellationToken)
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(VerificacionPdfDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<VerificacionPdfDto>> VerificarPdf(
+        int id,
+        IFormFile archivo,
+        CancellationToken cancellationToken)
+    {
+        if (archivo is null || archivo.Length == 0)
         {
-            using var stream = new MemoryStream();
-            await archivo.CopyToAsync(stream, cancellationToken);
+            return BadRequest(new { detail = "Seleccione un archivo PDF." });
+        }
 
-            var resultado = await _verificarPdf.HandleAsync(
-                new VerificarDocumentoPdfQuery(id, stream.ToArray()), cancellationToken);
+        using var stream = new MemoryStream();
+        await archivo.CopyToAsync(stream, cancellationToken);
 
-            return Ok(resultado);
-}
+        var resultado = await _verificarPdf.HandleAsync(
+            new VerificarDocumentoPdfQuery(id, stream.ToArray()), cancellationToken);
+
+        return Ok(resultado);
+    }
 }

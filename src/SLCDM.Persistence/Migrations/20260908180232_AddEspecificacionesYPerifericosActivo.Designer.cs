@@ -12,7 +12,7 @@ using SLCDM.Persistence;
 namespace SLCDM.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260908182046_AddEspecificacionesYPerifericosActivo")]
+    [Migration("20260908180232_AddEspecificacionesYPerifericosActivo")]
     partial class AddEspecificacionesYPerifericosActivo
     {
         /// <inheritdoc />
@@ -44,8 +44,8 @@ namespace SLCDM.Persistence.Migrations
                         .HasColumnName("descripcion");
 
                     b.Property<string>("EspecificacionesHardware")
-                        .HasMaxLength(300)
-                        .HasColumnType("varchar(300)")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
                         .HasColumnName("especificaciones_hardware");
 
                     b.Property<DateTime>("FechaCompra")
@@ -109,8 +109,8 @@ namespace SLCDM.Persistence.Migrations
                         .HasColumnName("observaciones");
 
                     b.Property<string>("PerifericosAdicionales")
-                        .HasMaxLength(300)
-                        .HasColumnType("varchar(300)")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
                         .HasColumnName("perifericos_adicionales");
 
                     b.Property<string>("TokenPublico")
