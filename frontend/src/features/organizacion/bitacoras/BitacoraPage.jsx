@@ -3,6 +3,7 @@ import * as bitacoraService from '@/features/organizacion/bitacoras/bitacoraServ
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import { TipoOperacionBitacora } from '@/shared/api/contracts';
 import { DataTable } from '@/shared/components/DataTable';
+import { DetailField } from '@/shared/components/DetailOverlay';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useResource } from '@/shared/hooks/useResource';
 import { byId, formatDateTime } from '@/shared/utils/format';
@@ -190,6 +191,16 @@ export function BitacoraPage() {
         emptyDescription="Cuando el backend registre escrituras, aparecerán aquí."
         defaultSortKey="fechaHora"
         defaultSortDirection="desc"
+        expandable
+        renderExpandedContent={(row) => (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <DetailField label="Anterior" value={row.informacionAnterior} />
+            <DetailField label="Nuevo" value={row.informacionNueva} />
+            <div className="sm:col-span-2">
+              <DetailField label="Descripción" value={row.descripcion} />
+            </div>
+          </div>
+        )}
       />
     </section>
   );
