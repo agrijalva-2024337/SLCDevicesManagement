@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { TIPO_DIFERENCIA_LABEL, TIPO_DIFERENCIA_TONE } from '@/features/inventario/tipoDiferencia';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { HBarChart } from '@/features/reportes/components/ActivityCharts';
 import * as reporteService from '@/features/reportes/reporteService';
@@ -73,6 +74,27 @@ export function DashboardPage() {
     [diasGarantia, idActiva],
   );
   const garantias = useResource(loadGarantias);
+  const loadDiferencias = useCallback(
+    () => reporteService.diferenciasInventario({ idEmpresa: idActiva || undefined }),
+    [idActiva],
+  );
+  const diferencias = useResource(loadDiferencias);
+  const diferenciasPorJornada = useMemo(() => {
+    const groups = new Map();
+    for (const row of diferencias.data ?? []) {
+      const key = row.idHistoricoInventario;
+      if (!groups.has(key)) {
+        groups.set(key, {
+          id: key,
+          nombreSede: row.nombreSede,
+          fechaInicio: row.fechaInicio,
+          filas: [],
+        });
+      }
+      groups.get(key).filas.push(row);
+    }
+    return [...groups.values()];
+  }, [diferencias.data]);
   const ubicacionesFiltradas = useMemo(() => {
     if (idSedeSel == null) return ubicaciones.data ?? [];
     return (ubicaciones.data ?? []).filter((row) => Number(row.idSede) === Number(idSedeSel));
@@ -295,6 +317,55 @@ export function DashboardPage() {
                 </tbody>
               </table>
             </div>
+          )}
+        </div>
+      </section>
+
+      <section className="dash-card">
+        <header className="dash-card-head">
+          <div>
+            <h2>Diferencias de inventarios cerrados</h2>
+            <p className="dash-hint">
+              Este reporte solo incluye jornadas cerradas. El parcial de una jornada abierta está en su hoja
+              de conteo.
+            </p>
+          </div>
+        </header>
+        <div className="dash-card-body">
+          {diferencias.errorMessage ? (
+            <p className="dash-empty">{diferencias.errorMessage}</p>
+          ) : diferenciasPorJornada.length === 0 ? (
+            <p className="dash-empty">No hay diferencias en jornadas cerradas.</p>
+          ) : (
+            diferenciasPorJornada.map((grupo) => (
+              <div key={grupo.id} className="dash-mini-wrap" style={{ marginBottom: '1rem' }}>
+                <h3 className="dash-subhead">
+                  {grupo.nombreSede} · {formatDate(grupo.fechaInicio)}
+                </h3>
+                <table className="dash-mini">
+                  <thead>
+                    <tr>
+                      <th>Activo</th>
+                      <th>Tipo</th>
+                      <th>Observaciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {grupo.filas.map((row) => (
+                      <tr key={`${row.idHistoricoInventario}-${row.idActivo}-${row.tipoDiferencia}`}>
+                        <td>{row.nombreActivo}</td>
+                        <td>
+                          <ToneBadge tone={TIPO_DIFERENCIA_TONE[row.tipoDiferencia] ?? 'muted'}>
+                            {TIPO_DIFERENCIA_LABEL[row.tipoDiferencia] ?? row.tipoDiferencia}
+                          </ToneBadge>
+                        </td>
+                        <td>{row.observaciones ?? '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ))
           )}
         </div>
       </section>
