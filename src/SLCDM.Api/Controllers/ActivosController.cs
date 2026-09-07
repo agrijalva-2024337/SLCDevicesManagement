@@ -18,19 +18,22 @@ public sealed class ActivosController : ApiControllerBase
     private readonly ICommandHandler<CreateActivoCommand, int> _create;
     private readonly ICommandHandler<UpdateActivoCommand> _update;
     private readonly ICommandHandler<DeleteActivoCommand> _delete;
+    private readonly IQueryHandler<GetActivoQrQuery, ActivoQrFileDto> _qr;
 
     public ActivosController(
         IQueryHandler<GetActivosQuery, IReadOnlyList<ActivoDto>> getAll,
         IQueryHandler<GetActivoByIdQuery, ActivoDto> getById,
         ICommandHandler<CreateActivoCommand, int> create,
         ICommandHandler<UpdateActivoCommand> update,
-        ICommandHandler<DeleteActivoCommand> delete)
+        ICommandHandler<DeleteActivoCommand> delete,
+        IQueryHandler<GetActivoQrQuery, ActivoQrFileDto> qr)
     {
         _getAll = getAll;
         _getById = getById;
         _create = create;
         _update = update;
         _delete = delete;
+        _qr = qr;
     }
 
     [HttpGet]
@@ -48,6 +51,15 @@ public sealed class ActivosController : ApiControllerBase
     [Authorize(Roles = Roles.Lectura)]
     public async Task<ActionResult<ActivoDto>> GetById(int id, CancellationToken cancellationToken) =>
         Ok(await _getById.HandleAsync(new GetActivoByIdQuery(id), cancellationToken));
+
+    [HttpGet("{id:int}/qr")]
+    [Authorize(Roles = Roles.Lectura)]
+    [Produces("image/png")]
+    public async Task<IActionResult> GetQr(int id, CancellationToken cancellationToken)
+    {
+        var file = await _qr.HandleAsync(new GetActivoQrQuery(id), cancellationToken);
+        return File(file.Content, "image/png", file.FileName);
+    }
 
     [HttpGet("{id:int}/asignaciones")]
     [Authorize(Roles = Roles.Lectura)]

@@ -34,3 +34,5 @@ public sealed record AsignacionHistorialDto(
     bool Activa,
     string? Observaciones
 );
+
+public sealed record AsignacionPdfFileDto(byte[] Content, string FileName);

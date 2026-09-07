@@ -16,6 +16,12 @@ builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerWithBearer();
+builder.Services.Configure<SLCDM.Application.Common.Options.DeviceTrackingOptions>(
+    builder.Configuration.GetSection(SLCDM.Application.Common.Options.DeviceTrackingOptions.SectionName));
+builder.Services.Configure<SLCDM.Application.Common.Options.SmtpOptions>(
+    builder.Configuration.GetSection(SLCDM.Application.Common.Options.SmtpOptions.SectionName));
+builder.Services.AddSingleton<SLCDM.Application.Common.Interfaces.IEmailSender, SLCDM.Api.Email.SmtpEmailSender>();
+
 
 var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
     ?? ["http://localhost:5173", "https://localhost:5173"];

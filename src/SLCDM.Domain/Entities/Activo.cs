@@ -62,4 +62,8 @@ public class Activo: SLCDM.Domain.Common.BaseEntity {
 
     [MaxLength(500, ErrorMessage = "El campo observaciones no debe superar los 500 caracteres")]
     public string? Observaciones { get; set; }
+
+    [Required]
+    [MaxLength(32, ErrorMessage = "El campo token publico no debe superar los 32 caracteres")]
+    public string TokenPublico { get; set; } = string.Empty;
 }
