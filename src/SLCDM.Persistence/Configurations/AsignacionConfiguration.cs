@@ -64,7 +64,7 @@ public class AsignacionConfiguration : IEntityTypeConfiguration<Asignacion>
             .WithMany()
             .HasForeignKey(a => a.IdResponsable)
             .OnDelete(DeleteBehavior.Restrict);
-            
+
         builder.HasOne(a => a.Estado)
             .WithMany()
             .HasForeignKey(a => a.IdEstado)
@@ -79,5 +79,9 @@ public class AsignacionConfiguration : IEntityTypeConfiguration<Asignacion>
             .IsUnique()
             .HasFilter("[activa] = 1")
             .HasDatabaseName("ix_asignacion_activo_unica_activa");
+
+        builder.Property(a => a.DocumentoPdfHash)
+            .HasColumnName("documento_pdf_hash")
+            .HasColumnType("varchar(64)");
     }
 }
