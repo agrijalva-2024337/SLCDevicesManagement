@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { HBarChart } from '@/features/reportes/components/ActivityCharts';
@@ -53,8 +53,23 @@ export function DashboardPage() {
     () => reporteService.activosPorCategoria({ idEmpresa: idActiva || undefined }),
     [idActiva],
   );
+  const loadSedes = useCallback(
+    () => reporteService.activosPorSede({ idEmpresa: idActiva || undefined }),
+    [idActiva],
+  );
+  const loadUbicaciones = useCallback(
+    () => reporteService.activosPorUbicacion({ idEmpresa: idActiva || undefined }),
+    [idActiva],
+  );
   const inventario = useResource(loadInventario);
   const categorias = useResource(loadCategorias);
+  const sedes = useResource(loadSedes);
+  const ubicaciones = useResource(loadUbicaciones);
+  const [idSedeSel, setIdSedeSel] = useState(null);
+  const ubicacionesFiltradas = useMemo(() => {
+    if (idSedeSel == null) return ubicaciones.data ?? [];
+    return (ubicaciones.data ?? []).filter((row) => Number(row.idSede) === Number(idSedeSel));
+  }, [idSedeSel, ubicaciones.data]);
   const resumen = useMemo(() => consolidar(inventario.data), [inventario.data]);
   const variasEmpresas = (inventario.data?.length ?? 0) > 1;
 
@@ -133,6 +148,92 @@ export function DashboardPage() {
           )}
         </div>
       </section>
+
+      <div className="dash-split">
+        <section className="dash-table-card">
+          <header className="dash-card-head">
+            <div>
+              <h2>Por sede</h2>
+              <p className="dash-hint">Seleccione una sede para filtrar ubicaciones.</p>
+            </div>
+          </header>
+          <div className="dash-card-body">
+            {sedes.errorMessage ? (
+              <p className="dash-empty">{sedes.errorMessage}</p>
+            ) : (
+              <div className="dash-mini-wrap">
+                <table className="dash-mini">
+                  <thead>
+                    <tr>
+                      <th>Sede</th>
+                      <th>Activos</th>
+                      <th>Disp.</th>
+                      <th>Asig.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(sedes.data ?? []).map((row) => (
+                      <tr
+                        key={row.idSede}
+                        className={Number(idSedeSel) === Number(row.idSede) ? 'is-on' : undefined}
+                        onClick={() =>
+                          setIdSedeSel((current) =>
+                            Number(current) === Number(row.idSede) ? null : row.idSede,
+                          )
+                        }
+                      >
+                        <td>{row.nombreSede}</td>
+                        <td className="tabular-nums">{row.totalActivos}</td>
+                        <td className="tabular-nums">{row.disponibles}</td>
+                        <td className="tabular-nums">{row.asignados}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="dash-table-card">
+          <header className="dash-card-head">
+            <div>
+              <h2>Por ubicación</h2>
+              <p className="dash-hint">
+                {idSedeSel == null ? 'Todas las sedes de la empresa activa.' : 'Filtrado en cliente, sin otra petición.'}
+              </p>
+            </div>
+          </header>
+          <div className="dash-card-body">
+            {ubicaciones.errorMessage ? (
+              <p className="dash-empty">{ubicaciones.errorMessage}</p>
+            ) : ubicacionesFiltradas.length === 0 ? (
+              <p className="dash-empty">No hay ubicaciones para el filtro.</p>
+            ) : (
+              <div className="dash-mini-wrap">
+                <table className="dash-mini">
+                  <thead>
+                    <tr>
+                      <th>Ubicación</th>
+                      <th>Sede</th>
+                      <th>Activos</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ubicacionesFiltradas.map((row) => (
+                      <tr key={row.idUbicacion}>
+                        <td>{row.nombreUbicacion}</td>
+                        <td>{row.nombreSede}</td>
+                        <td className="tabular-nums">{row.totalActivos}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
 
       {variasEmpresas ? (
         <section className="dash-card">
