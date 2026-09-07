@@ -1,6 +1,7 @@
 import * as categoriaService from '@/features/catalogos/categorias/categoriaService';
 import * as paisService from '@/features/catalogos/paises/paisService';
 import * as proveedorService from '@/features/catalogos/proveedores/proveedorService';
+import { bssidFormatError, normalizeBssid } from '@/features/catalogos/redesConocidas/bssid';
 import * as redConocidaService from '@/features/catalogos/redesConocidas/redConocidaService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import * as areaService from '@/features/organizacion/areas/areaService';
@@ -396,13 +397,13 @@ export const maestros = {
     ],
     validate(values) {
       return {
-        bssid: requireText(values.bssid, 'BSSID', 17),
+        bssid: bssidFormatError(values.bssid),
         idUbicacion: requireSelect(values.idUbicacion, 'una ubicación'),
       };
     },
     toPayload(values) {
       return {
-        bssid: values.bssid.trim(),
+        bssid: normalizeBssid(values.bssid),
         idUbicacion: Number(values.idUbicacion),
       };
     },
