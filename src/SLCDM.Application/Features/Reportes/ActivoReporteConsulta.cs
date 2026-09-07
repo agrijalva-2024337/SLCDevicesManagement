@@ -62,6 +62,33 @@ internal static class ActivoReporteConsulta
         return user.EmpresaId;
     }
 
+    // NOTA (fix aplicado en BE-23-reportes-historiales, ver guia de
+    // Sprint 9 en el proyecto): esta version reemplaza la que trajo
+    // BE-23-reportes-operativos (copiada tal cual del repo de prueba),
+    // que tenia dos problemas reales contra el esquema de este repo:
+    //
+    // 1) La empresa de un activo se resolvia via Activo -> Ubicacion ->
+    //    Sede -> Empresa con INNER JOIN. Como Activo.IdUbicacion es
+    //    nullable aqui (no es obligatorio como en el repo de prueba),
+    //    cualquier activo sin ubicacion asignada desaparecia de TODOS
+    //    los reportes, incluido "inventario general". Ahora la empresa
+    //    se resuelve via Activo -> Proveedor -> Empresa (IdProveedor es
+    //    obligatorio), el mismo camino que ya usa el filtro multiempresa
+    //    de EF Core para Activo (ApplyEmpresaQueryFilters en
+    //    ApplicationDbContext.cs). Sede y Ubicacion se resuelven aparte
+    //    y toleran ser nulas: un activo sin ubicacion sale en los
+    //    reportes con IdSede=0, NombreSede="(sin sede)".
+    //
+    // 2) El estado operativo se reconstruia recorriendo el historial de
+    //    Asignaciones activas + su TipoAsignacion en cada consulta. Desde
+    //    BE-14/BE-18 el repo real ya mantiene Activo.IdEstado actualizado
+    //    en cada comando (CreateAsignacionCommand, DevolverAsignacionCommand,
+    //    CreateMantenimientoCommand, FinalizarMantenimientoCommand,
+    //    CreateBajaCommand) -- no hace falta reconstruir nada, con leer
+    //    Activo.IdEstado -> Estado.Nombre alcanza y es la fuente de
+    //    verdad real. El responsable actual (solo hace falta cuando el
+    //    estado es "asignado") si se sigue resolviendo desde la
+    //    Asignacion activa, porque Activo no lo guarda directo.
     public static async Task<IReadOnlyList<ActivoInventarioRow>> CargarAsync(
         IApplicationDbContext db,
         int? idEmpresa,
@@ -69,17 +96,12 @@ internal static class ActivoReporteConsulta
     {
         var query =
             from a in db.Activos.AsNoTracking()
-            join u in db.Ubicaciones.AsNoTracking() on a.IdUbicacion equals u.Id
-            join s in db.Sedes.AsNoTracking() on u.IdSede equals s.Id
-            join e in db.Empresas.AsNoTracking() on s.IdEmpresa equals e.Id
+            join p in db.Proveedores.AsNoTracking() on a.IdProveedor equals p.Id
+            join e in db.Empresas.AsNoTracking() on p.IdEmpresa equals e.Id
             join c in db.CategoriasActivo.AsNoTracking() on a.IdCategoriaActivo equals c.Id
             select new
             {
                 Activo = a,
-                IdSede = s.Id,
-                NombreSede = s.Nombre,
-                IdUbicacion = u.Id,
-                NombreUbicacion = u.Nombre,
                 IdEmpresa = e.Id,
                 NombreEmpresa = e.Nombre,
                 NombreCategoria = c.Nombre
@@ -91,79 +113,82 @@ internal static class ActivoReporteConsulta
         }
 
         var filas = await query.ToListAsync(cancellationToken);
-        var estados = await EstadosPorActivoAsync(db, cancellationToken);
 
-        return filas
-            .Select(x =>
-            {
-                var info = estados.GetValueOrDefault(x.Activo.Id);
-                return new ActivoInventarioRow(
-                    x.Activo,
-                    x.IdSede,
-                    x.NombreSede,
-                    x.IdUbicacion,
-                    x.NombreUbicacion,
-                    x.IdEmpresa,
-                    x.NombreEmpresa,
-                    x.NombreCategoria,
-                    info?.Estado ?? ActivoEstadoOperativo.Disponible,
-                    info?.IdResponsable);
-            })
-            .ToList();
-    }
+        var ubicaciones = await db.Ubicaciones.AsNoTracking()
+            .ToDictionaryAsync(u => u.Id, cancellationToken);
+        var sedes = await db.Sedes.AsNoTracking()
+            .ToDictionaryAsync(s => s.Id, cancellationToken);
+        var estados = await db.Estados.AsNoTracking()
+            .ToDictionaryAsync(es => es.Id, cancellationToken);
+        var responsablesPorActivo = await ResponsableAsignadoPorActivoAsync(db, cancellationToken);
 
-    public static async Task<IReadOnlyDictionary<int, ActivoEstadoInfo>> EstadosPorActivoAsync(
-        IApplicationDbContext db,
-        CancellationToken cancellationToken)
-    {
-        var tipos = await db.TiposAsignacion.AsNoTracking().ToListAsync(cancellationToken);
-        var idsBaja = tipos
-            .Where(t => TipoAsignacionNombres.EsNombre(t.Nombre, TipoAsignacionNombres.Baja))
-            .Select(t => t.Id)
-            .ToHashSet();
-        var idsMantenimiento = tipos
-            .Where(t => TipoAsignacionNombres.EsNombre(t.Nombre, TipoAsignacionNombres.Mantenimiento))
-            .Select(t => t.Id)
-            .ToHashSet();
-        var idsAsignacion = tipos
-            .Where(t => TipoAsignacionNombres.EsNombre(t.Nombre, TipoAsignacionNombres.Asignacion))
-            .Select(t => t.Id)
-            .ToHashSet();
+        var resultado = new List<ActivoInventarioRow>(filas.Count);
 
-        var activas = await db.Asignaciones
-            .AsNoTracking()
-            .Where(a => a.Activa)
-            .Select(a => new { a.IdActivo, a.IdTipoAsignacion, a.IdResponsable, a.FechaAsignacion })
-            .ToListAsync(cancellationToken);
-
-        var resultado = new Dictionary<int, ActivoEstadoInfo>();
-        foreach (var grupo in activas.GroupBy(a => a.IdActivo))
+        foreach (var fila in filas)
         {
-            if (grupo.Any(a => idsBaja.Contains(a.IdTipoAsignacion)))
-            {
-                resultado[grupo.Key] = new ActivoEstadoInfo(ActivoEstadoOperativo.Baja, null);
-                continue;
-            }
+            var activo = fila.Activo;
 
-            if (grupo.Any(a => idsMantenimiento.Contains(a.IdTipoAsignacion)))
-            {
-                resultado[grupo.Key] = new ActivoEstadoInfo(ActivoEstadoOperativo.Mantenimiento, null);
-                continue;
-            }
+            Ubicacion? ubicacion = activo.IdUbicacion.HasValue
+                ? ubicaciones.GetValueOrDefault(activo.IdUbicacion.Value)
+                : null;
+            Sede? sede = ubicacion is not null ? sedes.GetValueOrDefault(ubicacion.IdSede) : null;
 
-            var asignacion = grupo
-                .Where(a => idsAsignacion.Contains(a.IdTipoAsignacion))
-                .OrderByDescending(a => a.FechaAsignacion)
-                .FirstOrDefault();
+            var nombreEstado = activo.IdEstado.HasValue
+                ? estados.GetValueOrDefault(activo.IdEstado.Value)?.Nombre
+                : null;
+            var estadoOperativo = EstadoOperativoDesdeNombre(nombreEstado);
 
-            if (asignacion is not null)
-            {
-                resultado[grupo.Key] = new ActivoEstadoInfo(ActivoEstadoOperativo.Asignado, asignacion.IdResponsable);
-            }
+            resultado.Add(new ActivoInventarioRow(
+                activo,
+                sede?.Id ?? 0,
+                sede?.Nombre ?? "(sin sede)",
+                ubicacion?.Id ?? 0,
+                ubicacion?.Nombre ?? "(sin ubicacion)",
+                fila.IdEmpresa,
+                fila.NombreEmpresa,
+                fila.NombreCategoria,
+                estadoOperativo,
+                estadoOperativo == ActivoEstadoOperativo.Asignado
+                    ? responsablesPorActivo.GetValueOrDefault(activo.Id)
+                    : null));
         }
 
         return resultado;
     }
-}
 
-internal sealed record ActivoEstadoInfo(string Estado, int? IdResponsable);
+    private static string EstadoOperativoDesdeNombre(string? nombreEstado)
+    {
+        if (TipoAsignacionNombres.EsNombre(nombreEstado, EstadoActivoNombres.Asignado))
+        {
+            return ActivoEstadoOperativo.Asignado;
+        }
+
+        if (TipoAsignacionNombres.EsNombre(nombreEstado, EstadoActivoNombres.EnMantenimiento))
+        {
+            return ActivoEstadoOperativo.Mantenimiento;
+        }
+
+        if (TipoAsignacionNombres.EsNombre(nombreEstado, EstadoActivoNombres.DadoDeBaja))
+        {
+            return ActivoEstadoOperativo.Baja;
+        }
+
+        return ActivoEstadoOperativo.Disponible;
+    }
+
+    private static async Task<IReadOnlyDictionary<int, int>> ResponsableAsignadoPorActivoAsync(
+        IApplicationDbContext db,
+        CancellationToken cancellationToken)
+    {
+        var activas = await db.Asignaciones.AsNoTracking()
+            .Where(a => a.Activa)
+            .Select(a => new { a.IdActivo, a.IdResponsable, a.FechaAsignacion })
+            .ToListAsync(cancellationToken);
+
+        return activas
+            .GroupBy(a => a.IdActivo)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(a => a.FechaAsignacion).First().IdResponsable);
+    }
+}
