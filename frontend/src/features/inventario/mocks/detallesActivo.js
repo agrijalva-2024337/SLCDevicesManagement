@@ -17,4 +17,13 @@ export const detallesActivo = [
     observaciones: 'Verificado en oficina Reforma.',
     fechaVerificacion: '2026-06-03',
   },
+  {
+    id: 3,
+    idActivo: 3,
+    idHistoricoInventario: 2,
+    encontrado: false,
+    buenEstado: false,
+    observaciones: 'No estaba en el taller al momento del conteo.',
+    fechaVerificacion: '2026-08-26',
+  },
 ];

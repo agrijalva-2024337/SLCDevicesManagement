@@ -20,6 +20,24 @@ function asRecordId(value, fallbackId) {
   return { id: Number(value ?? fallbackId) };
 }
 
+function matchesParams(item, params) {
+  if (!params || typeof params !== 'object') return true;
+
+  return Object.entries(params).every(([key, value]) => {
+    if (value === undefined || key === 'incluirInhabilitados') return true;
+    const actual = item[key];
+    if (actual === value) return true;
+    if (actual == null || value == null) return actual === value;
+    if (typeof actual === 'boolean' || typeof value === 'boolean') {
+      return String(actual) === String(value);
+    }
+    if (typeof actual === 'number' || typeof value === 'number') {
+      return Number(actual) === Number(value);
+    }
+    return String(actual) === String(value);
+  });
+}
+
 export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS }) {
   let items = clone(seed);
   const usesHabilitado = seed.some((item) => Object.hasOwn(item, 'habilitado'));
@@ -27,7 +45,7 @@ export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS 
   async function getAll(params) {
     if (env.useApiMock) {
       await wait(delayMs);
-      return clone(items);
+      return clone(items).filter((item) => matchesParams(item, params));
     }
 
     const response = await httpClient.get(endpoint, {
@@ -107,9 +125,14 @@ export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS 
         throw error;
       }
 
-      const updated = usesHabilitado ? { ...current, habilitado: false } : current;
-      items = items.map((item) => (item.id === numericId ? updated : item));
-      return clone(updated);
+      if (usesHabilitado) {
+        const updated = { ...current, habilitado: false };
+        items = items.map((item) => (item.id === numericId ? updated : item));
+        return clone(updated);
+      }
+
+      items = items.filter((item) => item.id !== numericId);
+      return clone(current);
     }
 
     const numericId = Number(id);

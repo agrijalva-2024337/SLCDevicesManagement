@@ -217,11 +217,13 @@ function renderCellContent(column, row) {
 const ICON_ACTION_META = {
   view: { icon: 'pi pi-eye', tone: 'view', label: 'Ver ficha' },
   edit: { icon: 'pi pi-pencil', tone: 'edit', label: 'Editar' },
+  create: { icon: 'pi pi-check-circle', tone: 'view', label: 'Registrar' },
+  remove: { icon: 'pi pi-trash', tone: 'danger', label: 'Eliminar' },
 };
 
 function iconActionsFromRow(actions) {
   if (!actions) return [];
-  return ['view', 'edit']
+  return ['view', 'create', 'edit', 'remove']
     .filter((key) => actions[key])
     .map((key) => ({
       key,
@@ -229,6 +231,8 @@ function iconActionsFromRow(actions) {
       label: actions[key].label ?? ICON_ACTION_META[key].label,
       to: actions[key].to,
       onClick: actions[key].onClick,
+      enabled: actions[key].enabled,
+      disabledReason: actions[key].disabledReason,
     }));
 }
 

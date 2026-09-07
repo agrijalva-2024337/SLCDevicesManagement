@@ -14,7 +14,7 @@ export const modulosApp = [
   { path: '/app/traslados', label: 'Traslados', icon: 'pi pi-arrow-right-arrow-left' },
   { path: '/app/mantenimientos', label: 'Mantenimientos', icon: 'pi pi-wrench' },
   { path: '/app/bajas', label: 'Bajas', icon: 'pi pi-times-circle' },
-  { path: '/app/inventario-fisico', label: 'Inventario físico', icon: 'pi pi-clipboard', disabled: true },
+  { path: '/app/inventario-fisico', label: 'Inventario físico', icon: 'pi pi-clipboard' },
   { path: '/app/bitacora', label: 'Bitácora', icon: 'pi pi-history', adminOnly: true },
   { path: '/app/reportes', label: 'Reportes', icon: 'pi pi-chart-bar', disabled: true },
 ];
@@ -76,6 +76,9 @@ export function getPageTitle(pathname) {
   }
   if (/^\/app\/catalogos\/[^/]+\/[^/]+/.test(pathname)) {
     return 'Ficha';
+  }
+  if (/^\/app\/inventario-fisico\/\d+/.test(pathname)) {
+    return 'Jornada';
   }
   return 'SLCDM';
 }
