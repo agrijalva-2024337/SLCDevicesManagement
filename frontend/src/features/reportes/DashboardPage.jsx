@@ -5,8 +5,9 @@ import { HBarChart } from '@/features/reportes/components/ActivityCharts';
 import * as reporteService from '@/features/reportes/reporteService';
 import '@/features/reportes/dashboard.css';
 import { FeedbackState } from '@/shared/components/FeedbackState';
+import { ToneBadge } from '@/shared/components/StatusBadge';
 import { useResource } from '@/shared/hooks/useResource';
-import { formatMoney } from '@/shared/utils/format';
+import { formatDate, formatMoney } from '@/shared/utils/format';
 
 function vacio() {
   return {
@@ -66,6 +67,12 @@ export function DashboardPage() {
   const sedes = useResource(loadSedes);
   const ubicaciones = useResource(loadUbicaciones);
   const [idSedeSel, setIdSedeSel] = useState(null);
+  const [diasGarantia, setDiasGarantia] = useState(30);
+  const loadGarantias = useCallback(
+    () => reporteService.garantiasPorVencer({ idEmpresa: idActiva || undefined, dias: diasGarantia }),
+    [diasGarantia, idActiva],
+  );
+  const garantias = useResource(loadGarantias);
   const ubicacionesFiltradas = useMemo(() => {
     if (idSedeSel == null) return ubicaciones.data ?? [];
     return (ubicaciones.data ?? []).filter((row) => Number(row.idSede) === Number(idSedeSel));
@@ -234,6 +241,63 @@ export function DashboardPage() {
           </div>
         </section>
       </div>
+
+      <section className="dash-attention">
+        <header className="dash-card-head is-split">
+          <div>
+            <h2>Garantías por vencer</h2>
+            <p className="dash-hint">Ventana enviada al servidor como query `dias`.</p>
+          </div>
+          <div className="dash-range" role="group" aria-label="Ventana de garantías">
+            {[30, 60, 90].map((dias) => (
+              <button
+                key={dias}
+                type="button"
+                className={diasGarantia === dias ? 'is-on' : undefined}
+                onClick={() => setDiasGarantia(dias)}
+              >
+                {dias} días
+              </button>
+            ))}
+          </div>
+        </header>
+        <div className="dash-card-body">
+          {garantias.errorMessage ? (
+            <p className="dash-empty">{garantias.errorMessage}</p>
+          ) : garantias.data.length === 0 ? (
+            <p className="dash-empty">Ninguna garantía vence en {diasGarantia} días.</p>
+          ) : (
+            <div className="dash-mini-wrap">
+              <table className="dash-mini">
+                <thead>
+                  <tr>
+                    <th>Activo</th>
+                    <th>Sede</th>
+                    <th>Vence</th>
+                    <th>Días</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {garantias.data.map((row) => {
+                    const dias = Number(row.diasRestantes);
+                    const tone = dias <= 7 ? 'danger' : dias <= 30 ? 'warning' : 'muted';
+                    return (
+                      <tr key={row.activo?.id ?? `${row.idSede}-${row.fechaVencimientoGarantia}`}>
+                        <td>{row.activo?.nombre ?? '—'}</td>
+                        <td>{row.nombreSede}</td>
+                        <td>{formatDate(row.fechaVencimientoGarantia)}</td>
+                        <td>
+                          <ToneBadge tone={tone}>{dias}</ToneBadge>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
 
       {variasEmpresas ? (
         <section className="dash-card">
