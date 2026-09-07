@@ -3,7 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SLCDM.Domain.Entities;
 
-public class Asignacion: SLCDM.Domain.Common.BaseEntity {
+public class Asignacion : SLCDM.Domain.Common.BaseEntity
+{
 
     [Required(ErrorMessage = "El campo activo es obligatorio")]
     public int IdActivo { get; set; }
@@ -45,7 +46,7 @@ public class Asignacion: SLCDM.Domain.Common.BaseEntity {
     public bool Activa { get; set; } = true;
 
     [MaxLength(300, ErrorMessage = "El campo observaciones no debe superar los 300 caracteres")]
-    public string? Observaciones {get; set; } = string.Empty;
+    public string? Observaciones { get; set; } = string.Empty;
 
     public byte[]? FirmaEntrega { get; set; }
 
@@ -57,6 +58,8 @@ public class Asignacion: SLCDM.Domain.Common.BaseEntity {
     public string? DocumentoPdfUrl { get; set; } = string.Empty;
 
     public DateTime? DocumentoPdfGenerardoEn { get; set; }
+     
+    public string? DocumentoPdfHash { get; set; }
 
 }
 
