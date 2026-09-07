@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import { listarAgrupadosPorUbicacion } from '@/features/inventario/activosEsperados';
 import * as detalleActivoService from '@/features/inventario/detalleActivoService';
+import { DiferenciasPanel } from '@/features/inventario/DiferenciasPanel';
 import { HallazgoFormOverlay } from '@/features/inventario/HallazgoFormOverlay';
 import * as historicoInventarioService from '@/features/inventario/historicoInventarioService';
 import { todayIsoDate } from '@/features/inventario/trasladoRuta';
@@ -254,6 +255,12 @@ export function JornadaDetallePage() {
           );
         })
       )}
+
+      <DiferenciasPanel
+        jornadaId={jornada?.id}
+        cerrado={Boolean(jornada?.cerrado)}
+        refreshKey={`${hallazgos.length}-${verificados}-${jornada?.cerrado}`}
+      />
 
       <DetailOverlay
         open={crud.isView}
