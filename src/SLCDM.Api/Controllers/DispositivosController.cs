@@ -102,7 +102,10 @@ public sealed class DispositivosController : ApiControllerBase
 
         await _ping.HandleAsync(new RegistrarUbicacionCommand(idActivo, body.Bssid), cancellationToken);
         return NoContent();
+
+        await _ping.HandleAsync(
+            new RegistrarUbicacionCommand(idActivo, body.Bssid, body.Latitud, body.Longitud),
+            cancellationToken);
     }
 }
-
-public sealed record DevicePingRequest(string Bssid);
+public sealed record DevicePingRequest(string? Bssid, decimal? Latitud = null, decimal? Longitud = null);

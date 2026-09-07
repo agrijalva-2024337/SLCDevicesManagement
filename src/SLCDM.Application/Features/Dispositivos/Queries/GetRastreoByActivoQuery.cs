@@ -1,58 +1,52 @@
-using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
-using SLCDM.Application.Common.Validation;
-using SLCDM.Application.Features.Dispositivos;
 
 namespace SLCDM.Application.Features.Dispositivos.Queries;
 
 public sealed record GetRastreoByActivoQuery(int IdActivo);
 
-public sealed class GetRastreoByActivoQueryValidator : AbstractValidator<GetRastreoByActivoQuery>
-{
-    public GetRastreoByActivoQueryValidator()
-    {
-        RuleFor(x => x.IdActivo).RequiredId("id activo");
-    }
-}
-
-public sealed class GetRastreoByActivoQueryHandler : IQueryHandler<GetRastreoByActivoQuery, DispositivoRastreoDto>
+public sealed class GetRastreoByActivoQueryHandler
+    : IQueryHandler<GetRastreoByActivoQuery, DispositivoRastreoDto>
 {
     private readonly IApplicationDbContext _db;
-    private readonly IValidator<GetRastreoByActivoQuery> _validator;
 
-    public GetRastreoByActivoQueryHandler(
-        IApplicationDbContext db,
-        IValidator<GetRastreoByActivoQuery> validator)
+    public GetRastreoByActivoQueryHandler(IApplicationDbContext db)
     {
         _db = db;
-        _validator = validator;
     }
 
     public async Task<DispositivoRastreoDto> HandleAsync(
         GetRastreoByActivoQuery query,
         CancellationToken cancellationToken = default)
     {
-        await _validator.ValidateAndThrowAsync(query, cancellationToken);
-
-        var dto = await _db.DispositivosToken.AsNoTracking()
-            .Where(d => d.IdActivo == query.IdActivo && !d.Revocado)
-            .Include(d => d.Activo)
+        return await _db.DispositivosToken.AsNoTracking()
+            .Where(d => !d.Revocado)
             .Select(d => new DispositivoRastreoDto(
-                d.Id,
                 d.IdActivo,
                 d.Activo!.Nombre,
-                d.Activo.IdUbicacion,
-                d.UltimaUbicacionDetectadaId,
-                d.UltimoUsoEn,
                 d.FueraDeRango,
-                d.Revocado,
-                d.CreadoEn,
-                d.ExpiraEn))
-            .FirstOrDefaultAsync(cancellationToken)
-            ?? throw new NotFoundException("DispositivoToken", query.IdActivo);
+                d.UltimoUsoEn,
+                d.UltimoBssid,
+                d.OrigenCoordenada,
+                d.UltimaLatitud,
+                d.UltimaLongitud,
+                d.Activo.Ubicacion == null
+                    ? null
+                    : new UbicacionMapaDto(
+                        d.Activo.Ubicacion.Id,
+                        d.Activo.Ubicacion.Nombre,
+                        d.Activo.Ubicacion.Latitud,
+                        d.Activo.Ubicacion.Longitud),
+                d.UltimaUbicacionDetectada == null
+                    ? null
+                    : new UbicacionMapaDto(
+                        d.UltimaUbicacionDetectada.Id,
+                        d.UltimaUbicacionDetectada.Nombre,
+                        d.UltimaUbicacionDetectada.Latitud,
+                        d.UltimaUbicacionDetectada.Longitud)))
+            .FirstOrDefaultAsync(cancellationToken);
 
-        return dto;
+        return dto ?? throw new NotFoundException("DispositivoToken", query.IdActivo);
     }
 }

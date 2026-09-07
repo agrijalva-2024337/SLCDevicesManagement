@@ -43,6 +43,22 @@ public class DispositivoTokenConfiguration : IEntityTypeConfiguration<Dispositiv
         builder.Property(d => d.FueraDeRango)
             .HasColumnName("fuera_de_rango")
             .HasDefaultValue(false);
+        
+        builder.Property(d => d.UltimoBssid)
+            .HasColumnName("ultimo_bssid")
+            .HasColumnType("varchar(17)");
+
+        builder.Property(d => d.UltimaLatitud)
+            .HasColumnName("ultima_latitud")
+            .HasColumnType("decimal(9,6)");
+
+        builder.Property(d => d.UltimaLongitud)
+            .HasColumnName("ultima_longitud")
+            .HasColumnType("decimal(9,6)");
+
+        builder.Property(d => d.OrigenCoordenada)
+            .HasColumnName("origen_coordenada")
+            .HasColumnType("varchar(10)");
 
         builder.HasIndex(d => d.TokenHash).IsUnique();
         builder.HasIndex(d => d.IdActivo).IsUnique().HasFilter("[revocado] = 0");

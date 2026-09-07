@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Interfaces;
-using SLCDM.Application.Features.Dispositivos;
 
 namespace SLCDM.Application.Features.Dispositivos.Queries;
 
@@ -20,23 +19,32 @@ public sealed class GetDispositivosRastreoQueryHandler
         GetDispositivosRastreoQuery query,
         CancellationToken cancellationToken = default)
     {
-        var items = await _db.DispositivosToken.AsNoTracking()
+        return await _db.DispositivosToken.AsNoTracking()
             .Where(d => !d.Revocado)
-            .Include(d => d.Activo)
-            .OrderByDescending(d => d.UltimoUsoEn)
             .Select(d => new DispositivoRastreoDto(
                 d.Id,
                 d.IdActivo,
                 d.Activo!.Nombre,
-                d.Activo.IdUbicacion,
-                d.UltimaUbicacionDetectadaId,
-                d.UltimoUsoEn,
                 d.FueraDeRango,
-                d.Revocado,
-                d.CreadoEn,
-                d.ExpiraEn))
+                d.UltimoUsoEn,
+                d.UltimoBssid,
+                d.OrigenCoordenada,
+                d.UltimaLatitud,
+                d.UltimaLongitud,
+                d.Activo.IdUbicacion == null || d.Activo.Ubicacion == null
+                    ? null
+                    : new UbicacionMapaDto(
+                        d.Activo.Ubicacion.Id,
+                        d.Activo.Ubicacion.Nombre,
+                        d.Activo.Ubicacion.Latitud,
+                        d.Activo.Ubicacion.Longitud),
+                d.UltimaUbicacionDetectada == null
+                    ? null
+                    : new UbicacionMapaDto(
+                        d.UltimaUbicacionDetectada.Id,
+                        d.UltimaUbicacionDetectada.Nombre,
+                        d.UltimaUbicacionDetectada.Latitud,
+                        d.UltimaUbicacionDetectada.Longitud)))
             .ToListAsync(cancellationToken);
-
-        return items;
     }
 }
