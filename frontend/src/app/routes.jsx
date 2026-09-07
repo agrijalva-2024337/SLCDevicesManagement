@@ -23,6 +23,7 @@ const loadMantenimientos = () => import('@/features/mantenimientos/Mantenimiento
 const loadActivos = () => import('@/features/activos/ActivosPage');
 const loadAsignaciones = () => import('@/features/asignaciones/AsignacionesPage');
 const loadBajas = () => import('@/features/bajas/BajasPage');
+const loadBitacora = () => import('@/features/organizacion/bitacoras/BitacoraPage');
 
 const writeChildren = (loader, formExport, detailExport) => [
   {
@@ -72,6 +73,7 @@ export const router = createBrowserRouter([
           { path: 'traslados', ...named(loadTraslados, 'TrasladosPage') },
           { path: 'mantenimientos', ...named(loadMantenimientos, 'MantenimientosPage') },
           { path: 'bajas', ...named(loadBajas, 'BajasPage') },
+          { path: 'bitacora', ...named(loadBitacora, 'BitacoraPage') },
         ],
       },
     ],
