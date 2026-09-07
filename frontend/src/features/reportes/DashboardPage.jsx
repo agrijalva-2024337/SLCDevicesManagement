@@ -1,17 +1,17 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { TIPO_DIFERENCIA_LABEL, TIPO_DIFERENCIA_TONE } from '@/features/inventario/tipoDiferencia';
+import * as historicoInventarioService from '@/features/inventario/historicoInventarioService';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
-import { HBarChart } from '@/features/reportes/components/ActivityCharts';
-import { DrillDownPanel } from '@/features/reportes/components/DrillDownPanel';
-import { CATEGORY_ICON } from '@/features/reportes/dashboardParams';
+import { DualBars, HBarChart, Sparkline, WaveSpark } from '@/features/reportes/components/ActivityCharts';
+import { CATEGORY_ICON, RANGE_OPTIONS } from '@/features/reportes/dashboardParams';
 import * as reporteService from '@/features/reportes/reporteService';
 import { ESTADO_ACTIVO } from '@/shared/api/tipoAsignacion';
 import '@/features/reportes/dashboard.css';
 import { FeedbackState } from '@/shared/components/FeedbackState';
 import { ToneBadge } from '@/shared/components/StatusBadge';
 import { useResource } from '@/shared/hooks/useResource';
-import { formatDate, formatMoney } from '@/shared/utils/format';
+import { formatDate } from '@/shared/utils/format';
 
 function vacio() {
   return {
@@ -25,14 +25,22 @@ function vacio() {
 }
 
 function consolidar(rows) {
-  return (rows ?? []).reduce((acc, row) => ({
-    totalActivos: acc.totalActivos + Number(row.totalActivos ?? 0),
-    disponibles: acc.disponibles + Number(row.disponibles ?? 0),
-    asignados: acc.asignados + Number(row.asignados ?? 0),
-    enMantenimiento: acc.enMantenimiento + Number(row.enMantenimiento ?? 0),
-    dadosDeBaja: acc.dadosDeBaja + Number(row.dadosDeBaja ?? 0),
-    costoAdquisicionTotal: acc.costoAdquisicionTotal + Number(row.costoAdquisicionTotal ?? 0),
-  }), vacio());
+  return (rows ?? []).reduce(
+    (acc, row) => ({
+      totalActivos: acc.totalActivos + Number(row.totalActivos ?? 0),
+      disponibles: acc.disponibles + Number(row.disponibles ?? 0),
+      asignados: acc.asignados + Number(row.asignados ?? 0),
+      enMantenimiento: acc.enMantenimiento + Number(row.enMantenimiento ?? 0),
+      dadosDeBaja: acc.dadosDeBaja + Number(row.dadosDeBaja ?? 0),
+      costoAdquisicionTotal: acc.costoAdquisicionTotal + Number(row.costoAdquisicionTotal ?? 0),
+    }),
+    vacio(),
+  );
+}
+
+function percentOf(part, total) {
+  if (!total) return 0;
+  return Math.round((Number(part) / Number(total)) * 100);
 }
 
 const CATEGORY_TONE = ['info', 'success', 'warning', 'danger', 'primary'];
@@ -40,6 +48,9 @@ const CATEGORY_TONE = ['info', 'success', 'warning', 'danger', 'primary'];
 export function DashboardPage() {
   const navigate = useNavigate();
   const { idActiva } = useEmpresaActiva();
+  const [range, setRange] = useState('30');
+  const diasGarantia = Number(range);
+
   const loadInventario = useCallback(
     () => reporteService.inventarioGeneral({ idEmpresa: idActiva || undefined }),
     [idActiva],
@@ -52,60 +63,46 @@ export function DashboardPage() {
     () => reporteService.activosPorSede({ idEmpresa: idActiva || undefined }),
     [idActiva],
   );
-  const loadUbicaciones = useCallback(
-    () => reporteService.activosPorUbicacion({ idEmpresa: idActiva || undefined }),
-    [idActiva],
-  );
-  const inventario = useResource(loadInventario);
-  const categorias = useResource(loadCategorias);
-  const sedes = useResource(loadSedes);
-  const ubicaciones = useResource(loadUbicaciones);
-  const [idSedeSel, setIdSedeSel] = useState(null);
-  const [diasGarantia, setDiasGarantia] = useState(30);
-  const sedeSigueVisible = (sedes.data ?? []).some((row) => Number(row.idSede) === Number(idSedeSel));
-  const idSedeFiltro = sedeSigueVisible ? idSedeSel : null;
   const loadGarantias = useCallback(
     () => reporteService.garantiasPorVencer({ idEmpresa: idActiva || undefined, dias: diasGarantia }),
     [diasGarantia, idActiva],
   );
-  const garantias = useResource(loadGarantias);
   const loadDiferencias = useCallback(
     () => reporteService.diferenciasInventario({ idEmpresa: idActiva || undefined }),
     [idActiva],
   );
+  const loadJornadas = useCallback(
+    () => historicoInventarioService.listar({ idEmpresa: idActiva || undefined }),
+    [idActiva],
+  );
+
+  const inventario = useResource(loadInventario);
+  const categorias = useResource(loadCategorias);
+  const sedes = useResource(loadSedes);
+  const garantias = useResource(loadGarantias);
   const diferencias = useResource(loadDiferencias);
-  const diferenciasPorJornada = useMemo(() => {
-    const groups = new Map();
-    for (const row of diferencias.data ?? []) {
-      const key = row.idHistoricoInventario;
-      if (!groups.has(key)) {
-        groups.set(key, {
-          id: key,
-          nombreSede: row.nombreSede,
-          fechaInicio: row.fechaInicio,
-          filas: [],
-        });
-      }
-      groups.get(key).filas.push(row);
-    }
-    return [...groups.values()];
-  }, [diferencias.data]);
-  const ubicacionesFiltradas = useMemo(() => {
-    if (idSedeFiltro == null) return ubicaciones.data ?? [];
-    return (ubicaciones.data ?? []).filter((row) => Number(row.idSede) === Number(idSedeFiltro));
-  }, [idSedeFiltro, ubicaciones.data]);
+  const jornadas = useResource(loadJornadas);
+
   const resumen = useMemo(() => consolidar(inventario.data), [inventario.data]);
-  const variasEmpresas = (inventario.data?.length ?? 0) > 1;
+  const spark = [
+    resumen.disponibles,
+    resumen.asignados,
+    resumen.enMantenimiento,
+    resumen.dadosDeBaja,
+    resumen.totalActivos,
+  ];
+  const jornadasAbiertas = (jornadas.data ?? []).filter((row) => !row.cerrado).length;
+  const jornadasCerradas = (jornadas.data ?? []).filter((row) => row.cerrado).length;
+  const totalEstados = resumen.disponibles + resumen.asignados + resumen.enMantenimiento + resumen.dadosDeBaja;
 
   const widgets = [
-    { key: 'total', label: 'Activos', value: resumen.totalActivos, icon: 'pi-box', tone: 'primary', to: '/app/activos' },
     {
-      key: 'disp',
-      label: 'Disponibles',
-      value: resumen.disponibles,
-      icon: 'pi-check-circle',
-      tone: 'success',
-      to: `/app/activos?estado=${encodeURIComponent(ESTADO_ACTIVO.Disponible)}`,
+      key: 'activos',
+      label: 'Activos',
+      value: resumen.totalActivos,
+      icon: 'pi-box',
+      tone: 'primary',
+      to: '/app/activos',
     },
     {
       key: 'asig',
@@ -116,30 +113,95 @@ export function DashboardPage() {
       to: `/app/activos?estado=${encodeURIComponent(ESTADO_ACTIVO.Asignado)}`,
     },
     {
+      key: 'resg',
+      label: 'Resguardo',
+      value: resumen.disponibles,
+      icon: 'pi-inbox',
+      tone: 'warning',
+      to: `/app/activos?estado=${encodeURIComponent(ESTADO_ACTIVO.Disponible)}`,
+    },
+    {
       key: 'mant',
-      label: 'En mantenimiento',
+      label: 'Mantenimientos',
       value: resumen.enMantenimiento,
       icon: 'pi-wrench',
-      tone: 'warning',
+      tone: 'danger',
       to: '/app/mantenimientos?abiertos=1',
     },
+  ];
+
+  const brands = [
     {
-      key: 'baja',
-      label: 'Dados de baja',
-      value: resumen.dadosDeBaja,
-      icon: 'pi-times-circle',
-      tone: 'danger',
-      to: '/app/bajas',
+      key: 'activos',
+      title: 'Activos',
+      icon: 'pi-box',
+      tone: 'primary',
+      to: '/app/activos',
+      stats: [
+        { label: 'Total', value: resumen.totalActivos },
+        { label: 'Asignados', value: resumen.asignados },
+      ],
     },
     {
-      key: 'costo',
-      label: 'Costo de adquisición',
-      value: formatMoney(resumen.costoAdquisicionTotal, 'GTQ'),
-      icon: 'pi-wallet',
-      tone: 'primary',
-      to: '/app/reportes',
+      key: 'inventario',
+      title: 'Inventario físico',
+      icon: 'pi-list',
+      tone: 'info',
+      to: '/app/inventario-fisico',
+      stats: [
+        { label: 'Conteos abiertos', value: jornadasAbiertas },
+        { label: 'Conteos cerrados', value: jornadasCerradas },
+      ],
+    },
+    {
+      key: 'mant',
+      title: 'Mantenimientos',
+      icon: 'pi-wrench',
+      tone: 'accent',
+      to: '/app/mantenimientos?abiertos=1',
+      stats: [
+        { label: 'Abiertos', value: resumen.enMantenimiento },
+        { label: 'Dados de baja', value: resumen.dadosDeBaja },
+      ],
+    },
+    {
+      key: 'bajas',
+      title: 'Bajas',
+      icon: 'pi-calendar',
+      tone: 'warning',
+      to: '/app/bajas',
+      stats: [
+        { label: 'Registradas', value: resumen.dadosDeBaja },
+        { label: 'En mantenimiento', value: resumen.enMantenimiento },
+      ],
     },
   ];
+
+  const estadoItems = [
+    { key: 'resg', label: 'En resguardo', value: resumen.disponibles, icon: 'pi-inbox', tone: 'warning' },
+    { key: 'asig', label: 'Asignado', value: resumen.asignados, icon: 'pi-user', tone: 'info' },
+    { key: 'mant', label: 'En mantenimiento', value: resumen.enMantenimiento, icon: 'pi-wrench', tone: 'danger' },
+  ];
+
+  const atencion = [
+    ...(garantias.data ?? []).map((row) => {
+      const dias = Number(row.diasRestantes);
+      return {
+        id: `g-${row.activo?.id ?? row.fechaVencimientoGarantia}`,
+        severity: dias <= 7 ? 'alta' : dias <= 30 ? 'media' : 'baja',
+        label: row.activo?.nombre ?? 'Activo',
+        detail: `Garantía vence ${formatDate(row.fechaVencimientoGarantia)} · ${dias} días`,
+        to: '/app/reportes',
+      };
+    }),
+    ...(diferencias.data ?? []).slice(0, 6).map((row) => ({
+      id: `d-${row.idHistoricoInventario}-${row.idActivo}-${row.tipoDiferencia}`,
+      severity: 'alta',
+      label: `${row.nombreActivo ?? 'Activo'}`,
+      detail: `${TIPO_DIFERENCIA_LABEL[row.tipoDiferencia] ?? row.tipoDiferencia} · ${row.nombreSede ?? ''}`,
+      to: `/app/inventario-fisico/${row.idHistoricoInventario}`,
+    })),
+  ].slice(0, 8);
 
   if (inventario.isLoading && !inventario.data?.length) {
     return <FeedbackState status="loading" loadingMessage="Cargando el inventario general…" />;
@@ -160,8 +222,18 @@ export function DashboardPage() {
       <header className="dash-head">
         <div>
           <h2 className="dash-title">Panel de control</h2>
-          <p className="dash-lead">Inventario general por empresa activa.</p>
+          <p className="dash-lead">Resumen general del sistema</p>
         </div>
+        <label className="dash-period">
+          <i className="pi pi-calendar" aria-hidden />
+          <select aria-label="Periodo" value={range} onChange={(event) => setRange(event.target.value)}>
+            {RANGE_OPTIONS.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.long}
+              </option>
+            ))}
+          </select>
+        </label>
       </header>
 
       <div className="dash-widgets">
@@ -170,272 +242,246 @@ export function DashboardPage() {
             <i className={`pi ${widget.icon} dash-widget-icon`} aria-hidden />
             <p className="dash-widget-value tabular-nums">{widget.value}</p>
             <p className="dash-widget-title">{widget.label}</p>
+            <Sparkline values={spark} fill />
           </Link>
         ))}
       </div>
 
-      <DrillDownPanel
-        title="Activos por categoría"
-        hint="Cada barra abre el reporte detallado de esa categoría."
-        stack={[]}
-        onChange={() => {}}
-        empty={!categorias.errorMessage && categorias.data.length === 0}
-        emptyMessage="No hay activos por categoría."
-      >
-        {categorias.errorMessage ? (
-          <p className="dash-empty">{categorias.errorMessage}</p>
-        ) : (
-          <HBarChart
-            items={categorias.data.map((row, index) => ({
-              key: String(row.idCategoriaActivo),
-              label: row.nombreCategoria,
-              value: row.totalActivos,
-              icon: CATEGORY_ICON[row.nombreCategoria],
-              tone: CATEGORY_TONE[index % CATEGORY_TONE.length],
-            }))}
-            total={resumen.totalActivos || undefined}
-            onSelect={(item) => navigate(`/app/reportes/activos?idCategoriaActivo=${item.key}`)}
-          />
-        )}
-      </DrillDownPanel>
-
-      <div className="dash-split">
-        <section className="dash-table-card">
-          <header className="dash-card-head">
-            <div>
-              <h2>Por sede</h2>
-              <p className="dash-hint">Seleccione una sede para filtrar ubicaciones.</p>
+      <div className="dash-brands">
+        {brands.map((brand) => (
+          <Link key={brand.key} to={brand.to} className={`dash-brand dash-brand--${brand.tone}`}>
+            <div className="dash-brand-cap">
+              <i className={`pi ${brand.icon}`} aria-hidden />
+              <span className="dash-brand-title">{brand.title}</span>
+              <WaveSpark values={spark} />
             </div>
-          </header>
-          <div className="dash-card-body">
-            {sedes.errorMessage ? (
-              <p className="dash-empty">{sedes.errorMessage}</p>
-            ) : (
-              <div className="dash-mini-wrap">
-                <table className="dash-mini">
-                  <thead>
-                    <tr>
-                      <th>Sede</th>
-                      <th>Activos</th>
-                      <th>Disp.</th>
-                      <th>Asig.</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(sedes.data ?? []).map((row) => (
-                      <tr
-                        key={row.idSede}
-                        className={Number(idSedeFiltro) === Number(row.idSede) ? 'is-on' : undefined}
-                        onClick={() =>
-                          setIdSedeSel((current) =>
-                            Number(current) === Number(row.idSede) ? null : row.idSede,
-                          )
-                        }
-                      >
-                        <td>{row.nombreSede}</td>
-                        <td className="tabular-nums">{row.totalActivos}</td>
-                        <td className="tabular-nums">{row.disponibles}</td>
-                        <td className="tabular-nums">{row.asignados}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </section>
-
-        <section className="dash-table-card">
-          <header className="dash-card-head">
-            <div>
-              <h2>Por ubicación</h2>
-              <p className="dash-hint">
-                {idSedeFiltro == null
-                  ? 'Todas las sedes de la empresa activa.'
-                  : 'Filtrado en cliente, sin otra petición.'}
-              </p>
+            <div className="dash-brand-body">
+              {brand.stats.map((stat) => (
+                <span key={stat.label} className="dash-brand-stat">
+                  <strong className="tabular-nums">{stat.value}</strong>
+                  <span>{stat.label}</span>
+                </span>
+              ))}
             </div>
-          </header>
-          <div className="dash-card-body">
-            {ubicaciones.errorMessage ? (
-              <p className="dash-empty">{ubicaciones.errorMessage}</p>
-            ) : ubicacionesFiltradas.length === 0 ? (
-              <p className="dash-empty">No hay ubicaciones para el filtro.</p>
-            ) : (
-              <div className="dash-mini-wrap">
-                <table className="dash-mini">
-                  <thead>
-                    <tr>
-                      <th>Ubicación</th>
-                      <th>Sede</th>
-                      <th>Activos</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {ubicacionesFiltradas.map((row) => (
-                      <tr key={row.idUbicacion}>
-                        <td>{row.nombreUbicacion}</td>
-                        <td>{row.nombreSede}</td>
-                        <td className="tabular-nums">{row.totalActivos}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </section>
+          </Link>
+        ))}
       </div>
 
-      <section className="dash-attention">
+      <section className="dash-card">
         <header className="dash-card-head is-split">
-          <div>
-            <h2>Garantías por vencer</h2>
-            <p className="dash-hint">Ventana enviada al servidor como query `dias`.</p>
-          </div>
-          <div className="dash-range" role="group" aria-label="Ventana de garantías">
-            {[30, 60, 90].map((dias) => (
+          <h2>Parque y movimientos</h2>
+          <div className="dash-range" role="group" aria-label="Periodo">
+            {RANGE_OPTIONS.map((item) => (
               <button
-                key={dias}
+                key={item.value}
                 type="button"
-                className={diasGarantia === dias ? 'is-on' : undefined}
-                onClick={() => setDiasGarantia(dias)}
+                className={range === item.value ? 'is-on' : undefined}
+                onClick={() => setRange(item.value)}
               >
-                {dias} días
+                {item.label}
               </button>
             ))}
           </div>
         </header>
         <div className="dash-card-body">
-          {garantias.errorMessage ? (
-            <p className="dash-empty">{garantias.errorMessage}</p>
-          ) : garantias.data.length === 0 ? (
-            <p className="dash-empty">Ninguna garantía vence en {diasGarantia} días.</p>
-          ) : (
-            <div className="dash-mini-wrap">
-              <table className="dash-mini">
-                <thead>
-                  <tr>
-                    <th>Activo</th>
-                    <th>Sede</th>
-                    <th>Vence</th>
-                    <th>Días</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {garantias.data.map((row) => {
-                    const dias = Number(row.diasRestantes);
-                    const tone = dias <= 7 ? 'danger' : dias <= 30 ? 'warning' : 'muted';
-                    return (
-                      <tr key={row.activo?.id ?? `${row.idSede}-${row.fechaVencimientoGarantia}`}>
-                        <td>{row.activo?.nombre ?? '—'}</td>
-                        <td>{row.nombreSede}</td>
-                        <td>{formatDate(row.fechaVencimientoGarantia)}</td>
-                        <td>
-                          <ToneBadge tone={tone}>{dias}</ToneBadge>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section className="dash-card">
-        <header className="dash-card-head">
-          <div>
-            <h2>Diferencias de inventarios cerrados</h2>
-            <p className="dash-hint">
-              Este reporte solo incluye jornadas cerradas. El parcial de una jornada abierta está en su hoja
-              de conteo.
-            </p>
-          </div>
-        </header>
-        <div className="dash-card-body">
-          {diferencias.errorMessage ? (
-            <p className="dash-empty">{diferencias.errorMessage}</p>
-          ) : diferenciasPorJornada.length === 0 ? (
-            <p className="dash-empty">No hay diferencias en jornadas cerradas.</p>
-          ) : (
-            diferenciasPorJornada.map((grupo) => (
-              <div key={grupo.id} className="dash-mini-wrap">
-                <h3 className="dash-subhead">
-                  <Link to={`/app/inventario-fisico/${grupo.id}`}>
-                    {grupo.nombreSede} · {formatDate(grupo.fechaInicio)}
-                    <i className="pi pi-chevron-right" aria-hidden />
-                  </Link>
-                </h3>
-                <table className="dash-mini">
-                  <thead>
-                    <tr>
-                      <th>Activo</th>
-                      <th>Tipo</th>
-                      <th>Observaciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {grupo.filas.map((row) => (
-                      <tr key={`${row.idHistoricoInventario}-${row.idActivo}-${row.tipoDiferencia}`}>
-                        <td>{row.nombreActivo}</td>
-                        <td>
-                          <ToneBadge tone={TIPO_DIFERENCIA_TONE[row.tipoDiferencia] ?? 'muted'}>
-                            {TIPO_DIFERENCIA_LABEL[row.tipoDiferencia] ?? row.tipoDiferencia}
-                          </ToneBadge>
-                        </td>
-                        <td>{row.observaciones ?? '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          <div className="dash-minis">
+            <div className="dash-mini-stat is-info">
+              <span className="dash-mini-icon">
+                <i className="pi pi-user" aria-hidden />
+              </span>
+              <div>
+                <p className="dash-mini-label">Asignados</p>
+                <p className="dash-mini-value tabular-nums">{resumen.asignados}</p>
+                <p className="dash-mini-pct is-flat">{percentOf(resumen.asignados, resumen.totalActivos)}%</p>
               </div>
-            ))
-          )}
+            </div>
+            <div className="dash-mini-stat is-success">
+              <span className="dash-mini-icon">
+                <i className="pi pi-inbox" aria-hidden />
+              </span>
+              <div>
+                <p className="dash-mini-label">En resguardo</p>
+                <p className="dash-mini-value tabular-nums">{resumen.disponibles}</p>
+                <p className="dash-mini-pct is-flat">{percentOf(resumen.disponibles, resumen.totalActivos)}%</p>
+              </div>
+            </div>
+            <div className="dash-mini-stat is-warning">
+              <span className="dash-mini-icon">
+                <i className="pi pi-list-check" aria-hidden />
+              </span>
+              <div>
+                <p className="dash-mini-label">Jornadas</p>
+                <p className="dash-mini-value tabular-nums">{(jornadas.data ?? []).length}</p>
+                <p className="dash-mini-pct is-flat">{jornadasAbiertas} abiertas</p>
+              </div>
+            </div>
+            <div className="dash-mini-stat is-danger">
+              <span className="dash-mini-icon">
+                <i className="pi pi-bell" aria-hidden />
+              </span>
+              <div>
+                <p className="dash-mini-label">Requieren atención</p>
+                <p className="dash-mini-value tabular-nums">{atencion.length}</p>
+                <p className="dash-mini-pct is-flat">garantías y diferencias</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="dash-quad">
+            <section className="dash-chart">
+              <h3>Disponibles y asignados por sede</h3>
+              {(sedes.data ?? []).length ? (
+                <DualBars
+                  items={(sedes.data ?? []).map((row) => ({
+                    key: String(row.idSede),
+                    label: row.nombreSede,
+                    value1: Number(row.disponibles ?? 0),
+                    value2: Number(row.asignados ?? 0),
+                  }))}
+                  label1="Disponibles"
+                  label2="Asignados"
+                />
+              ) : (
+                <p className="dash-empty">Sin sedes en el inventario.</p>
+              )}
+            </section>
+
+            <section className="dash-chart">
+              <h3>Por categoría</h3>
+              {categorias.errorMessage ? (
+                <p className="dash-empty">{categorias.errorMessage}</p>
+              ) : (
+                <HBarChart
+                  items={(categorias.data ?? []).map((row, index) => ({
+                    key: String(row.idCategoriaActivo),
+                    label: row.nombreCategoria,
+                    value: row.totalActivos,
+                    icon: CATEGORY_ICON[row.nombreCategoria],
+                    tone: CATEGORY_TONE[index % CATEGORY_TONE.length],
+                  }))}
+                  total={resumen.totalActivos || undefined}
+                  onSelect={(item) => navigate(`/app/reportes/activos?idCategoriaActivo=${item.key}`)}
+                />
+              )}
+            </section>
+
+            <section className="dash-chart">
+              <h3>Estado del parque</h3>
+              <HBarChart
+                items={estadoItems}
+                total={totalEstados || undefined}
+                onSelect={(item) => {
+                  if (item.key === 'mant') navigate('/app/mantenimientos?abiertos=1');
+                  else if (item.key === 'asig') {
+                    navigate(`/app/activos?estado=${encodeURIComponent(ESTADO_ACTIVO.Asignado)}`);
+                  } else {
+                    navigate(`/app/activos?estado=${encodeURIComponent(ESTADO_ACTIVO.Disponible)}`);
+                  }
+                }}
+              />
+            </section>
+
+            <section className="dash-chart">
+              <h3>Por sede</h3>
+              <HBarChart
+                items={(sedes.data ?? []).map((row, index) => ({
+                  key: String(row.idSede),
+                  label: row.nombreSede,
+                  value: row.totalActivos,
+                  icon: 'pi-building',
+                  tone: CATEGORY_TONE[index % CATEGORY_TONE.length],
+                }))}
+                total={resumen.totalActivos || undefined}
+              />
+            </section>
+          </div>
         </div>
       </section>
 
-      {variasEmpresas ? (
+      <div className="dash-bottom">
         <section className="dash-card">
           <header className="dash-card-head">
-            <div>
-              <h2>Por empresa</h2>
-              <p className="dash-hint">El consolidado de arriba suma estas filas.</p>
-            </div>
+            <h2>
+              <i className="pi pi-bell" aria-hidden />
+              Requiere atención
+            </h2>
           </header>
           <div className="dash-card-body">
-            <div className="dash-mini-wrap">
-              <table className="dash-mini">
+            {atencion.length === 0 ? (
+              <p className="dash-empty">Nada pendiente ahora.</p>
+            ) : (
+              <ul className="dash-attention">
+                {atencion.map((item) => (
+                  <li key={item.id}>
+                    <Link to={item.to}>
+                      <span className={`dash-sev is-${item.severity}`}>
+                        {item.severity === 'alta' ? 'Alta' : item.severity === 'media' ? 'Media' : 'Baja'}
+                      </span>
+                      <span className="dash-attention-copy">
+                        <span className="dash-attention-title">{item.label}</span>
+                        <span className="dash-attention-detail">{item.detail}</span>
+                      </span>
+                      <i className="pi pi-chevron-right" aria-hidden />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
+
+        <section className="dash-card dash-table-card">
+          <header className="dash-card-head is-split">
+            <h2>
+              <i className="pi pi-clock" aria-hidden />
+              Diferencias cerradas
+            </h2>
+            <Link to="/app/inventario-fisico" className="dash-inline-link">
+              Ver inventario
+              <i className="pi pi-arrow-right" aria-hidden />
+            </Link>
+          </header>
+          {(diferencias.data ?? []).length === 0 ? (
+            <div className="dash-card-body">
+              <p className="dash-empty">No hay diferencias en jornadas cerradas.</p>
+            </div>
+          ) : (
+            <div className="dash-table-wrap">
+              <table className="dash-table">
                 <thead>
                   <tr>
-                    <th>Empresa</th>
-                    <th>Activos</th>
-                    <th>Disponibles</th>
-                    <th>Asignados</th>
-                    <th>Mantenimiento</th>
-                    <th>Baja</th>
-                    <th>Costo</th>
+                    <th>Registro</th>
+                    <th>Tipo</th>
+                    <th>Sede</th>
+                    <th>Cuándo</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {inventario.data.map((row) => (
-                    <tr key={row.idEmpresa}>
-                      <td>{row.nombreEmpresa}</td>
-                      <td className="tabular-nums">{row.totalActivos}</td>
-                      <td className="tabular-nums">{row.disponibles}</td>
-                      <td className="tabular-nums">{row.asignados}</td>
-                      <td className="tabular-nums">{row.enMantenimiento}</td>
-                      <td className="tabular-nums">{row.dadosDeBaja}</td>
-                      <td className="tabular-nums">{formatMoney(row.costoAdquisicionTotal, 'GTQ')}</td>
+                  {(diferencias.data ?? []).slice(0, 8).map((row) => (
+                    <tr
+                      key={`${row.idHistoricoInventario}-${row.idActivo}-${row.tipoDiferencia}`}
+                      onClick={() => navigate(`/app/inventario-fisico/${row.idHistoricoInventario}`)}
+                    >
+                      <td>
+                        <span className="dash-table-name">{row.nombreActivo ?? '—'}</span>
+                      </td>
+                      <td>
+                        <ToneBadge tone={TIPO_DIFERENCIA_TONE[row.tipoDiferencia] ?? 'muted'}>
+                          {TIPO_DIFERENCIA_LABEL[row.tipoDiferencia] ?? row.tipoDiferencia}
+                        </ToneBadge>
+                      </td>
+                      <td>
+                        <span className="dash-table-chip">{row.nombreSede ?? '—'}</span>
+                      </td>
+                      <td>{formatDate(row.fechaInicio)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </div>
+          )}
         </section>
-      ) : null}
+      </div>
     </section>
   );
 }
