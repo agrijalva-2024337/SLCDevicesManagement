@@ -23,6 +23,7 @@ export function canWriteCatalog(rol, resource) {
 
   if (
     resource === 'ubicaciones' ||
+    resource === 'redes-conocidas' ||
     resource === 'traslados' ||
     resource === 'mantenimientos' ||
     resource === 'activos' ||

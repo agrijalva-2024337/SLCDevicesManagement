@@ -5,6 +5,7 @@ import { getMaestro, nameById } from '@/features/catalogos/maestros';
 import { filterRowsByEmpresa, useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { PaisesGrid } from '@/features/catalogos/paises/PaisesGrid';
 import * as paisService from '@/features/catalogos/paises/paisService';
+import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import { UbicacionesMapPage } from '@/features/catalogos/ubicaciones/UbicacionesMapPage';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
@@ -47,23 +48,30 @@ export function CatalogoPage() {
   const empresas = useResource(empresaService.getAll);
   const sedes = useResource(sedeService.getAll);
   const paises = useResource(paisService.getAll);
+  const ubicaciones = useResource(ubicacionService.getAll);
 
   const lookups = useMemo(
     () => ({
       empresas: empresas.data,
       sedes: sedes.data,
       paises: paises.data,
+      ubicaciones: ubicaciones.data,
       empresaNombres: nameById(empresas.data),
       sedeNombres: nameById(sedes.data),
+      ubicacionNombres: nameById(ubicaciones.data),
     }),
-    [empresas.data, sedes.data, paises.data],
+    [empresas.data, sedes.data, paises.data, ubicaciones.data],
   );
 
   const catalogRows = maestro?.hasHabilitado === false ? rows : visibleRows;
-  const items = useMemo(
-    () => filterRowsByEmpresa(catalogRows, idActiva, { sedes: sedes.data }),
-    [catalogRows, idActiva, sedes.data],
-  );
+  const items = useMemo(() => {
+    const withSede = catalogRows.map((row) => {
+      if (row.idSede != null || row.idUbicacion == null) return row;
+      const ubicacion = (ubicaciones.data ?? []).find((item) => Number(item.id) === Number(row.idUbicacion));
+      return ubicacion ? { ...row, idSede: ubicacion.idSede } : row;
+    });
+    return filterRowsByEmpresa(withSede, idActiva, { sedes: sedes.data });
+  }, [catalogRows, idActiva, sedes.data, ubicaciones.data]);
   const outletContext = useMemo(
     () => ({ reload, rows, lookups }),
     [reload, rows, lookups],
@@ -122,11 +130,25 @@ export function CatalogoPage() {
           loading={isLoading}
           searchPlaceholder={`Buscar en ${maestro.title.toLowerCase()}`}
           statusFilter={maestro.hasHabilitado === false ? undefined : { key: 'habilitado' }}
+          filters={typeof maestro.listView.filters === 'function' ? maestro.listView.filters(lookups) : undefined}
           emptyTitle={maestro.listView.emptyTitle}
           emptyDescription={maestro.listView.emptyDescription}
           getRowActions={(item) => ({
             view: { to: `${item.id}` },
             edit: allowWrite ? { to: `${item.id}/editar` } : undefined,
+            remove:
+              allowWrite && maestro.hasHabilitado === false
+                ? {
+                    onClick: async () => {
+                      const ok = window.confirm(
+                        `¿Eliminar ${maestro.singular} ${maestro.titleOf(item)}? Esta acción no se puede deshacer.`,
+                      );
+                      if (!ok) return;
+                      await maestro.service.remove(item.id);
+                      await reload();
+                    },
+                  }
+                : undefined,
           })}
         />
         <OverlayOutlet context={outletContext} />

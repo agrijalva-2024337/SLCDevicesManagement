@@ -114,7 +114,7 @@ Definidas en `src/app/routes.jsx` con `createBrowserRouter` + lazy. `App.jsx` mo
 | `/app` | Dashboard de reportes (`DashboardPage`) | Activa |
 | `/app/catalogos/empresas` | Empresas + overlays `nueva` / `:id` / `:id/editar` | Activa |
 | `/app/catalogos/sedes` | Sedes + overlays `nueva` / `:id` / `:id/editar` | Activa |
-| `/app/catalogos/:slug` | Áreas, categorías, proveedores, ubicaciones, países | Activa |
+| `/app/catalogos/:slug` | Áreas, categorías, proveedores, ubicaciones, redes conocidas, países | Activa |
 | `/app/catalogos/:slug/nueva` \| `:id` \| `:id/editar` | Ficha y formulario sobre la lista | Activa |
 | `/app/activos` | Parque + pestañas Asignaciones / Traslados / Mantenimientos / Bajas (`?vista=`) | Activa |
 | `/app/activos?vista=asignaciones` | Entrega y devolución (tipo `Asignacion`) | Activa |
@@ -130,6 +130,14 @@ Definidas en `src/app/routes.jsx` con `createBrowserRouter` + lazy. `App.jsx` mo
 | `*` | 404 | Activa |
 
 Empresa y sede viven en `features/organizacion/`; el resto de maestros en `features/catalogos/` (`maestros.js` + `CatalogoPage`). Las URLs quedan bajo `/app/catalogos/...`. Deep link de ficha: `/app/catalogos/areas/7`. Países es grilla con banderas; ubicaciones es tabla + mapa. Detalle de la configuración: `src/features/catalogos/README.md`.
+
+## Redes conocidas (FE-14)
+
+Insumo del rastreo de FE-16: cada fila es un BSSID (MAC del AP) mapeado a una ubicación. Sin esta tabla poblada, el agente no puede resolver una red detectada a un sitio.
+
+El BSSID es único y se **normaliza a minúsculas** antes de enviarlo (`aa:bb:cc:dd:ee:ff`). **No hay borrado lógico**: `RedConocida` no tiene `habilitado`; eliminar es `DELETE`. Si se elimina una ubicación, EF borra en cascada sus redes.
+
+`// [API]` pendiente: no existe `RedesConocidasController`. La pantalla corre contra mock. La ruta tentativa es `/api/RedesConocidas` en `paths.js` — hay que confirmarla en Swagger, junto con el método de borrado y el rol de escritura.
 
 El sidebar muestra Activos, inventario físico, reportes y bitácora. Asignaciones, traslados, mantenimientos y bajas viven como pestañas de filtro en Activos. La bitácora no se muestra a Consulta ni a Operador.
 
@@ -258,6 +266,7 @@ BE-24 / BE-25 no publicaron estos cuatro endpoints. El frontend sigue con workar
 | Tipos de mantenimiento | `GET /api/TiposMantenimiento` | `features/mantenimientos/tipoMantenimientoService.js` |
 | Detalle de baja en el DTO | `DetalleBaja` en `AsignacionDto` o endpoint propio | `features/bajas/detalleBajaParser.js` lee `informacionNueva` del historial |
 | Activos esperados de una jornada | `GET /api/HistoricosInventario/{id}/esperados` | `features/inventario/activosEsperados.js` replica las reglas de jornada |
+| Redes conocidas | `GET/POST/PUT/DELETE /api/RedesConocidas` (ruta **sin confirmar**) | `features/catalogos/redesConocidas/` (mock + seed) |
 
 **Hallazgo, no olvido:** `DispositivosController` (rastreo, auto-registro, ping, fuera de rango) no tiene interfaz. No está en las tareas FE. No se construye en este sprint. En `origin/main` el constructor todavía puede fallar el build (`CS1003`: falta una coma tras `_ping` en `DispositivosController.cs`). Eso es backend (BE-25), no un parche de UI.
 

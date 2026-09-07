@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext, useParams } from 'react-router';
 import { getMaestro } from '@/features/catalogos/maestros';
 import { resolveUbicacionCoords } from '@/features/catalogos/ubicaciones/resolveUbicacionCoords';
 import * as paisService from '@/features/catalogos/paises/paisService';
+import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import { DetailOverlay } from '@/shared/components/DetailOverlay';
@@ -10,6 +11,7 @@ import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import { compactErrors } from '@/shared/components/recordFormUtils';
 import { StatusBadge } from '@/shared/components/StatusBadge';
 import { useResource } from '@/shared/hooks/useResource';
+import { toRedConocidaWriteError } from '@/features/catalogos/redesConocidas/redConocidaErrors';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 
@@ -24,6 +26,7 @@ function MaestroFormEditor({ slug, id }) {
   const empresas = useResource(empresaService.getAll);
   const sedes = useResource(sedeService.getAll);
   const paises = useResource(paisService.getAll);
+  const ubicaciones = useResource(ubicacionService.getAll);
   const editing = Boolean(id);
   const close = () => navigate(`/app/catalogos/${slug}`);
 
@@ -98,6 +101,7 @@ function MaestroFormEditor({ slug, id }) {
     empresas: enabledRecords(empresas.data),
     sedes: enabledRecords(sedes.data),
     paises: paises.data,
+    ubicaciones: enabledRecords(ubicaciones.data),
   };
   const initialValues = item ? maestro.toForm(item) : maestro.empty();
   const fields = maestro.fields(lookups);
@@ -130,7 +134,7 @@ function MaestroFormEditor({ slug, id }) {
           await outlet.reload?.();
           navigate(`/app/catalogos/${slug}/${saved.id}`);
         } catch (error) {
-          throw applyApiFieldErrors(error);
+          throw slug === 'redes-conocidas' ? toRedConocidaWriteError(error) : applyApiFieldErrors(error);
         }
       }}
       onClose={close}

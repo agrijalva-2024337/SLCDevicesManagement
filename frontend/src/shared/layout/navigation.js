@@ -7,6 +7,7 @@ export const catalogos = [
   { slug: 'categorias', label: 'Categorías', icon: 'pi pi-tags' },
   { slug: 'proveedores', label: 'Proveedores', icon: 'pi pi-truck' },
   { slug: 'ubicaciones', label: 'Ubicaciones', icon: 'pi pi-map' },
+  { slug: 'redes-conocidas', label: 'Redes conocidas', icon: 'pi pi-wifi' },
   { slug: 'paises', label: 'Países', icon: 'pi pi-globe' },
 ];
 
