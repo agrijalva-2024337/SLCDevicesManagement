@@ -1,10 +1,14 @@
 import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
+import { useAuth } from '@/features/auth/useAuth';
+import { JornadaFormOverlay } from '@/features/inventario/JornadaFormOverlay';
 import * as historicoInventarioService from '@/features/inventario/historicoInventarioService';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import { DataTable } from '@/shared/components/DataTable';
+import { RegisterButton } from '@/shared/components/RecordActions';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
+import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
 import { useResource } from '@/shared/hooks/useResource';
 import { byId, formatDate } from '@/shared/utils/format';
 
@@ -19,15 +23,23 @@ function hydrate(row, sedes) {
 
 export function JornadasPage() {
   const navigate = useNavigate();
+  const { canWrite } = useAuth();
+  const allowWrite = canWrite('inventario-fisico');
   const { idActiva } = useEmpresaActiva();
   const load = useCallback(
     () => historicoInventarioService.listar({ idEmpresa: idActiva || undefined }),
     [idActiva],
   );
-  const { rows, isLoading, errorMessage } = useCatalogCollection(load);
+  const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(load);
+  const crud = useCrudOverlay();
   const sedes = useResource(sedeService.getAll);
 
   const tableRows = useMemo(() => rows.map((row) => hydrate(row, sedes.data)), [rows, sedes.data]);
+  const sedesDeEmpresa = useMemo(() => {
+    if (idActiva == null || idActiva === '') return sedes.data ?? [];
+    return (sedes.data ?? []).filter((sede) => Number(sede.idEmpresa) === Number(idActiva));
+  }, [idActiva, sedes.data]);
+  const jornadasAbiertas = useMemo(() => rows.filter((row) => !row.cerrado), [rows]);
 
   const columns = useMemo(
     () => [
@@ -70,9 +82,20 @@ export function JornadasPage() {
 
   return (
     <section>
+      {banner ? (
+        <div
+          className={`app-feedback ${banner.variant === 'error' ? 'app-feedback--error' : 'app-feedback--empty'}`}
+          role={banner.variant === 'error' ? 'alert' : 'status'}
+        >
+          {banner.message}
+        </div>
+      ) : null}
       <DataTable
         title="Inventario físico"
         description="Jornadas de conteo por sede. La ubicación es agrupación de la hoja de trabajo, no un filtro del servidor."
+        primaryAction={
+          allowWrite ? <RegisterButton label="Abrir jornada" onClick={() => crud.openCreate()} /> : null
+        }
         columns={columns}
         rows={tableRows}
         loading={isLoading}
@@ -91,6 +114,24 @@ export function JornadasPage() {
         getRowActions={(row) => ({
           view: { onClick: () => navigate(`/app/inventario-fisico/${row.id}`) },
         })}
+      />
+      <JornadaFormOverlay
+        open={crud.isCreate}
+        sedes={sedesDeEmpresa}
+        jornadasAbiertas={jornadasAbiertas}
+        onClose={crud.close}
+        onSave={async (values) => {
+          const created = await historicoInventarioService.crear({
+            idSede: Number(values.idSede),
+            responsable: values.responsable,
+            fechaInicio: values.fechaInicio,
+            observaciones: values.observaciones,
+          });
+          setBanner({ message: 'Jornada abierta.', variant: 'empty' });
+          crud.close();
+          await reload();
+          navigate(`/app/inventario-fisico/${created.id}`);
+        }}
       />
     </section>
   );
