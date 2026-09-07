@@ -789,3 +789,60 @@ select.app-input {
 .theme-toggle--inverse:focus-visible {
   color: var(--text-on-inverse);
 }
+
+[data-theme='dark'] .app-overlay,
+[data-theme='dark'] .app-field,
+[data-theme='dark'] .app-switch-row,
+[data-theme='dark'] .data-table-toolbar,
+[data-theme='dark'] .dash-period {
+  color-scheme: dark;
+}
+
+[data-theme='dark'] .app-input,
+[data-theme='dark'] select.app-input,
+[data-theme='dark'] textarea.app-input {
+  color: var(--text);
+  background: var(--surface-muted);
+  color-scheme: dark;
+}
+
+[data-theme='dark'] .app-input:focus,
+[data-theme='dark'] select.app-input:focus,
+[data-theme='dark'] textarea.app-input:focus {
+  box-shadow:
+    0 0 0 1.5px var(--accent),
+    0 0 0 5px var(--accent-soft);
+}
+
+[data-theme='dark'] select option,
+[data-theme='dark'] select.app-input option,
+[data-theme='dark'] optgroup {
+  background-color: var(--surface-elevated);
+  color: var(--text);
+}
+
+[data-theme='dark'] .app-input:-webkit-autofill,
+[data-theme='dark'] .app-input:-webkit-autofill:hover,
+[data-theme='dark'] .app-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text);
+  box-shadow: 0 0 0 1000px var(--surface-muted) inset;
+  caret-color: var(--text);
+}
+
+[data-theme='dark'] .app-overlay {
+  background: var(--surface-elevated);
+  box-shadow: none;
+}
+
+[data-theme='dark'] .app-kanban {
+  background: var(--surface-elevated);
+  box-shadow: none;
+}
+
+[data-theme='dark'] .app-switch-knob {
+  background: #e8eaf4;
+}
+
+[data-theme='dark'] .app-feedback {
+  box-shadow: none;
+}

@@ -311,6 +311,36 @@
   color: var(--text-secondary);
 }
 
+[data-theme='dark'] .data-table-frame {
+  background: var(--surface-elevated);
+}
+
+[data-theme='dark'] .data-table th,
+[data-theme='dark'] .data-table th.data-td--sticky {
+  background: #191c25;
+}
+
+[data-theme='dark'] .data-td--sticky {
+  background: var(--surface-elevated);
+}
+
+[data-theme='dark'] .data-table:not(.data-table--expandable) tbody tr:nth-child(even) td,
+[data-theme='dark'] .data-table--expandable tbody tr:not(.data-table-expand-row):nth-child(4n + 1) td,
+[data-theme='dark'] .data-table:not(.data-table--expandable) tbody tr:nth-child(even) td.data-td--sticky,
+[data-theme='dark'] .data-table--expandable tbody tr:not(.data-table-expand-row):nth-child(4n + 1) td.data-td--sticky {
+  background: rgb(232 234 244 / 0.04);
+}
+
+[data-theme='dark'] .data-table tbody tr:hover td,
+[data-theme='dark'] .data-table tbody tr:hover td.data-td--sticky {
+  background: rgb(232 234 244 / 0.08);
+}
+
+[data-theme='dark'] .data-table-toolbar .app-input,
+[data-theme='dark'] .data-table-filter select {
+  color-scheme: dark;
+}
+
 .data-icon-btn:hover,
 .data-icon-btn:focus-visible {
   outline: none;
