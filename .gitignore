@@ -38,3 +38,4 @@ obj/
 *.suo
 .vs/
 appsettings.Development.json
+appsettings.json
