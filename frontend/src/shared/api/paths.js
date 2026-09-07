@@ -20,6 +20,8 @@ export const apiPaths = {
   categoriasActivo: '/api/CategoriasActivo',
   proveedores: '/api/Proveedores',
   ubicaciones: '/api/Ubicaciones',
+  // [API] ruta no confirmada: no hay RedesConocidasController; verificar contra Swagger
+  redesConocidas: '/api/RedesConocidas',
   activos: '/api/Activos',
   asignaciones: '/api/Asignaciones',
   historicosInventario: '/api/HistoricosInventario',

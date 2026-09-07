@@ -135,6 +135,13 @@
  * @property {number} latitud
  * @property {number} longitud
  *
+ * @typedef {object} RedConocidaDto
+ * Punto de acceso Wi-Fi conocido. No tiene `habilitado` (DELETE real, no disable).
+ * `bssid` es único, varchar(17), formato MAC `aa:bb:cc:dd:ee:ff`.
+ * @property {number} id
+ * @property {string} bssid
+ * @property {number} idUbicacion
+ *
  * @typedef {object} ActivoDto
  * @property {number} id
  * @property {number} idCategoriaActivo
