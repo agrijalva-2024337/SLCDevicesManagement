@@ -44,9 +44,10 @@ export const historialActivos = [
     idAsignacion: 5,
     idDetalleActivo: null,
     fechaHora: '2026-07-12T14:00:00',
-    tipoOperacion: 'Creacion',
+    tipoOperacion: 'Baja',
     descripcion: 'Baja de activo',
     informacionAnterior: null,
-    informacionNueva: 'Activo 5 dado de baja.',
+    informacionNueva:
+      'id_motivo_baja=2; documento_pdf_url=https://files.slc.local/bajas/HP-E24.pdf; id_autorizado_por=2; id_responsable=2',
   },
 ];
