@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHashService, PasswordHashService>();
         services.AddSingleton<IPasswordGenerator, PasswordGenerator>();
         services.AddSingleton<IDeviceTokenHashService, DeviceTokenHashService>();
+        services.AddSingleton<IPdfHashService, PdfHashService>();
         services.AddScoped<IAsignacionPdfService, AsignacionPdfService>();
         services.AddScoped<IAsignacionCorreoService, AsignacionCorreoService>();
 
