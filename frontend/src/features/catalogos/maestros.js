@@ -1,6 +1,7 @@
 import * as categoriaService from '@/features/catalogos/categorias/categoriaService';
 import * as paisService from '@/features/catalogos/paises/paisService';
 import * as proveedorService from '@/features/catalogos/proveedores/proveedorService';
+import * as redConocidaService from '@/features/catalogos/redesConocidas/redConocidaService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import * as areaService from '@/features/organizacion/areas/areaService';
 import { asOptions, optionalText, requireSelect, requireText } from '@/shared/components/recordFormUtils';
@@ -353,6 +354,61 @@ export const maestros = {
       { label: 'ISO 2', value: item.codigoIso2 },
       { label: 'ISO 3', value: item.codigoIso3 },
       { label: 'Código telefónico', value: item.codigoTelefonico },
+    ],
+  },
+  'redes-conocidas': {
+    service: redConocidaService,
+    hasHabilitado: false,
+    title: 'Redes conocidas',
+    singular: 'red conocida',
+    kicker: 'Red conocida',
+    registerLabel: 'Registrar red',
+    hint: 'El BSSID va en formato aa:bb:cc:dd:ee:ff y debe ser único. Si se elimina la ubicación, se eliminan también sus redes.',
+    description: 'Puntos de acceso Wi-Fi conocidos. El agente de rastreo los usa para inferir la ubicación de un equipo.',
+    titleOf: (item) => item.bssid,
+    facts: (item, lookups = {}) => [lookups.ubicacionNombres?.[item.idUbicacion]].filter(Boolean),
+    listView: {
+      emptyTitle: 'No hay redes conocidas',
+      emptyDescription: 'Registre el primer BSSID para mapearlo a una ubicación.',
+      columns: (lookups = {}) => [
+        { key: 'bssid', header: 'BSSID', primary: true, mono: true },
+        {
+          key: 'ubicacion',
+          header: 'Ubicación',
+          getValue: (item) => lookups.ubicacionNombres?.[item.idUbicacion] ?? '—',
+        },
+      ],
+    },
+    empty: () => ({ bssid: '', idUbicacion: '' }),
+    toForm: (item) => ({
+      bssid: item.bssid ?? '',
+      idUbicacion: String(item.idUbicacion ?? ''),
+    }),
+    fields: ({ ubicaciones } = {}) => [
+      { name: 'bssid', label: 'BSSID', required: true, maxLength: 17, wide: true },
+      {
+        name: 'idUbicacion',
+        label: 'Ubicación',
+        type: 'select',
+        required: true,
+        options: asOptions(ubicaciones ?? []),
+      },
+    ],
+    validate(values) {
+      return {
+        bssid: requireText(values.bssid, 'BSSID', 17),
+        idUbicacion: requireSelect(values.idUbicacion, 'una ubicación'),
+      };
+    },
+    toPayload(values) {
+      return {
+        bssid: values.bssid.trim(),
+        idUbicacion: Number(values.idUbicacion),
+      };
+    },
+    detail: (item, lookups = {}) => [
+      { label: 'BSSID', value: item.bssid },
+      { label: 'Ubicación', value: lookups.ubicacionNombres?.[item.idUbicacion] ?? '—' },
     ],
   },
 };
