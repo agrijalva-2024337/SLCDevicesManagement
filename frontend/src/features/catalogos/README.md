@@ -17,7 +17,7 @@ Empresas y sedes se registran **antes** de `:slug` en `src/app/routes.jsx`.
 
 Deep link de ficha: `/app/catalogos/areas/7` es un `:id` de ruta, no `?id=`.
 
-Slugs de `maestros.js`: `areas`, `categorias`, `proveedores`, `ubicaciones`, `paises`.
+Slugs de `maestros.js`: `areas`, `categorias`, `proveedores`, `ubicaciones`, `redes-conocidas`, `paises`.
 
 ## Configuración (`maestros.js`)
 
@@ -32,6 +32,7 @@ Lookups (`sedeNombre`, `empresaNombre`) no leen stores. `fields({ empresas, sede
 | `proveedores` | `proveedorService` | DataTable |
 | `ubicaciones` | `ubicacionService` | `UbicacionesMapPage` (tabla + Leaflet) |
 | `paises` | `paisService` | `PaisesGrid` (banderas `fi fi-${codigoIso2}`) |
+| `redes-conocidas` | `redConocidaService` | DataTable (BSSID + ubicación; sin `habilitado`) |
 
 Inactivar: switch `habilitado` en el formulario. `PaisDto` no tiene `habilitado`; no hay switch ni soft-delete. `CatalogoPage` usa `rows` (no el filtro `activos`) para países.
 
