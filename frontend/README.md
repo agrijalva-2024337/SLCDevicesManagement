@@ -87,9 +87,9 @@ El JWT trae `role` y `id_empresa`. `RutaProtegida` exige token en `/app`. Sin es
 
 | Perfil | Lectura | Escritura en UI |
 | --- | --- | --- |
-| Consulta | Catálogos | Ninguna |
-| Operador de inventario | Catálogos | Ubicaciones |
-| Administrador de empresa | Catálogos de su empresa | Sedes, áreas, categorías, proveedores; editar/inactivar empresa |
+| Consulta | Catálogos y módulos | Ninguna (acciones visibles, deshabilitadas) |
+| Operador de inventario | Catálogos | Ubicaciones, activos, asignaciones, traslados, mantenimientos, inventario físico |
+| Administrador de empresa | Catálogos de su empresa | Lo anterior + sedes, áreas, categorías, proveedores, bajas; editar/inactivar empresa |
 | Administrador general | Todo | Lo anterior + crear empresa + países |
 
 ### Empresa activa
@@ -121,12 +121,14 @@ Definidas en `src/app/routes.jsx` con `createBrowserRouter` + lazy. `App.jsx` mo
 | `/app/traslados` | Traslados (vista de `Asignacion` tipo Traslado) | Activa |
 | `/app/mantenimientos` | Mantenimientos (vista de `Asignacion` tipo Mantenimiento) | Activa |
 | `/app/bajas` | Bajas (vista de `Asignacion` tipo Baja) | Activa |
+| `/app/inventario-fisico` | Jornadas de inventario físico | Activa |
+| `/app/inventario-fisico/:id` | Hoja de conteo, hallazgos y diferencias | Activa |
 | `/app/bitacora` | Bitácora de auditoría, solo lectura | Activa |
 | `*` | 404 | Activa |
 
 Empresa y sede viven en `features/organizacion/`; el resto de maestros en `features/catalogos/` (`maestros.js` + `CatalogoPage`). Las URLs quedan bajo `/app/catalogos/...`. Deep link de ficha: `/app/catalogos/areas/7`. Países es grilla con banderas; ubicaciones es tabla + mapa. Detalle de la configuración: `src/features/catalogos/README.md`.
 
-Activos, asignaciones, traslados, mantenimientos, bajas y bitácora están habilitados en el sidebar. Inventario físico y reportes siguen deshabilitados. La bitácora no se muestra a Consulta ni a Operador.
+Activos, asignaciones, traslados, mantenimientos, bajas, inventario físico y bitácora están habilitados en el sidebar. Reportes sigue deshabilitado. La bitácora no se muestra a Consulta ni a Operador.
 
 ## Activos y asignaciones (FE-06)
 
@@ -193,6 +195,40 @@ Pendiente de Angel (`// [API]` en código):
 | `GET /api/TiposMantenimiento` | Mock Preventivo / Correctivo |
 | Bitácora: paginación y filtro por fecha | Filtro de fechas en cliente |
 
+## Inventario físico (FE-09)
+
+Jornadas de conteo por **sede**. La ubicación solo agrupa la hoja de trabajo; no viaja en el command de apertura.
+
+Flujo: abrir jornada → contar (hallazgos por activo, agrupados por ubicación) → cerrar → reporte de diferencias.
+
+| Acción | Contrato |
+| --- | --- |
+| Listar | `GET /api/HistoricosInventario` (`idSede`, `idEmpresa`, `soloAbiertos`) |
+| Abrir | `POST /api/HistoricosInventario` (`IdSede`, `Responsable` texto máx. 150, `FechaInicio`, `Observaciones` máx. 300) |
+| Cerrar | `POST /api/HistoricosInventario/{id}/cerrar?fechaCierre=` (query, no body) |
+| Diferencias | `GET /api/HistoricosInventario/{id}/diferencias` — `tipoDiferencia` exacto: `Faltante`, `NoEncontrado`, `MalEstado` |
+| Hallazgos | `POST/PUT/DELETE /api/DetallesActivo`. El PUT lleva `id` en ruta y en body. Update no cambia la fecha. |
+
+No hay `GET .../esperados`. El cliente replica `InventarioJornadaRules` en `activosEsperados.js`: ubicaciones de la sede → activos con esa `idUbicacion` → excluir dados de baja (`isActivoDeBaja`). Marcado `// [API]`.
+
+Una sola jornada abierta por sede. Duplicado: 400/409 *"Ya existe una jornada de inventario abierta para esta sede."* → error de campo en `idSede`. El cierre es irreversible; 409 *"La jornada de inventario ya esta cerrada."*
+
+Jornada cerrada: no se registran hallazgos (400), ni se editan (409) ni se eliminan (409). Las acciones de escritura se muestran deshabilitadas con el motivo, también para el perfil Consulta.
+
+Eliminar un hallazgo **sí borra** en el servidor el movimiento de verificación de ese detalle en `Historial_Activo`. La confirmación lo dice.
+
+Abierta = reporte de diferencias parcial. Cerrada = definitivo. Etiquetas y tonos salen de `tipoDiferencia.js`.
+
+Admin general debe mandar `idEmpresa` de la empresa activa: el filtro EF del JWT no aplica a ese rol.
+
+Operador de inventario o superior escribe. `Responsable` es texto libre, no el catálogo de responsables.
+
+Pendiente de Angel (`// [API]` en código):
+
+| Hueco | Qué hace el frontend mientras tanto |
+| --- | --- |
+| `GET /api/HistoricosInventario/{id}/esperados` | Replica las reglas de jornada en `activosEsperados.js` |
+
 ## Estructura de carpetas
 
 ```
@@ -210,7 +246,7 @@ frontend/src/
     catalogos/         maestros.js, CatalogoPage, categorias, proveedores, ubicaciones, paises
     activos/           ActivosPage, ficha, form, activoAcciones, historialActivoService
     asignaciones/      AsignacionesPage, form, asignacionService (entrega y devolver)
-    inventario/        TrasladosPage, trasladoService (POST /traslado)
+    inventario/        TrasladosPage, JornadasPage, hoja de conteo, historicoInventarioService, detalleActivoService
     mantenimientos/    MantenimientosPage, apertura, cierre, tipoMantenimientoService
     bajas/             BajasPage, BajaFormOverlay, bajaService, motivosBaja
   shared/
@@ -242,6 +278,7 @@ Los campos de cada catálogo coinciden con los DTOs de Application (camelCase): 
 | Activos, asignaciones, inventario | CRUD mock / API                       | Activos: alta y edición. Asignaciones: `entregar` + `devolver` |
 | Traslados / mantenimientos        | Vista + POST dedicados                | `/traslado`, `/mantenimiento`, `/finalizar-mantenimiento` |
 | Bajas                             | Vista + `POST /baja`                  | Motivo desde historial. MotivosBaja mock. |
+| Inventario físico                 | `historicoInventarioService`, `detalleActivoService` | Jornadas por sede, hallazgos, `POST {id}/cerrar`, `GET {id}/diferencias` |
 
 Hook `useResource(loadFn)` → `{ data, isLoading, errorMessage, reload }`.
 
@@ -251,7 +288,7 @@ Hook `useResource(loadFn)` → `{ data, isLoading, errorMessage, reload }`.
 
 Los catálogos usan `SchemaForm` y `app-feedback`. Ya no existen `Button`, `Badge`, `TextField`, `SelectField`, `TextareaField`, `CheckboxField`, `FormActions`, `AlertBanner`, `Modal`, `ConfirmDialog`, `HabilitadoFilter` ni `CatalogRowActions`.
 
-`DataTable.columns[]`: `{ key, header, getValue, render, sortValue, primary, numeric, mono, truncate, sticky, type: 'status' | 'badge', … }`.
+`DataTable.columns[]`: `{ key, header, getValue, render, sortValue, primary, numeric, mono, truncate, sticky, type: 'status' | 'badge', … }`. Acciones de fila: `view`, `create`, `edit`, `remove` (`enabled` + `disabledReason`).
 
 `SchemaForm.fields[]`: `{ name, label, type, required, maxLength, wide, hint, placeholder, options, rows, step, min, autoComplete }`.
 
