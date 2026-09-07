@@ -613,6 +613,43 @@
   display: block;
 }
 
+.landing-plataforma-foot {
+  margin-top: 2.75rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.landing-plataforma-foot-title {
+  margin: 0;
+  color: var(--color-navy);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.landing-plataforma-foot-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-plataforma-foot-links a {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
+.landing-plataforma-foot-links a:hover {
+  color: var(--color-navy);
+}
+
+.landing-plataforma-foot-legal {
+  margin: 1.25rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
 .landing-soporte {
   background: var(--color-lavender);
 }

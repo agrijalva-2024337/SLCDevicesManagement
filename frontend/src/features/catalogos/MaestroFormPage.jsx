@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router';
 import { getMaestro } from '@/features/catalogos/maestros';
+import { resolveUbicacionCoords } from '@/features/catalogos/ubicaciones/resolveUbicacionCoords';
 import * as paisService from '@/features/catalogos/paises/paisService';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
@@ -117,7 +118,11 @@ function MaestroFormEditor({ slug, id }) {
       submitLabel={editing ? 'Guardar cambios' : maestro.registerLabel}
       validate={(values) => compactErrors(maestro.validate(values, records, id))}
       onSave={async (values) => {
-        const payload = maestro.toPayload(values);
+        let payload = maestro.toPayload(values);
+        if (slug === 'ubicaciones') {
+          const sedeNombre = sedes.data.find((sede) => Number(sede.id) === Number(payload.idSede))?.nombre;
+          payload = await resolveUbicacionCoords(payload, sedeNombre);
+        }
         try {
           const saved = editing
             ? await maestro.service.update(Number(id), payload)

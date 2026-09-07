@@ -23,22 +23,7 @@ export const footerContent = {
         { label: 'Capacidades', href: '#plataforma' },
         { label: 'Soporte de TI', href: '#soporte' },
         { label: 'Panel de control', href: '/app' },
-      ],
-    },
-    {
-      titulo: 'Acceso',
-      enlaces: [
         { label: 'Iniciar sesión', href: '/login' },
-        { label: 'Ver demo', href: '/app' },
-        { label: 'Volver al inicio', href: '#inicio' },
-      ],
-    },
-    {
-      titulo: 'Contacto TI',
-      enlaces: [
-        { label: 'ti@slc.example', href: 'mailto:ti@slc.example' },
-        { label: '+502 0000 0000', href: 'tel:+50200000000' },
-        { label: 'Lun–Vie, 8:00 a 17:00', href: '#soporte' },
       ],
     },
   ],

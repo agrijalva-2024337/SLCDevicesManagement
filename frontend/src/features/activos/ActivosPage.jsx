@@ -9,6 +9,7 @@ import {
   getAccionesDisponibles,
 } from '@/features/activos/activoAcciones';
 import * as activoService from '@/features/activos/activoService';
+import { activosVistaPath } from '@/features/activos/activosVistas';
 import * as asignacionService from '@/features/asignaciones/asignacionService';
 import * as categoriaService from '@/features/catalogos/categorias/categoriaService';
 import * as proveedorService from '@/features/catalogos/proveedores/proveedorService';
@@ -123,7 +124,7 @@ export function ActivosPage() {
       return;
     }
     if (action.key === 'assign') {
-      navigate('/app/asignaciones', { state: { idActivo: activo.id } });
+      navigate(activosVistaPath('asignaciones'), { state: { idActivo: activo.id } });
       return;
     }
     if (action.key === 'transfer') {
@@ -186,7 +187,6 @@ export function ActivosPage() {
         initialFilters={estadoInicial ? { estadoNombre: estadoInicial } : undefined}
         emptyTitle="No hay activos"
         emptyDescription="Registre el primer activo para armar el parque."
-        expandable
         renderRowActions={(row) => (
           <RowIconActions
             actions={
@@ -214,7 +214,7 @@ export function ActivosPage() {
         canRetire={canRetire}
         onClose={crud.close}
         onEditar={(activo) => crud.openEdit(activo)}
-        onAsignar={(activo) => navigate('/app/asignaciones', { state: { idActivo: activo.id } })}
+        onAsignar={(activo) => navigate(activosVistaPath('asignaciones'), { state: { idActivo: activo.id } })}
         onTrasladar={(activo) => setMovimiento({ tipo: 'traslado', idActivo: activo.id })}
         onMantenimiento={(activo) => setMovimiento({ tipo: 'mantenimiento', idActivo: activo.id })}
         onRetirar={(activo) => setMovimiento({ tipo: 'baja', idActivo: activo.id })}

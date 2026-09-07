@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router';
 import {
   FiBarChart2,
   FiBook,
@@ -10,6 +11,7 @@ import {
   FiXCircle,
 } from 'react-icons/fi';
 import { TypeLine } from '@/features/landing/components/TypeLine';
+import { footerContent } from '@/features/landing/data/contenido';
 import { modulos, modulosIntro } from '@/features/landing/data/modulos';
 import { Reveal } from '@/shared/components/Reveal';
 import { usePrefersReducedMotion } from '@/shared/hooks/usePrefersReducedMotion';
@@ -92,6 +94,30 @@ export function PlataformaSection() {
             </div>
           </div>
         </Reveal>
+
+        <footer className="landing-plataforma-foot">
+          {footerContent.columnas.map((columna) => (
+            <div key={columna.titulo}>
+              <p className="landing-plataforma-foot-title">{columna.titulo}</p>
+              <ul className="landing-plataforma-foot-links">
+                {columna.enlaces.map((enlace) => (
+                  <li key={enlace.label}>
+                    {enlace.href.startsWith('/') ? (
+                      <Link to={enlace.href}>{enlace.label}</Link>
+                    ) : (
+                      <a href={enlace.href}>{enlace.label}</a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          <p className="landing-plataforma-foot-legal">
+            {footerContent.copyright}
+            <span> · </span>
+            {footerContent.legal}
+          </p>
+        </footer>
       </div>
     </section>
   );

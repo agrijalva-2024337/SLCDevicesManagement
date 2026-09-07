@@ -103,7 +103,7 @@ Cubrir empresas, sedes, áreas, categorías, proveedores, ubicaciones y países.
 | MAN-01 | Activo no de baja | Abrir mantenimiento preventivo o correctivo | `POST /api/Asignaciones/mantenimiento` | P-OP |
 | MAN-02 | Orden abierta | Finalizar | `POST /api/Asignaciones/{id}/finalizar-mantenimiento` | P-OP |
 | MAN-03 | Activo de baja | Abrir mantenimiento | UI deshabilitada; el servidor rechaza | P-OP |
-| MAN-04 | Hay abiertos | `/app/mantenimientos?abiertos=1` | Solo órdenes abiertas | P-OP |
+| MAN-04 | Hay abiertos | `/app/activos?vista=mantenimientos&abiertos=1` | Solo órdenes abiertas | P-OP |
 | MAN-05 | P-CO | Registrar / finalizar | Sin escritura | P-CO |
 
 ---
@@ -160,8 +160,8 @@ Cubrir empresas, sedes, áreas, categorías, proveedores, ubicaciones y países.
 | DAS-03 | P-AG | Cambiar empresa activa | Todos los paneles recargan con `idEmpresa` | P-AG |
 | DAS-04 | Hay categorías | Clic en una barra | Va a `/app/reportes/activos?idCategoriaActivo=` | P-AE |
 | DAS-05 | Widget Disponibles | Clic | `/app/activos?estado=Disponible` | P-AE |
-| DAS-06 | Widget mantenimiento | Clic | `/app/mantenimientos?abiertos=1` | P-AE |
-| DAS-07 | Widget bajas | Clic | `/app/bajas` | P-AE |
+| DAS-06 | Widget mantenimiento | Clic | `/app/activos?vista=mantenimientos&abiertos=1` | P-AE |
+| DAS-07 | Widget bajas | Clic | `/app/activos?vista=bajas` | P-AE |
 | DAS-08 | Diferencia de jornada cerrada | Clic en el grupo | `/app/inventario-fisico/:id` | P-AE |
 | DAS-09 | Garantías | Cambiar 30 / 60 / 90 | Nueva petición `dias`; tono ≤7 danger, ≤30 warning | P-AE |
 | DAS-10 | P-CO | Abrir `/app` | Lectura; los widgets navegan | P-CO |

@@ -345,14 +345,15 @@ export function DataTable({
   });
   const [expandedId, setExpandedId] = useState(null);
   const expandIdPrefix = useId();
-  const canExpand = Boolean(expandable) || typeof getRowActions === 'function';
+  const canExpand = Boolean(expandable) || typeof renderExpandedContent === 'function';
+  const withInlineActions =
+    typeof getRowActions === 'function' || typeof renderRowActions === 'function';
 
   const displayColumns = useMemo(() => withStickyOffsets(expandColumns(columns)), [columns]);
   const toolbarFilters = useMemo(
     () => normalizeFilters(statusFilter, filters),
     [statusFilter, filters],
   );
-  const withInlineActions = typeof getRowActions === 'function' && !canExpand;
   const activeSortKey = onSortChange ? sortKey : internalSort.key;
   const activeSortDirection = onSortChange ? sortDirection : internalSort.direction;
   const currentPage = onPageChange ? (page ?? 1) : internalPage;
@@ -579,7 +580,7 @@ export function DataTable({
                   );
                 })}
                 {withInlineActions ? (
-                  <th scope="col" data-align="right">
+                  <th scope="col" className="data-th-actions" data-align="right">
                     Acciones
                   </th>
                 ) : null}
@@ -634,6 +635,18 @@ export function DataTable({
                             </td>
                           );
                         })}
+                        {withInlineActions ? (
+                          <td className="data-td-actions" data-slot="actions" data-label="Acciones" data-align="right">
+                            {typeof renderRowActions === 'function' ? (
+                              renderRowActions(row)
+                            ) : iconActions.length ? (
+                              <RowIconActions
+                                actions={iconActions}
+                                onAction={(action) => action.onClick?.()}
+                              />
+                            ) : null}
+                          </td>
+                        ) : null}
                       </tr>
                       {canExpand ? (
                         <tr className={`data-table-expand-row${open ? ' is-open' : ''}`} aria-hidden={!open}>
@@ -646,16 +659,6 @@ export function DataTable({
                             >
                               <div className="data-table-expand-inner">
                                 <div className="data-table-expand-panel">
-                                  {typeof renderRowActions === 'function' ? (
-                                    <div className="data-table-expand-actions">{renderRowActions(row)}</div>
-                                  ) : iconActions.length ? (
-                                    <div className="data-table-expand-actions">
-                                      <RowIconActions
-                                        actions={iconActions}
-                                        onAction={(action) => action.onClick?.()}
-                                      />
-                                    </div>
-                                  ) : null}
                                   {typeof renderExpandedContent === 'function'
                                     ? renderExpandedContent(row)
                                     : null}

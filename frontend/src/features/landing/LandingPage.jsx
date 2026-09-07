@@ -1,5 +1,4 @@
 import { BandaLineas } from '@/features/landing/components/BandaLineas';
-import { LandingFooter } from '@/features/landing/components/LandingFooter';
 import { LandingHeader } from '@/features/landing/components/LandingHeader';
 import { HeroSection } from '@/features/landing/sections/HeroSection';
 import { PlataformaSection } from '@/features/landing/sections/PlataformaSection';
@@ -22,7 +21,6 @@ export function LandingPage() {
         <PlataformaSection />
         <SoporteSection />
       </main>
-      <LandingFooter />
     </div>
   );
 }

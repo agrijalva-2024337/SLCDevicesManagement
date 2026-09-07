@@ -18,11 +18,7 @@ const loadAppLayout = () => import('@/shared/layout/AppLayout');
 const loadEmpresas = () => import('@/features/organizacion/empresas/EmpresasPage');
 const loadSedes = () => import('@/features/organizacion/sedes/SedesPage');
 const loadCatalogo = () => import('@/features/catalogos/CatalogoPage');
-const loadTraslados = () => import('@/features/inventario/TrasladosPage');
-const loadMantenimientos = () => import('@/features/mantenimientos/MantenimientosPage');
-const loadActivos = () => import('@/features/activos/ActivosPage');
-const loadAsignaciones = () => import('@/features/asignaciones/AsignacionesPage');
-const loadBajas = () => import('@/features/bajas/BajasPage');
+const loadActivosHub = () => import('@/features/activos/ActivosHubPage');
 const loadBitacora = () => import('@/features/organizacion/bitacoras/BitacoraPage');
 const loadJornadas = () => import('@/features/inventario/JornadasPage');
 const loadJornadaDetalle = () => import('@/features/inventario/JornadaDetallePage');
@@ -72,11 +68,11 @@ export const router = createBrowserRouter([
             ...named(loadCatalogo, 'CatalogoPage'),
             children: writeChildren(loadCatalogo, 'MaestroFormPage', 'MaestroDetallePage'),
           },
-          { path: 'activos', ...named(loadActivos, 'ActivosPage') },
-          { path: 'asignaciones', ...named(loadAsignaciones, 'AsignacionesPage') },
-          { path: 'traslados', ...named(loadTraslados, 'TrasladosPage') },
-          { path: 'mantenimientos', ...named(loadMantenimientos, 'MantenimientosPage') },
-          { path: 'bajas', ...named(loadBajas, 'BajasPage') },
+          { path: 'activos', ...named(loadActivosHub, 'ActivosHubPage') },
+          { path: 'asignaciones', ...named(loadActivosHub, 'RedirectToActivosVista') },
+          { path: 'traslados', ...named(loadActivosHub, 'RedirectToActivosVista') },
+          { path: 'mantenimientos', ...named(loadActivosHub, 'RedirectToActivosVista') },
+          { path: 'bajas', ...named(loadActivosHub, 'RedirectToActivosVista') },
           { path: 'inventario-fisico', ...named(loadJornadas, 'JornadasPage') },
           { path: 'inventario-fisico/:id', ...named(loadJornadaDetalle, 'JornadaDetallePage') },
           { path: 'reportes', ...named(loadReportes, 'ReportesPage') },

@@ -1,19 +1,17 @@
+import { titleForActivosVista } from '@/features/activos/activosVistas';
+
 export const catalogos = [
   { slug: 'empresas', label: 'Empresas', icon: 'pi pi-building' },
-  { slug: 'sedes', label: 'Sedes' },
-  { slug: 'areas', label: 'Áreas' },
-  { slug: 'categorias', label: 'Categorías' },
-  { slug: 'proveedores', label: 'Proveedores' },
-  { slug: 'ubicaciones', label: 'Ubicaciones' },
-  { slug: 'paises', label: 'Países' },
+  { slug: 'sedes', label: 'Sedes', icon: 'pi pi-map-marker' },
+  { slug: 'areas', label: 'Áreas', icon: 'pi pi-th-large' },
+  { slug: 'categorias', label: 'Categorías', icon: 'pi pi-tags' },
+  { slug: 'proveedores', label: 'Proveedores', icon: 'pi pi-truck' },
+  { slug: 'ubicaciones', label: 'Ubicaciones', icon: 'pi pi-map' },
+  { slug: 'paises', label: 'Países', icon: 'pi pi-globe' },
 ];
 
 export const modulosApp = [
   { path: '/app/activos', label: 'Activos', icon: 'pi pi-box' },
-  { path: '/app/asignaciones', label: 'Asignaciones', icon: 'pi pi-users' },
-  { path: '/app/traslados', label: 'Traslados', icon: 'pi pi-arrow-right-arrow-left' },
-  { path: '/app/mantenimientos', label: 'Mantenimientos', icon: 'pi pi-wrench' },
-  { path: '/app/bajas', label: 'Bajas', icon: 'pi pi-times-circle' },
   { path: '/app/inventario-fisico', label: 'Inventario físico', icon: 'pi pi-clipboard' },
   { path: '/app/bitacora', label: 'Bitácora', icon: 'pi pi-history', adminOnly: true },
   { path: '/app/reportes', label: 'Reportes', icon: 'pi pi-chart-bar' },
@@ -28,6 +26,7 @@ export const navigation = [
     children: catalogos.map((item) => ({
       path: `/app/catalogos/${item.slug}`,
       label: item.label,
+      icon: item.icon,
       disabled: item.disabled,
     })),
   },
@@ -46,7 +45,14 @@ export const pageTitles = {
   ...moduloTitles,
 };
 
-export function getPageTitle(pathname) {
+export function getPageTitle(pathname, search = '') {
+  if (pathname === '/app/activos' || pathname.startsWith('/app/activos')) {
+    return titleForActivosVista(new URLSearchParams(search).get('vista'));
+  }
+  if (pathname.startsWith('/app/asignaciones')) return 'Asignaciones';
+  if (pathname.startsWith('/app/traslados')) return 'Traslados';
+  if (pathname.startsWith('/app/mantenimientos')) return 'Mantenimientos';
+  if (pathname.startsWith('/app/bajas')) return 'Bajas';
   if (pageTitles[pathname]) {
     return pageTitles[pathname];
   }
@@ -93,12 +99,11 @@ export function getPageKicker(pathname) {
     pathname.startsWith('/app/activos') ||
     pathname.startsWith('/app/asignaciones') ||
     pathname.startsWith('/app/traslados') ||
+    pathname.startsWith('/app/mantenimientos') ||
+    pathname.startsWith('/app/bajas') ||
     pathname.startsWith('/app/inventario-fisico')
   ) {
     return 'Inventario';
-  }
-  if (pathname.startsWith('/app/mantenimientos') || pathname.startsWith('/app/bajas')) {
-    return 'Operaciones';
   }
   if (pathname.startsWith('/app/bitacora')) return 'Auditoría';
   if (pathname.startsWith('/app/reportes')) return 'Informes';
