@@ -190,7 +190,7 @@ export function TrasladosPage() {
             idUsuario: usuario?.id,
             idResponsable: Number(values.idResponsable),
             fecha: values.fecha,
-            observaciones: values.observaciones,
+            motivo: values.motivo,
           });
           setBanner({ message: 'Traslado registrado.', variant: 'empty' });
           crud.close();

@@ -8,10 +8,20 @@ import {
   parseTrasladoRuta,
 } from '@/features/inventario/trasladoRuta';
 import { ESTADO_ACTIVO, TIPO_ASIGNACION, getIdEstado, getIdTipoAsignacion } from '@/shared/api/tipoAsignacion';
+import { apiPaths } from '@/shared/api/paths';
 import { env } from '@/shared/config/env';
+import httpClient from '@/shared/services/httpClient';
+import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { byId } from '@/shared/utils/format';
 
 export { parseTrasladoRuta };
+
+function idFromCreated(response, fallback) {
+  const data = response?.data;
+  if (typeof data === 'object' && data?.id != null) return Number(data.id);
+  const n = Number(data);
+  return Number.isFinite(n) ? n : fallback;
+}
 
 async function filtrarPorTipo(nombreTipo) {
   const idTipo = await getIdTipoAsignacion(nombreTipo);
@@ -38,26 +48,42 @@ export async function leerOrigen(idActivo) {
   };
 }
 
-/**
- * Punto de conexión BE-16.
- * Hoy: POST /api/Asignaciones (CreateAsignacionCommand ya recibe idUbicacion).
- * Cuando exista POST /api/Asignaciones/traslado, cambiar solo el cuerpo de `persistir`.
- */
-async function persistir(payload) {
-  return asignacionService.create(payload);
+async function persistir(command) {
+  if (env.useApiMock) {
+    return asignacionService.create({
+      idActivo: command.idActivo,
+      idUsuario: command.idUsuario,
+      idResponsable: command.idResponsable,
+      idEstado: command.idEstado,
+      idTipoAsignacion: await getIdTipoAsignacion(TIPO_ASIGNACION.Traslado),
+      fechaAsignacion: command.fechaAsignacion,
+      fechaDevolucion: command.fechaAsignacion,
+      activa: false,
+      observaciones: command.observaciones,
+      documentoPdfUrl: null,
+      idUbicacion: command.idUbicacionDestino,
+    });
+  }
+
+  try {
+    const response = await httpClient.post(`${apiPaths.asignaciones}/traslado`, command);
+    return { id: idFromCreated(response, null), ...command };
+  } catch (error) {
+    throw applyApiFieldErrors(error);
+  }
 }
 
-async function aplicarEfectosMock({ activo, idUbicacionDestino, idAsignacion }) {
+async function aplicarEfectosMock({ activo, idUbicacionDestino, idAsignacion, motivo }) {
   if (!env.useApiMock) return;
   await activoService.update(activo.id, { idUbicacion: idUbicacionDestino });
   await historialActivoService.registrarMovimientoMock({
     idAsignacion,
     idDetalleActivo: null,
     fechaHora: new Date().toISOString(),
-    tipoOperacion: 'Creacion',
+    tipoOperacion: 'Traslado',
     descripcion: 'Traslado de activo',
-    informacionAnterior: `idUbicacion=${activo.idUbicacion ?? ''}`,
-    informacionNueva: `idUbicacion=${idUbicacionDestino}`,
+    informacionAnterior: `id_ubicacion=${activo.idUbicacion ?? ''}`,
+    informacionNueva: `id_ubicacion=${idUbicacionDestino}; motivo=${motivo ?? ''}`,
   });
 }
 
@@ -67,9 +93,8 @@ export async function registrar({
   idUsuario,
   idResponsable,
   fecha,
-  observaciones,
+  motivo,
 }) {
-  const idTipoAsignacion = await getIdTipoAsignacion(TIPO_ASIGNACION.Traslado);
   const idEstado = await getIdEstado(ESTADO_ACTIVO.Asignado);
   const { activo, origenNombre, idUbicacionOrigen } = await leerOrigen(idActivo);
 
@@ -82,10 +107,10 @@ export async function registrar({
   const ubicaciones = await ubicacionService.getAll();
   const destino = byId(ubicaciones, idUbicacionDestino);
   const destinoNombre = nombreUbicacion(destino);
-  const texto = formatTrasladoObservaciones({
+  const observaciones = formatTrasladoObservaciones({
     origen: origenNombre,
     destino: destinoNombre,
-    detalle: observaciones,
+    detalle: '',
   });
 
   const created = await persistir({
@@ -93,19 +118,17 @@ export async function registrar({
     idUsuario: Number(idUsuario),
     idResponsable: Number(idResponsable),
     idEstado,
-    idTipoAsignacion,
+    idUbicacionDestino: Number(idUbicacionDestino),
     fechaAsignacion: fecha,
-    fechaDevolucion: null,
-    activa: true,
-    observaciones: texto,
-    documentoPdfUrl: null,
-    idUbicacion: Number(idUbicacionDestino),
+    motivo: String(motivo ?? '').trim() || null,
+    observaciones,
   });
 
   await aplicarEfectosMock({
     activo,
     idUbicacionDestino: Number(idUbicacionDestino),
     idAsignacion: created.id,
+    motivo: String(motivo ?? '').trim() || null,
   });
 
   return created;

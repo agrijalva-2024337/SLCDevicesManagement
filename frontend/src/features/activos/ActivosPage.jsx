@@ -21,6 +21,7 @@ import { empresaIdDeActivo, nombreUbicacion } from '@/features/inventario/trasla
 import * as trasladoService from '@/features/inventario/trasladoService';
 import { MantenimientoFormOverlay } from '@/features/mantenimientos/MantenimientoFormOverlay';
 import * as mantenimientoService from '@/features/mantenimientos/mantenimientoService';
+import * as tipoMantenimientoService from '@/features/mantenimientos/tipoMantenimientoService';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import * as estadoService from '@/features/organizacion/estados/estadoService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
@@ -66,6 +67,7 @@ export function ActivosPage() {
   const asignaciones = useResource(asignacionService.getAll);
   const usuarios = useResource(usuarioService.getAll);
   const motivos = useResource(motivoBajaService.getAll);
+  const tiposMantenimiento = useResource(tipoMantenimientoService.getAll);
 
   const ctx = useMemo(
     () => ({ asignaciones: asignaciones.data, tipos: tipos.data, estados: estados.data, canRetire }),
@@ -258,7 +260,7 @@ export function ActivosPage() {
             idUsuario: usuario?.id,
             idResponsable: Number(values.idResponsable),
             fecha: values.fecha,
-            observaciones: values.observaciones,
+            motivo: values.motivo,
           });
           setBanner({ message: 'Traslado registrado desde la ficha.' });
           setMovimiento(null);
@@ -274,6 +276,7 @@ export function ActivosPage() {
         ubicaciones={ubicaciones.data}
         sedes={sedes.data}
         responsables={responsables.data}
+        tiposMantenimiento={tiposMantenimiento.data}
         asignaciones={asignaciones.data}
         tipos={tipos.data}
         onClose={() => setMovimiento(null)}
@@ -284,6 +287,8 @@ export function ActivosPage() {
             idResponsable: Number(values.idResponsable),
             fecha: values.fecha,
             observaciones: values.observaciones,
+            idTipoMantenimiento: Number(values.idTipoMantenimiento),
+            descripcionProblema: values.descripcionProblema,
           });
           setBanner({ message: 'Mantenimiento abierto desde la ficha.' });
           setMovimiento(null);

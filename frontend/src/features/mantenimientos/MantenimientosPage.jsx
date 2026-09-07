@@ -4,8 +4,10 @@ import { useAuth } from '@/features/auth/useAuth';
 import * as activoService from '@/features/activos/activoService';
 import * as asignacionService from '@/features/asignaciones/asignacionService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
+import { MantenimientoCierreOverlay } from '@/features/mantenimientos/MantenimientoCierreOverlay';
 import { MantenimientoFormOverlay } from '@/features/mantenimientos/MantenimientoFormOverlay';
 import * as mantenimientoService from '@/features/mantenimientos/mantenimientoService';
+import * as tipoMantenimientoService from '@/features/mantenimientos/tipoMantenimientoService';
 import * as estadoService from '@/features/organizacion/estados/estadoService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
@@ -49,8 +51,9 @@ export function MantenimientosPage() {
   const load = useCallback(() => mantenimientoService.listar(), []);
   const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(load);
   const crud = useCrudOverlay();
-  const [closing, setClosing] = useState(false);
+  const [cierreOpen, setCierreOpen] = useState(false);
   const activos = useResource(activoService.getAll);
+  const tiposMantenimiento = useResource(tipoMantenimientoService.getAll);
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
   const estados = useResource(estadoService.getAll);
@@ -186,7 +189,10 @@ export function MantenimientosPage() {
             />
           ) : null
         }
-        onClose={crud.close}
+        onClose={() => {
+          setCierreOpen(false);
+          crud.close();
+        }}
       >
         {crud.record ? (
           <div className="grid gap-4 sm:grid-cols-2">
@@ -204,22 +210,10 @@ export function MantenimientosPage() {
                 <button
                   type="button"
                   className="app-btn app-btn--primary"
-                  disabled={closing}
-                  onClick={async () => {
-                    setClosing(true);
-                    try {
-                      await mantenimientoService.finalizar(crud.record.id);
-                      setBanner({ message: 'Mantenimiento finalizado. El activo vuelve a Disponible.', variant: 'empty' });
-                      crud.close();
-                      await reload();
-                      await activos.reload();
-                    } finally {
-                      setClosing(false);
-                    }
-                  }}
+                  onClick={() => setCierreOpen(true)}
                 >
                   <i className="pi pi-check" aria-hidden="true" />
-                  {closing ? 'Finalizando…' : 'Finalizar mantenimiento'}
+                  Finalizar mantenimiento
                 </button>
               </div>
             ) : null}
@@ -234,6 +228,7 @@ export function MantenimientosPage() {
         ubicaciones={lookups.ubicaciones}
         sedes={lookups.sedes}
         responsables={lookups.responsables}
+        tiposMantenimiento={tiposMantenimiento.data}
         asignaciones={asignacionesAll.data}
         tipos={tipos.data}
         onClose={crud.close}
@@ -244,8 +239,30 @@ export function MantenimientosPage() {
             idResponsable: Number(values.idResponsable),
             fecha: values.fecha,
             observaciones: values.observaciones,
+            idTipoMantenimiento: Number(values.idTipoMantenimiento),
+            descripcionProblema: values.descripcionProblema,
           });
           setBanner({ message: 'Mantenimiento abierto.', variant: 'empty' });
+          crud.close();
+          await reload();
+          await activos.reload();
+        }}
+      />
+
+      <MantenimientoCierreOverlay
+        open={cierreOpen && crud.isView}
+        record={crud.record}
+        onClose={() => setCierreOpen(false)}
+        onSave={async (values) => {
+          await mantenimientoService.finalizar(crud.record.id, {
+            trabajoRealizado: values.trabajoRealizado,
+            costo: values.costo,
+            numeroFactura: values.numeroFactura,
+            fechaDevolucion: values.fechaDevolucion,
+            observaciones: values.observaciones,
+          });
+          setBanner({ message: 'Mantenimiento finalizado. El activo vuelve a Disponible.', variant: 'empty' });
+          setCierreOpen(false);
           crud.close();
           await reload();
           await activos.reload();

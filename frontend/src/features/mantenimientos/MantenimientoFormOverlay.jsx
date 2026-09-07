@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { isActivoDeBaja, isActivoEnMantenimiento } from '@/features/activos/activoAcciones';
 import { nombreUbicacion } from '@/features/inventario/trasladoRuta';
 import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
-import { asOptions, compactErrors, optionalText, requireSelect } from '@/shared/components/recordFormUtils';
+import { asOptions, compactErrors, optionalText, requireSelect, requireText } from '@/shared/components/recordFormUtils';
 import { byId } from '@/shared/utils/format';
 
 function todayIsoDate() {
@@ -23,6 +23,7 @@ export function MantenimientoFormOverlay({
   ubicaciones,
   sedes,
   responsables,
+  tiposMantenimiento = [],
   asignaciones = [],
   tipos = [],
   onSave,
@@ -45,6 +46,8 @@ export function MantenimientoFormOverlay({
       sede: idActivo ? sedeDeActivo(activo, ubicaciones, sedes) : '',
       idResponsable: prefill?.idResponsable ? String(prefill.idResponsable) : '',
       fecha: todayIsoDate(),
+      idTipoMantenimiento: '',
+      descripcionProblema: '',
       observaciones: '',
     };
   }, [activos, prefill, sedes, ubicaciones]);
@@ -78,15 +81,30 @@ export function MantenimientoFormOverlay({
       },
       { name: 'fecha', label: 'Fecha de apertura', type: 'date', required: true },
       {
+        name: 'idTipoMantenimiento',
+        label: 'Tipo de mantenimiento',
+        type: 'select',
+        required: true,
+        options: asOptions(tiposMantenimiento ?? []),
+        hint: 'Catálogo Preventivo / Correctivo. [API] GET /api/TiposMantenimiento aún no existe.',
+      },
+      {
+        name: 'descripcionProblema',
+        label: 'Descripción del problema',
+        type: 'textarea',
+        required: true,
+        maxLength: 300,
+        wide: true,
+      },
+      {
         name: 'observaciones',
-        label: 'Detalle',
+        label: 'Observaciones',
         type: 'textarea',
         maxLength: 300,
         wide: true,
-        hint: 'El DTO no tiene tipo preventivo/correctivo. Si aplica, descríbalo aquí.',
       },
     ],
-    [activos, activosElegibles, lockActivo, responsables],
+    [activos, activosElegibles, lockActivo, responsables, tiposMantenimiento],
   );
 
   return (
@@ -95,7 +113,7 @@ export function MantenimientoFormOverlay({
       open={open}
       title="Abrir mantenimiento"
       kicker="Operaciones"
-      hint="Se registra como una asignación de tipo Mantenimiento. BE-17 cambia el estado del activo mientras dura."
+      hint="Se registra con POST /api/Asignaciones/mantenimiento. El tipo y la descripción del problema son obligatorios."
       fields={fields}
       initialValues={initialValues}
       deriveValues={(next) => {
@@ -111,7 +129,9 @@ export function MantenimientoFormOverlay({
           idActivo: requireSelect(values.idActivo, 'un activo'),
           idResponsable: requireSelect(values.idResponsable, 'un responsable'),
           fecha: requireSelect(values.fecha, 'una fecha'),
-          observaciones: optionalText(values.observaciones, 'detalle', 300),
+          idTipoMantenimiento: requireSelect(values.idTipoMantenimiento, 'un tipo de mantenimiento'),
+          descripcionProblema: requireText(values.descripcionProblema, 'descripcion del problema', 300),
+          observaciones: optionalText(values.observaciones, 'observaciones', 300),
         };
         if (activo && isActivoDeBaja(activo, ctx)) {
           errors.idActivo = 'El activo está dado de baja. No se traslada ni se envía a mantenimiento.';
