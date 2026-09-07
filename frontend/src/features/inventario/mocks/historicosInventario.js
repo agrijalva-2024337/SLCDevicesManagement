@@ -1,7 +1,7 @@
 export const historicosInventario = [
   {
     id: 1,
-    idSede: 1,
+    idSede: 3,
     cerrado: true,
     responsable: 'Miguel Ángel Pérez',
     fechaInicio: '2026-06-01',
