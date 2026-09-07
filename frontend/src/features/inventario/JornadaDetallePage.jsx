@@ -14,6 +14,7 @@ import { FeedbackState } from '@/shared/components/FeedbackState';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { StatCard } from '@/shared/components/StatCard';
 import { StatusBadge } from '@/shared/components/StatusBadge';
+import { Tooltip } from '@/shared/components/Tooltip';
 import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
 import { useRecordDeepLink } from '@/shared/hooks/useRecordDeepLink';
 import { useResource } from '@/shared/hooks/useResource';
@@ -25,6 +26,12 @@ function resultadoDe(hallazgo) {
   if (!hallazgo.encontrado) return { label: 'No encontrado', tone: 'danger' };
   if (!hallazgo.buenEstado) return { label: 'Mal estado', tone: 'warning' };
   return { label: 'Encontrado', tone: 'success' };
+}
+
+function motivoBloqueoEscritura(allowWrite, cerrado) {
+  if (!allowWrite) return 'Su perfil es de consulta. No puede modificar el inventario físico.';
+  if (cerrado) return 'La jornada ya está cerrada.';
+  return null;
 }
 
 function flattenFilas(grupos, hallazgoPorActivo) {
@@ -122,6 +129,7 @@ export function JornadaDetallePage() {
   const pendientes = esperados - verificados;
   const sede = byId(sedes.data, jornada?.idSede);
   const hallazgosConId = useMemo(() => hallazgos.filter((item) => item.id != null), [hallazgos]);
+  const bloqueoEscritura = motivoBloqueoEscritura(allowWrite, Boolean(jornada?.cerrado));
 
   useRecordDeepLink(hallazgosConId, crud.openView);
 
@@ -155,7 +163,14 @@ export function JornadaDetallePage() {
               inactiveLabel="Cerrada"
               tone={jornada?.cerrado ? 'default' : 'warning'}
             />
-            {allowWrite && !jornada?.cerrado ? (
+            {bloqueoEscritura ? (
+              <Tooltip label={bloqueoEscritura}>
+                <button type="button" className="app-btn app-btn--primary" disabled>
+                  <i className="pi pi-lock" aria-hidden="true" />
+                  Cerrar jornada
+                </button>
+              </Tooltip>
+            ) : (
               <button
                 type="button"
                 className="app-btn app-btn--primary"
@@ -167,7 +182,7 @@ export function JornadaDetallePage() {
                 <i className="pi pi-lock" aria-hidden="true" />
                 Cerrar jornada
               </button>
-            ) : null}
+            )}
           </>
         }
       />
@@ -220,27 +235,31 @@ export function JornadaDetallePage() {
                 emptyTitle="Sin activos"
                 getRowActions={(row) => {
                   if (row.verificado) {
-                    const actions = { view: { onClick: () => crud.openView(row.hallazgo) } };
-                    if (allowWrite && !jornada?.cerrado) {
-                      actions.edit = {
+                    return {
+                      view: { onClick: () => crud.openView(row.hallazgo) },
+                      edit: {
+                        enabled: !bloqueoEscritura,
+                        disabledReason: bloqueoEscritura ?? undefined,
                         onClick: () =>
                           crud.openEdit({
                             ...row.hallazgo,
                             activoNombre: row.activoNombre,
                           }),
-                      };
-                      actions.remove = {
+                      },
+                      remove: {
+                        enabled: !bloqueoEscritura,
+                        disabledReason: bloqueoEscritura ?? undefined,
                         onClick: () => {
                           setDeleteError(null);
                           setPendingDelete({ ...row.hallazgo, activoNombre: row.activoNombre });
                         },
-                      };
-                    }
-                    return actions;
+                      },
+                    };
                   }
-                  if (!allowWrite || jornada?.cerrado) return {};
                   return {
                     create: {
+                      enabled: !bloqueoEscritura,
+                      disabledReason: bloqueoEscritura ?? undefined,
                       onClick: () =>
                         crud.openCreate({
                           idActivo: row.idActivo,

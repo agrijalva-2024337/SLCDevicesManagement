@@ -7,6 +7,7 @@ import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaAct
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import { DataTable } from '@/shared/components/DataTable';
 import { RegisterButton } from '@/shared/components/RecordActions';
+import { Tooltip } from '@/shared/components/Tooltip';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
 import { useResource } from '@/shared/hooks/useResource';
@@ -94,7 +95,16 @@ export function JornadasPage() {
         title="Inventario físico"
         description="Jornadas de conteo por sede. La ubicación es agrupación de la hoja de trabajo, no un filtro del servidor."
         primaryAction={
-          allowWrite ? <RegisterButton label="Abrir jornada" onClick={() => crud.openCreate()} /> : null
+          allowWrite ? (
+            <RegisterButton label="Abrir jornada" onClick={() => crud.openCreate()} />
+          ) : (
+            <Tooltip label="Su perfil es de consulta. No puede abrir jornadas.">
+              <button type="button" className="app-btn app-btn--primary" disabled>
+                <i className="pi pi-plus" aria-hidden="true" />
+                Abrir jornada
+              </button>
+            </Tooltip>
+          )
         }
         columns={columns}
         rows={tableRows}
