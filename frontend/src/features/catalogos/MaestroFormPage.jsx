@@ -11,6 +11,7 @@ import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import { compactErrors } from '@/shared/components/recordFormUtils';
 import { StatusBadge } from '@/shared/components/StatusBadge';
 import { useResource } from '@/shared/hooks/useResource';
+import { toRedConocidaWriteError } from '@/features/catalogos/redesConocidas/redConocidaErrors';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 
@@ -133,7 +134,7 @@ function MaestroFormEditor({ slug, id }) {
           await outlet.reload?.();
           navigate(`/app/catalogos/${slug}/${saved.id}`);
         } catch (error) {
-          throw applyApiFieldErrors(error);
+          throw slug === 'redes-conocidas' ? toRedConocidaWriteError(error) : applyApiFieldErrors(error);
         }
       }}
       onClose={close}
