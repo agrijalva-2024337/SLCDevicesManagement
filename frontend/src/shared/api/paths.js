@@ -25,4 +25,6 @@ export const apiPaths = {
   historicosInventario: '/api/HistoricosInventario',
   detallesActivo: '/api/DetallesActivos',
   historialActivos: '/api/HistorialActivos',
+  motivosBaja: '/api/MotivosBaja',
+  tiposMantenimiento: '/api/TiposMantenimiento',
 };

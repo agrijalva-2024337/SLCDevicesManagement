@@ -105,7 +105,7 @@ No hay header ni query global de empresa. El selector del topbar es **solo UI**:
 
 ## Rutas
 
-Definidas en `src/app/routes.jsx` con `createBrowserRouter` + lazy. `App.jsx` monta `AuthProvider` y `RouterProvider`. `/app` pasa por `RutaProtegida`; `nueva` / `:id/editar` por `RutaEscritura`.
+Definidas en `src/app/routes.jsx` con `createBrowserRouter` + lazy. `App.jsx` monta `AuthProvider` y `RouterProvider`. `/app` pasa por `RutaProtegida`; `nueva` / `:id/editar` por `RutaEscritura`; `/app/bitacora` por `RutaAdministrador` (rol ≥ Administrador de empresa).
 
 | Ruta | Página | Estado |
 | --- | --- | --- |
@@ -120,11 +120,13 @@ Definidas en `src/app/routes.jsx` con `createBrowserRouter` + lazy. `App.jsx` mo
 | `/app/asignaciones` | Entrega y devolución (tipo `Asignacion`) | Activa |
 | `/app/traslados` | Traslados (vista de `Asignacion` tipo Traslado) | Activa |
 | `/app/mantenimientos` | Mantenimientos (vista de `Asignacion` tipo Mantenimiento) | Activa |
+| `/app/bajas` | Bajas (vista de `Asignacion` tipo Baja) | Activa |
+| `/app/bitacora` | Bitácora de auditoría, solo lectura | Activa |
 | `*` | 404 | Activa |
 
 Empresa y sede viven en `features/organizacion/`; el resto de maestros en `features/catalogos/` (`maestros.js` + `CatalogoPage`). Las URLs quedan bajo `/app/catalogos/...`. Deep link de ficha: `/app/catalogos/areas/7`. Países es grilla con banderas; ubicaciones es tabla + mapa. Detalle de la configuración: `src/features/catalogos/README.md`.
 
-Activos, asignaciones, traslados y mantenimientos están habilitados en el sidebar. Bajas, inventario físico, bitácora y reportes siguen deshabilitados.
+Activos, asignaciones, traslados, mantenimientos, bajas y bitácora están habilitados en el sidebar. Inventario físico y reportes siguen deshabilitados. La bitácora no se muestra a Consulta ni a Operador.
 
 ## Activos y asignaciones (FE-06)
 
@@ -134,7 +136,7 @@ El estado del activo no viene en el DTO. Se lee de `Activo.idEstado` si el mock 
 
 Asignaciones de esta pantalla son **solo entrega**. Se listan filas con tipo `Asignacion` resuelto por nombre. No hay select de Traslado / Mantenimiento / Baja. Crear llama `POST /api/Asignaciones` (`CreateAsignacionCommand` exige `idUbicacion`; se toma del activo). Cerrar llama `POST /api/Asignaciones/{id}/devolver`. No se edita `activa` a mano.
 
-Desde la ficha, **Asignar** navega a `/app/asignaciones` con `state: { idActivo }`. Trasladar y mantenimiento siguen abriendo overlays locales (FE-07). **Dar de baja** está deshabilitado hasta el Sprint 7 (BE-18).
+Desde la ficha, **Asignar** navega a `/app/asignaciones` con `state: { idActivo }`. Trasladar, mantenimiento y dar de baja abren overlays locales. **Dar de baja** exige `canWrite('bajas')` (Administrador de empresa o superior). El operador ve la acción deshabilitada, no oculta.
 
 Perfil Consulta: ve listas y fichas; no registra, no edita, no entrega ni devuelve. Operador de inventario o superior escribe en `activos` y `asignaciones`.
 
@@ -151,24 +153,45 @@ Nombres del seed (`Scripts/SeedCatalogosAddendum.sql`):
 
 Si un nombre no aparece, la UI muestra «catálogo incompleto» y no manda `undefined` al backend.
 
-El origen de un traslado es la ubicación actual del activo (dato, no input). El destino es un select de ubicaciones de la empresa activa. La ruta `Origen → Destino` se guarda en `observaciones` porque `AsignacionDto` no tiene `idUbicacionOrigen` / `idUbicacionDestino`.
+El origen de un traslado es la ubicación actual del activo (dato, no input). El destino es un select de ubicaciones de la empresa activa. La ruta `Origen → Destino` se guarda en `observaciones` porque `AsignacionDto` no tiene origen/destino; el texto libre va en `motivo` (`CreateTrasladoCommand`).
 
-El tipo preventivo/correctivo no existe en el DTO; va en `observaciones` si hace falta. La sede del mantenimiento es `Activo → Ubicacion → Sede`.
+La sede del mantenimiento es `Activo → Ubicacion → Sede`. El tipo Preventivo/Correctivo y la descripción del problema van en `CreateMantenimientoCommand` (`idTipoMantenimiento`, `descripcionProblema`).
 
-Punto de conexión cuando Angel/Gerardo publiquen BE-16 / BE-17 (las rutas ya estaban esbozadas en BE-15 y se recortaron para que compilara):
+Escritura real (BE-16 / BE-17 ya publicados):
 
-| Acción | Hoy (mock o API genérica) | Cuando exista el command |
-| --- | --- | --- |
-| Listar | `GET /api/Asignaciones` + filtro por nombre de tipo | Igual |
-| Registrar traslado | `POST /api/Asignaciones` con `idTipoAsignacion` = Traslado e `idUbicacion` destino | `POST /api/Asignaciones/traslado` — cambiar `persistir` en `trasladoService.js` |
-| Abrir mantenimiento | `POST /api/Asignaciones` con tipo Mantenimiento | `POST /api/Asignaciones/mantenimiento` — `persistirApertura` en `mantenimientoService.js` |
-| Finalizar mantenimiento | `POST /api/Asignaciones/{id}/devolver` | `POST /api/Asignaciones/{id}/finalizar-mantenimiento` — `finalizar` |
+| Acción | Endpoint |
+| --- | --- |
+| Listar | `GET /api/Asignaciones` + filtro por nombre de tipo |
+| Registrar traslado | `POST /api/Asignaciones/traslado` (`CreateTrasladoCommand`) |
+| Abrir mantenimiento | `POST /api/Asignaciones/mantenimiento` (`CreateMantenimientoCommand`) |
+| Finalizar mantenimiento | `POST /api/Asignaciones/{id}/finalizar-mantenimiento` (`FinalizarMantenimientoCommand`) |
 
-En local, con `VITE_USE_API_MOCK=true`, el mock respeta `AsignacionDto`, actualiza `Activo.idUbicacion` en el traslado y el estado al abrir/cerrar mantenimiento. Cuando el backend publique: `git pull`, `VITE_USE_API_MOCK=false` y, si ya están los endpoints dedicados, un solo cambio en esas funciones.
+En mock (`VITE_USE_API_MOCK=true`) esos POST se simulan con `asignacionService.create` / `devolver` y se actualiza el activo. El listado sigue siendo una vista sobre `Asignacion`.
 
 Query params de mantenimientos (drill-down de FE-10): `?abiertos=1` y `?estado=<nombre>`. Deep link de ficha: `?id=<id>`.
 
 Perfil Consulta: sin botones de registrar ni finalizar. Un activo dado de baja muestra traslado y mantenimiento deshabilitados, con el motivo en el tooltip.
+
+## Bajas y bitácora (FE-08)
+
+Las bajas **no son entidad propia**. Se listan asignaciones de tipo `Baja` (nombre resuelto en runtime, igual que traslados). Alta: `POST /api/Asignaciones/baja` (`CreateBajaCommand`). Roles: Administrador de empresa o superior.
+
+`AsignacionDto` no trae motivo, autorizado por ni documento. Esos datos se leen del historial del activo (`informacionNueva` con `id_motivo_baja=…; documento_pdf_url=…; id_autorizado_por=…; id_responsable=…`) en `detalleBajaParser.js`. Si el formato no coincide, la ficha muestra "—".
+
+`documentoPdfUrl` es obligatorio (máx. 300). No hay uploader: el formulario pide una URL. `documentoReferencia` y `observaciones` son opcionales (máx. 300). El estado del activo pasa a `Dado de baja` (nombre, no id hardcodeado).
+
+409 del backend: *"El activo ya esta dado de baja."* y *"El activo tiene una asignacion o un mantenimiento activo. Cierren el proceso antes de dar de baja."*
+
+La bitácora es **solo lectura**. La escribe el interceptor del backend. `GET /api/Bitacoras` acepta `idUsuario` y `entidadAfectada`; no pagina ni filtra por fecha/tipo (eso va en cliente). Expandir una fila muestra `informacionAnterior` / `informacionNueva`. No hay alta ni edición desde la UI.
+
+Pendiente de Angel (`// [API]` en código):
+
+| Hueco | Qué hace el frontend mientras tanto |
+| --- | --- |
+| `GET /api/MotivosBaja` | Mock con los 7 nombres del seed (sin tilde): Venta, Desecho, Donacion, Perdida, Robo, Dano irreparable, Otro |
+| `GET` de DetalleBaja | Parser del historial |
+| `GET /api/TiposMantenimiento` | Mock Preventivo / Correctivo |
+| Bitácora: paginación y filtro por fecha | Filtro de fechas en cliente |
 
 ## Estructura de carpetas
 
@@ -183,12 +206,13 @@ frontend/src/
   features/
     landing/           LandingPage, sections, data estáticos, landing.css
     auth/              LoginPage, authService, useAuth, RutaProtegida, decodeJwt
-    organizacion/      empresas, sedes, areas (servicios + detalle/form de empresa y sede)
+    organizacion/      empresas, sedes, areas, usuarios, bitacoras
     catalogos/         maestros.js, CatalogoPage, categorias, proveedores, ubicaciones, paises
     activos/           ActivosPage, ficha, form, activoAcciones, historialActivoService
     asignaciones/      AsignacionesPage, form, asignacionService (entrega y devolver)
-    inventario/        TrasladosPage, trasladoService (sobre Asignacion)
-    mantenimientos/    MantenimientosPage, mantenimientoService (apertura y cierre)
+    inventario/        TrasladosPage, trasladoService (POST /traslado)
+    mantenimientos/    MantenimientosPage, apertura, cierre, tipoMantenimientoService
+    bajas/             BajasPage, BajaFormOverlay, bajaService, motivosBaja
   shared/
     api/               paths.js, contracts.js, errors.js
     components/        DataTable, PageHeader, FeedbackState, overlays, forms…
@@ -214,9 +238,10 @@ Los campos de cada catálogo coinciden con los DTOs de Application (camelCase): 
 | Catálogos ya con pantalla         | `getAll/getById/create/update/remove` | Soft delete con `habilitado`                                                       |
 | `authService`                     | `login`, `getMe`, `logout`            | Real: `{ emailOrUsername, password }` → `token` + `userDetails`. Mock: `Practica2026` |
 | `useAuth`                         | JWT (`role`, `id_empresa`) + sesión   | Expone `rol`, `idEmpresa`, `canWrite`                                              |
-| Bitácora / historial de activo    | `getAll`, `getById`                   | Solo lectura                                                                       |
+| Bitácora                          | `getAll({ idUsuario, entidadAfectada })` | Solo lectura. Admins. Sin `incluirInhabilitados`. |
 | Activos, asignaciones, inventario | CRUD mock / API                       | Activos: alta y edición. Asignaciones: `entregar` + `devolver` |
-| Traslados / mantenimientos        | Vista sobre `asignacionService`       | Lookup por nombre. No hay `/api/traslados` |
+| Traslados / mantenimientos        | Vista + POST dedicados                | `/traslado`, `/mantenimiento`, `/finalizar-mantenimiento` |
+| Bajas                             | Vista + `POST /baja`                  | Motivo desde historial. MotivosBaja mock. |
 
 Hook `useResource(loadFn)` → `{ data, isLoading, errorMessage, reload }`.
 

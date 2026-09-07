@@ -2,7 +2,17 @@ import * as activoService from '@/features/activos/activoService';
 import * as historialActivoService from '@/features/activos/historialActivoService';
 import * as asignacionService from '@/features/asignaciones/asignacionService';
 import { ESTADO_ACTIVO, TIPO_ASIGNACION, getIdEstado, getIdTipoAsignacion } from '@/shared/api/tipoAsignacion';
+import { apiPaths } from '@/shared/api/paths';
 import { env } from '@/shared/config/env';
+import httpClient from '@/shared/services/httpClient';
+import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
+
+function idFromCreated(response, fallback) {
+  const data = response?.data;
+  if (typeof data === 'object' && data?.id != null) return Number(data.id);
+  const n = Number(data);
+  return Number.isFinite(n) ? n : fallback;
+}
 
 export async function listar() {
   const idTipo = await getIdTipoAsignacion(TIPO_ASIGNACION.Mantenimiento);
@@ -18,16 +28,33 @@ export function estaAbierto(row) {
   return Boolean(row?.activa) && !row?.fechaDevolucion;
 }
 
-/**
- * Punto de conexión BE-17.
- * Hoy: POST /api/Asignaciones (CreateAsignacionCommand ya pone Estado = En mantenimiento).
- * Cuando exista POST /api/Asignaciones/mantenimiento, cambiar solo persistirApertura.
- */
-async function persistirApertura(payload) {
-  return asignacionService.create(payload);
+async function persistirApertura(command) {
+  if (env.useApiMock) {
+    const activo = await activoService.getById(command.idActivo);
+    return asignacionService.create({
+      idActivo: command.idActivo,
+      idUsuario: command.idUsuario,
+      idResponsable: command.idResponsable,
+      idEstado: command.idEstado,
+      idTipoAsignacion: await getIdTipoAsignacion(TIPO_ASIGNACION.Mantenimiento),
+      fechaAsignacion: command.fechaAsignacion,
+      fechaDevolucion: null,
+      activa: true,
+      observaciones: command.observaciones,
+      documentoPdfUrl: null,
+      idUbicacion: activo.idUbicacion,
+    });
+  }
+
+  try {
+    const response = await httpClient.post(`${apiPaths.asignaciones}/mantenimiento`, command);
+    return { id: idFromCreated(response, null), ...command };
+  } catch (error) {
+    throw applyApiFieldErrors(error);
+  }
 }
 
-async function aplicarAperturaMock({ activo, idAsignacion }) {
+async function aplicarAperturaMock({ activo, idAsignacion, idTipoMantenimiento, descripcionProblema }) {
   if (!env.useApiMock) return;
   const idEstado = await getIdEstado(ESTADO_ACTIVO.EnMantenimiento);
   await activoService.update(activo.id, { idEstado });
@@ -35,33 +62,43 @@ async function aplicarAperturaMock({ activo, idAsignacion }) {
     idAsignacion,
     idDetalleActivo: null,
     fechaHora: new Date().toISOString(),
-    tipoOperacion: 'Creacion',
-    descripcion: 'Apertura de mantenimiento',
+    tipoOperacion: 'Mantenimiento',
+    descripcion: 'Inicio de mantenimiento',
     informacionAnterior: null,
-    informacionNueva: `Activo ${activo.id} en mantenimiento.`,
+    informacionNueva: `id_tipo_mantenimiento=${idTipoMantenimiento}; descripcion_problema=${descripcionProblema}`,
   });
 }
 
-export async function registrar({ idActivo, idUsuario, idResponsable, fecha, observaciones }) {
-  const idTipoAsignacion = await getIdTipoAsignacion(TIPO_ASIGNACION.Mantenimiento);
+export async function registrar({
+  idActivo,
+  idUsuario,
+  idResponsable,
+  fecha,
+  observaciones,
+  idTipoMantenimiento,
+  descripcionProblema,
+}) {
   const idEstado = await getIdEstado(ESTADO_ACTIVO.EnMantenimiento);
   const activo = await activoService.getById(idActivo);
+  const problema = String(descripcionProblema ?? '').trim();
 
   const created = await persistirApertura({
     idActivo: Number(idActivo),
     idUsuario: Number(idUsuario),
     idResponsable: Number(idResponsable),
     idEstado,
-    idTipoAsignacion,
+    idTipoMantenimiento: Number(idTipoMantenimiento),
+    descripcionProblema: problema,
     fechaAsignacion: fecha,
-    fechaDevolucion: null,
-    activa: true,
     observaciones: String(observaciones ?? '').trim() || null,
-    documentoPdfUrl: null,
-    idUbicacion: activo.idUbicacion,
   });
 
-  await aplicarAperturaMock({ activo, idAsignacion: created.id });
+  await aplicarAperturaMock({
+    activo,
+    idAsignacion: created.id,
+    idTipoMantenimiento: Number(idTipoMantenimiento),
+    descripcionProblema: problema,
+  });
   return created;
 }
 
@@ -80,18 +117,37 @@ async function aplicarCierreMock({ activo, idAsignacion, fechaDevolucion }) {
   });
 }
 
-/**
- * Punto de conexión BE-17: POST /api/Asignaciones/{id}/finalizar-mantenimiento.
- * Mientras tanto usa POST /api/Asignaciones/{id}/devolver (BE-15), que revierte a Disponible.
- */
-export async function finalizar(id, { fechaDevolucion, observaciones } = {}) {
-  const row = await asignacionService.getById(id);
+export async function finalizar(
+  id,
+  { trabajoRealizado, costo, numeroFactura, fechaDevolucion, observaciones } = {},
+) {
+  const numericId = Number(id);
+  const row = await asignacionService.getById(numericId);
   const cierre = fechaDevolucion || new Date().toISOString();
-  const updated = await asignacionService.devolver(id, {
+  const command = {
+    id: numericId,
+    trabajoRealizado: String(trabajoRealizado ?? '').trim() || null,
+    costo: costo === '' || costo == null ? null : Number(costo),
+    numeroFactura: String(numeroFactura ?? '').trim() || null,
     fechaDevolucion: cierre,
-    observaciones: observaciones ?? row.observaciones,
-  });
-  const activo = await activoService.getById(row.idActivo);
-  await aplicarCierreMock({ activo, idAsignacion: Number(id), fechaDevolucion: cierre });
-  return updated;
+    observaciones: String(observaciones ?? '').trim() || null,
+  };
+
+  if (env.useApiMock) {
+    const updated = await asignacionService.devolver(numericId, {
+      fechaDevolucion: cierre,
+      observaciones: command.observaciones ?? row.observaciones,
+    });
+    const activo = await activoService.getById(row.idActivo);
+    await aplicarCierreMock({ activo, idAsignacion: numericId, fechaDevolucion: cierre });
+    return updated;
+  }
+
+  try {
+    await httpClient.post(`${apiPaths.asignaciones}/${numericId}/finalizar-mantenimiento`, command);
+  } catch (error) {
+    throw applyApiFieldErrors(error);
+  }
+
+  return { id: numericId, ...command };
 }

@@ -1,0 +1,216 @@
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router';
+import { useAuth } from '@/features/auth/useAuth';
+import * as activoService from '@/features/activos/activoService';
+import { BajaFormOverlay } from '@/features/bajas/BajaFormOverlay';
+import * as bajaService from '@/features/bajas/bajaService';
+import { parseDetalleBaja } from '@/features/bajas/detalleBajaParser';
+import * as motivoBajaService from '@/features/bajas/motivoBajaService';
+import * as historialActivoService from '@/features/activos/historialActivoService';
+import * as asignacionService from '@/features/asignaciones/asignacionService';
+import { DataTable } from '@/shared/components/DataTable';
+import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
+import { RegisterButton } from '@/shared/components/RecordActions';
+import { ToneBadge } from '@/shared/components/StatusBadge';
+import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
+import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
+import { useRecordDeepLink } from '@/shared/hooks/useRecordDeepLink';
+import { useResource } from '@/shared/hooks/useResource';
+import { byId, formatDate } from '@/shared/utils/format';
+import * as responsableService from '@/features/organizacion/responsables/responsableService';
+import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
+import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
+import * as estadoService from '@/features/organizacion/estados/estadoService';
+
+function usuarioNombre(usuario) {
+  if (!usuario) return '—';
+  return [usuario.nombres, usuario.apellidos].filter(Boolean).join(' ') || usuario.correo || '—';
+}
+
+function hydrate(row, lookups) {
+  const activo = byId(lookups.activos, row.idActivo);
+  const estado = byId(lookups.estados, row.idEstado);
+  const detalle = lookups.detallePorAsignacion.get(Number(row.id));
+  const motivo = detalle?.idMotivoBaja ? byId(lookups.motivos, detalle.idMotivoBaja) : null;
+  const autorizador = detalle?.idAutorizadoPor
+    ? byId(lookups.usuarios, detalle.idAutorizadoPor)
+    : byId(lookups.usuarios, row.idUsuario);
+  return {
+    ...row,
+    activoNombre: activo?.nombre ?? `Activo #${row.idActivo}`,
+    motivoNombre: motivo?.nombre ?? '—',
+    autorizadoNombre: usuarioNombre(autorizador),
+    estadoNombre: estado?.nombre ?? '—',
+    documentoPdfUrl: detalle?.documentoPdfUrl ?? row.documentoPdfUrl,
+    documentoReferencia: null,
+  };
+}
+
+export function BajasPage() {
+  const { canWrite, usuario } = useAuth();
+  const allowWrite = canWrite('bajas');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const load = useCallback(() => bajaService.listar(), []);
+  const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(load);
+  const crud = useCrudOverlay();
+  const prefillOpened = useRef(false);
+  const activos = useResource(activoService.getAll);
+  const motivos = useResource(motivoBajaService.getAll);
+  const usuarios = useResource(usuarioService.getAll);
+  const responsables = useResource(responsableService.getAll);
+  const estados = useResource(estadoService.getAll);
+  const tipos = useResource(tipoAsignacionService.getAll);
+  const asignacionesAll = useResource(asignacionService.getAll);
+  const historial = useResource(historialActivoService.getAll);
+
+  const detallePorAsignacion = useMemo(() => {
+    const map = new Map();
+    for (const item of historial.data ?? []) {
+      const parsed = parseDetalleBaja(item.informacionNueva);
+      if (parsed && item.idAsignacion != null) {
+        map.set(Number(item.idAsignacion), parsed);
+      }
+    }
+    return map;
+  }, [historial.data]);
+
+  const lookups = useMemo(
+    () => ({
+      activos: activos.data,
+      motivos: motivos.data,
+      usuarios: usuarios.data,
+      estados: estados.data,
+      detallePorAsignacion,
+    }),
+    [activos.data, detallePorAsignacion, estados.data, motivos.data, usuarios.data],
+  );
+
+  const tableRows = useMemo(() => rows.map((row) => hydrate(row, lookups)), [lookups, rows]);
+  useRecordDeepLink(tableRows, crud.openView);
+
+  useEffect(() => {
+    if (prefillOpened.current || !allowWrite) return;
+    const idActivo = location.state?.idActivo;
+    if (idActivo == null || idActivo === '') return;
+    prefillOpened.current = true;
+    crud.openCreate({ idActivo });
+    navigate(location.pathname, { replace: true, state: {} });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo reacciona al state de navegación
+  }, [allowWrite, location.pathname, location.state, navigate]);
+
+  if (errorMessage) {
+    return (
+      <section>
+        <div className="app-feedback app-feedback--error" role="alert">
+          {errorMessage}
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section>
+      {banner ? (
+        <div
+          className={`app-feedback ${banner.variant === 'error' ? 'app-feedback--error' : 'app-feedback--empty'}`}
+          role={banner.variant === 'error' ? 'alert' : 'status'}
+        >
+          {banner.message}
+        </div>
+      ) : null}
+      <DataTable
+        title="Bajas"
+        description="Retiro definitivo. Son filas de Asignación con tipo Baja. No existe /api/bajas."
+        primaryAction={
+          allowWrite ? <RegisterButton label="Registrar baja" onClick={() => crud.openCreate()} /> : null
+        }
+        columns={[
+          { key: 'activoNombre', header: 'Activo', primary: true },
+          { key: 'motivoNombre', header: 'Motivo' },
+          {
+            key: 'fechaAsignacion',
+            header: 'Fecha',
+            numeric: true,
+            getValue: (row) => formatDate(row.fechaAsignacion),
+            sortValue: (row) => row.fechaAsignacion,
+          },
+          { key: 'autorizadoNombre', header: 'Autorizado por' },
+          {
+            key: 'estadoNombre',
+            header: 'Estado',
+            type: 'badge',
+            tone: () => 'danger',
+          },
+        ]}
+        rows={tableRows}
+        loading={isLoading}
+        searchPlaceholder="Buscar por activo, motivo o autorizante"
+        emptyTitle="No hay bajas"
+        emptyDescription="Registre la primera baja con motivo, autorizante y URL del documento."
+        getRowActions={(row) => ({
+          view: { onClick: () => crud.openView(row) },
+        })}
+      />
+
+      <DetailOverlay
+        open={crud.isView}
+        title={crud.record?.activoNombre ?? 'Baja'}
+        kicker="Baja"
+        badge={crud.record ? <ToneBadge tone="danger">{crud.record.estadoNombre}</ToneBadge> : null}
+        onClose={crud.close}
+      >
+        {crud.record ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <DetailField label="Activo" value={crud.record.activoNombre} />
+            <DetailField label="Motivo" value={crud.record.motivoNombre} />
+            <DetailField label="Autorizado por" value={crud.record.autorizadoNombre} />
+            <DetailField label="Fecha" value={formatDate(crud.record.fechaAsignacion)} />
+            <DetailField label="Estado" value={crud.record.estadoNombre} />
+            <div className="sm:col-span-2">
+              <DetailField label="URL del documento" value={crud.record.documentoPdfUrl} />
+            </div>
+            <div className="sm:col-span-2">
+              <DetailField label="Observaciones" value={crud.record.observaciones} />
+            </div>
+          </div>
+        ) : null}
+      </DetailOverlay>
+
+      <BajaFormOverlay
+        open={crud.isCreate}
+        prefill={crud.record}
+        activos={activos.data}
+        motivos={motivos.data}
+        usuarios={usuarios.data}
+        responsables={responsables.data}
+        asignaciones={asignacionesAll.data}
+        tipos={tipos.data}
+        onClose={crud.close}
+        onSave={async (values) => {
+          try {
+            await bajaService.registrar({
+              idActivo: Number(values.idActivo),
+              idUsuario: usuario?.id,
+              idResponsable: Number(values.idResponsable),
+              idMotivoBaja: Number(values.idMotivoBaja),
+              idAutorizadoPor: Number(values.idAutorizadoPor),
+              documentoReferencia: values.documentoReferencia,
+              documentoPdfUrl: values.documentoPdfUrl,
+              fecha: values.fecha,
+              observaciones: values.observaciones,
+            });
+            setBanner({ message: 'Baja registrada. El activo queda dado de baja.', variant: 'empty' });
+            crud.close();
+            await Promise.all([reload(), activos.reload(), asignacionesAll.reload(), historial.reload()]);
+          } catch (error) {
+            if (error.response?.status === 409 || error.status === 409) {
+              setBanner({ message: error.message, variant: 'error' });
+            }
+            throw error;
+          }
+        }}
+      />
+    </section>
+  );
+}

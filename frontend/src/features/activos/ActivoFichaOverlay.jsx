@@ -30,11 +30,13 @@ export function ActivoFichaOverlay({
   tipos,
   estados,
   canWrite,
+  canRetire = false,
   onClose,
   onEditar,
   onAsignar,
   onTrasladar,
   onMantenimiento,
+  onRetirar,
   children,
 }) {
   const ubicacion = byId(ubicaciones, activo?.idUbicacion);
@@ -52,10 +54,10 @@ export function ActivoFichaOverlay({
   const movimientos = useResource(loadMovimientos);
   const acciones = useMemo(() => {
     if (!activo) return [];
-    const all = getAccionesDisponibles(activo, { asignaciones, tipos });
+    const all = getAccionesDisponibles(activo, { asignaciones, tipos, canRetire });
     if (canWrite) return all.filter((item) => item.key !== 'view' && item.key !== 'edit');
     return [];
-  }, [activo, asignaciones, canWrite, tipos]);
+  }, [activo, asignaciones, canRetire, canWrite, tipos]);
 
   return (
     <DetailOverlay
@@ -102,6 +104,7 @@ export function ActivoFichaOverlay({
                     if (action.key === 'assign') onAsignar?.(activo);
                     if (action.key === 'transfer') onTrasladar?.(activo);
                     if (action.key === 'maintenance') onMantenimiento?.(activo);
+                    if (action.key === 'retire') onRetirar?.(activo);
                   }}
                 />
               </div>

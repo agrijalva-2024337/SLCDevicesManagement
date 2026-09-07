@@ -54,6 +54,6 @@ export function initialTrasladoValues(prefill, { activos, ubicaciones } = {}) {
     idUbicacionDestino: '',
     idResponsable: prefill?.idResponsable ? String(prefill.idResponsable) : '',
     fecha: todayIsoDate(),
-    observaciones: '',
+    motivo: '',
   };
 }

@@ -75,11 +75,12 @@ export function TrasladoFormOverlay({
       },
       { name: 'fecha', label: 'Fecha', type: 'date', required: true },
       {
-        name: 'observaciones',
-        label: 'Observaciones',
+        name: 'motivo',
+        label: 'Motivo',
         type: 'textarea',
         maxLength: 300,
         wide: true,
+        hint: 'Va en CreateTrasladoCommand.motivo. La ruta Origen → Destino se guarda en observaciones para el listado.',
       },
     ],
     [activos, activosElegibles, destinos, lockActivo, responsables],
@@ -91,7 +92,7 @@ export function TrasladoFormOverlay({
       open={open}
       title="Registrar traslado"
       kicker="Inventario"
-      hint="El traslado se registra como una asignación de tipo Traslado. El origen no es un campo editable."
+      hint="El traslado se registra con POST /api/Asignaciones/traslado. El origen no es un campo editable."
       fields={fields}
       initialValues={initialValues}
       deriveValues={(next) => {
@@ -108,7 +109,7 @@ export function TrasladoFormOverlay({
           idUbicacionDestino: requireSelect(values.idUbicacionDestino, 'una ubicación destino'),
           idResponsable: requireSelect(values.idResponsable, 'un responsable'),
           fecha: requireSelect(values.fecha, 'una fecha'),
-          observaciones: optionalText(values.observaciones, 'observaciones', 300),
+          motivo: optionalText(values.motivo, 'motivo', 300),
         };
         if (activo && isActivoDeBaja(activo, ctx)) {
           errors.idActivo = 'El activo está dado de baja. No se traslada ni se envía a mantenimiento.';
