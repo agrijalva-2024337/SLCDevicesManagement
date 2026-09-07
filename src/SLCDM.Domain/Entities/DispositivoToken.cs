@@ -35,4 +35,13 @@ public class DispositivoToken : SLCDM.Domain.Common.BaseEntity
     public Ubicacion? UltimaUbicacionDetectada { get; set; }
 
     public bool FueraDeRango { get; set; }
+     [MaxLength(17)]
+    public string? UltimoBssid { get; set; }
+
+    public decimal? UltimaLatitud { get; set; }
+
+    public decimal? UltimaLongitud { get; set; }
+
+    [MaxLength(10)]
+    public string? OrigenCoordenada { get; set; }
 }

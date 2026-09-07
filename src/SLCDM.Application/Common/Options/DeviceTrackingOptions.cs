@@ -9,4 +9,5 @@ public sealed class DeviceTrackingOptions
     public string InstallKey { get; set; } = string.Empty;
 
     public int TokenExpiryDays { get; set; } = 365;
+    public int GeofenceRadiusMeters { get; set; } = 250;
 }

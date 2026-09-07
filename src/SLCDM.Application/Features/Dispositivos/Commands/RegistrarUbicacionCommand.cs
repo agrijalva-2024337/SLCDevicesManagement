@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using SLCDM.Application.Common;
 using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
+using SLCDM.Application.Common.Options;
 using SLCDM.Domain.Entities;
 
 namespace SLCDM.Application.Features.Dispositivos.Commands;
@@ -8,62 +11,97 @@ namespace SLCDM.Application.Features.Dispositivos.Commands;
 /// <summary>
 /// IdActivo llega desde la claim del DeviceToken (Api/Authentication), nunca
 /// del cuerpo de la peticion: un dispositivo solo puede reportar su propia
-/// ubicacion, jamas la de otro activo.
+/// ubicacion, jamas la de otro activo. Latitud/Longitud son la fuente
+/// principal (GPS/ubicacion real del equipo, vía el agente corriendo en la
+/// sesion del usuario); Bssid es solo respaldo para cuando no hay
+/// coordenadas disponibles.
 /// </summary>
-public sealed record RegistrarUbicacionCommand(int IdActivo, string Bssid);
+public sealed record RegistrarUbicacionCommand(
+    int IdActivo,
+    string? Bssid,
+    decimal? Latitud = null,
+    decimal? Longitud = null);
 
 public sealed class RegistrarUbicacionCommandHandler : ICommandHandler<RegistrarUbicacionCommand>
 {
     private readonly IApplicationDbContext _db;
+    private readonly DeviceTrackingOptions _options;
 
-    public RegistrarUbicacionCommandHandler(IApplicationDbContext db)
+    public RegistrarUbicacionCommandHandler(IApplicationDbContext db, IOptions<DeviceTrackingOptions> options)
     {
         _db = db;
+        _options = options.Value;
     }
 
     public async Task HandleAsync(RegistrarUbicacionCommand command, CancellationToken cancellationToken = default)
     {
+        var bssid = BssidFormat.Normalize(command.Bssid);
+
         var activo = await _db.Activos.IgnoreQueryFilters()
             .FirstOrDefaultAsync(a => a.Id == command.IdActivo, cancellationToken)
             ?? throw new NotFoundException("Activo", command.IdActivo);
 
         var token = await _db.DispositivosToken.IgnoreQueryFilters()
-            .FirstOrDefaultAsync(d => d.IdActivo == command.IdActivo, cancellationToken)
+            .FirstOrDefaultAsync(d => d.IdActivo == command.IdActivo && !d.Revocado, cancellationToken)
             ?? throw new NotFoundException("DispositivoToken", command.IdActivo);
 
-        var redConocida = await _db.RedesConocidas.IgnoreQueryFilters()
-            .Include(r => r.Ubicacion)
-            .FirstOrDefaultAsync(r => r.Bssid == command.Bssid, cancellationToken);
+        var redConocida = bssid is null
+            ? null
+            : (await _db.RedesConocidas.IgnoreQueryFilters()
+                .Include(r => r.Ubicacion)
+                .ToListAsync(cancellationToken))
+                .FirstOrDefault(r => BssidFormat.Normalize(r.Bssid) == bssid);
 
         var ubicacionDetectada = redConocida?.Ubicacion;
+        var gpsOk = GeoCoords.EsUtilizable(command.Latitud, command.Longitud);
+        var wifiCoordsOk = ubicacionDetectada is not null
+            && GeoCoords.EsUtilizable(ubicacionDetectada.Latitud, ubicacionDetectada.Longitud);
 
-        // Decision de negocio: si el activo TODAVIA no tiene ubicacion
-        // asignada (nunca paso por un traslado formal), no evaluamos alerta
-        // -- no tiene sentido avisar que esta "fuera de rango" de un rango
-        // que nunca se definio. Si mas adelante prefieren lo contrario
-        // (tratar "sin asignar" como alerta), este es el unico punto que
-        // hay que cambiar.
+        token.UltimoBssid = bssid;
+        token.UltimoUsoEn = DateTime.UtcNow;
+        token.UltimaUbicacionDetectadaId = ubicacionDetectada?.Id;
+
+        if (gpsOk)
+        {
+            // Fuente principal: coordenadas reales del equipo.
+            token.UltimaLatitud = command.Latitud;
+            token.UltimaLongitud = command.Longitud;
+            token.OrigenCoordenada = "gps";
+        }
+        else if (wifiCoordsOk)
+        {
+            // Respaldo: sin GPS disponible, se usa la ubicacion del catalogo de redes conocidas.
+            token.UltimaLatitud = ubicacionDetectada!.Latitud;
+            token.UltimaLongitud = ubicacionDetectada.Longitud;
+            token.OrigenCoordenada = "wifi";
+        }
+        else
+        {
+            token.UltimaLatitud = null;
+            token.UltimaLongitud = null;
+            token.OrigenCoordenada = null;
+        }
+
+        // Decision de negocio ya vigente en el repo real: si el activo
+        // todavia no tiene ubicacion asignada (nunca paso por un traslado
+        // formal), no se evalua alerta de "fuera de rango".
         if (activo.IdUbicacion is null)
         {
-            token.UltimaUbicacionDetectadaId = ubicacionDetectada?.Id;
-            token.UltimoUsoEn = DateTime.UtcNow;
             await _db.SaveChangesAsync(cancellationToken);
             return;
         }
 
-        // Fuera de rango: la red no esta catalogada, o esta catalogada pero
-        // apunta a una ubicacion distinta de la asignada al activo.
-        var estaFueraDeRango = ubicacionDetectada is null || ubicacionDetectada.Id != activo.IdUbicacion;
+        var ubicacionAsignada = await _db.Ubicaciones.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.Id == activo.IdUbicacion, cancellationToken);
+
+        var estaFueraDeRango = gpsOk
+            ? EstaFueraDeGeocerca(command.Latitud!.Value, command.Longitud!.Value, ubicacionAsignada)
+            : ubicacionDetectada is null || ubicacionDetectada.Id != activo.IdUbicacion;
         var eraFueraDeRango = token.FueraDeRango;
 
         token.FueraDeRango = estaFueraDeRango;
-        token.UltimaUbicacionDetectadaId = ubicacionDetectada?.Id;
-        token.UltimoUsoEn = DateTime.UtcNow;
         await _db.SaveChangesAsync(cancellationToken);
 
-        // Solo se escribe en el historial cuando cambia el estado (entra o
-        // sale de la alerta), no en cada ping -- si no, serian decenas de
-        // renglones idénticos por dia mientras el equipo sigue fuera de rango.
         if (estaFueraDeRango == eraFueraDeRango)
         {
             return;
@@ -77,10 +115,28 @@ public sealed class RegistrarUbicacionCommandHandler : ICommandHandler<Registrar
                 ? "El activo fue detectado fuera de la ubicacion asignada"
                 : "El activo volvio a la ubicacion asignada",
             InformacionAnterior = $"id_ubicacion_asignada={activo.IdUbicacion}",
-            InformacionNueva = ubicacionDetectada is not null
-                ? $"id_ubicacion_detectada={ubicacionDetectada.Id}; bssid={command.Bssid}"
-                : $"ubicacion_detectada=desconocida; bssid={command.Bssid}"
+            InformacionNueva = gpsOk
+                ? $"origen=gps; lat={command.Latitud}; lng={command.Longitud}; bssid={bssid ?? "ninguno"}"
+                : ubicacionDetectada is not null
+                    ? $"origen=wifi; id_ubicacion_detectada={ubicacionDetectada.Id}; bssid={bssid}"
+                    : $"origen=wifi; ubicacion_detectada=desconocida; bssid={bssid}"
         });
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    private bool EstaFueraDeGeocerca(decimal latitud, decimal longitud, Ubicacion? ubicacionAsignada)
+    {
+        if (ubicacionAsignada is null)
+        {
+            return false;
+        }
+
+        if (!GeoCoords.EsUtilizable(ubicacionAsignada.Latitud, ubicacionAsignada.Longitud))
+        {
+            return true;
+        }
+
+        var radio = _options.GeofenceRadiusMeters > 0 ? _options.GeofenceRadiusMeters : 250;
+        return GeoDistance.Meters(latitud, longitud, ubicacionAsignada.Latitud, ubicacionAsignada.Longitud) > radio;
     }
 }
