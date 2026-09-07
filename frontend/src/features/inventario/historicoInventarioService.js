@@ -117,7 +117,10 @@ export async function diferencias(id) {
 
   const jornada = await getById(id);
   const { listarPorJornada } = await import('@/features/inventario/detalleActivoService');
+  const { idsEsperadosDeSede } = await import('@/features/inventario/activosEsperados');
   const detalles = await listarPorJornada(jornada.id);
+  const idsEsperados = await idsEsperadosDeSede(jornada.idSede);
+  const idsVerificados = new Set(detalles.map((item) => Number(item.idActivo)));
   const { getById: getActivo } = await import('@/features/activos/activoService');
 
   async function nombreDe(idActivo) {
@@ -130,6 +133,14 @@ export async function diferencias(id) {
   }
 
   const resultado = [];
+  for (const idActivo of idsEsperados.filter((item) => !idsVerificados.has(Number(item)))) {
+    resultado.push({
+      idActivo,
+      nombreActivo: await nombreDe(idActivo),
+      tipoDiferencia: TIPO_DIFERENCIA.Faltante,
+      observaciones: 'No se registro verificacion para este activo en la jornada.',
+    });
+  }
   for (const detalle of detalles.filter((item) => !item.encontrado)) {
     resultado.push({
       idActivo: detalle.idActivo,
