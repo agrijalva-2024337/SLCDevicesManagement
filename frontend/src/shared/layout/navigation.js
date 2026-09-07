@@ -80,6 +80,9 @@ export function getPageTitle(pathname) {
   if (/^\/app\/inventario-fisico\/\d+/.test(pathname)) {
     return 'Jornada';
   }
+  if (/^\/app\/reportes\/activos/.test(pathname)) {
+    return 'Activos detallados';
+  }
   return 'SLCDM';
 }
 
