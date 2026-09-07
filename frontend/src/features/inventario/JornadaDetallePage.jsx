@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
+import { useAuth } from '@/features/auth/useAuth';
 import { listarAgrupadosPorUbicacion } from '@/features/inventario/activosEsperados';
 import * as detalleActivoService from '@/features/inventario/detalleActivoService';
+import { HallazgoFormOverlay } from '@/features/inventario/HallazgoFormOverlay';
 import * as historicoInventarioService from '@/features/inventario/historicoInventarioService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import { DataTable } from '@/shared/components/DataTable';
@@ -45,6 +47,8 @@ function flattenFilas(grupos, hallazgoPorActivo) {
 
 export function JornadaDetallePage() {
   const { id } = useParams();
+  const { canWrite } = useAuth();
+  const allowWrite = canWrite('inventario-fisico');
   const sedes = useResource(sedeService.getAll);
   const crud = useCrudOverlay();
   const [jornada, setJornada] = useState(null);
@@ -52,9 +56,9 @@ export function JornadaDetallePage() {
   const [hallazgos, setHallazgos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [banner, setBanner] = useState(null);
 
   const reload = useCallback(async () => {
-    setIsLoading(true);
     try {
       const next = await historicoInventarioService.getById(id);
       const [nextGrupos, nextHallazgos] = await Promise.all([
@@ -73,8 +77,30 @@ export function JornadaDetallePage() {
   }, [id]);
 
   useEffect(() => {
-    reload();
-  }, [reload]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const next = await historicoInventarioService.getById(id);
+        if (cancelled) return;
+        const [nextGrupos, nextHallazgos] = await Promise.all([
+          listarAgrupadosPorUbicacion(next.idSede),
+          detalleActivoService.listarPorJornada(next.id),
+        ]);
+        if (cancelled) return;
+        setJornada(next);
+        setGrupos(nextGrupos);
+        setHallazgos(nextHallazgos);
+        setErrorMessage(null);
+      } catch (error) {
+        if (!cancelled) setErrorMessage(getErrorMessage(error));
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   const hallazgoPorActivo = useMemo(() => {
     const map = new Map();
@@ -137,6 +163,15 @@ export function JornadaDetallePage() {
         {jornada?.cerrado ? ` · Cierre ${formatDate(jornada.fechaCierre)}` : ''}
       </p>
 
+      {banner ? (
+        <div
+          className={`app-feedback mb-4 ${banner.variant === 'error' ? 'app-feedback--error' : 'app-feedback--empty'}`}
+          role={banner.variant === 'error' ? 'alert' : 'status'}
+        >
+          {banner.message}
+        </div>
+      ) : null}
+
       {grupos.length === 0 ? (
         <div className="app-feedback app-feedback--empty" role="status">
           No hay activos esperados en las ubicaciones de esta sede.
@@ -162,11 +197,22 @@ export function JornadaDetallePage() {
                 rows={rows}
                 hideToolbar
                 emptyTitle="Sin activos"
-                getRowActions={(row) =>
-                  row.verificado
-                    ? { view: { onClick: () => crud.openView(row.hallazgo) } }
-                    : {}
-                }
+                getRowActions={(row) => {
+                  if (row.verificado) {
+                    return { view: { onClick: () => crud.openView(row.hallazgo) } };
+                  }
+                  if (!allowWrite || jornada?.cerrado) return {};
+                  return {
+                    create: {
+                      onClick: () =>
+                        crud.openCreate({
+                          idActivo: row.idActivo,
+                          activoNombre: row.activoNombre,
+                          idHistoricoInventario: jornada.id,
+                        }),
+                    },
+                  };
+                }}
               />
             </div>
           );
@@ -190,6 +236,25 @@ export function JornadaDetallePage() {
           </div>
         ) : null}
       </DetailOverlay>
+
+      <HallazgoFormOverlay
+        open={crud.isCreate}
+        prefill={crud.record}
+        onClose={crud.close}
+        onSave={async (values) => {
+          await detalleActivoService.registrar({
+            idActivo: Number(values.idActivo || crud.record?.idActivo),
+            idHistoricoInventario: Number(jornada.id),
+            encontrado: values.encontrado,
+            buenEstado: values.buenEstado,
+            observaciones: values.observaciones,
+            fechaVerificacion: values.fechaVerificacion,
+          });
+          setBanner({ message: 'Hallazgo registrado.', variant: 'empty' });
+          crud.close();
+          await reload();
+        }}
+      />
     </section>
   );
 }

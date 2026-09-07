@@ -14,7 +14,7 @@ export function FormField({ id, label, required, error, hint, children, wide = f
   );
 }
 
-export function EnabledSwitch({ checked, onChange, title = 'Registro habilitado', hint }) {
+export function EnabledSwitch({ checked, onChange, title = 'Registro habilitado', hint, disabled = false }) {
   return (
     <div className="app-switch-row sm:col-span-2">
       <div>
@@ -26,8 +26,11 @@ export function EnabledSwitch({ checked, onChange, title = 'Registro habilitado'
         role="switch"
         aria-checked={checked}
         aria-label={title}
+        disabled={disabled}
         className={`app-switch ${checked ? 'is-on' : ''}`}
-        onClick={() => onChange(!checked)}
+        onClick={() => {
+          if (!disabled) onChange(!checked);
+        }}
       >
         <span className="app-switch-knob" />
       </button>
@@ -67,6 +70,7 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
               checked={Boolean(values[field.name])}
               title={field.label}
               hint={field.hint}
+              disabled={Boolean(field.disabled || field.readOnly || field.disabledWhen?.(values))}
               onChange={(next) => setField(field.name, next)}
             />
           );
