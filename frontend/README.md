@@ -111,7 +111,7 @@ Definidas en `src/app/routes.jsx` con `createBrowserRouter` + lazy. `App.jsx` mo
 | --- | --- | --- |
 | `/` | Landing pública | Activa |
 | `/login` | Inicio de sesión (JWT real o mock) | Activa |
-| `/app` | Dashboard (`HomePage`), envuelto en `RutaProtegida` | Activa |
+| `/app` | Dashboard de reportes (`DashboardPage`) | Activa |
 | `/app/catalogos/empresas` | Empresas + overlays `nueva` / `:id` / `:id/editar` | Activa |
 | `/app/catalogos/sedes` | Sedes + overlays `nueva` / `:id` / `:id/editar` | Activa |
 | `/app/catalogos/:slug` | Áreas, categorías, proveedores, ubicaciones, países | Activa |
@@ -124,11 +124,13 @@ Definidas en `src/app/routes.jsx` con `createBrowserRouter` + lazy. `App.jsx` mo
 | `/app/inventario-fisico` | Jornadas de inventario físico | Activa |
 | `/app/inventario-fisico/:id` | Hoja de conteo, hallazgos y diferencias | Activa |
 | `/app/bitacora` | Bitácora de auditoría, solo lectura | Activa |
+| `/app/reportes` | Catálogo de los 8 informes operativos | Activa |
+| `/app/reportes/activos` | Listado paginado `GET /api/Reportes/activos` | Activa |
 | `*` | 404 | Activa |
 
 Empresa y sede viven en `features/organizacion/`; el resto de maestros en `features/catalogos/` (`maestros.js` + `CatalogoPage`). Las URLs quedan bajo `/app/catalogos/...`. Deep link de ficha: `/app/catalogos/areas/7`. Países es grilla con banderas; ubicaciones es tabla + mapa. Detalle de la configuración: `src/features/catalogos/README.md`.
 
-Activos, asignaciones, traslados, mantenimientos, bajas, inventario físico y bitácora están habilitados en el sidebar. Reportes sigue deshabilitado. La bitácora no se muestra a Consulta ni a Operador.
+Activos, asignaciones, traslados, mantenimientos, bajas, inventario físico, reportes y bitácora están habilitados en el sidebar. La bitácora no se muestra a Consulta ni a Operador.
 
 ## Activos y asignaciones (FE-06)
 
@@ -229,6 +231,22 @@ Pendiente de Angel (`// [API]` en código):
 | --- | --- |
 | `GET /api/HistoricosInventario/{id}/esperados` | Replica las reglas de jornada en `activosEsperados.js` |
 
+## Dashboard y reportes (FE-10)
+
+El archivo del controller es `ReportesOperativosController.cs`, pero la clase es `ReportesController` y hereda `[Route("api/[controller]")]`. La ruta real es **`/api/Reportes`**, no `/api/ReportesOperativos`.
+
+Los 8 endpoints aceptan `idEmpresa` opcional. Admin general sin ese query ve todas las empresas: el selector del topbar se manda en las 8 llamadas. El resto usa el `EmpresaId` del token.
+
+`ActivoReporteDto` y `GarantiaPorVencerDto` anidan el `ActivoDto` en `activo` (`row.activo.nombre`). Los otros seis DTOs son planos.
+
+`estadoOperativo` sale en minúsculas: `disponible`, `asignado`, `mantenimiento`, `baja`. Las etiquetas (`Disponible`, `Asignado`, `En mantenimiento`, `Dado de baja`) viven en `ESTADO_OPERATIVO_LABEL`. El query `estado` acepta singular/plural y se normaliza.
+
+`GET /api/Reportes/activos` es el único endpoint paginado (`skip` / `take`, default 100, máx. 500). **No hay total.** El paginador es anterior/siguiente; se acaba cuando llegan menos de `take` filas.
+
+`GET /api/Reportes/diferencias-inventario` solo trae jornadas **cerradas**. El parcial de una jornada abierta sigue en `GET /api/HistoricosInventario/{id}/diferencias`.
+
+Las gráficas son SVG propio (`ActivityCharts.jsx`). No hay recharts, chart.js ni d3.
+
 ## Estructura de carpetas
 
 ```
@@ -249,6 +267,7 @@ frontend/src/
     inventario/        TrasladosPage, JornadasPage, hoja de conteo, historicoInventarioService, detalleActivoService
     mantenimientos/    MantenimientosPage, apertura, cierre, tipoMantenimientoService
     bajas/             BajasPage, BajaFormOverlay, bajaService, motivosBaja
+    reportes/          DashboardPage, ReportesPage, ActivosReportePage, reporteService, gráficas SVG
   shared/
     api/               paths.js, contracts.js, errors.js
     components/        DataTable, PageHeader, FeedbackState, overlays, forms…
@@ -279,6 +298,7 @@ Los campos de cada catálogo coinciden con los DTOs de Application (camelCase): 
 | Traslados / mantenimientos        | Vista + POST dedicados                | `/traslado`, `/mantenimiento`, `/finalizar-mantenimiento` |
 | Bajas                             | Vista + `POST /baja`                  | Motivo desde historial. MotivosBaja mock. |
 | Inventario físico                 | `historicoInventarioService`, `detalleActivoService` | Jornadas por sede, hallazgos, `POST {id}/cerrar`, `GET {id}/diferencias` |
+| Reportes                          | `reporteService` (solo lectura)                      | `/api/Reportes/*`. `activos` pagina con skip/take y sin total |
 
 Hook `useResource(loadFn)` → `{ data, isLoading, errorMessage, reload }`.
 
