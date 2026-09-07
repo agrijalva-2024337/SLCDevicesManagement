@@ -19,13 +19,18 @@ public sealed class GetAsignacionPdfQueryHandler : IQueryHandler<GetAsignacionPd
 {
     private readonly IApplicationDbContext _db;
     private readonly IAsignacionPdfService _pdf;
+    private readonly IPdfHashService _pdfHash;
     private readonly IValidator<GetAsignacionPdfQuery> _validator;
 
     public GetAsignacionPdfQueryHandler(
-        IApplicationDbContext db, IAsignacionPdfService pdf, IValidator<GetAsignacionPdfQuery> validator)
+        IApplicationDbContext db,
+        IAsignacionPdfService pdf,
+        IPdfHashService pdfHash,
+        IValidator<GetAsignacionPdfQuery> validator)
     {
         _db = db;
         _pdf = pdf;
+        _pdfHash = pdfHash;
         _validator = validator;
     }
 
@@ -39,6 +44,7 @@ public sealed class GetAsignacionPdfQueryHandler : IQueryHandler<GetAsignacionPd
         if (tracked is not null && tracked.DocumentoPdfGenerardoEn is null)
         {
             tracked.DocumentoPdfUrl ??= $"/api/asignaciones/{tracked.Id}/pdf";
+            tracked.DocumentoPdfHash = _pdfHash.CalcularHash(file.Content);
             tracked.DocumentoPdfGenerardoEn = DateTime.UtcNow;
             await _db.SaveChangesAsync(cancellationToken);
         }
