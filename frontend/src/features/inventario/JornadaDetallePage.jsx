@@ -57,6 +57,8 @@ export function JornadaDetallePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
   const [banner, setBanner] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
 
   const reload = useCallback(async () => {
     try {
@@ -199,7 +201,23 @@ export function JornadaDetallePage() {
                 emptyTitle="Sin activos"
                 getRowActions={(row) => {
                   if (row.verificado) {
-                    return { view: { onClick: () => crud.openView(row.hallazgo) } };
+                    const actions = { view: { onClick: () => crud.openView(row.hallazgo) } };
+                    if (allowWrite && !jornada?.cerrado) {
+                      actions.edit = {
+                        onClick: () =>
+                          crud.openEdit({
+                            ...row.hallazgo,
+                            activoNombre: row.activoNombre,
+                          }),
+                      };
+                      actions.remove = {
+                        onClick: () => {
+                          setDeleteError(null);
+                          setPendingDelete({ ...row.hallazgo, activoNombre: row.activoNombre });
+                        },
+                      };
+                    }
+                    return actions;
                   }
                   if (!allowWrite || jornada?.cerrado) return {};
                   return {
@@ -238,23 +256,83 @@ export function JornadaDetallePage() {
       </DetailOverlay>
 
       <HallazgoFormOverlay
-        open={crud.isCreate}
+        open={crud.isCreate || crud.isEdit}
         prefill={crud.record}
         onClose={crud.close}
         onSave={async (values) => {
-          await detalleActivoService.registrar({
-            idActivo: Number(values.idActivo || crud.record?.idActivo),
-            idHistoricoInventario: Number(jornada.id),
-            encontrado: values.encontrado,
-            buenEstado: values.buenEstado,
-            observaciones: values.observaciones,
-            fechaVerificacion: values.fechaVerificacion,
-          });
-          setBanner({ message: 'Hallazgo registrado.', variant: 'empty' });
+          if (crud.isEdit) {
+            await detalleActivoService.actualizar(crud.record.id, {
+              encontrado: values.encontrado,
+              buenEstado: values.buenEstado,
+              observaciones: values.observaciones,
+            });
+            setBanner({ message: 'Hallazgo actualizado.', variant: 'empty' });
+          } else {
+            await detalleActivoService.registrar({
+              idActivo: Number(values.idActivo || crud.record?.idActivo),
+              idHistoricoInventario: Number(jornada.id),
+              encontrado: values.encontrado,
+              buenEstado: values.buenEstado,
+              observaciones: values.observaciones,
+              fechaVerificacion: values.fechaVerificacion,
+            });
+            setBanner({ message: 'Hallazgo registrado.', variant: 'empty' });
+          }
           crud.close();
           await reload();
         }}
       />
+
+      <DetailOverlay
+        open={Boolean(pendingDelete)}
+        title="Eliminar hallazgo"
+        kicker="Confirmación"
+        onClose={() => {
+          setPendingDelete(null);
+          setDeleteError(null);
+        }}
+      >
+        <p className="text-base text-navy">
+          Se eliminará la verificación de {pendingDelete?.activoNombre ?? 'este activo'}. El movimiento de
+          verificación asociado en el historial del activo también se borra en el servidor.
+        </p>
+        {deleteError ? (
+          <div className="app-feedback app-feedback--error" role="alert">
+            {deleteError}
+          </div>
+        ) : null}
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            className="app-btn app-btn--primary"
+            onClick={async () => {
+              try {
+                await detalleActivoService.eliminar(pendingDelete.id);
+                setBanner({ message: 'Hallazgo eliminado.', variant: 'empty' });
+                setPendingDelete(null);
+                setDeleteError(null);
+                crud.close();
+                await reload();
+              } catch (error) {
+                setDeleteError(getErrorMessage(error));
+              }
+            }}
+          >
+            <i className="pi pi-trash" aria-hidden="true" />
+            Eliminar
+          </button>
+          <button
+            type="button"
+            className="app-btn app-btn--ghost"
+            onClick={() => {
+              setPendingDelete(null);
+              setDeleteError(null);
+            }}
+          >
+            Cancelar
+          </button>
+        </div>
+      </DetailOverlay>
     </section>
   );
 }
