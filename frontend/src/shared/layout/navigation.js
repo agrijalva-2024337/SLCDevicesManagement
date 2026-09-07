@@ -77,6 +77,9 @@ export function getPageTitle(pathname) {
   if (/^\/app\/catalogos\/[^/]+\/[^/]+/.test(pathname)) {
     return 'Ficha';
   }
+  if (/^\/app\/inventario-fisico\/\d+/.test(pathname)) {
+    return 'Jornada';
+  }
   return 'SLCDM';
 }
 
