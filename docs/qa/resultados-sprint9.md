@@ -199,4 +199,29 @@ Todos los casos quedan **bloqueados** por ese hallazgo. No se inventan pases en 
 
 ## Issues
 
-Pendiente de número de GitHub (se anota en el commit de enlace). Un issue por este bloqueo; no se abren 82 issues iguales.
+`gh` no está en el PATH de esta máquina; el número de GitHub queda **pendiente**. Un solo issue (no 82): el API no compila y bloquea todos los casos.
+
+Cuando exista el número, reemplazar `pendiente` en la columna de enlace. Borrador para abrir:
+
+**Título:** `[BE] SLCDM.Api no compila por DispositivosController`
+
+**Labels:** `bug`, `backend`, `sprint-10`
+
+**Cuerpo:**
+
+```
+**Módulo:** API / Dispositivos
+**Perfil:** ninguno (no hay login)
+**Pasos:** 1) `cd src/SLCDM.Api`  2) `dotnet build` o `dotnet run`
+**Esperado:** la API escucha en http://localhost:5139 y Swagger abre
+**Obtenido:** CS1003 en DispositivosController.cs:29 (falta coma tras `_ping`). Tampoco existen `GetDispositivosRastreoQuery` ni `DispositivoRastreoDto` en Application.
+**Endpoint:** ninguno; el host no arranca
+**Causa:** backend
+**Severidad:** crítica
+**Caso del plan:** AUTH-01 (bloquea AUTH-* CAT-* ACT-* ASG-* TRA-* MAN-* BAJ-* INV-* BIT-* DAS-* REP-* PER-*)
+**Evidencia:** `dotnet build src/SLCDM.Api/SLCDM.Api.csproj` → error CS1003. `Invoke-WebRequest http://localhost:5139/swagger` → timeout.
+```
+
+| Casos | Issue |
+| --- | --- |
+| AUTH-01 … PER-04 (82 bloqueados) | pendiente — mismo bug de compilación |
