@@ -30,8 +30,8 @@ function EmpresaSelector() {
 }
 
 export function Topbar({ sidebarOpen, onMenuToggle }) {
-  const { pathname } = useLocation();
-  const title = getPageTitle(pathname);
+  const { pathname, search } = useLocation();
+  const title = getPageTitle(pathname, search);
 
   return (
     <header className="app-topbar sticky top-0 z-20 flex h-[var(--header-height)] items-center justify-between">

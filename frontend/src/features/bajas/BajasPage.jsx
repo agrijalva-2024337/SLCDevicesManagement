@@ -97,9 +97,9 @@ export function BajasPage() {
     if (idActivo == null || idActivo === '') return;
     prefillOpened.current = true;
     crud.openCreate({ idActivo });
-    navigate(location.pathname, { replace: true, state: {} });
+    navigate({ pathname: location.pathname, search: location.search }, { replace: true, state: {} });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- solo reacciona al state de navegación
-  }, [allowWrite, location.pathname, location.state, navigate]);
+  }, [allowWrite, location.pathname, location.search, location.state, navigate]);
 
   if (errorMessage) {
     return (

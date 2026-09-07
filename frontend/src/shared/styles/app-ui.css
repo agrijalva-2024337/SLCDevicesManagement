@@ -534,6 +534,52 @@ select.app-input {
   box-shadow: 0 0 0 1px var(--border);
 }
 
+.app-vista-nav {
+  position: sticky;
+  top: var(--header-height);
+  z-index: 15;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: -0.15rem 0 1.15rem;
+  padding: 0.3rem;
+  border-radius: 16px;
+  background: var(--surface-muted);
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.app-vista-nav__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.35rem;
+  padding: 0.35rem 0.95rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.app-vista-nav__tab:hover {
+  color: var(--color-navy);
+  background: var(--surface-elevated);
+}
+
+.app-vista-nav__tab.is-active {
+  color: var(--color-navy);
+  background: var(--surface-elevated);
+  box-shadow: 0 1px 3px rgb(12 20 64 / 0.08);
+}
+
+.app-vista-nav__tab i {
+  font-size: 0.85rem;
+}
+
 .app-field {
   position: relative;
   border-radius: 14px;
@@ -845,4 +891,14 @@ select.app-input {
 
 [data-theme='dark'] .app-feedback {
   box-shadow: none;
+}
+
+[data-theme='dark'] .app-vista-nav {
+  background: var(--surface-elevated);
+}
+
+[data-theme='dark'] .app-vista-nav__tab:hover,
+[data-theme='dark'] .app-vista-nav__tab.is-active {
+  color: var(--text);
+  background: var(--surface-muted);
 }

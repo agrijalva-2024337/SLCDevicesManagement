@@ -82,10 +82,10 @@ export function Sidebar({ open, onClose }) {
                       {children.map((child) => (
                         <li key={child.path}>
                           {child.disabled ? (
-                            <DisabledNavItem label={child.label} />
+                            <DisabledNavItem icon={child.icon} label={child.label} />
                           ) : (
                             <NavLink to={child.path} className={linkClass} onClick={closeOnMobile}>
-                              {child.label}
+                              <NavItemContent icon={child.icon} label={child.label} />
                             </NavLink>
                           )}
                         </li>

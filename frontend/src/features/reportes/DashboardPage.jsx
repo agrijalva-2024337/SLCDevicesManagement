@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { TIPO_DIFERENCIA_LABEL, TIPO_DIFERENCIA_TONE } from '@/features/inventario/tipoDiferencia';
 import * as historicoInventarioService from '@/features/inventario/historicoInventarioService';
+import { activosVistaPath } from '@/features/activos/activosVistas';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { DualBars, HBarChart, Sparkline, WaveSpark } from '@/features/reportes/components/ActivityCharts';
 import { CATEGORY_ICON, RANGE_OPTIONS } from '@/features/reportes/dashboardParams';
@@ -126,7 +127,7 @@ export function DashboardPage() {
       value: resumen.enMantenimiento,
       icon: 'pi-wrench',
       tone: 'danger',
-      to: '/app/mantenimientos?abiertos=1',
+      to: activosVistaPath('mantenimientos', { abiertos: '1' }),
     },
   ];
 
@@ -158,7 +159,7 @@ export function DashboardPage() {
       title: 'Mantenimientos',
       icon: 'pi-wrench',
       tone: 'accent',
-      to: '/app/mantenimientos?abiertos=1',
+      to: activosVistaPath('mantenimientos', { abiertos: '1' }),
       stats: [
         { label: 'Abiertos', value: resumen.enMantenimiento },
         { label: 'Dados de baja', value: resumen.dadosDeBaja },
@@ -169,7 +170,7 @@ export function DashboardPage() {
       title: 'Bajas',
       icon: 'pi-calendar',
       tone: 'warning',
-      to: '/app/bajas',
+      to: activosVistaPath('bajas'),
       stats: [
         { label: 'Registradas', value: resumen.dadosDeBaja },
         { label: 'En mantenimiento', value: resumen.enMantenimiento },
@@ -371,7 +372,7 @@ export function DashboardPage() {
                 items={estadoItems}
                 total={totalEstados || undefined}
                 onSelect={(item) => {
-                  if (item.key === 'mant') navigate('/app/mantenimientos?abiertos=1');
+                  if (item.key === 'mant') navigate(activosVistaPath('mantenimientos', { abiertos: '1' }));
                   else if (item.key === 'asig') {
                     navigate(`/app/activos?estado=${encodeURIComponent(ESTADO_ACTIVO.Asignado)}`);
                   } else {

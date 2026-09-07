@@ -91,10 +91,10 @@ export function AsignacionesPage() {
     if (idActivo == null || idActivo === '') return;
     prefillOpened.current = true;
     crud.openCreate({ idActivo });
-    navigate(location.pathname, { replace: true, state: {} });
+    navigate({ pathname: location.pathname, search: location.search }, { replace: true, state: {} });
     // openCreate es estable en la práctica; el ref evita reabrir al re-renderizar.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- solo reacciona al state de navegación
-  }, [allowWrite, location.pathname, location.state, navigate]);
+  }, [allowWrite, location.pathname, location.search, location.state, navigate]);
 
   const responsableOptions = useMemo(
     () => [
@@ -128,7 +128,7 @@ export function AsignacionesPage() {
       ) : null}
       <DataTable
         title="Asignaciones"
-        description="Entrega y devolución. Solo filas de tipo Asignacion. Traslado y mantenimiento viven en sus propias pantallas."
+        description="Entrega y devolución. Solo filas de tipo Asignacion. Traslado y mantenimiento están en las pestañas de Activos."
         primaryAction={
           allowWrite ? <RegisterButton label="Registrar asignación" onClick={() => crud.openCreate()} /> : null
         }

@@ -116,11 +116,12 @@ Definidas en `src/app/routes.jsx` con `createBrowserRouter` + lazy. `App.jsx` mo
 | `/app/catalogos/sedes` | Sedes + overlays `nueva` / `:id` / `:id/editar` | Activa |
 | `/app/catalogos/:slug` | Áreas, categorías, proveedores, ubicaciones, países | Activa |
 | `/app/catalogos/:slug/nueva` \| `:id` \| `:id/editar` | Ficha y formulario sobre la lista | Activa |
-| `/app/activos` | Parque: alta, edición, ficha, acciones y línea de tiempo | Activa |
-| `/app/asignaciones` | Entrega y devolución (tipo `Asignacion`) | Activa |
-| `/app/traslados` | Traslados (vista de `Asignacion` tipo Traslado) | Activa |
-| `/app/mantenimientos` | Mantenimientos (vista de `Asignacion` tipo Mantenimiento) | Activa |
-| `/app/bajas` | Bajas (vista de `Asignacion` tipo Baja) | Activa |
+| `/app/activos` | Parque + pestañas Asignaciones / Traslados / Mantenimientos / Bajas (`?vista=`) | Activa |
+| `/app/activos?vista=asignaciones` | Entrega y devolución (tipo `Asignacion`) | Activa |
+| `/app/activos?vista=traslados` | Traslados (vista de `Asignacion` tipo Traslado) | Activa |
+| `/app/activos?vista=mantenimientos` | Mantenimientos (vista de `Asignacion` tipo Mantenimiento) | Activa |
+| `/app/activos?vista=bajas` | Bajas (vista de `Asignacion` tipo Baja) | Activa |
+| `/app/asignaciones` `/traslados` `/mantenimientos` `/bajas` | Redirigen a la pestaña de Activos | Redirect |
 | `/app/inventario-fisico` | Jornadas de inventario físico | Activa |
 | `/app/inventario-fisico/:id` | Hoja de conteo, hallazgos y diferencias | Activa |
 | `/app/bitacora` | Bitácora de auditoría, solo lectura | Activa |
@@ -130,7 +131,7 @@ Definidas en `src/app/routes.jsx` con `createBrowserRouter` + lazy. `App.jsx` mo
 
 Empresa y sede viven en `features/organizacion/`; el resto de maestros en `features/catalogos/` (`maestros.js` + `CatalogoPage`). Las URLs quedan bajo `/app/catalogos/...`. Deep link de ficha: `/app/catalogos/areas/7`. Países es grilla con banderas; ubicaciones es tabla + mapa. Detalle de la configuración: `src/features/catalogos/README.md`.
 
-Activos, asignaciones, traslados, mantenimientos, bajas, inventario físico, reportes y bitácora están habilitados en el sidebar. La bitácora no se muestra a Consulta ni a Operador.
+El sidebar muestra Activos, inventario físico, reportes y bitácora. Asignaciones, traslados, mantenimientos y bajas viven como pestañas de filtro en Activos. La bitácora no se muestra a Consulta ni a Operador.
 
 ## Activos y asignaciones (FE-06)
 
@@ -140,7 +141,7 @@ El estado del activo no viene en el DTO. Se lee de `Activo.idEstado` si el mock 
 
 Asignaciones de esta pantalla son **solo entrega**. Se listan filas con tipo `Asignacion` resuelto por nombre. No hay select de Traslado / Mantenimiento / Baja. Crear llama `POST /api/Asignaciones` (`CreateAsignacionCommand` exige `idUbicacion`; se toma del activo). Cerrar llama `POST /api/Asignaciones/{id}/devolver`. No se edita `activa` a mano.
 
-Desde la ficha, **Asignar** navega a `/app/asignaciones` con `state: { idActivo }`. Trasladar, mantenimiento y dar de baja abren overlays locales. **Dar de baja** exige `canWrite('bajas')` (Administrador de empresa o superior). El operador ve la acción deshabilitada, no oculta.
+Desde la ficha, **Asignar** abre la pestaña `?vista=asignaciones` con `state: { idActivo }`. Trasladar, mantenimiento y dar de baja abren overlays locales. **Dar de baja** exige `canWrite('bajas')` (Administrador de empresa o superior). El operador ve la acción deshabilitada, no oculta.
 
 Perfil Consulta: ve listas y fichas; no registra, no edita, no entrega ni devuelve. Operador de inventario o superior escribe en `activos` y `asignaciones`.
 
@@ -172,7 +173,7 @@ Escritura real (BE-16 / BE-17 ya publicados):
 
 En mock (`VITE_USE_API_MOCK=true`) esos POST se simulan con `asignacionService.create` / `devolver` y se actualiza el activo. El listado sigue siendo una vista sobre `Asignacion`.
 
-Query params de mantenimientos (drill-down de FE-10): `?abiertos=1` y `?estado=<nombre>`. Deep link de ficha: `?id=<id>`.
+Query params de mantenimientos (drill-down de FE-10): `/app/activos?vista=mantenimientos&abiertos=1` y `?estado=<nombre>`. Deep link de ficha: `?id=<id>`.
 
 Perfil Consulta: sin botones de registrar ni finalizar. Un activo dado de baja muestra traslado y mantenimiento deshabilitados, con el motivo en el tooltip.
 
