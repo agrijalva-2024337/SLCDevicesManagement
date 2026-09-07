@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation, useNavigate, useOutletContext } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
+import { RolUsuario } from '@/shared/api/contracts';
 import { DetailOverlay } from '@/shared/components/DetailOverlay';
 import { FeedbackState } from '@/shared/components/FeedbackState';
 import { PageHeader } from '@/shared/components/PageHeader';
@@ -71,4 +72,14 @@ export function RutaEscritura() {
   }
 
   return <Outlet context={outlet} />;
+}
+
+export function RutaAdministrador() {
+  const { rol } = useAuth();
+
+  if (rol == null || rol < RolUsuario.AdministradorEmpresa) {
+    return <SinPermiso />;
+  }
+
+  return <Outlet />;
 }

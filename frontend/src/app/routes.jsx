@@ -73,7 +73,11 @@ export const router = createBrowserRouter([
           { path: 'traslados', ...named(loadTraslados, 'TrasladosPage') },
           { path: 'mantenimientos', ...named(loadMantenimientos, 'MantenimientosPage') },
           { path: 'bajas', ...named(loadBajas, 'BajasPage') },
-          { path: 'bitacora', ...named(loadBitacora, 'BitacoraPage') },
+          {
+            path: 'bitacora',
+            ...named(loadGuard, 'RutaAdministrador'),
+            children: [{ index: true, ...named(loadBitacora, 'BitacoraPage') }],
+          },
         ],
       },
     ],

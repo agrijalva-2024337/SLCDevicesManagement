@@ -1,4 +1,6 @@
 import { NavLink } from 'react-router';
+import { useAuth } from '@/features/auth/useAuth';
+import { RolUsuario } from '@/shared/api/contracts';
 import { navigation } from '@/shared/layout/navigation';
 import { ThemeToggle } from '@/shared/theme/ThemeToggle';
 
@@ -23,7 +25,14 @@ function DisabledNavItem({ icon, label }) {
   );
 }
 
+function isVisibleToRol(item, rol) {
+  if (!item.adminOnly) return true;
+  return rol != null && rol >= RolUsuario.AdministradorEmpresa;
+}
+
 export function Sidebar({ open, onClose }) {
+  const { rol } = useAuth();
+
   function closeOnMobile() {
     if (window.matchMedia('(max-width: 1023.98px)').matches) {
       onClose();
@@ -59,8 +68,10 @@ export function Sidebar({ open, onClose }) {
 
         <nav aria-label="Módulos del sistema" className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-1">
-            {navigation.map((item) => {
+            {navigation.filter((item) => isVisibleToRol(item, rol)).map((item) => {
               if (item.type === 'group') {
+                const children = item.children.filter((child) => isVisibleToRol(child, rol));
+                if (!children.length) return null;
                 return (
                   <li key={item.label} className="pt-3">
                     <p className="app-nav-group">
@@ -68,7 +79,7 @@ export function Sidebar({ open, onClose }) {
                       {item.label}
                     </p>
                     <ul className="space-y-0.5">
-                      {item.children.map((child) => (
+                      {children.map((child) => (
                         <li key={child.path}>
                           {child.disabled ? (
                             <DisabledNavItem label={child.label} />
