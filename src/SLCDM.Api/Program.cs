@@ -21,6 +21,8 @@ builder.Services.Configure<SLCDM.Application.Common.Options.DeviceTrackingOption
 builder.Services.Configure<SLCDM.Application.Common.Options.SmtpOptions>(
     builder.Configuration.GetSection(SLCDM.Application.Common.Options.SmtpOptions.SectionName));
 builder.Services.AddSingleton<SLCDM.Application.Common.Interfaces.IEmailSender, SLCDM.Api.Email.SmtpEmailSender>();
+builder.Services.Configure<SLCDM.Application.Common.Options.DocumentIntegrityOptions>(
+    builder.Configuration.GetSection(SLCDM.Application.Common.Options.DocumentIntegrityOptions.SectionName));
 
 
 var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
