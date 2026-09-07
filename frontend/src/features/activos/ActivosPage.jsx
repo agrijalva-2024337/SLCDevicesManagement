@@ -186,7 +186,6 @@ export function ActivosPage() {
         initialFilters={estadoInicial ? { estadoNombre: estadoInicial } : undefined}
         emptyTitle="No hay activos"
         emptyDescription="Registre el primer activo para armar el parque."
-        expandable
         renderRowActions={(row) => (
           <RowIconActions
             actions={

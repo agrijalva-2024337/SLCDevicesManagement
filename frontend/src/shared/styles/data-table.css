@@ -178,6 +178,16 @@
   color: var(--color-text-muted);
 }
 
+.data-th-actions,
+.data-td-actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.data-td-actions .data-row-actions {
+  justify-content: flex-end;
+}
+
 .data-table--expandable tbody tr:not(.data-table-expand-row) {
   cursor: pointer;
 }
