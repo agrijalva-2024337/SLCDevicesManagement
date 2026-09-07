@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { useAuth } from '@/features/auth/useAuth';
 import * as bitacoraService from '@/features/organizacion/bitacoras/bitacoraService';
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import { TipoOperacionBitacora } from '@/shared/api/contracts';
@@ -30,6 +31,8 @@ function diaDe(fechaHora) {
 }
 
 export function BitacoraPage() {
+  const { canWrite } = useAuth();
+  const canReadUsuarios = canWrite('usuarios');
   const [idUsuario, setIdUsuario] = useState('all');
   const [entidadAfectada, setEntidadAfectada] = useState('all');
   const [fechaDesde, setFechaDesde] = useState('');
@@ -44,7 +47,8 @@ export function BitacoraPage() {
     [entidadAfectada, idUsuario],
   );
   const { rows, isLoading, errorMessage } = useCatalogCollection(load);
-  const usuarios = useResource(usuarioService.getAll);
+  const loadUsuarios = useCallback(() => usuarioService.getAllIfAllowed(canReadUsuarios), [canReadUsuarios]);
+  const usuarios = useResource(loadUsuarios);
 
   const tableRows = useMemo(() => {
     const mapped = rows.map((row) => ({
@@ -63,13 +67,13 @@ export function BitacoraPage() {
 
   const usuarioOptions = useMemo(
     () => [
-      { value: 'all', label: 'Todos los usuarios' },
+      { value: 'all', label: canReadUsuarios ? 'Todos los usuarios' : 'Listado de usuarios no disponible' },
       ...(usuarios.data ?? []).map((item) => ({
         value: String(item.id),
         label: usuarioNombre(item),
       })),
     ],
-    [usuarios.data],
+    [canReadUsuarios, usuarios.data],
   );
 
   const entidadOptions = useMemo(() => {
@@ -101,6 +105,8 @@ export function BitacoraPage() {
             id="bitacora-usuario"
             className="app-input"
             value={idUsuario}
+            disabled={!canReadUsuarios}
+            title={canReadUsuarios ? undefined : usuarioService.USUARIOS_SIN_LECTURA}
             onChange={(event) => setIdUsuario(event.target.value)}
           >
             {usuarioOptions.map((option) => (
