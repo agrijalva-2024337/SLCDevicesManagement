@@ -62,6 +62,8 @@ export function DashboardPage() {
   const ubicaciones = useResource(loadUbicaciones);
   const [idSedeSel, setIdSedeSel] = useState(null);
   const [diasGarantia, setDiasGarantia] = useState(30);
+  const sedeSigueVisible = (sedes.data ?? []).some((row) => Number(row.idSede) === Number(idSedeSel));
+  const idSedeFiltro = sedeSigueVisible ? idSedeSel : null;
   const loadGarantias = useCallback(
     () => reporteService.garantiasPorVencer({ idEmpresa: idActiva || undefined, dias: diasGarantia }),
     [diasGarantia, idActiva],
@@ -89,9 +91,9 @@ export function DashboardPage() {
     return [...groups.values()];
   }, [diferencias.data]);
   const ubicacionesFiltradas = useMemo(() => {
-    if (idSedeSel == null) return ubicaciones.data ?? [];
-    return (ubicaciones.data ?? []).filter((row) => Number(row.idSede) === Number(idSedeSel));
-  }, [idSedeSel, ubicaciones.data]);
+    if (idSedeFiltro == null) return ubicaciones.data ?? [];
+    return (ubicaciones.data ?? []).filter((row) => Number(row.idSede) === Number(idSedeFiltro));
+  }, [idSedeFiltro, ubicaciones.data]);
   const resumen = useMemo(() => consolidar(inventario.data), [inventario.data]);
   const variasEmpresas = (inventario.data?.length ?? 0) > 1;
 
@@ -223,7 +225,7 @@ export function DashboardPage() {
                     {(sedes.data ?? []).map((row) => (
                       <tr
                         key={row.idSede}
-                        className={Number(idSedeSel) === Number(row.idSede) ? 'is-on' : undefined}
+                        className={Number(idSedeFiltro) === Number(row.idSede) ? 'is-on' : undefined}
                         onClick={() =>
                           setIdSedeSel((current) =>
                             Number(current) === Number(row.idSede) ? null : row.idSede,
@@ -248,7 +250,9 @@ export function DashboardPage() {
             <div>
               <h2>Por ubicación</h2>
               <p className="dash-hint">
-                {idSedeSel == null ? 'Todas las sedes de la empresa activa.' : 'Filtrado en cliente, sin otra petición.'}
+                {idSedeFiltro == null
+                  ? 'Todas las sedes de la empresa activa.'
+                  : 'Filtrado en cliente, sin otra petición.'}
               </p>
             </div>
           </header>

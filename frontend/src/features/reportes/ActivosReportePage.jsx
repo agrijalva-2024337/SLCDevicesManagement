@@ -33,6 +33,15 @@ export function ActivosReportePage() {
   const sedes = useResource(sedeService.getAll);
   const categorias = useResource(categoriaService.getAll);
   const responsables = useResource(responsableService.getAll);
+  const sedesEmpresa = useMemo(() => {
+    if (idActiva == null || idActiva === '') return sedes.data ?? [];
+    return (sedes.data ?? []).filter((sede) => Number(sede.idEmpresa) === Number(idActiva));
+  }, [idActiva, sedes.data]);
+  const [empresaVista, setEmpresaVista] = useState(idActiva);
+  if (empresaVista !== idActiva) {
+    setEmpresaVista(idActiva);
+    setSkip(0);
+  }
 
   const load = useCallback(
     () =>
@@ -106,7 +115,7 @@ export function ActivosReportePage() {
           Sede
           <select className="app-input" value={idSede} onChange={cambiarFiltro(setIdSede)}>
             <option value="">Todas</option>
-            {(sedes.data ?? []).map((sede) => (
+            {sedesEmpresa.map((sede) => (
               <option key={sede.id} value={sede.id}>
                 {sede.nombre}
               </option>
