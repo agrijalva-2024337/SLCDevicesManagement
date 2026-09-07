@@ -24,6 +24,7 @@ const loadActivos = () => import('@/features/activos/ActivosPage');
 const loadAsignaciones = () => import('@/features/asignaciones/AsignacionesPage');
 const loadBajas = () => import('@/features/bajas/BajasPage');
 const loadBitacora = () => import('@/features/organizacion/bitacoras/BitacoraPage');
+const loadJornadas = () => import('@/features/inventario/JornadasPage');
 
 const writeChildren = (loader, formExport, detailExport) => [
   {
@@ -73,6 +74,7 @@ export const router = createBrowserRouter([
           { path: 'traslados', ...named(loadTraslados, 'TrasladosPage') },
           { path: 'mantenimientos', ...named(loadMantenimientos, 'MantenimientosPage') },
           { path: 'bajas', ...named(loadBajas, 'BajasPage') },
+          { path: 'inventario-fisico', ...named(loadJornadas, 'JornadasPage') },
           {
             path: 'bitacora',
             ...named(loadGuard, 'RutaAdministrador'),
