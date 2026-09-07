@@ -21,6 +21,7 @@ public sealed class AsignacionesController : ApiControllerBase
     private readonly ICommandHandler<FinalizarMantenimientoCommand> _finalizarMantenimiento;
     private readonly ICommandHandler<CreateBajaCommand, int> _darDeBaja;
     private readonly IQueryHandler<GetAsignacionPdfQuery, AsignacionPdfFileDto> _pdf;
+    private readonly IQueryHandler<VerificarDocumentoPdfQuery, VerificacionPdfDto> _verificarPdf;
 
     public AsignacionesController(
         IQueryHandler<GetAsignacionesQuery, IReadOnlyList<AsignacionDto>> getAll,
@@ -33,7 +34,8 @@ public sealed class AsignacionesController : ApiControllerBase
         ICommandHandler<CreateMantenimientoCommand, int> iniciarMantenimiento,
         ICommandHandler<FinalizarMantenimientoCommand> finalizarMantenimiento,
         ICommandHandler<CreateBajaCommand, int> darDeBaja,
-        IQueryHandler<GetAsignacionPdfQuery, AsignacionPdfFileDto> pdf)
+        IQueryHandler<GetAsignacionPdfQuery, AsignacionPdfFileDto> pdf,
+        IQueryHandler<VerificarDocumentoPdfQuery, VerificacionPdfDto> verificarPdf)
     {
         _getAll = getAll;
         _getById = getById;
@@ -46,6 +48,7 @@ public sealed class AsignacionesController : ApiControllerBase
         _finalizarMantenimiento = finalizarMantenimiento;
         _darDeBaja = darDeBaja;
         _pdf = pdf;
+        _verificarPdf = verificarPdf;
     }
 
     [HttpGet]
@@ -158,4 +161,18 @@ public sealed class AsignacionesController : ApiControllerBase
         var id = await _darDeBaja.HandleAsync(command, cancellationToken);
         return CreatedId(nameof(GetById), id);
     }
+
+    [HttpPost("{id:int}/pdf/verificar")]
+    [Authorize(Roles = Roles.EscrituraOperativa)]
+        public async Task<ActionResult<VerificacionPdfDto>> VerificarPdf(
+            int id, IFormFile archivo, CancellationToken cancellationToken)
+        {
+            using var stream = new MemoryStream();
+            await archivo.CopyToAsync(stream, cancellationToken);
+
+            var resultado = await _verificarPdf.HandleAsync(
+                new VerificarDocumentoPdfQuery(id, stream.ToArray()), cancellationToken);
+
+            return Ok(resultado);
+}
 }
