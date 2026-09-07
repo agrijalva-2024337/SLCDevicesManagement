@@ -52,6 +52,7 @@ export function ActivosPage() {
   const { canWrite, usuario } = useAuth();
   const allowWrite = canWrite('activos');
   const canRetire = canWrite('bajas');
+  const canReadUsuarios = canWrite('usuarios');
   const { idActiva, empresas } = useEmpresaActiva();
   const load = useCallback(() => activoService.getAll(), []);
   const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(load);
@@ -65,7 +66,8 @@ export function ActivosPage() {
   const responsables = useResource(responsableService.getAll);
   const tipos = useResource(tipoAsignacionService.getAll);
   const asignaciones = useResource(asignacionService.getAll);
-  const usuarios = useResource(usuarioService.getAll);
+  const loadUsuarios = useCallback(() => usuarioService.getAllIfAllowed(canReadUsuarios), [canReadUsuarios]);
+  const usuarios = useResource(loadUsuarios);
   const motivos = useResource(motivoBajaService.getAll);
   const tiposMantenimiento = useResource(tipoMantenimientoService.getAll);
 
@@ -303,6 +305,7 @@ export function ActivosPage() {
         activos={rows}
         motivos={motivos.data}
         usuarios={usuarios.data}
+        usuariosUnavailableReason={canReadUsuarios ? null : usuarioService.USUARIOS_SIN_LECTURA}
         responsables={responsables.data}
         asignaciones={asignaciones.data}
         tipos={tipos.data}

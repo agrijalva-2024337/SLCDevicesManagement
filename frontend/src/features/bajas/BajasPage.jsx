@@ -49,6 +49,7 @@ function hydrate(row, lookups) {
 export function BajasPage() {
   const { canWrite, usuario } = useAuth();
   const allowWrite = canWrite('bajas');
+  const canReadUsuarios = canWrite('usuarios');
   const location = useLocation();
   const navigate = useNavigate();
   const load = useCallback(() => bajaService.listar(), []);
@@ -57,7 +58,8 @@ export function BajasPage() {
   const prefillOpened = useRef(false);
   const activos = useResource(activoService.getAll);
   const motivos = useResource(motivoBajaService.getAll);
-  const usuarios = useResource(usuarioService.getAll);
+  const loadUsuarios = useCallback(() => usuarioService.getAllIfAllowed(canReadUsuarios), [canReadUsuarios]);
+  const usuarios = useResource(loadUsuarios);
   const responsables = useResource(responsableService.getAll);
   const estados = useResource(estadoService.getAll);
   const tipos = useResource(tipoAsignacionService.getAll);
@@ -183,6 +185,7 @@ export function BajasPage() {
         activos={activos.data}
         motivos={motivos.data}
         usuarios={usuarios.data}
+        usuariosUnavailableReason={canReadUsuarios ? null : usuarioService.USUARIOS_SIN_LECTURA}
         responsables={responsables.data}
         asignaciones={asignacionesAll.data}
         tipos={tipos.data}

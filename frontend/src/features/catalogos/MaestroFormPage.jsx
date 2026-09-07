@@ -9,6 +9,7 @@ import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import { compactErrors } from '@/shared/components/recordFormUtils';
 import { StatusBadge } from '@/shared/components/StatusBadge';
 import { useResource } from '@/shared/hooks/useResource';
+import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 
 function enabledRecords(list) {
@@ -117,12 +118,15 @@ function MaestroFormEditor({ slug, id }) {
       validate={(values) => compactErrors(maestro.validate(values, records, id))}
       onSave={async (values) => {
         const payload = maestro.toPayload(values);
-        // [API] mapear errores de campo del backend con fieldErrors.js
-        const saved = editing
-          ? await maestro.service.update(Number(id), payload)
-          : await maestro.service.create(payload);
-        await outlet.reload?.();
-        navigate(`/app/catalogos/${slug}/${saved.id}`);
+        try {
+          const saved = editing
+            ? await maestro.service.update(Number(id), payload)
+            : await maestro.service.create(payload);
+          await outlet.reload?.();
+          navigate(`/app/catalogos/${slug}/${saved.id}`);
+        } catch (error) {
+          throw applyApiFieldErrors(error);
+        }
       }}
       onClose={close}
     />

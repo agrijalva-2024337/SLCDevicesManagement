@@ -26,6 +26,7 @@ export function BajaFormOverlay({
   activos,
   motivos,
   usuarios,
+  usuariosUnavailableReason,
   responsables,
   asignaciones = [],
   tipos = [],
@@ -74,8 +75,10 @@ export function BajaFormOverlay({
         name: 'idAutorizadoPor',
         label: 'Autorizado por',
         type: 'select',
-        required: true,
+        required: !usuariosUnavailableReason,
+        readOnly: Boolean(usuariosUnavailableReason),
         options: usuarioOptions,
+        hint: usuariosUnavailableReason || undefined,
       },
       {
         name: 'idResponsable',
@@ -109,7 +112,7 @@ export function BajaFormOverlay({
         wide: true,
       },
     ],
-    [activos, activosElegibles, lockActivo, motivos, responsables, usuarioOptions],
+    [activos, activosElegibles, lockActivo, motivos, responsables, usuarioOptions, usuariosUnavailableReason],
   );
 
   return (
@@ -135,7 +138,7 @@ export function BajaFormOverlay({
         const errors = {
           idActivo: requireSelect(values.idActivo, 'un activo'),
           idMotivoBaja: requireSelect(values.idMotivoBaja, 'un motivo de baja'),
-          idAutorizadoPor: requireSelect(values.idAutorizadoPor, 'quien autoriza'),
+          idAutorizadoPor: usuariosUnavailableReason || requireSelect(values.idAutorizadoPor, 'quien autoriza'),
           idResponsable: requireSelect(values.idResponsable, 'un responsable'),
           fecha: requireSelect(values.fecha, 'una fecha'),
           documentoReferencia: optionalText(values.documentoReferencia, 'documento de referencia', 300),
