@@ -43,6 +43,8 @@ En el frontend, `Consulta` o rol nulo **nunca** escribe. `RutaProtegida` pide se
 | Responsables | POST/PUT/disable | EscrituraOperativa | `responsables` → `>= OperadorInventario` | Sí (no hay catálogo propio; `RutaEscritura` y `CatalogoPage` ya resuelven el slug) |
 | Ubicaciones | GET | Lectura | slug `ubicaciones` | Sí |
 | Ubicaciones | POST/PUT/disable | EscrituraOperativa | `ubicaciones` → `>= OperadorInventario` | Sí |
+| Redes conocidas | GET | Lectura (por analogía; **sin controller**) | slug `redes-conocidas`; lista visible a los 4 | Por confirmar |
+| Redes conocidas | POST/PUT/DELETE | EscrituraOperativa esperada; **sin controller** | `redes-conocidas` → `>= OperadorInventario` (igual que Ubicaciones) | Por confirmar |
 | Activos | GET | Lectura | lista visible a los 4 | Sí |
 | Activos | POST/PUT/disable | EscrituraOperativa | `activos` | Sí |
 | Asignaciones | GET | Lectura | lista visible a los 4 | Sí |
@@ -71,5 +73,6 @@ Ninguna desalineación queda abierta entre la matriz de controllers y `canWriteC
 2. **Estados y tipos de asignación** no tienen pantalla de escritura. La rama explícita existe para que un maestro futuro no le dé el `else` (AdministradorEmpresa) a un recurso que la API reserva a AdministradorGeneral.
 3. **Responsables** no tiene `CatalogoPage`. El permiso ya coincide con EscrituraOperativa por si la ruta `/app/catalogos/responsables` se agrega.
 4. **Dispositivos** es API publicada sin tarea FE. No hay recurso en `canWriteCatalog`. Ver `frontend/README.md`.
+5. **Redes conocidas** no tiene controller. El frontend ya pide escritura desde OperadorInventario (igual que Ubicaciones). El `[Authorize]` real queda por confirmar.
 
 Si BE-24 cambia un `[Authorize]`, actualizar esta tabla y `canWriteCatalog` en el mismo cambio.
