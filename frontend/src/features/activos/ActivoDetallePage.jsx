@@ -244,7 +244,16 @@ export function ActivoDetallePage() {
             <DetailField label="Factura" value={activo.numeroFactura} />
             <DetailField label="Garantía hasta" value={formatDate(activo.fechaVencimientoGarantia)} />
             <div className="sm:col-span-2">
-              <DetailField label="Observaciones" value={activo.observaciones ?? activo.descripcion} />
+              <DetailField label="Descripción" value={activo.descripcion} />
+            </div>
+            <div className="sm:col-span-2">
+              <DetailField label="Especificaciones de hardware" value={activo.especificacionesHardware} />
+            </div>
+            <div className="sm:col-span-2">
+              <DetailField label="Periféricos adicionales" value={activo.perifericosAdicionales} />
+            </div>
+            <div className="sm:col-span-2">
+              <DetailField label="Observaciones" value={activo.observaciones} />
             </div>
           </div>
         </div>

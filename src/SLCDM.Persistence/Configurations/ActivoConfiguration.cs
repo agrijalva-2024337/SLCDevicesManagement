@@ -30,6 +30,14 @@
                 .HasColumnName("descripcion")
                 .HasColumnType("varchar(300)");
 
+            builder.Property(a => a.EspecificacionesHardware)
+                .HasColumnName("especificaciones_hardware")
+                .HasColumnType("varchar(300)");
+
+            builder.Property(a => a.PerifericosAdicionales)
+                .HasColumnName("perifericos_adicionales")
+                .HasColumnType("varchar(300)");
+
             builder.Property(a => a.Marca)
                 .HasColumnName("marca")
                 .HasColumnType("varchar(100)");
