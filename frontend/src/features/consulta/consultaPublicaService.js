@@ -98,8 +98,28 @@ export async function getFichaPublica(codigo) {
 
 export async function getQrDeActivo(idActivo) {
   if (!env.useApiMock) {
-    const response = await httpClient.get(apiPaths.activoQr(idActivo));
-    return response.data;
+    const [activo, response] = await Promise.all([
+      activoService.getById(idActivo),
+      httpClient.get(apiPaths.activoQr(idActivo), {
+        responseType: 'blob',
+        headers: { Accept: 'image/png' },
+      }),
+    ]);
+
+    const blob = response.data;
+    if (!(blob instanceof Blob) || blob.size === 0 || (blob.type && blob.type.includes('json'))) {
+      const error = new Error('No se pudo generar el código QR.');
+      error.status = 500;
+      throw error;
+    }
+
+    const codigo = activo.tokenPublico ?? activo.tokenConsulta;
+    const consultaUrl = codigo ? consultaUrlDe(codigo) : '';
+    return {
+      codigo: codigo ?? '',
+      consultaUrl,
+      imageUrl: URL.createObjectURL(blob),
+    };
   }
 
   const activo = await activoService.getById(idActivo);
