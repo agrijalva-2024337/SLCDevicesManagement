@@ -26,6 +26,17 @@ public class CategoriaActivoConfiguration : IEntityTypeConfiguration<CategoriaAc
             .HasColumnName("descripcion")
             .HasColumnType("varchar(200)");
 
-        builder.HasIndex(c => c.Nombre).IsUnique();
+        builder.Property(c => c.IdEmpresa)
+            .HasColumnName("id_empresa")
+            .IsRequired();
+
+        builder.HasOne(c => c.Empresa)
+            .WithMany()
+            .HasForeignKey(c => c.IdEmpresa)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(c => new { c.IdEmpresa, c.Nombre })
+            .IsUnique()
+            .HasDatabaseName("ix_categoria_activo_empresa_nombre");
     }
 }

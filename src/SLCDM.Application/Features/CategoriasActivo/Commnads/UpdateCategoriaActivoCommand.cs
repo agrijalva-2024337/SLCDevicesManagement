@@ -23,8 +23,18 @@ public sealed class UpdateCategoriaActivoCommandValidator : AbstractValidator<Up
             .NotEmpty().WithMessage("El campo nombre es obligatorio.")
             .MaximumLength(100).WithMessage("El campo nombre no debe superar los 100 caracteres.")
             .MustAsync(async (cmd, nombre, ct) =>
-                !await db.CategoriasActivo.AnyAsync(c => c.Nombre == nombre && c.Id != cmd.Id, ct))
-            .WithMessage("Ya existe una categoria de activo con el mismo nombre.");
+            {
+                var categoria = await db.CategoriasActivo.AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.Id == cmd.Id, ct);
+                if (categoria is null)
+                {
+                    return true;
+                }
+
+                return !await db.CategoriasActivo.IgnoreQueryFilters()
+                    .AnyAsync(c => c.IdEmpresa == categoria.IdEmpresa && c.Nombre == nombre && c.Id != cmd.Id, ct);
+            })
+            .WithMessage("Ya existe una categoria de activo con el mismo nombre en esta empresa.");
 
         RuleFor(x => x.Descripcion)
             .MaximumLength(200).WithMessage("El campo descripcion no debe superar los 200 caracteres.")

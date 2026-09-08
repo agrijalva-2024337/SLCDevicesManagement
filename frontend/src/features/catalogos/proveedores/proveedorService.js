@@ -22,7 +22,7 @@ function toApi(data) {
   }
 
   const { correo, corre, ...rest } = data;
-  return { ...rest, corre: correo ?? corre ?? null };
+  return { ...rest, correo: correo ?? corre ?? null };
 }
 
 export async function getAll(params) {

@@ -8,5 +8,5 @@ public sealed record ProveedorDto(
     string Nit,
     string? NombreContacto,
     string? Telefono,
-    string? Corre
+    string? Correo
 );

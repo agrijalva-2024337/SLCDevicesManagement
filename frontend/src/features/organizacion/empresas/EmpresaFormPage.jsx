@@ -14,6 +14,7 @@ import { compactErrors } from '@/shared/components/recordFormUtils';
 import { StatusBadge } from '@/shared/components/StatusBadge';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
+import { resolveSavedId, saveSuccessState } from '@/shared/utils/saveFeedback';
 
 function EmpresaFormEditor({ id }) {
   const navigate = useNavigate();
@@ -104,7 +105,12 @@ function EmpresaFormEditor({ id }) {
             ? await empresaService.update(Number(id), payload)
             : await empresaService.create(payload);
           await outlet.reload?.();
-          navigate(`/app/catalogos/empresas/${saved.id}`);
+          const recordId = resolveSavedId(saved, id);
+          if (recordId == null) {
+            navigate('/app/catalogos/empresas');
+            return;
+          }
+          navigate(`/app/catalogos/empresas/${recordId}`, { state: saveSuccessState(editing) });
         } catch (error) {
           throw applyApiFieldErrors(error);
         }
