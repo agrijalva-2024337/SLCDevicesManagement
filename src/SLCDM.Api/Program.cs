@@ -46,7 +46,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerWithBearer();
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseCors("ReactClient");
 app.UseRateLimiter();
 app.UseAuthentication();
