@@ -34,12 +34,6 @@ public class Activo: SLCDM.Domain.Common.BaseEntity {
     [MaxLength(300, ErrorMessage = "El campo descripcion no debe superar los 300 caracteres")]
     public string? Descripcion { get; set; }
 
-    [MaxLength(300, ErrorMessage = "El campo especificaciones de hardware no debe superar los 300 caracteres")]
-    public string? EspecificacionesHardware { get; set; }
-
-    [MaxLength(300, ErrorMessage = "El campo perifericos adicionales no debe superar los 300 caracteres")]
-    public string? PerifericosAdicionales { get; set; }
-
     [MaxLength(100, ErrorMessage = "El campo marca no debe superar los 100 caracteres")]
     public string? Marca { get; set; }
 
@@ -72,4 +66,10 @@ public class Activo: SLCDM.Domain.Common.BaseEntity {
     [Required]
     [MaxLength(32, ErrorMessage = "El campo token publico no debe superar los 32 caracteres")]
     public string TokenPublico { get; set; } = string.Empty;
+    
+    [MaxLength(500, ErrorMessage = "El campo especificaciones de hardware no debe superar los 500 caracteres")]
+    public string? EspecificacionesHardware { get; set; }
+
+    [MaxLength(500, ErrorMessage = "El campo perifericos adicionales no debe superar los 500 caracteres")]
+    public string? PerifericosAdicionales { get; set; }
 }

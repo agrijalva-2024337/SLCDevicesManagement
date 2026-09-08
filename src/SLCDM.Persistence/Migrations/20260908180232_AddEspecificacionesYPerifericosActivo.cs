@@ -13,15 +13,15 @@ namespace SLCDM.Persistence.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "especificaciones_hardware",
                 table: "activo",
-                type: "varchar(300)",
-                maxLength: 300,
+                type: "varchar(500)",
+                maxLength: 500,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "perifericos_adicionales",
                 table: "activo",
-                type: "varchar(300)",
-                maxLength: 300,
+                type: "varchar(500)",
+                maxLength: 500,
                 nullable: true);
         }
 

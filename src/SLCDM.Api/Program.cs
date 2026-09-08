@@ -23,6 +23,16 @@ builder.Services.Configure<SLCDM.Application.Common.Options.SmtpOptions>(
 builder.Services.AddSingleton<SLCDM.Application.Common.Interfaces.IEmailSender, SLCDM.Api.Email.SmtpEmailSender>();
 builder.Services.Configure<SLCDM.Application.Common.Options.DocumentIntegrityOptions>(
     builder.Configuration.GetSection(SLCDM.Application.Common.Options.DocumentIntegrityOptions.SectionName));
+builder.Services.Configure<SLCDM.Application.Common.Options.BrandingOptions>(
+    builder.Configuration.GetSection(SLCDM.Application.Common.Options.BrandingOptions.SectionName));
+builder.Services.PostConfigure<SLCDM.Application.Common.Options.BrandingOptions>(options =>
+{
+    if (string.IsNullOrWhiteSpace(options.LetterheadPath))
+    {
+        options.LetterheadPath = Path.Combine(
+            builder.Environment.ContentRootPath, "wwwroot", "branding", "banner.png");
+    }
+});
 
 
 var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()

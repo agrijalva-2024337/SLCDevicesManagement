@@ -141,7 +141,9 @@ export function VerificarDocumentoOverlay({ open, asignacion, onClose }) {
               <p className="font-semibold">
                 {result.coincide
                   ? `Documento válido — generado el ${formatDate(result.fechaGenerado)}`
-                  : 'Este documento no coincide con nuestros registros'}
+                  : result.hashRegistro
+                    ? 'Este documento no coincide con nuestros registros'
+                    : 'No hay un acta registrada para comparar. El hash no se guardó al enviar el correo.'}
               </p>
               <div className="app-compare mt-3">
                 <p>
