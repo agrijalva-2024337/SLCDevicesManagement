@@ -4,18 +4,24 @@ export const catalogos = [
   { slug: 'empresas', label: 'Empresas', icon: 'pi pi-building' },
   { slug: 'sedes', label: 'Sedes', icon: 'pi pi-map-marker' },
   { slug: 'areas', label: 'Áreas', icon: 'pi pi-th-large' },
-  { slug: 'categorias', label: 'Categorías', icon: 'pi pi-tags' },
   { slug: 'proveedores', label: 'Proveedores', icon: 'pi pi-truck' },
   { slug: 'ubicaciones', label: 'Ubicaciones', icon: 'pi pi-map' },
-  { slug: 'redes-conocidas', label: 'Redes conocidas', icon: 'pi pi-wifi' },
   { slug: 'paises', label: 'Países', icon: 'pi pi-globe' },
+];
+
+export const administracion = [
+  { slug: 'usuarios', label: 'Usuarios', icon: 'pi pi-users', adminOnly: true },
+  { slug: 'responsables', label: 'Responsables', icon: 'pi pi-id-card' },
+  { slug: 'categorias', label: 'Categorías', icon: 'pi pi-tags' },
+  { slug: 'estados', label: 'Estados', icon: 'pi pi-flag' },
+  { slug: 'tipos-asignacion', label: 'Tipos de asignación', icon: 'pi pi-list' },
+  { slug: 'redes-conocidas', label: 'Redes Wi-Fi', icon: 'pi pi-wifi' },
 ];
 
 export const modulosApp = [
   { path: '/app/activos', label: 'Activos', icon: 'pi pi-box' },
   { path: '/app/inventario-fisico', label: 'Inventario físico', icon: 'pi pi-clipboard' },
   { path: '/app/rastreo', label: 'Rastreo', icon: 'pi pi-map' },
-  { path: '/app/bitacora', label: 'Bitácora', icon: 'pi pi-history', adminOnly: true },
   { path: '/app/reportes', label: 'Reportes', icon: 'pi pi-chart-bar' },
 ];
 
@@ -33,13 +39,30 @@ export const navigation = [
     })),
   },
   ...modulosApp.map((item) => ({ type: 'link', ...item })),
+  {
+    type: 'group',
+    label: 'Administración',
+    icon: 'pi pi-cog',
+    children: [
+      ...administracion.map((item) => ({
+        path: `/app/catalogos/${item.slug}`,
+        label: item.label,
+        icon: item.icon,
+        adminOnly: item.adminOnly,
+      })),
+      { path: '/app/bitacora', label: 'Bitácora', icon: 'pi pi-history', adminOnly: true },
+    ],
+  },
 ];
 
 const catalogTitles = Object.fromEntries(
-  catalogos.map((item) => [`/app/catalogos/${item.slug}`, item.label]),
+  [...catalogos, ...administracion].map((item) => [`/app/catalogos/${item.slug}`, item.label]),
 );
 
-const moduloTitles = Object.fromEntries(modulosApp.map((item) => [item.path, item.label]));
+const moduloTitles = {
+  ...Object.fromEntries(modulosApp.map((item) => [item.path, item.label])),
+  '/app/bitacora': 'Bitácora',
+};
 
 export const pageTitles = {
   '/app': 'Principal',
@@ -101,6 +124,12 @@ export function getPageTitle(pathname, search = '') {
 
 export function getPageKicker(pathname) {
   if (pathname === '/app') return 'Panel';
+  if (pathname.startsWith('/app/catalogos/usuarios')) return 'Administración';
+  if (pathname.startsWith('/app/catalogos/responsables')) return 'Administración';
+  if (pathname.startsWith('/app/catalogos/categorias')) return 'Administración';
+  if (pathname.startsWith('/app/catalogos/estados')) return 'Administración';
+  if (pathname.startsWith('/app/catalogos/tipos-asignacion')) return 'Administración';
+  if (pathname.startsWith('/app/catalogos/redes-conocidas')) return 'Administración';
   if (pathname.startsWith('/app/catalogos')) return 'Catálogo';
   if (
     pathname.startsWith('/app/activos') ||

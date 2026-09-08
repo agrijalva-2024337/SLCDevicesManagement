@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router';
+import { useAuth } from '@/features/auth/useAuth';
 import { getMaestro } from '@/features/catalogos/maestros';
 import { resolveUbicacionCoords } from '@/features/catalogos/ubicaciones/resolveUbicacionCoords';
 import * as paisService from '@/features/catalogos/paises/paisService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
+import * as areaService from '@/features/organizacion/areas/areaService';
+import { invalidateCatalogoAsignacionCache } from '@/shared/api/tipoAsignacion';
 import { DetailOverlay } from '@/shared/components/DetailOverlay';
 import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import { compactErrors } from '@/shared/components/recordFormUtils';
@@ -21,10 +24,12 @@ function enabledRecords(list) {
 
 function MaestroFormEditor({ slug, id }) {
   const navigate = useNavigate();
+  const { rol, idEmpresa } = useAuth();
   const outlet = useOutletContext() ?? {};
   const maestro = getMaestro(slug);
   const empresas = useResource(empresaService.getAll);
   const sedes = useResource(sedeService.getAll);
+  const areas = useResource(areaService.getAll);
   const paises = useResource(paisService.getAll);
   const ubicaciones = useResource(ubicacionService.getAll);
   const editing = Boolean(id);
@@ -100,16 +105,20 @@ function MaestroFormEditor({ slug, id }) {
   const lookups = {
     empresas: enabledRecords(empresas.data),
     sedes: enabledRecords(sedes.data),
+    areas: enabledRecords(areas.data),
     paises: paises.data,
     ubicaciones: enabledRecords(ubicaciones.data),
+    rol,
+    idEmpresa,
+    editing,
   };
-  const initialValues = item ? maestro.toForm(item) : maestro.empty();
+  const initialValues = item ? maestro.toForm(item) : maestro.empty(lookups);
   const fields = maestro.fields(lookups);
 
   return (
     <RecordFormOverlay
       open
-      title={editing ? maestro.titleOf(item) : `Nueva ${maestro.singular}`}
+      title={editing ? maestro.titleOf(item) : (maestro.newTitle ?? `Nueva ${maestro.singular}`)}
       kicker={editing ? 'Editar registro' : maestro.registerLabel}
       badge={
         editing && maestro.hasHabilitado !== false ? (
@@ -122,7 +131,7 @@ function MaestroFormEditor({ slug, id }) {
       submitLabel={editing ? 'Guardar cambios' : maestro.registerLabel}
       validate={(values) => compactErrors(maestro.validate(values, records, id))}
       onSave={async (values) => {
-        let payload = maestro.toPayload(values);
+        let payload = maestro.toPayload(values, { editing });
         if (slug === 'ubicaciones') {
           const sedeNombre = sedes.data.find((sede) => Number(sede.id) === Number(payload.idSede))?.nombre;
           payload = await resolveUbicacionCoords(payload, sedeNombre);
@@ -131,8 +140,13 @@ function MaestroFormEditor({ slug, id }) {
           const saved = editing
             ? await maestro.service.update(Number(id), payload)
             : await maestro.service.create(payload);
+          if (slug === 'estados' || slug === 'tipos-asignacion') {
+            invalidateCatalogoAsignacionCache();
+          }
           await outlet.reload?.();
-          navigate(`/app/catalogos/${slug}/${saved.id}`);
+          navigate(`/app/catalogos/${slug}/${saved.id}`, {
+            state: saved.passwordGenerada ? { passwordGenerada: saved.passwordGenerada } : undefined,
+          });
         } catch (error) {
           throw slug === 'redes-conocidas' ? toRedConocidaWriteError(error) : applyApiFieldErrors(error);
         }
