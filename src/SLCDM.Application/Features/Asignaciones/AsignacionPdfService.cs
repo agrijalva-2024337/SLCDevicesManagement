@@ -37,6 +37,7 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
     private readonly IApplicationDbContext _db;
     private readonly IConfiguration _configuration;
     private readonly BrandingOptions _branding;
+    private readonly IPdfHashService _pdfHash;
 
     static AsignacionPdfService()
     {
@@ -44,22 +45,35 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
     }
 
     public AsignacionPdfService(
-        IApplicationDbContext db, IConfiguration configuration, IOptions<BrandingOptions> branding)
+        IApplicationDbContext db,
+        IConfiguration configuration,
+        IOptions<BrandingOptions> branding,
+        IPdfHashService pdfHash)
     {
         _db = db;
         _configuration = configuration;
         _branding = branding.Value;
+        _pdfHash = pdfHash;
     }
 
     public async Task<AsignacionPdfFileDto> GenerarAsync(
-        int idAsignacion, DateTime marcaTemporal, CancellationToken cancellationToken = default)
+        int idAsignacion, CancellationToken cancellationToken = default)
     {
+        // OJO: sin AsNoTracking aqui -- la entidad se queda rastreada por EF
+        // porque al final del metodo, si es la primera vez que se genera este
+        // PDF, se le guarda el hash y la marca de tiempo directo con SaveChangesAsync.
         var asignacion = await _db.Asignaciones
-            .AsNoTracking()
             .Include(a => a.TipoAsignacion)
             .Include(a => a.Estado)
             .FirstOrDefaultAsync(a => a.Id == idAsignacion, cancellationToken)
             ?? throw new NotFoundException("Asignacion", idAsignacion);
+
+        // Se congela la primera vez que se genera el PDF (DocumentoPdfGenerardoEn)
+        // y se reutiliza en cada descarga posterior -- si no, cada descarga
+        // metería una hora distinta en el pie de pagina, el PDF nunca volvería
+        // a ser byte-por-byte igual, y el hash guardado dejaría de coincidir
+        // con cualquier descarga futura del mismo acta.
+        var fechaDocumento = asignacion.DocumentoPdfGenerardoEn ?? DateTime.UtcNow;
 
         var activo = await _db.Activos.AsNoTracking().IgnoreQueryFilters()
             .Include(a => a.CategoriaActivo)
@@ -224,11 +238,28 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
                         text.Span($"Este documento es propiedad de {empresaNombre}, queda prohibida su reproducción total o parcial.")
                             .FontSize(7).Italic().FontColor(Colors.Grey.Darken2);
                     });
-                    col.Item().AlignRight().Text($"Folio #{asignacion.Id} · {marcaTemporal:yyyy-MM-dd HH:mm} UTC")
+                    col.Item().AlignRight().Text($"Folio #{asignacion.Id} · {fechaDocumento:yyyy-MM-dd HH:mm} UTC")
                         .FontSize(7).FontColor(Colors.Grey.Medium);
                 });
             });
-        }).GeneratePdf();
+        })
+        .WithMetadata(new DocumentMetadata
+        {
+            Title = titulo,
+            Author = "SLC Devices Management",
+            Creator = "SLCDM",
+            CreationDate = fechaDocumento,
+            ModifiedDate = fechaDocumento,
+        })
+        .GeneratePdf();
+
+        if (string.IsNullOrEmpty(asignacion.DocumentoPdfHash))
+        {
+            asignacion.DocumentoPdfUrl ??= $"/api/Asignaciones/{asignacion.Id}/pdf";
+            asignacion.DocumentoPdfHash = _pdfHash.CalcularHash(pdf);
+            asignacion.DocumentoPdfGenerardoEn = fechaDocumento;
+            await _db.SaveChangesAsync(cancellationToken);
+        }
 
         return new AsignacionPdfFileDto(pdf, fileName);
     }

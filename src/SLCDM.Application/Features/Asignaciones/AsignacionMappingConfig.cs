@@ -7,7 +7,9 @@ public sealed class AsignacionMappingConfig : IRegister
 {
     public void Register(TypeAdapterConfig config)
     {
-        config.NewConfig<Asignacion, AsignacionDto>();
+        config.NewConfig<Asignacion, AsignacionDto>()
+            .Map(dest => dest.DocumentoPdfGeneradoEn, src => src.DocumentoPdfGenerardoEn)
+            .Map(dest => dest.DocumentoPdfHash, src => src.DocumentoPdfHash);
 
         config.NewConfig<Commands.UpdateAsignacionCommand, Asignacion>()
             .Ignore(dest => dest.Id)

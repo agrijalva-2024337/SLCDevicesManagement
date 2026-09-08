@@ -186,10 +186,11 @@
  * @property {string | null} observaciones
  * @property {string | null} documentoPdfUrl
  * @property {string | null} [documentoPdfGeneradoEn]
- * @property {string | null} [hashDocumento] SHA-256 hex del acta original; [API] nombre por confirmar
+ * @property {string | null} [documentoPdfHash] HMAC-SHA256 hex del acta canónica
+ * @property {string | null} [hashDocumento] alias de documentoPdfHash en la UI
  *
  * @typedef {object} VerificacionPdfDto
- * Resultado de `POST /api/Asignaciones/{id}/pdf/verificar`. [API] forma por confirmar.
+ * Resultado de `POST /api/Asignaciones/{id}/pdf/verificar`.
  * @property {boolean} coincide
  * @property {string | null} hashRegistro
  * @property {string | null} firmaDocumento
