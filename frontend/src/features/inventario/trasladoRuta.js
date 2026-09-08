@@ -40,6 +40,24 @@ export function empresaIdDeActivo(activo, ubicaciones, sedes) {
   return empresaIdDeUbicacion(ubicacion, sedes);
 }
 
+export function filtrarPorEmpresaDeActivo(rows, idEmpresa, activos, ubicaciones, sedes) {
+  if (idEmpresa == null || idEmpresa === '') return rows ?? [];
+  const wanted = Number(idEmpresa);
+  return (rows ?? []).filter((row) => {
+    const activo = (activos ?? []).find((item) => Number(item.id) === Number(row.idActivo));
+    return empresaIdDeActivo(activo, ubicaciones, sedes) === wanted;
+  });
+}
+
+export function filtrarPorEmpresaDeUbicacion(rows, idEmpresa, ubicaciones, sedes, campo = 'idUbicacion') {
+  if (idEmpresa == null || idEmpresa === '') return rows ?? [];
+  const wanted = Number(idEmpresa);
+  return (rows ?? []).filter((row) => {
+    const ubicacion = (ubicaciones ?? []).find((item) => Number(item.id) === Number(row[campo]));
+    return empresaIdDeUbicacion(ubicacion, sedes) === wanted;
+  });
+}
+
 export function todayIsoDate() {
   return new Date().toISOString().slice(0, 10);
 }

@@ -16,7 +16,8 @@ export function canWriteCatalog(rol, resource) {
     resource === 'paises' ||
     resource === 'empresas-create' ||
     resource === 'estados' ||
-    resource === 'tipos-asignacion'
+    resource === 'tipos-asignacion' ||
+    resource === 'categorias'
   ) {
     return rol === RolUsuario.AdministradorGeneral;
   }

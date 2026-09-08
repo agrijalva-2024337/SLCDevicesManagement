@@ -33,6 +33,11 @@ public sealed class CreateUsuarioCommandValidator : AbstractValidator<CreateUsua
             .WithMessage("El campo id empresa es obligatorio para este rol.")
             .When(x => x.Rol != RolUsuario.AdministradorGeneral);
 
+        RuleFor(x => x.IdEmpresa)
+            .Must(id => currentUser.IsAdministradorGeneral || id == currentUser.EmpresaId)
+            .WithMessage("Solo puede crear usuarios de su empresa.")
+            .When(_ => !currentUser.IsAdministradorGeneral);
+
         RuleFor(x => x.Nombres)
             .NotEmpty().WithMessage("El campo nombres es obligatorio.")
             .MaximumLength(100).WithMessage("El campo nombres no debe superar los 100 caracteres.");

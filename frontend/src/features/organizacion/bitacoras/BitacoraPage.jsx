@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useAuth } from '@/features/auth/useAuth';
 import * as bitacoraService from '@/features/organizacion/bitacoras/bitacoraService';
+import { filterRowsByEmpresa, useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import { TipoOperacionBitacora } from '@/shared/api/contracts';
 import { DataTable } from '@/shared/components/DataTable';
@@ -33,6 +34,7 @@ function diaDe(fechaHora) {
 export function BitacoraPage() {
   const { canWrite } = useAuth();
   const canReadUsuarios = canWrite('usuarios');
+  const { idActiva } = useEmpresaActiva();
   const [idUsuario, setIdUsuario] = useState('all');
   const [entidadAfectada, setEntidadAfectada] = useState('all');
   const [fechaDesde, setFechaDesde] = useState('');
@@ -50,6 +52,11 @@ export function BitacoraPage() {
   const loadUsuarios = useCallback(() => usuarioService.getAllIfAllowed(canReadUsuarios), [canReadUsuarios]);
   const usuarios = useResource(loadUsuarios);
 
+  const usuariosDeEmpresa = useMemo(
+    () => filterRowsByEmpresa(usuarios.data, idActiva),
+    [idActiva, usuarios.data],
+  );
+
   const tableRows = useMemo(() => {
     const mapped = rows.map((row) => ({
       ...row,
@@ -58,22 +65,30 @@ export function BitacoraPage() {
       fechaDia: diaDe(row.fechaHora),
     }));
 
-    return mapped.filter((row) => {
+    const scoped =
+      idActiva == null || idActiva === ''
+        ? mapped
+        : mapped.filter((row) => {
+            const usuario = byId(usuarios.data, row.idUsuario);
+            return usuario != null && Number(usuario.idEmpresa) === Number(idActiva);
+          });
+
+    return scoped.filter((row) => {
       if (fechaDesde && row.fechaDia && row.fechaDia < fechaDesde) return false;
       if (fechaHasta && row.fechaDia && row.fechaDia > fechaHasta) return false;
       return true;
     });
-  }, [fechaDesde, fechaHasta, rows, usuarios.data]);
+  }, [fechaDesde, fechaHasta, idActiva, rows, usuarios.data]);
 
   const usuarioOptions = useMemo(
     () => [
       { value: 'all', label: canReadUsuarios ? 'Todos los usuarios' : 'Listado de usuarios no disponible' },
-      ...(usuarios.data ?? []).map((item) => ({
+      ...(usuariosDeEmpresa ?? []).map((item) => ({
         value: String(item.id),
         label: usuarioNombre(item),
       })),
     ],
-    [canReadUsuarios, usuarios.data],
+    [canReadUsuarios, usuariosDeEmpresa],
   );
 
   const entidadOptions = useMemo(() => {

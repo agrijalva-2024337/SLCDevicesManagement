@@ -75,7 +75,7 @@ internal static class AsignacionEmpresaRules
     }
 
     public static bool EmpresasCoinciden(int? empresaA, int? empresaB) =>
-        !empresaA.HasValue || !empresaB.HasValue || empresaA.Value == empresaB.Value;
+        empresaA.HasValue && empresaB.HasValue && empresaA.Value == empresaB.Value;
 
     public static async Task<bool> MismaEmpresaAsync(
         IApplicationDbContext db,
