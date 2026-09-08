@@ -26,7 +26,8 @@ public sealed class CurrentUserService : ICurrentUserService
     public int? EmpresaId => ParseInt(Find(AuthClaimTypes.IdEmpresa));
 
     public bool IsAdministradorGeneral =>
-        string.Equals(Role, Roles.AdministradorGeneral, StringComparison.Ordinal);
+        User?.IsInRole(Roles.AdministradorGeneral) == true
+        || string.Equals(Role, Roles.AdministradorGeneral, StringComparison.OrdinalIgnoreCase);
 
     private string? Find(string claimType) => User?.FindFirstValue(claimType);
 

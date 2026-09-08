@@ -9,17 +9,21 @@ public sealed record GetEmpresasQuery(bool IncluirInhabilitados = false);
 public sealed class GetEmpresasQueryHandler : IQueryHandler<GetEmpresasQuery, IReadOnlyList<EmpresaDto>>
 {
     private readonly IApplicationDbContext _db;
+    private readonly ICurrentUserService _currentUser;
 
-    public GetEmpresasQueryHandler(IApplicationDbContext db)
+    public GetEmpresasQueryHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     {
         _db = db;
+        _currentUser = currentUser;
     }
 
     public async Task<IReadOnlyList<EmpresaDto>> HandleAsync(
         GetEmpresasQuery query,
         CancellationToken cancellationToken = default)
     {
-        var q = _db.Empresas.AsNoTracking();
+        var q = _currentUser.IsAdministradorGeneral
+            ? _db.Empresas.IgnoreQueryFilters().AsNoTracking()
+            : _db.Empresas.AsNoTracking();
         if (!query.IncluirInhabilitados)
         {
             q = q.Where(e => e.Habilitado);
