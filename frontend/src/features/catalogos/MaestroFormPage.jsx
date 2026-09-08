@@ -95,7 +95,7 @@ function MaestroFormEditor({ slug, id }) {
     );
   }
 
-  if (!ready) {
+  if (!ready || paises.isLoading) {
     return (
       <DetailOverlay open title={maestro.title} kicker={editing ? 'Editar registro' : maestro.registerLabel} onClose={close}>
         <div className="app-feedback app-feedback--loading" role="status">
@@ -116,7 +116,7 @@ function MaestroFormEditor({ slug, id }) {
     idEmpresaActiva: idActiva,
     editing,
   };
-  const initialValues = item ? maestro.toForm(item) : maestro.empty(lookups);
+  const initialValues = item ? maestro.toForm(item, lookups) : maestro.empty(lookups);
   const fields = maestro.fields(lookups);
 
   return (
@@ -137,8 +137,9 @@ function MaestroFormEditor({ slug, id }) {
       onSave={async (values) => {
         let payload = maestro.toPayload(values, { editing, idEmpresaActiva: idActiva });
         if (slug === 'ubicaciones') {
-          const sedeNombre = sedes.data.find((sede) => Number(sede.id) === Number(payload.idSede))?.nombre;
-          payload = await resolveUbicacionCoords(payload, sedeNombre);
+          const sede = sedes.data.find((item) => Number(item.id) === Number(payload.idSede));
+          const pais = paises.data.find((item) => Number(item.id) === Number(sede?.idPais));
+          payload = await resolveUbicacionCoords(payload, sede, pais?.nombre);
         }
         try {
           const saved = editing

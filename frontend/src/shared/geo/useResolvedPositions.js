@@ -1,9 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
+import { buildUbicacionGeocodeQuery } from '@/features/catalogos/ubicaciones/resolveUbicacionCoords';
 import { geocodeAddress } from '@/shared/geo/geocodeAddress';
 import { parseCoordinates } from '@/shared/geo/parseCoordinates';
 
 function geocodeQuery(item) {
-  return [item.direccion, item.nombre, item.descripcion].filter(Boolean).join(', ');
+  return buildUbicacionGeocodeQuery({
+    nombre: item.nombre,
+    descripcion: item.descripcion,
+    sede: item.sede ?? {
+      nombre: item.sedeNombre,
+      direccion: item.direccion,
+      ciudad: item.ciudad,
+    },
+    paisNombre: item.paisNombre,
+  });
 }
 
 export function useResolvedPositions(items) {

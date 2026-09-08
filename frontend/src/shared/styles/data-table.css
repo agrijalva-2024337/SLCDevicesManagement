@@ -144,6 +144,8 @@
   padding: 0.95rem 1.25rem;
   border-bottom: 1px solid var(--color-border);
   vertical-align: middle;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .data-table tbody tr:last-child td {
@@ -228,6 +230,8 @@
 }
 
 .data-table-expand-cell {
+  min-width: 0;
+  overflow: hidden;
   padding: 0 !important;
   border-bottom: 0;
   vertical-align: top;
@@ -250,10 +254,13 @@
 
 .data-table-expand-inner {
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
 }
 
 .data-table-expand-panel {
+  min-width: 0;
+  overflow: hidden;
   padding: 0.65rem 1.25rem 0.9rem calc(var(--data-expand-col, 2.25rem) + 1.25rem);
   border-top: 1px solid var(--color-border);
   text-align: left;

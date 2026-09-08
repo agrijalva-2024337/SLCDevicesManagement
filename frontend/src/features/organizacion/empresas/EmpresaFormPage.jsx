@@ -7,7 +7,9 @@ import {
   empresaToPayload,
   validateEmpresaForm,
 } from '@/features/organizacion/empresas/empresaFormModel';
+import * as paisService from '@/features/catalogos/paises/paisService';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
+import { useResource } from '@/shared/hooks/useResource';
 import { DetailOverlay } from '@/shared/components/DetailOverlay';
 import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import { compactErrors } from '@/shared/components/recordFormUtils';
@@ -22,6 +24,7 @@ function EmpresaFormEditor({ id }) {
   const editing = Boolean(id);
   const close = () => navigate('/app/catalogos/empresas');
 
+  const paises = useResource(paisService.getAll);
   const [item, setItem] = useState(null);
   const [records, setRecords] = useState(outlet.rows ?? []);
   const [loadError, setLoadError] = useState(null);
@@ -75,7 +78,7 @@ function EmpresaFormEditor({ id }) {
     );
   }
 
-  if (!ready) {
+  if (!ready || paises.isLoading) {
     return (
       <DetailOverlay open title="Empresas" kicker={editing ? 'Editar registro' : 'Registrar empresa'} onClose={close}>
         <div className="app-feedback app-feedback--loading" role="status">
@@ -85,7 +88,7 @@ function EmpresaFormEditor({ id }) {
     );
   }
 
-  const initialValues = item ? empresaToForm(item) : emptyEmpresaForm();
+  const initialValues = item ? empresaToForm(item, paises.data) : emptyEmpresaForm(paises.data);
 
   return (
     <RecordFormOverlay
@@ -94,7 +97,7 @@ function EmpresaFormEditor({ id }) {
       kicker={editing ? 'Editar registro' : 'Registrar empresa'}
       badge={editing ? <StatusBadge active={Boolean(initialValues.habilitado)} /> : null}
       hint="Complete el registro corporativo. Nombre y NIT son obligatorios."
-      fields={empresaFields()}
+      fields={empresaFields(paises.data)}
       initialValues={initialValues}
       submitLabel={editing ? 'Guardar cambios' : 'Registrar empresa'}
       validate={(values) => compactErrors(validateEmpresaForm(values, records, id))}

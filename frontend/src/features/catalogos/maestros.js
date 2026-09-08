@@ -10,7 +10,8 @@ import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import { RolUsuario, rolUsuarioLabel } from '@/shared/api/contracts';
-import { asOptions, optionalText, requireSelect, requireText } from '@/shared/components/recordFormUtils';
+import { asOptions, optionalText, phoneField, requireSelect, requireText } from '@/shared/components/recordFormUtils';
+import { phoneFormFields, phonePayload, validatePhoneFields } from '@/shared/utils/phoneNumber';
 
 function switchField() {
   return {
@@ -282,30 +283,30 @@ export const maestros = {
         { key: 'habilitado', header: 'Estado', type: 'status' },
       ],
     },
-    empty: () => ({
+    empty: ({ paises } = {}) => ({
       idEmpresa: '',
       nombre: '',
       nit: '',
       nombreContacto: '',
-      telefono: '',
+      ...phoneFormFields('', paises),
       correo: '',
       habilitado: true,
     }),
-    toForm: (item) => ({
+    toForm: (item, { paises } = {}) => ({
       idEmpresa: String(item.idEmpresa ?? ''),
       nombre: item.nombre ?? '',
       nit: item.nit ?? '',
       nombreContacto: item.nombreContacto ?? '',
-      telefono: item.telefono ?? '',
+      ...phoneFormFields(item.telefono, paises),
       correo: item.correo ?? '',
       habilitado: Boolean(item.habilitado),
     }),
-    fields: ({ empresas } = {}) => [
+    fields: ({ empresas, paises } = {}) => [
       { name: 'idEmpresa', label: 'Empresa', type: 'select', required: true, options: asOptions(empresas ?? []) },
       { name: 'nombre', label: 'Nombre', required: true, maxLength: 150 },
       { name: 'nit', label: 'NIT', required: true, maxLength: 50 },
       { name: 'nombreContacto', label: 'Contacto', maxLength: 100 },
-      { name: 'telefono', label: 'Teléfono', maxLength: 30, autoComplete: 'tel' },
+      phoneField({ paises }),
       { name: 'correo', label: 'Correo', maxLength: 150, autoComplete: 'email' },
       switchField(),
     ],
@@ -315,7 +316,7 @@ export const maestros = {
         nombre: requireText(values.nombre, 'nombre', 150),
         nit: requireText(values.nit, 'NIT', 50),
         nombreContacto: optionalText(values.nombreContacto, 'contacto', 100),
-        telefono: optionalText(values.telefono, 'teléfono', 30),
+        telefono: validatePhoneFields(values),
         correo: optionalText(values.correo, 'correo', 150),
       };
       const nit = String(values.nit ?? '')
@@ -335,7 +336,7 @@ export const maestros = {
         nombre: values.nombre.trim(),
         nit: values.nit.trim(),
         nombreContacto: values.nombreContacto.trim() || null,
-        telefono: values.telefono.trim() || null,
+        telefono: phonePayload(values),
         correo: values.correo.trim() || null,
         habilitado: Boolean(values.habilitado),
       };
@@ -354,7 +355,7 @@ export const maestros = {
     singular: 'ubicación',
     kicker: 'Ubicación',
     registerLabel: 'Registrar ubicación',
-    hint: 'El nombre y la sede son obligatorios. Si deja latitud y longitud vacías, se geocodifican desde el nombre, la descripción y la sede antes de enviarlas al backend.',
+    hint: 'El nombre y la sede son obligatorios. Si deja latitud y longitud vacías, se geocodifican desde la dirección y la ciudad de la sede.',
     description: 'Sitios físicos donde descansa un activo: rack, escritorio o bodega.',
     titleOf: (item) => item.nombre,
     facts: (item, lookups = {}) =>
@@ -381,7 +382,7 @@ export const maestros = {
         label: 'Latitud',
         type: 'number',
         step: 'any',
-        hint: 'Opcional. Si la deja vacía, el mapa usa el nombre y la descripción.',
+        hint: 'Opcional. Si la deja vacía, se usa la dirección de la sede.',
       },
       {
         name: 'longitud',
@@ -777,28 +778,28 @@ export const maestros = {
         { key: 'habilitado', header: 'Estado', type: 'status' },
       ],
     },
-    empty: () => ({
+    empty: ({ paises } = {}) => ({
       idArea: '',
       nombreCompleto: '',
       cargo: '',
       correo: '',
-      telefono: '',
+      ...phoneFormFields('', paises),
       habilitado: true,
     }),
-    toForm: (item) => ({
+    toForm: (item, { paises } = {}) => ({
       idArea: String(item.idArea ?? ''),
       nombreCompleto: item.nombreCompleto ?? '',
       cargo: item.cargo ?? '',
       correo: item.correo ?? '',
-      telefono: item.telefono ?? '',
+      ...phoneFormFields(item.telefono, paises),
       habilitado: Boolean(item.habilitado),
     }),
-    fields: ({ areas, editing } = {}) => [
+    fields: ({ areas, paises, editing } = {}) => [
       { name: 'idArea', label: 'Área', type: 'select', required: true, options: asOptions(areas ?? []) },
       { name: 'nombreCompleto', label: 'Nombre completo', required: true, maxLength: 150, wide: true },
       { name: 'cargo', label: 'Cargo', maxLength: 100 },
       { name: 'correo', label: 'Correo', maxLength: 150, type: 'email', autoComplete: 'email' },
-      { name: 'telefono', label: 'Teléfono', maxLength: 30, autoComplete: 'tel' },
+      phoneField({ paises }),
       { ...switchField(), hiddenWhen: () => !editing },
     ],
     validate(values) {
@@ -807,7 +808,7 @@ export const maestros = {
         nombreCompleto: requireText(values.nombreCompleto, 'nombre completo', 150),
         cargo: optionalText(values.cargo, 'cargo', 100),
         correo: optionalEmail(values.correo),
-        telefono: optionalText(values.telefono, 'teléfono', 30),
+        telefono: validatePhoneFields(values),
       };
     },
     toPayload(values, { editing } = {}) {
@@ -816,7 +817,7 @@ export const maestros = {
         nombreCompleto: values.nombreCompleto.trim(),
         cargo: values.cargo.trim() || null,
         correo: values.correo.trim() || null,
-        telefono: values.telefono.trim() || null,
+        telefono: phonePayload(values),
       };
       if (editing) {
         return { ...base, habilitado: Boolean(values.habilitado) };

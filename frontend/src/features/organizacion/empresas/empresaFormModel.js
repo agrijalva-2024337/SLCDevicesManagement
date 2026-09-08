@@ -1,31 +1,32 @@
-import { optionalText, requireText } from '@/shared/components/recordFormUtils';
+import { optionalText, phoneField, requireText } from '@/shared/components/recordFormUtils';
+import { phoneFormFields, phonePayload, validatePhoneFields } from '@/shared/utils/phoneNumber';
 
-export function emptyEmpresaForm() {
+export function emptyEmpresaForm(paises = []) {
   return {
     nombre: '',
     nitCodigo: '',
     direccion: '',
-    telefono: '',
+    ...phoneFormFields('', paises),
     habilitado: true,
   };
 }
 
-export function empresaToForm(empresa) {
+export function empresaToForm(empresa, paises = []) {
   return {
     nombre: empresa.nombre ?? '',
     nitCodigo: empresa.nitCodigo ?? '',
     direccion: empresa.direccion ?? '',
-    telefono: empresa.telefono ?? '',
+    ...phoneFormFields(empresa.telefono, paises),
     habilitado: Boolean(empresa.habilitado),
   };
 }
 
-export function empresaFields() {
+export function empresaFields(paises = []) {
   return [
     { name: 'nombre', label: 'Nombre', required: true, maxLength: 150, wide: true },
     { name: 'nitCodigo', label: 'NIT / código', required: true, maxLength: 50 },
     { name: 'direccion', label: 'Dirección', maxLength: 150, wide: true },
-    { name: 'telefono', label: 'Teléfono', maxLength: 30, autoComplete: 'tel' },
+    phoneField({ paises }),
     {
       name: 'habilitado',
       type: 'switch',
@@ -40,7 +41,7 @@ export function validateEmpresaForm(values, empresas = [], currentId) {
     nombre: requireText(values.nombre, 'nombre', 150),
     nitCodigo: requireText(values.nitCodigo, 'NIT', 50),
     direccion: optionalText(values.direccion, 'dirección', 150),
-    telefono: optionalText(values.telefono, 'teléfono', 30),
+    telefono: validatePhoneFields(values),
   };
   const nit = String(values.nitCodigo ?? '')
     .trim()
@@ -61,7 +62,7 @@ export function empresaToPayload(values) {
     nombre: values.nombre.trim(),
     nitCodigo: values.nitCodigo.trim(),
     direccion: values.direccion.trim() || null,
-    telefono: values.telefono.trim() || null,
+    telefono: phonePayload(values),
     habilitado: Boolean(values.habilitado),
   };
 }

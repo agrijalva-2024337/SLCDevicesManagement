@@ -60,7 +60,7 @@ export function VerificarDocumentoOverlay({ open, asignacion, onClose }) {
     >
       {asignacion ? (
         <div className="space-y-5">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="app-fields">
             <DetailField label="Activo" value={asignacion.activoNombre} />
             <DetailField label="Responsable" value={asignacion.responsableNombre} />
             <DetailField

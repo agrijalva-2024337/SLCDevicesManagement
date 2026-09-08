@@ -1,9 +1,10 @@
+import { PhoneInput } from '@/shared/components/PhoneInput';
 import { SignaturePad } from '@/shared/components/SignaturePad';
 import { generateTemporaryPassword } from '@/shared/utils/generateTemporaryPassword';
 
 export function FormField({ id, label, required, error, hint, children, wide = false }) {
   return (
-    <div className={wide ? 'sm:col-span-2' : undefined}>
+    <div className={wide ? 'min-w-0 sm:col-span-2' : 'min-w-0'}>
       {label ? (
         <label htmlFor={id} className="app-label">
           {label}
@@ -64,7 +65,7 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
   }
 
   return (
-    <form className="grid gap-4 sm:grid-cols-2" onSubmit={onSubmit} noValidate>
+    <form className="app-fields" onSubmit={onSubmit} noValidate>
       {fields.map((field) => {
         if (field.hiddenWhen?.(values)) {
           return null;
@@ -103,6 +104,34 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
                   </option>
                 ))}
               </select>
+            </FormField>
+          );
+        }
+
+        if (field.type === 'tel') {
+          const prefijoName = field.prefijoName ?? `${field.name}Prefijo`;
+          return (
+            <FormField
+              key={field.name}
+              id={id}
+              label={field.label}
+              required={field.required}
+              error={errors[field.name]}
+              hint={field.hint ?? (field.paises?.length ? null : 'Registre países con código telefónico para elegir el prefijo.')}
+              wide
+            >
+              <PhoneInput
+                id={id}
+                paises={field.paises}
+                prefijo={values[prefijoName] ?? ''}
+                numero={values[field.name] ?? ''}
+                error={errors[field.name]}
+                disabled={Boolean(field.readOnly)}
+                maxLength={field.maxLength ?? 30}
+                autoComplete={field.autoComplete}
+                onPrefijoChange={(next) => setField(prefijoName, next)}
+                onNumeroChange={(next) => setField(field.name, next)}
+              />
             </FormField>
           );
         }
