@@ -80,7 +80,7 @@ export function EmpresaDetallePage() {
       badge={<StatusBadge active={empresa.habilitado} />}
       onClose={close}
     >
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="app-fields">
         <DetailField label="NIT" value={empresa.nitCodigo} />
         <DetailField label="Teléfono" value={empresa.telefono} />
         <DetailField label="Dirección" value={empresa.direccion} />

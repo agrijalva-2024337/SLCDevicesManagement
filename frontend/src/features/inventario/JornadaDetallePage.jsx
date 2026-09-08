@@ -187,7 +187,7 @@ export function JornadaDetallePage() {
         }
       />
 
-      <div className="mb-6 grid gap-3 sm:grid-cols-3">
+      <div className="app-fields app-fields--3 mb-6">
         <StatCard label="Esperados" value={esperados} hint="Activos de la sede, sin bajas" />
         <StatCard label="Verificados" value={verificados} featured hint="Con hallazgo en esta jornada" />
         <StatCard label="Pendientes" value={pendientes} hint="Aún sin registrar" />
@@ -288,7 +288,7 @@ export function JornadaDetallePage() {
         onClose={crud.close}
       >
         {crud.record ? (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="app-fields">
             <DetailField label="Encontrado" value={crud.record.encontrado ? 'Sí' : 'No'} />
             <DetailField label="Buen estado" value={crud.record.buenEstado ? 'Sí' : 'No'} />
             <DetailField label="Fecha" value={formatDate(crud.record.fechaVerificacion)} />

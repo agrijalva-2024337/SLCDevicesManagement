@@ -15,7 +15,7 @@ export function HomePage() {
         description="Andamiaje del frontend listo. Esta pantalla verifica el layout, el sistema de diseño y el cliente HTTP. Las pantallas de negocio se construyen en sprints posteriores."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="app-fields">
         <StatCard label="VITE_API_URL" value={env.apiUrl || '(no definida)'} hint="Base URL del backend .NET" />
         <StatCard label="VITE_USE_API_MOCK" value={String(env.useApiMock)} hint="Catálogos en memoria si es true" />
       </div>

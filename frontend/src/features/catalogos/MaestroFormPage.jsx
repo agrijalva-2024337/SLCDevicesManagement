@@ -133,8 +133,9 @@ function MaestroFormEditor({ slug, id }) {
       onSave={async (values) => {
         let payload = maestro.toPayload(values, { editing });
         if (slug === 'ubicaciones') {
-          const sedeNombre = sedes.data.find((sede) => Number(sede.id) === Number(payload.idSede))?.nombre;
-          payload = await resolveUbicacionCoords(payload, sedeNombre);
+          const sede = sedes.data.find((item) => Number(item.id) === Number(payload.idSede));
+          const pais = paises.data.find((item) => Number(item.id) === Number(sede?.idPais));
+          payload = await resolveUbicacionCoords(payload, sede, pais?.nombre);
         }
         try {
           const saved = editing

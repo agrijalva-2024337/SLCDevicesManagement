@@ -220,7 +220,7 @@ export function AsignacionesPage() {
         onClose={crud.close}
       >
         {crud.record ? (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="app-fields">
             <DetailField label="Activo" value={crud.record.activoNombre} />
             <DetailField label="Responsable" value={crud.record.responsableNombre} />
             <DetailField label="Ubicación" value={crud.record.ubicacionNombre} />

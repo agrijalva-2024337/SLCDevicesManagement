@@ -198,7 +198,7 @@ export function MantenimientosPage() {
         }}
       >
         {crud.record ? (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="app-fields">
             <DetailField label="Activo" value={crud.record.activoNombre} />
             <DetailField label="Sede" value={crud.record.sedeNombre} />
             <DetailField label="Responsable" value={crud.record.responsableNombre} />

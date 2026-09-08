@@ -36,7 +36,7 @@ export function DetailOverlay({ open, title, kicker = 'Ficha', badge, onClose, c
               <p className="app-kicker">{kicker}</p>
               <h2
                 id="detail-overlay-title"
-                className="mt-2 font-display text-2xl font-bold tracking-tight sm:text-3xl"
+                className="mt-2 break-words font-display text-2xl font-bold tracking-tight sm:text-3xl"
               >
                 {title}
               </h2>
@@ -62,8 +62,8 @@ export function DetailOverlay({ open, title, kicker = 'Ficha', badge, onClose, c
 export function DetailField({ label, value }) {
   return (
     <div className="app-field">
-      <p className="text-sm font-medium text-text-muted">{label}</p>
-      <div className="mt-1 text-base font-semibold text-navy">{value || '—'}</div>
+      <p className="app-field-label">{label}</p>
+      <div className="app-field-value">{value || '—'}</div>
     </div>
   );
 }

@@ -17,7 +17,7 @@ export function RecordCard({
   const inner = (
     <>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <h3 className="font-display text-xl font-bold tracking-tight text-navy sm:text-2xl">{title}</h3>
+        <h3 className="min-w-0 break-words font-display text-xl font-bold tracking-tight text-navy sm:text-2xl">{title}</h3>
         {badge ??
           (showStatus ? (
             statusLabel ? (
@@ -28,9 +28,11 @@ export function RecordCard({
           ) : null)}
       </div>
       {facts.length > 0 ? (
-        <ul className="mt-3 space-y-1 text-base text-navy">
+        <ul className="mt-3 min-w-0 space-y-1 break-words text-base text-navy">
           {facts.map((fact) => (
-            <li key={fact}>{fact}</li>
+            <li key={fact} className="min-w-0 overflow-hidden break-words">
+              {fact}
+            </li>
           ))}
         </ul>
       ) : null}

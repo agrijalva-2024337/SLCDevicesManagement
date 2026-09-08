@@ -4,7 +4,7 @@ import { generateTemporaryPassword } from '@/shared/utils/generateTemporaryPassw
 
 export function FormField({ id, label, required, error, hint, children, wide = false }) {
   return (
-    <div className={wide ? 'sm:col-span-2' : undefined}>
+    <div className={wide ? 'min-w-0 sm:col-span-2' : 'min-w-0'}>
       {label ? (
         <label htmlFor={id} className="app-label">
           {label}
@@ -65,7 +65,7 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
   }
 
   return (
-    <form className="grid gap-4 sm:grid-cols-2" onSubmit={onSubmit} noValidate>
+    <form className="app-fields" onSubmit={onSubmit} noValidate>
       {fields.map((field) => {
         if (field.hiddenWhen?.(values)) {
           return null;

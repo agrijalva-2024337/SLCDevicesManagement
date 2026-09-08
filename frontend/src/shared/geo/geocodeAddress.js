@@ -37,7 +37,7 @@ async function fetchNominatim(query) {
     format: 'json',
     limit: '1',
     addressdetails: '0',
-    countrycodes: 'gt,sv,hn',
+    countrycodes: 'gt,sv,hn,ni,cr,pa,mx,us,bz,co',
     'accept-language': 'es',
     email: 'slcdm.local@slc.example',
   });

@@ -22,9 +22,10 @@ export function PhoneInput({
 }) {
   const options = useMemo(() => paisesConPrefijo(paises), [paises]);
   const fallback = defaultDialCode(options);
-  const selected = options.find((pais) => pais.codigoTelefonico === prefijo);
+  const selected = options.find((pais) => pais.codigoTelefonico === prefijo) ?? options[0] ?? null;
   const flagClass = flagClassName(selected?.codigoIso2);
-  const localMax = Math.max(1, maxLength - (prefijo ? prefijo.length + 1 : 0));
+  const shownPrefijo = selected?.codigoTelefonico ?? prefijo ?? '';
+  const localMax = Math.max(1, maxLength - (shownPrefijo ? shownPrefijo.length + 1 : 0));
 
   useEffect(() => {
     if (!prefijo && fallback) {
@@ -36,25 +37,24 @@ export function PhoneInput({
     <div className={error ? 'app-phone app-phone--error' : 'app-phone'}>
       <div className="app-phone-prefix">
         {flagClass ? <span className={`${flagClass} app-phone-flag`} aria-hidden="true" /> : null}
+        <span className="app-phone-code">{shownPrefijo || '—'}</span>
+        <i className="pi pi-chevron-down app-phone-caret" aria-hidden="true" />
         <select
           id={`${id}-prefijo`}
           aria-label="Prefijo del país"
-          className="app-input app-phone-select"
-          value={prefijo ?? ''}
+          className="app-phone-select"
+          value={shownPrefijo}
           disabled={disabled || options.length === 0}
           onChange={(event) => onPrefijoChange(event.target.value)}
         >
           {options.length === 0 ? (
             <option value="">Sin países</option>
           ) : (
-            <>
-              <option value="">Prefijo</option>
-              {options.map((pais) => (
-                <option key={pais.id} value={pais.codigoTelefonico} title={pais.nombre}>
-                  {pais.codigoTelefonico}
-                </option>
-              ))}
-            </>
+            options.map((pais) => (
+              <option key={pais.id} value={pais.codigoTelefonico}>
+                {pais.nombre}
+              </option>
+            ))
           )}
         </select>
       </div>

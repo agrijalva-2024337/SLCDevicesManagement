@@ -327,7 +327,7 @@ export const maestros = {
     singular: 'ubicación',
     kicker: 'Ubicación',
     registerLabel: 'Registrar ubicación',
-    hint: 'El nombre y la sede son obligatorios. Si deja latitud y longitud vacías, se geocodifican desde el nombre, la descripción y la sede antes de enviarlas al backend.',
+    hint: 'El nombre y la sede son obligatorios. Si deja latitud y longitud vacías, se geocodifican desde la dirección y la ciudad de la sede.',
     description: 'Sitios físicos donde descansa un activo: rack, escritorio o bodega.',
     titleOf: (item) => item.nombre,
     facts: (item, lookups = {}) =>
@@ -354,7 +354,7 @@ export const maestros = {
         label: 'Latitud',
         type: 'number',
         step: 'any',
-        hint: 'Opcional. Si la deja vacía, el mapa usa el nombre y la descripción.',
+        hint: 'Opcional. Si la deja vacía, se usa la dirección de la sede.',
       },
       {
         name: 'longitud',

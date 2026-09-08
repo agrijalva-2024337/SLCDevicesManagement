@@ -129,7 +129,10 @@
 .app-kpi,
 .dash-kpi {
   position: relative;
+  min-width: 0;
   overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   border-radius: 12px;
   background: var(--surface-elevated);
   padding: 1.2rem 1.25rem 1.25rem;
@@ -182,6 +185,9 @@
 .app-feed-item,
 .dash-feed-item {
   position: relative;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   padding-left: 1.15rem;
 }
 
@@ -500,58 +506,75 @@ select.app-input {
 
 .app-phone {
   display: flex;
-  gap: 0.5rem;
   align-items: stretch;
   min-width: 0;
-}
-
-.app-phone-prefix {
-  display: flex;
-  align-items: center;
-  flex: 0 0 7.25rem;
-  min-width: 7.25rem;
-  max-width: 7.25rem;
   border-radius: 12px;
   background: var(--surface-muted);
   box-shadow: 0 0 0 1px var(--border);
+}
+
+.app-phone:focus-within {
+  box-shadow:
+    0 0 0 1.5px var(--color-navy-mid),
+    0 0 0 5px rgb(20 50 89 / 0.16);
+}
+
+.app-phone-prefix {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+  min-width: 6.1rem;
+  padding: 0 0.65rem 0 0.75rem;
+  border-right: 1px solid var(--border);
 }
 
 .app-phone-flag {
   flex-shrink: 0;
   width: 1.2rem;
   height: 0.9rem;
-  margin-left: 0.7rem;
   border-radius: 2px;
   box-shadow: 0 0 0 1px var(--border);
 }
 
+.app-phone-code {
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.app-phone-caret {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
 .app-phone-select {
-  min-width: 0;
-  box-shadow: none !important;
-  background: transparent !important;
-  padding-left: 0.35rem;
-  padding-right: 1.6rem;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.app-phone-select:disabled {
+  cursor: not-allowed;
 }
 
 .app-phone-number {
   flex: 1 1 auto;
   min-width: 0;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 12px 12px 0;
 }
 
-.app-phone--error .app-phone-prefix,
-.app-phone--error .app-phone-number {
+.app-phone--error {
   box-shadow: 0 0 0 1.5px var(--color-error);
-}
-
-@media (max-width: 420px) {
-  .app-phone {
-    flex-direction: column;
-  }
-
-  .app-phone-prefix {
-    max-width: 7.25rem;
-    flex-basis: 7.25rem;
-  }
 }
 
 .app-route-fallback {
@@ -680,15 +703,52 @@ select.app-input {
   font-size: 0.85rem;
 }
 
+.app-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .app-fields,
+  .app-fields--2 {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .app-fields--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .app-field {
   position: relative;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   overflow-wrap: anywhere;
   word-break: break-word;
   border-radius: 14px;
   padding: 0.85rem 1rem 0.85rem 1.15rem;
   background: var(--surface-muted);
   box-shadow: 0 0 0 1px var(--border);
+}
+
+.app-field-label {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.app-field-value {
+  margin: 0.3rem 0 0;
+  color: var(--color-navy);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .app-field::before {
@@ -720,6 +780,9 @@ select.app-input {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   border-radius: 14px;
   padding: 0.85rem 1rem;
   background: var(--surface-muted);
@@ -758,8 +821,9 @@ select.app-input {
   position: relative;
   z-index: 1;
   max-height: 88dvh;
-  width: 100%;
-  max-width: min(42rem, 100%);
+  width: min(42rem, 100%);
+  max-width: 100%;
+  min-width: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -795,6 +859,8 @@ select.app-input {
 }
 
 .app-overlay-body {
+  min-width: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   padding: 1.35rem 1.25rem 1.5rem;
 }
@@ -1165,7 +1231,7 @@ select.app-input {
 [data-theme='dark'] .app-input,
 [data-theme='dark'] select.app-input,
 [data-theme='dark'] textarea.app-input,
-[data-theme='dark'] .app-phone-prefix {
+[data-theme='dark'] .app-phone {
   color: var(--text);
   background: var(--surface-muted);
   color-scheme: dark;
@@ -1174,6 +1240,12 @@ select.app-input {
 [data-theme='dark'] .app-input:focus,
 [data-theme='dark'] select.app-input:focus,
 [data-theme='dark'] textarea.app-input:focus {
+  box-shadow:
+    0 0 0 1.5px var(--accent),
+    0 0 0 5px var(--accent-soft);
+}
+
+[data-theme='dark'] .app-phone:focus-within {
   box-shadow:
     0 0 0 1.5px var(--accent),
     0 0 0 5px var(--accent-soft);
@@ -1215,6 +1287,10 @@ select.app-input {
 [data-theme='dark'] .app-field {
   background: var(--surface-muted);
   box-shadow: 0 0 0 1px var(--border);
+}
+
+[data-theme='dark'] .app-field-value {
+  color: var(--text);
 }
 
 [data-theme='dark'] .app-kanban {

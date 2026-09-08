@@ -120,7 +120,20 @@ export function CatalogoPage() {
     return (
       <>
         <CatalogBanner banner={banner} />
-        <UbicacionesMapPage items={items} loading={isLoading} />
+        <UbicacionesMapPage
+          items={items.map((item) => {
+            const sede = (sedes.data ?? []).find((row) => Number(row.id) === Number(item.idSede));
+            const pais = (paises.data ?? []).find((row) => Number(row.id) === Number(sede?.idPais));
+            return {
+              ...item,
+              direccion: sede?.direccion,
+              ciudad: sede?.ciudad,
+              sedeNombre: sede?.nombre,
+              paisNombre: pais?.nombre,
+            };
+          })}
+          loading={isLoading}
+        />
         <OverlayOutlet context={outletContext} />
       </>
     );

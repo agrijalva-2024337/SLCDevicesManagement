@@ -91,7 +91,7 @@ export function SedeDetallePage() {
       badge={<StatusBadge active={sede.habilitado} />}
       onClose={close}
     >
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="app-fields">
         <DetailField
           label="Empresa"
           value={
@@ -124,7 +124,7 @@ export function SedeDetallePage() {
       <section>
         <h3 className="font-display text-xl font-bold text-navy">Áreas</h3>
         <p className="mt-1 text-base text-text-muted">Unidades internas que operan en esta sede.</p>
-        <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+        <ul className="app-fields mt-4">
           {areas.length === 0 ? (
             <li className="app-field text-base text-text-muted">Sin áreas registradas.</li>
           ) : (

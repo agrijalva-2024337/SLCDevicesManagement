@@ -88,7 +88,7 @@ export function MaestroDetallePage() {
       badge={maestro.hasHabilitado === false ? null : <StatusBadge active={item.habilitado} />}
       onClose={close}
     >
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="app-fields">
         {maestro.detail(item, outlet.lookups ?? {}).map((field) => (
           <DetailField key={field.label} label={field.label} value={field.value} />
         ))}
