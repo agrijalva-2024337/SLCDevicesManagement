@@ -23,3 +23,16 @@ export function requireSelect(value, label) {
   if (value === '' || value == null) return `Seleccione ${label}.`;
   return null;
 }
+
+export function phoneField({ label = 'Teléfono', paises = [], maxLength = 30, required = false } = {}) {
+  return {
+    name: 'telefono',
+    type: 'tel',
+    label,
+    required,
+    maxLength,
+    autoComplete: 'tel',
+    wide: true,
+    paises,
+  };
+}

@@ -498,6 +498,62 @@ select.app-input {
   flex: 0 0 auto;
 }
 
+.app-phone {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.app-phone-prefix {
+  display: flex;
+  align-items: center;
+  flex: 0 0 7.25rem;
+  min-width: 7.25rem;
+  max-width: 7.25rem;
+  border-radius: 12px;
+  background: var(--surface-muted);
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.app-phone-flag {
+  flex-shrink: 0;
+  width: 1.2rem;
+  height: 0.9rem;
+  margin-left: 0.7rem;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.app-phone-select {
+  min-width: 0;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding-left: 0.35rem;
+  padding-right: 1.6rem;
+}
+
+.app-phone-number {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.app-phone--error .app-phone-prefix,
+.app-phone--error .app-phone-number {
+  box-shadow: 0 0 0 1.5px var(--color-error);
+}
+
+@media (max-width: 420px) {
+  .app-phone {
+    flex-direction: column;
+  }
+
+  .app-phone-prefix {
+    max-width: 7.25rem;
+    flex-basis: 7.25rem;
+  }
+}
+
 .app-route-fallback {
   min-height: 100dvh;
   background: var(--color-surface);
@@ -626,6 +682,9 @@ select.app-input {
 
 .app-field {
   position: relative;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   border-radius: 14px;
   padding: 0.85rem 1rem 0.85rem 1.15rem;
   background: var(--surface-muted);
@@ -1105,7 +1164,8 @@ select.app-input {
 
 [data-theme='dark'] .app-input,
 [data-theme='dark'] select.app-input,
-[data-theme='dark'] textarea.app-input {
+[data-theme='dark'] textarea.app-input,
+[data-theme='dark'] .app-phone-prefix {
   color: var(--text);
   background: var(--surface-muted);
   color-scheme: dark;

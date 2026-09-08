@@ -92,7 +92,7 @@ function MaestroFormEditor({ slug, id }) {
     );
   }
 
-  if (!ready) {
+  if (!ready || paises.isLoading) {
     return (
       <DetailOverlay open title={maestro.title} kicker={editing ? 'Editar registro' : maestro.registerLabel} onClose={close}>
         <div className="app-feedback app-feedback--loading" role="status">
@@ -112,7 +112,7 @@ function MaestroFormEditor({ slug, id }) {
     idEmpresa,
     editing,
   };
-  const initialValues = item ? maestro.toForm(item) : maestro.empty(lookups);
+  const initialValues = item ? maestro.toForm(item, lookups) : maestro.empty(lookups);
   const fields = maestro.fields(lookups);
 
   return (

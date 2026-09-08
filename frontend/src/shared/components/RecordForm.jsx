@@ -1,3 +1,4 @@
+import { PhoneInput } from '@/shared/components/PhoneInput';
 import { SignaturePad } from '@/shared/components/SignaturePad';
 import { generateTemporaryPassword } from '@/shared/utils/generateTemporaryPassword';
 
@@ -103,6 +104,34 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
                   </option>
                 ))}
               </select>
+            </FormField>
+          );
+        }
+
+        if (field.type === 'tel') {
+          const prefijoName = field.prefijoName ?? `${field.name}Prefijo`;
+          return (
+            <FormField
+              key={field.name}
+              id={id}
+              label={field.label}
+              required={field.required}
+              error={errors[field.name]}
+              hint={field.hint ?? (field.paises?.length ? null : 'Registre países con código telefónico para elegir el prefijo.')}
+              wide
+            >
+              <PhoneInput
+                id={id}
+                paises={field.paises}
+                prefijo={values[prefijoName] ?? ''}
+                numero={values[field.name] ?? ''}
+                error={errors[field.name]}
+                disabled={Boolean(field.readOnly)}
+                maxLength={field.maxLength ?? 30}
+                autoComplete={field.autoComplete}
+                onPrefijoChange={(next) => setField(prefijoName, next)}
+                onNumeroChange={(next) => setField(field.name, next)}
+              />
             </FormField>
           );
         }

@@ -3,11 +3,13 @@ import { useAuth } from '@/features/auth/useAuth';
 import * as bitacoraService from '@/features/organizacion/bitacoras/bitacoraService';
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import { TipoOperacionBitacora } from '@/shared/api/contracts';
+import { snapshotEntries } from '@/features/organizacion/bitacoras/bitacoraSnapshot';
 import { DataTable } from '@/shared/components/DataTable';
 import { DetailField } from '@/shared/components/DetailOverlay';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useResource } from '@/shared/hooks/useResource';
 import { byId, formatDateTime } from '@/shared/utils/format';
+import '@/features/organizacion/bitacoras/bitacora.css';
 
 const TIPO_LABEL = {
   [TipoOperacionBitacora.Creacion]: 'Creación',
@@ -28,6 +30,27 @@ function usuarioNombre(usuario) {
 
 function diaDe(fechaHora) {
   return String(fechaHora ?? '').slice(0, 10);
+}
+
+function BitacoraSnapshot({ label, value }) {
+  const entries = snapshotEntries(value);
+  return (
+    <article className="bitacora-snap">
+      <p className="bitacora-snap-label">{label}</p>
+      {entries.length === 0 ? (
+        <p className="bitacora-snap-empty">Sin registro</p>
+      ) : (
+        <dl className="bitacora-snap-list">
+          {entries.map(([key, item]) => (
+            <div key={key} className="bitacora-snap-row">
+              <dt>{key}</dt>
+              <dd>{item}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </article>
+  );
 }
 
 export function BitacoraPage() {
@@ -199,10 +222,10 @@ export function BitacoraPage() {
         defaultSortDirection="desc"
         expandable
         renderExpandedContent={(row) => (
-          <div className="grid gap-3 sm:grid-cols-2">
-            <DetailField label="Anterior" value={row.informacionAnterior} />
-            <DetailField label="Nuevo" value={row.informacionNueva} />
-            <div className="sm:col-span-2">
+          <div className="bitacora-diff">
+            <BitacoraSnapshot label="Antes" value={row.informacionAnterior} />
+            <BitacoraSnapshot label="Después" value={row.informacionNueva} />
+            <div className="bitacora-diff-note">
               <DetailField label="Descripción" value={row.descripcion} />
             </div>
           </div>
