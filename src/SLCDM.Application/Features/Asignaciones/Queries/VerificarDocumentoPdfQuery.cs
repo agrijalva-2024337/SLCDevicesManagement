@@ -6,7 +6,11 @@ namespace SLCDM.Application.Features.Asignaciones.Queries;
 
 public sealed record VerificarDocumentoPdfQuery(int IdAsignacion, byte[] ContenidoPdf);
 
-public sealed record VerificacionPdfDto(bool EsValido, DateTime? FechaGeneracionOriginal);
+public sealed record VerificacionPdfDto(
+    bool Coincide,
+    string? HashRegistro,
+    string? FirmaDocumento,
+    DateTime? FechaGenerado);
 
 public sealed class VerificarDocumentoPdfQueryHandler
     : IQueryHandler<VerificarDocumentoPdfQuery, VerificacionPdfDto>
@@ -27,12 +31,15 @@ public sealed class VerificarDocumentoPdfQueryHandler
             .FirstOrDefaultAsync(a => a.Id == query.IdAsignacion, cancellationToken)
             ?? throw new NotFoundException("Asignacion", query.IdAsignacion);
 
-        if (asignacion.DocumentoPdfHash is null)
-        {
-            return new VerificacionPdfDto(false, null);
-        }
+        var firmaDocumento = _pdfHash.CalcularHash(query.ContenidoPdf);
+        var hashRegistro = asignacion.DocumentoPdfHash;
+        var coincide = hashRegistro is not null
+            && string.Equals(firmaDocumento, hashRegistro, StringComparison.OrdinalIgnoreCase);
 
-        var coincide = _pdfHash.CalcularHash(query.ContenidoPdf) == asignacion.DocumentoPdfHash;
-        return new VerificacionPdfDto(coincide, coincide ? asignacion.DocumentoPdfGenerardoEn : null);
+        return new VerificacionPdfDto(
+            coincide,
+            hashRegistro,
+            firmaDocumento,
+            asignacion.DocumentoPdfGenerardoEn);
     }
 }

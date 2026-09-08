@@ -13,26 +13,29 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
     private static readonly Color Gold = Color.FromHex("#c9a227");
 
     private readonly IApplicationDbContext _db;
+    private readonly IPdfHashService _pdfHash;
 
     static AsignacionPdfService()
     {
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
-    public AsignacionPdfService(IApplicationDbContext db)
+    public AsignacionPdfService(IApplicationDbContext db, IPdfHashService pdfHash)
     {
         _db = db;
+        _pdfHash = pdfHash;
     }
 
     public async Task<AsignacionPdfFileDto> GenerarAsync(
         int idAsignacion, CancellationToken cancellationToken = default)
     {
         var asignacion = await _db.Asignaciones
-            .AsNoTracking()
             .Include(a => a.TipoAsignacion)
             .Include(a => a.Estado)
             .FirstOrDefaultAsync(a => a.Id == idAsignacion, cancellationToken)
             ?? throw new NotFoundException("Asignacion", idAsignacion);
+
+        var fechaDocumento = asignacion.DocumentoPdfGenerardoEn ?? DateTime.UtcNow;
 
         var activo = await _db.Activos.AsNoTracking().IgnoreQueryFilters()
             .Include(a => a.CategoriaActivo)
@@ -135,11 +138,28 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
                     col.Item().Background(Navy).Padding(8).AlignCenter().Text(text =>
                     {
                         text.Span("SLC · documento interno de inventario  ·  ").FontSize(8).FontColor(Colors.White);
-                        text.Span($"{DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC").FontSize(8).FontColor(Gold);
+                        text.Span($"{fechaDocumento:yyyy-MM-dd HH:mm} UTC").FontSize(8).FontColor(Gold);
                     });
                 });
             });
-        }).GeneratePdf();
+        })
+        .WithMetadata(new DocumentMetadata
+        {
+            Title = titulo,
+            Author = "SLC Devices Management",
+            Creator = "SLCDM",
+            CreationDate = fechaDocumento,
+            ModifiedDate = fechaDocumento,
+        })
+        .GeneratePdf();
+
+        if (string.IsNullOrEmpty(asignacion.DocumentoPdfHash))
+        {
+            asignacion.DocumentoPdfUrl ??= $"/api/Asignaciones/{asignacion.Id}/pdf";
+            asignacion.DocumentoPdfHash = _pdfHash.CalcularHash(pdf);
+            asignacion.DocumentoPdfGenerardoEn = fechaDocumento;
+            await _db.SaveChangesAsync(cancellationToken);
+        }
 
         return new AsignacionPdfFileDto(pdf, fileName);
     }

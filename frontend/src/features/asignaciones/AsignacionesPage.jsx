@@ -42,6 +42,8 @@ function hydrate(row, lookups) {
     responsableNombre: responsable?.nombreCompleto ?? '—',
     ubicacionNombre: nombreUbicacion(ubicacion),
     estadoVista: estadoVista(row),
+    hashDocumento: row.hashDocumento ?? row.documentoPdfHash ?? null,
+    documentoPdfGeneradoEn: row.documentoPdfGeneradoEn ?? row.documentoPdfGenerardoEn ?? null,
   };
 }
 

@@ -172,17 +172,27 @@ export async function verificarDocumento(id, file) {
     await wait(400);
     const row = await getById(id);
     const firmaDocumento = await sha256File(file);
-    const hashRegistro = row.hashDocumento ? String(row.hashDocumento).toLowerCase() : null;
+    const hashRegistro = row.hashDocumento
+      ? String(row.hashDocumento).toLowerCase()
+      : row.documentoPdfHash
+        ? String(row.documentoPdfHash).toLowerCase()
+        : null;
     return {
       coincide: Boolean(hashRegistro) && hashRegistro === firmaDocumento,
       hashRegistro,
       firmaDocumento,
-      fechaGenerado: row.documentoPdfGeneradoEn ?? null,
+      fechaGenerado: row.documentoPdfGeneradoEn ?? row.documentoPdfGenerardoEn ?? null,
     };
   }
 
   const form = new FormData();
   form.append('archivo', file);
   const response = await httpClient.post(apiPaths.asignacionVerificarPdf(id), form);
-  return response.data;
+  const data = response.data ?? {};
+  return {
+    coincide: Boolean(data.coincide ?? data.esValido),
+    hashRegistro: data.hashRegistro ?? data.hashDocumento ?? data.documentoPdfHash ?? null,
+    firmaDocumento: data.firmaDocumento ?? null,
+    fechaGenerado: data.fechaGenerado ?? data.fechaGeneracionOriginal ?? null,
+  };
 }
