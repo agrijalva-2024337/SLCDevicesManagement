@@ -141,7 +141,7 @@
 .dash-kpi--featured {
   background:
     radial-gradient(90% 120% at 100% 0%, rgb(38 166 33 / 0.22), transparent 42%),
-    var(--color-navy);
+    var(--palette-navy);
   color: var(--text-on-inverse);
   box-shadow:
     0 16px 40px rgb(12 20 64 / 0.22),
@@ -218,7 +218,7 @@
   gap: 0.75rem;
   border-radius: 12px;
   padding: 0.7rem 0.85rem;
-  color: var(--color-white);
+  color: var(--palette-white);
   background: rgb(253 253 255 / 0.08);
   transition:
     background 0.25s ease,
@@ -483,6 +483,21 @@ select.app-input {
   transform: translateY(-50%);
 }
 
+.app-input-with-action {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.app-input-with-action .app-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.app-input-with-action .app-btn {
+  flex: 0 0 auto;
+}
+
 .app-route-fallback {
   min-height: 100dvh;
   background: var(--color-surface);
@@ -673,7 +688,7 @@ select.app-input {
   border-radius: 16px;
   padding: 0.9rem 1rem;
   text-align: center;
-  color: var(--color-white);
+  color: var(--palette-white);
   background:
     radial-gradient(120% 140% at 100% -10%, rgb(38 166 33 / 0.22), transparent 46%),
     linear-gradient(135deg, #0c1440, #143259);
@@ -702,7 +717,7 @@ select.app-input {
   background:
     radial-gradient(120% 140% at 100% -10%, rgb(38 166 33 / 0.22), transparent 46%),
     linear-gradient(135deg, #0c1440 0%, #143259 100%);
-  color: var(--color-white);
+  color: var(--palette-white);
 }
 
 .app-overlay-head::after {
@@ -1121,7 +1136,25 @@ select.app-input {
 
 [data-theme='dark'] .app-overlay {
   background: var(--surface-elevated);
-  box-shadow: none;
+  box-shadow: 0 24px 80px rgb(0 0 0 / 0.55);
+  border: 1px solid var(--border);
+}
+
+[data-theme='dark'] .app-overlay-head {
+  color: var(--palette-white);
+}
+
+[data-theme='dark'] .app-panel,
+[data-theme='dark'] .dash-panel,
+[data-theme='dark'] .app-kpi,
+[data-theme='dark'] .dash-kpi {
+  background: var(--surface-elevated);
+  border-color: var(--border);
+}
+
+[data-theme='dark'] .app-field {
+  background: var(--surface-muted);
+  box-shadow: 0 0 0 1px var(--border);
 }
 
 [data-theme='dark'] .app-kanban {

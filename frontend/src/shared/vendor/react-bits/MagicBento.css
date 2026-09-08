@@ -96,3 +96,20 @@ a.magic-bento-card__body {
 .bento-section {
   position: relative;
 }
+
+[data-theme='dark'] .magic-bento-wrap {
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+[data-theme='dark'] .magic-bento-wrap:hover,
+[data-theme='dark'] .magic-bento-wrap:focus-within {
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 28px rgb(0 0 0 / 0.32),
+    0 0 0 1px var(--border-strong);
+}
+
+[data-theme='dark'] .magic-bento-card {
+  background: var(--surface-elevated);
+  color: var(--text);
+}
