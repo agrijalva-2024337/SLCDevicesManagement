@@ -31,7 +31,7 @@ export const apiPaths = {
   // [API] imagen QR del activo; confirmar en Swagger (blob o { imageUrl, consultaUrl })
   activoQr: (id) => `/api/Activos/${id}/qr`,
   // [API] ficha pública sin login; confirmar path y nombre del código
-  consultaPublica: (codigo) => `/api/Consulta/${codigo}`,
+  consultaPublica: (codigo) => `/api/consulta/activos/${encodeURIComponent(codigo)}`,
   asignaciones: '/api/Asignaciones',
   // [API] multipart archivo PDF; confirmar cuando exista el controller
   asignacionVerificarPdf: (id) => `/api/Asignaciones/${id}/pdf/verificar`,

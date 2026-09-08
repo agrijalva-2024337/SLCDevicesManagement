@@ -42,13 +42,33 @@ function notFound() {
   return error;
 }
 
+function fichaPublicaDe(raw) {
+  if (!raw) return raw;
+  return {
+    nombre: raw.nombre,
+    codigoInterno: raw.codigoInterno ?? raw.numeroSerie ?? (raw.id != null ? String(raw.id) : null),
+    marca: raw.marca ?? null,
+    modelo: raw.modelo ?? null,
+    numeroSerie: raw.numeroSerie ?? null,
+    categoria: raw.categoria ?? raw.nombreCategoria ?? null,
+    empresa: raw.empresa ?? raw.nombreEmpresa ?? null,
+    sede: raw.sede ?? raw.nombreSede ?? null,
+    ubicacion: raw.ubicacion ?? raw.nombreUbicacion ?? null,
+    estado: raw.estado ?? raw.estadoNombre ?? null,
+    responsable: raw.responsable ?? raw.nombreResponsable ?? null,
+    area: raw.area ?? raw.nombreArea ?? null,
+    garantiaHasta: raw.garantiaHasta ?? raw.fechaVencimientoGarantia ?? null,
+    descripcion: raw.descripcion ?? null,
+  };
+}
+
 export async function getFichaPublica(codigo) {
   const needle = String(codigo ?? '').trim();
   if (!needle) throw notFound();
 
   if (!env.useApiMock) {
     const response = await httpClient.get(apiPaths.consultaPublica(needle));
-    return response.data;
+    return fichaPublicaDe(response.data);
   }
 
   const [lista, categorias, ubicaciones, sedes, empresas, areas, responsables, estados, asignaciones] =
@@ -78,7 +98,7 @@ export async function getFichaPublica(codigo) {
   const responsable = asignada ? byId(responsables, asignada.idResponsable) : null;
   const area = responsable ? byId(areas, responsable.idArea) : null;
 
-  return {
+  return fichaPublicaDe({
     nombre: activo.nombre,
     codigoInterno: activo.codigoInterno ?? activo.numeroSerie ?? String(activo.id),
     marca: activo.marca ?? null,
@@ -93,7 +113,7 @@ export async function getFichaPublica(codigo) {
     area: area?.nombre ?? null,
     garantiaHasta: activo.fechaVencimientoGarantia ?? null,
     descripcion: activo.descripcion ?? null,
-  };
+  });
 }
 
 export async function getQrDeActivo(idActivo) {
