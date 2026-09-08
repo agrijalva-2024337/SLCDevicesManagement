@@ -150,7 +150,7 @@ export function AsignacionesPage() {
       ) : null}
       <DataTable
         title="Asignaciones"
-        description="Entrega y devolución. Solo filas de tipo Asignacion. Traslado y mantenimiento están en las pestañas de Activos."
+        description="Entrega y devolución de activos a un responsable."
         primaryAction={
           <>
             <EscanearQrButton />

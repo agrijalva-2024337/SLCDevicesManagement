@@ -156,7 +156,7 @@ export function ActivosPage() {
       ) : null}
       <DataTable
         title="Activos"
-        description="Parque tecnológico. Empresa y sede se leen de la ubicación. Use ?estado= para el drill-down."
+        description="Parque tecnológico. Empresa y sede se leen de la ubicación."
         primaryAction={
           <>
             <EscanearQrButton />

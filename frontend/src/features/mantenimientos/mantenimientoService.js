@@ -69,6 +69,13 @@ async function aplicarAperturaMock({ activo, idAsignacion, idTipoMantenimiento, 
   });
 }
 
+function asFechaAsignacion(fecha) {
+  const raw = String(fecha ?? '').trim();
+  if (!raw) return new Date().toISOString();
+  if (raw.includes('T')) return raw;
+  return `${raw}T12:00:00.000Z`;
+}
+
 export async function registrar({
   idActivo,
   idUsuario,
@@ -78,18 +85,30 @@ export async function registrar({
   idTipoMantenimiento,
   descripcionProblema,
 }) {
+  const userId = Number(idUsuario);
+  if (!Number.isFinite(userId) || userId <= 0) {
+    throw new Error('No se pudo identificar al usuario de la sesión. Vuelva a iniciar sesión.');
+  }
+
+  const tipoId = Number(idTipoMantenimiento);
+  if (!Number.isFinite(tipoId) || tipoId <= 0) {
+    const error = new Error('Seleccione un tipo de mantenimiento.');
+    error.fieldErrors = { idTipoMantenimiento: 'Seleccione un tipo de mantenimiento.' };
+    throw error;
+  }
+
   const idEstado = await getIdEstado(ESTADO_ACTIVO.EnMantenimiento);
   const activo = await activoService.getById(idActivo);
   const problema = String(descripcionProblema ?? '').trim();
 
   const created = await persistirApertura({
     idActivo: Number(idActivo),
-    idUsuario: Number(idUsuario),
+    idUsuario: userId,
     idResponsable: Number(idResponsable),
     idEstado,
-    idTipoMantenimiento: Number(idTipoMantenimiento),
+    idTipoMantenimiento: tipoId,
     descripcionProblema: problema,
-    fechaAsignacion: fecha,
+    fechaAsignacion: asFechaAsignacion(fecha),
     observaciones: String(observaciones ?? '').trim() || null,
   });
 

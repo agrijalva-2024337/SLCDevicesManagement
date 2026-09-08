@@ -107,7 +107,7 @@ export function RastreoPage() {
         emptyDescription={
           vista === 'fuera-de-rango'
             ? 'Cuando un equipo salga del lugar asignado, aparecerá aquí.'
-            : 'El listado sale de GET /api/Dispositivos/rastreo.'
+            : 'Cuando un equipo envíe señal, aparecerá aquí.'
         }
         renderRowActions={(row) =>
           row.mapsUrl ? (

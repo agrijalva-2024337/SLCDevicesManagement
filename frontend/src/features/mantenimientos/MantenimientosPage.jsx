@@ -149,7 +149,7 @@ export function MantenimientosPage() {
       ) : null}
       <DataTable
         title="Mantenimientos"
-        description="Órdenes sobre Asignación con tipo Mantenimiento. Use ?abiertos=1 o ?estado= para el drill-down del dashboard."
+        description="Órdenes de mantenimiento abiertas y cerradas."
         primaryAction={
           <>
             <EscanearQrButton />

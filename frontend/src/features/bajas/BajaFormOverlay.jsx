@@ -62,7 +62,7 @@ export function BajaFormOverlay({
         required: true,
         readOnly: lockActivo,
         options: asOptions(lockActivo ? (activos ?? []) : activosElegibles, 'nombre'),
-        hint: 'Solo activos libres. El tipo Baja se resuelve por nombre.',
+        hint: 'Solo activos libres.',
       },
       {
         name: 'idMotivoBaja',
@@ -102,7 +102,7 @@ export function BajaFormOverlay({
         required: true,
         maxLength: 300,
         wide: true,
-        hint: 'No hay endpoint de subida. Pegue la URL. Campo obligatorio del command.',
+        hint: 'Dirección del documento PDF que respalda la baja.',
       },
       {
         name: 'observaciones',
@@ -133,7 +133,7 @@ export function BajaFormOverlay({
       open={open}
       title="Registrar baja"
       kicker="Operaciones"
-      hint="Se registra como una asignación de tipo Baja. DocumentoPdfUrl es obligatorio; no hay uploader."
+      hint="Indique el motivo y la dirección del documento."
       fields={fields}
       initialValues={{
         idActivo: prefill?.idActivo ? String(prefill.idActivo) : '',

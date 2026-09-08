@@ -198,7 +198,7 @@ export function BitacoraPage() {
       </div>
       <DataTable
         title="Bitácora"
-        description="Solo lectura. Auditoría escrita por el interceptor del backend. Usuario y entidad van al GET; fecha y tipo se filtran en cliente."
+        description="Registro de auditoría. Filtre por usuario, entidad, fecha y tipo."
         columns={[
           {
             key: 'fechaHora',
@@ -232,7 +232,7 @@ export function BitacoraPage() {
           },
         ]}
         emptyTitle="No hay movimientos"
-        emptyDescription="Cuando el backend registre escrituras, aparecerán aquí."
+        emptyDescription="Cuando se registren cambios, aparecerán aquí."
         defaultSortKey="fechaHora"
         defaultSortDirection="desc"
         expandable

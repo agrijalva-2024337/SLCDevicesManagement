@@ -120,7 +120,7 @@ export function ActivoFormOverlay({
         type: 'select',
         required: true,
         options: asOptions(destinos),
-        hint: 'Empresa y sede se derivan de la ubicación. ActivoDto no tiene esos ids.',
+        hint: 'Empresa y sede se derivan de la ubicación.',
       },
       { name: 'marca', label: 'Marca', maxLength: 100 },
       { name: 'modelo', label: 'Modelo', maxLength: 100 },
@@ -156,7 +156,7 @@ export function ActivoFormOverlay({
       open={open}
       title={editing ? record?.nombre : 'Nuevo activo'}
       kicker={editing ? 'Editar registro' : 'Registrar activo'}
-      hint="Nombre, categoría, proveedor, ubicación, compra y garantía son obligatorios. No hay idEmpresa ni idSede en el DTO."
+      hint="Nombre, categoría, proveedor, ubicación, compra y garantía son obligatorios."
       fields={fields}
       initialValues={editing && record ? activoToForm(record) : emptyActivo()}
       submitLabel={editing ? 'Guardar cambios' : 'Registrar activo'}
