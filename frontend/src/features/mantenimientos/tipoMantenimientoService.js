@@ -2,10 +2,14 @@ import { tiposMantenimiento } from '@/features/mantenimientos/mocks/tiposManteni
 import { apiPaths } from '@/shared/api/paths';
 import { createReadService } from '@/shared/services/createMockCrudService';
 
-// [API] No existe TiposMantenimientoController. En VITE_USE_API_MOCK=false este GET
-// falla hasta que Angel publique GET /api/TiposMantenimiento. El seed vive en
-// Scripts/SeedCatalogosAddendum.sql (Preventivo, Correctivo).
-export const { getAll, getById } = createReadService({
+const read = createReadService({
   endpoint: apiPaths.tiposMantenimiento,
   seed: tiposMantenimiento,
 });
+
+export async function getAll(params) {
+  const rows = await read.getAll(params);
+  return Array.isArray(rows) ? rows : [];
+}
+
+export const { getById } = read;

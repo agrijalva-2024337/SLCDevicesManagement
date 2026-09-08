@@ -93,7 +93,7 @@ export function JornadasPage() {
       ) : null}
       <DataTable
         title="Inventario físico"
-        description="Jornadas de conteo por sede. La ubicación es agrupación de la hoja de trabajo, no un filtro del servidor."
+        description="Jornadas de conteo por sede."
         primaryAction={
           allowWrite ? (
             <RegisterButton label="Abrir jornada" onClick={() => crud.openCreate()} />

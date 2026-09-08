@@ -12,32 +12,30 @@ export function HomePage() {
     <section>
       <PageHeader
         title="SLCDevicesManagement"
-        description="Andamiaje del frontend listo. Esta pantalla verifica el layout, el sistema de diseño y el cliente HTTP. Las pantallas de negocio se construyen en sprints posteriores."
+        description="Inicio de la consola de inventario."
       />
 
       <div className="app-fields">
-        <StatCard label="VITE_API_URL" value={env.apiUrl || '(no definida)'} hint="Base URL del backend .NET" />
-        <StatCard label="VITE_USE_API_MOCK" value={String(env.useApiMock)} hint="Catálogos en memoria si es true" />
+        <StatCard label="Entorno" value={env.useApiMock ? 'Demostración' : 'En línea'} hint="Modo de operación actual" />
       </div>
 
       <div className="app-panel mt-6">
-        <h3 className="text-sm font-semibold text-navy">Estado del cliente HTTP</h3>
+        <h3 className="text-sm font-semibold text-navy">Estado del servicio</h3>
         <p className="mt-1 text-sm text-text-muted">
           {env.useApiMock
-            ? 'Modo mock: no se llama a la API real.'
-            : 'Modo API: GET /api/health.'}
+            ? 'Modo demostración: los datos se simulan en el navegador.'
+            : 'Comprobando la conexión con el servicio.'}
         </p>
 
         <div className="mt-4">
           <FeedbackState
             status={status}
-            loadingMessage="Comprobando el cliente HTTP..."
+            loadingMessage="Comprobando la conexión..."
             errorMessage={getErrorMessage(error)}
           >
             {data ? (
               <div className="rounded-md bg-success-soft px-4 py-3 text-sm text-accent-text">
-                <p className="font-medium">{data.message}</p>
-                <p className="mt-1 text-text-secondary">Origen: {data.source}</p>
+                <p className="font-medium">{data.ok ? 'Servicio disponible.' : 'Servicio no disponible.'}</p>
               </div>
             ) : null}
           </FeedbackState>

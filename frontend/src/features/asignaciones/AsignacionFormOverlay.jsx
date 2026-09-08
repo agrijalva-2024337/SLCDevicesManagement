@@ -59,14 +59,14 @@ export function AsignacionFormOverlay({
         required: true,
         readOnly: lockActivo,
         options: asOptions(lockActivo ? (activos ?? []) : activosElegibles, 'nombre'),
-        hint: 'Solo activos libres. El tipo Asignacion se resuelve por nombre, no se elige aquí.',
+        hint: 'Solo activos libres.',
       },
       {
         name: 'ubicacion',
         label: 'Ubicación de uso',
         type: 'text',
         readOnly: true,
-        hint: 'CreateAsignacionCommand exige idUbicacion. Se toma del activo.',
+        hint: 'Ubicación actual del activo.',
       },
       {
         name: 'idResponsable',
@@ -108,7 +108,7 @@ export function AsignacionFormOverlay({
       open={open}
       title="Registrar asignación"
       kicker="Entrega"
-      hint="Entrega a un responsable. No elija Traslado, Mantenimiento ni Baja en esta pantalla. La devolución cierra con POST /devolver."
+      hint="Entrega el activo a un responsable."
       fields={fields}
       initialValues={initialValues(prefill, { activos, ubicaciones })}
       deriveValues={(next) => {

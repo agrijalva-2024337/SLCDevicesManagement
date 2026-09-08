@@ -80,7 +80,7 @@ export function TrasladoFormOverlay({
         type: 'textarea',
         maxLength: 300,
         wide: true,
-        hint: 'Va en CreateTrasladoCommand.motivo. La ruta Origen → Destino se guarda en observaciones para el listado.',
+        hint: 'Por qué se mueve el activo.',
       },
     ],
     [activos, activosElegibles, destinos, lockActivo, responsables],
@@ -92,7 +92,7 @@ export function TrasladoFormOverlay({
       open={open}
       title="Registrar traslado"
       kicker="Inventario"
-      hint="El traslado se registra con POST /api/Asignaciones/traslado. El origen no es un campo editable."
+      hint="El origen es la ubicación actual del activo y no se edita."
       fields={fields}
       initialValues={initialValues}
       deriveValues={(next) => {

@@ -138,7 +138,7 @@ export function BajasPage() {
       ) : null}
       <DataTable
         title="Bajas"
-        description="Retiro definitivo. Son filas de Asignación con tipo Baja. No existe /api/bajas."
+        description="Retiro definitivo de activos."
         primaryAction={
           <>
             <EscanearQrButton />

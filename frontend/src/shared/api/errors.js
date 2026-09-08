@@ -35,12 +35,12 @@ export function getApiErrorMessage(error) {
       data?.detail ||
       data?.message ||
       data?.title ||
-      `La API respondió con HTTP ${error.response.status}.`
+      'No se pudo completar la operación.'
     );
   }
 
   if (error.request) {
-    return 'No se pudo conectar con la API. Verifica VITE_API_URL y que el backend esté en ejecución.';
+    return 'No se pudo conectar. Compruebe la conexión e intente de nuevo.';
   }
 
   return error.message || 'Error inesperado.';

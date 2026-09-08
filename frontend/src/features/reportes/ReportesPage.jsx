@@ -92,7 +92,7 @@ export function ReportesPage() {
             <i className="pi pi-chart-bar" aria-hidden />
             Reportes
           </h2>
-          <p className="report-lead">Ocho informes operativos sobre `/api/Reportes`.</p>
+          <p className="report-lead">Ocho informes operativos del inventario.</p>
         </div>
 
         <div className="report-toolbar">

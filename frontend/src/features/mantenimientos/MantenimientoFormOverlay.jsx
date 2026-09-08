@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { isActivoDeBaja, isActivoEnMantenimiento } from '@/features/activos/activoAcciones';
+import { isActivoAsignado, isActivoDeBaja, isActivoEnMantenimiento } from '@/features/activos/activoAcciones';
 import { nombreUbicacion } from '@/features/inventario/trasladoRuta';
 import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import { asOptions, compactErrors, optionalText, requireSelect, requireText } from '@/shared/components/recordFormUtils';
@@ -33,9 +33,14 @@ export function MantenimientoFormOverlay({
   const ctx = { asignaciones, tipos };
   const activosElegibles = useMemo(
     () =>
-      (activos ?? []).filter(
-        (item) => !isActivoDeBaja(item, { asignaciones, tipos }) && !isActivoEnMantenimiento(item, { asignaciones, tipos }),
-      ),
+      (activos ?? []).filter((item) => {
+        const lookup = { asignaciones, tipos };
+        return (
+          !isActivoDeBaja(item, lookup) &&
+          !isActivoEnMantenimiento(item, lookup) &&
+          !isActivoAsignado(item, lookup)
+        );
+      }),
     [activos, asignaciones, tipos],
   );
   const initialValues = useMemo(() => {
@@ -61,13 +66,14 @@ export function MantenimientoFormOverlay({
         required: true,
         readOnly: lockActivo,
         options: asOptions(lockActivo ? (activos ?? []) : activosElegibles, 'nombre'),
+        hint: 'Solo activos libres, sin asignación ni mantenimiento abierto.',
       },
       {
         name: 'sede',
         label: 'Sede',
         type: 'text',
         readOnly: true,
-        hint: 'Derivado: Activo → Ubicación → Sede. No se envía al backend.',
+        hint: 'Ubicación y sede actuales del activo.',
       },
       {
         name: 'idResponsable',
@@ -85,8 +91,11 @@ export function MantenimientoFormOverlay({
         label: 'Tipo de mantenimiento',
         type: 'select',
         required: true,
-        options: asOptions(tiposMantenimiento ?? []),
-        hint: 'Catálogo Preventivo / Correctivo. [API] GET /api/TiposMantenimiento aún no existe.',
+        options: asOptions(Array.isArray(tiposMantenimiento) ? tiposMantenimiento : []),
+        hint:
+          (tiposMantenimiento ?? []).length === 0
+            ? 'No hay tipos disponibles. Revise el catálogo.'
+            : 'Preventivo o correctivo.',
       },
       {
         name: 'descripcionProblema',
@@ -95,6 +104,7 @@ export function MantenimientoFormOverlay({
         required: true,
         maxLength: 300,
         wide: true,
+        hint: 'Qué falló o qué se va a revisar.',
       },
       {
         name: 'observaciones',
@@ -113,7 +123,7 @@ export function MantenimientoFormOverlay({
       open={open}
       title="Abrir mantenimiento"
       kicker="Operaciones"
-      hint="Se registra con POST /api/Asignaciones/mantenimiento. El tipo y la descripción del problema son obligatorios."
+      hint="El tipo y la descripción del problema son obligatorios."
       fields={fields}
       initialValues={initialValues}
       deriveValues={(next) => {
@@ -129,14 +139,19 @@ export function MantenimientoFormOverlay({
           idActivo: requireSelect(values.idActivo, 'un activo'),
           idResponsable: requireSelect(values.idResponsable, 'un responsable'),
           fecha: requireSelect(values.fecha, 'una fecha'),
-          idTipoMantenimiento: requireSelect(values.idTipoMantenimiento, 'un tipo de mantenimiento'),
+          idTipoMantenimiento:
+            (tiposMantenimiento ?? []).length === 0
+              ? 'No hay tipos de mantenimiento disponibles.'
+              : requireSelect(values.idTipoMantenimiento, 'un tipo de mantenimiento'),
           descripcionProblema: requireText(values.descripcionProblema, 'descripcion del problema', 300),
           observaciones: optionalText(values.observaciones, 'observaciones', 300),
         };
         if (activo && isActivoDeBaja(activo, ctx)) {
-          errors.idActivo = 'El activo está dado de baja. No se traslada ni se envía a mantenimiento.';
+          errors.idActivo = 'El activo está dado de baja. No se envía a mantenimiento.';
         } else if (activo && isActivoEnMantenimiento(activo, ctx)) {
           errors.idActivo = 'El activo ya está en mantenimiento.';
+        } else if (activo && isActivoAsignado(activo, ctx)) {
+          errors.idActivo = 'El activo tiene una asignación activa. Devuélvalo antes de enviarlo a mantenimiento.';
         }
         return compactErrors(errors);
       }}

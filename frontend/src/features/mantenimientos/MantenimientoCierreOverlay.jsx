@@ -44,7 +44,7 @@ export function MantenimientoCierreOverlay({ open, record, onSave, onClose }) {
       open={open}
       title={record ? `Finalizar ${record.activoNombre}` : 'Finalizar mantenimiento'}
       kicker="Operaciones"
-      hint="POST /api/Asignaciones/{id}/finalizar-mantenimiento. El activo vuelve a Disponible."
+      hint="Al finalizar, el activo vuelve a disponible."
       fields={fields}
       initialValues={initialValues}
       validate={(values) => {

@@ -99,8 +99,14 @@ export function getAccionesDisponibles(activo, ctx = {}) {
       label: 'Mantenimiento',
       icon: 'pi pi-wrench',
       tone: 'warning',
-      enabled: !baja && !mantenimiento,
-      disabledReason: baja ? `${bajaReason} No admite mantenimiento.` : 'El activo ya está en mantenimiento.',
+      enabled: !baja && !mantenimiento && !asignado,
+      disabledReason: baja
+        ? `${bajaReason} No admite mantenimiento.`
+        : mantenimiento
+          ? 'El activo ya está en mantenimiento.'
+          : asignado
+            ? 'El activo tiene una asignación activa. Devuélvalo antes de enviarlo a mantenimiento.'
+            : undefined,
     },
     {
       key: 'retire',

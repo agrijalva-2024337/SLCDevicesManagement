@@ -132,7 +132,7 @@ export function TrasladosPage() {
       ) : null}
       <DataTable
         title="Traslados"
-        description="Movimientos entre ubicaciones de la misma empresa. Se registran como filas de Asignación con tipo Traslado."
+        description="Movimientos entre ubicaciones de la misma empresa."
         primaryAction={
           <>
             <EscanearQrButton />

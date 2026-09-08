@@ -482,6 +482,19 @@ select.app-input {
   padding-right: 3.15rem;
 }
 
+.app-input-password input::-ms-reveal,
+.app-input-password input::-ms-clear {
+  display: none;
+}
+
+.app-input-password input::-webkit-credentials-auto-fill-button,
+.app-input-password input::-webkit-strong-password-auto-fill-button {
+  visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+}
+
 .app-input-password .app-icon-btn {
   position: absolute;
   top: 50%;
