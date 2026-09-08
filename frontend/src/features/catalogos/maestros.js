@@ -190,45 +190,70 @@ export const maestros = {
     singular: 'categoría',
     kicker: 'Categoría',
     registerLabel: 'Registrar categoría',
-    hint: 'El nombre es obligatorio.',
-    description: 'Clasificación global de activos. Es un catálogo del sistema, no se separa por empresa.',
-    scope: 'global',
+    hint: 'El nombre es obligatorio. La categoría queda ligada a la empresa.',
+    description: 'Clasificación de activos de cada empresa. Solo el administrador de empresa puede registrarlas.',
     titleOf: (item) => item.nombre,
     facts: (item) => [item.descripcion].filter(Boolean),
     listView: {
       emptyTitle: 'No hay categorías',
-      emptyDescription: 'Registre la primera categoría para clasificar activos.',
-      columns: () => [
+      emptyDescription: 'Registre la primera categoría de esta empresa para clasificar activos.',
+      columns: (lookups = {}) => [
         { key: 'nombre', header: 'Nombre', primary: true },
+        {
+          key: 'empresa',
+          header: 'Empresa',
+          getValue: (item) => lookups.empresaNombres?.[item.idEmpresa] ?? '—',
+        },
         { key: 'descripcion', header: 'Descripción' },
         { key: 'habilitado', header: 'Estado', type: 'status' },
       ],
     },
-    empty: () => ({ nombre: '', descripcion: '', habilitado: true }),
+    empty: ({ idEmpresa, idEmpresaActiva } = {}) => ({
+      idEmpresa: idEmpresaActiva == null || idEmpresaActiva === '' ? String(idEmpresa ?? '') : String(idEmpresaActiva),
+      nombre: '',
+      descripcion: '',
+      habilitado: true,
+    }),
     toForm: (item) => ({
+      idEmpresa: item.idEmpresa == null ? '' : String(item.idEmpresa),
       nombre: item.nombre ?? '',
       descripcion: item.descripcion ?? '',
       habilitado: Boolean(item.habilitado),
     }),
-    fields: () => [
+    fields: ({ empresas = [], rol, editing } = {}) => [
+      ...(rol === RolUsuario.AdministradorGeneral && !editing
+        ? [{ name: 'idEmpresa', label: 'Empresa', type: 'select', required: true, options: asOptions(empresas) }]
+        : []),
       { name: 'nombre', label: 'Nombre', required: true, maxLength: 100, wide: true },
       { name: 'descripcion', label: 'Descripción', type: 'textarea', maxLength: 200 },
       switchField(),
     ],
-    validate(values) {
+    validate(values, _records, _id, { rol } = {}) {
       return {
+        idEmpresa:
+          rol === RolUsuario.AdministradorGeneral ? requireSelect(values.idEmpresa, 'una empresa') : null,
         nombre: requireText(values.nombre, 'nombre', 100),
         descripcion: optionalText(values.descripcion, 'descripción', 200),
       };
     },
-    toPayload(values) {
+    toPayload(values, { idEmpresaActiva } = {}) {
+      const idEmpresa =
+        values.idEmpresa === '' || values.idEmpresa == null
+          ? idEmpresaActiva == null || idEmpresaActiva === ''
+            ? null
+            : Number(idEmpresaActiva)
+          : Number(values.idEmpresa);
       return {
+        idEmpresa,
         nombre: values.nombre.trim(),
         descripcion: values.descripcion.trim() || null,
         habilitado: Boolean(values.habilitado),
       };
     },
-    detail: (item) => [{ label: 'Descripción', value: item.descripcion }],
+    detail: (item, lookups = {}) => [
+      { label: 'Empresa', value: lookups.empresaNombres?.[item.idEmpresa] ?? '—' },
+      { label: 'Descripción', value: item.descripcion },
+    ],
   },
   proveedores: {
     service: proveedorService,

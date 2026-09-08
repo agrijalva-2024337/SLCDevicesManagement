@@ -45,7 +45,7 @@ public sealed class CategoriasActivoController : ApiControllerBase
         Ok(await _getById.HandleAsync(new GetCategoriaActivoByIdQuery(id), cancellationToken));
 
     [HttpPost]
-    [Authorize(Roles = Roles.AdministradorGeneral)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Create([FromBody] CreateCategoriaActivoCommand command, CancellationToken cancellationToken)
     {
         var id = await _create.HandleAsync(command, cancellationToken);
@@ -53,7 +53,7 @@ public sealed class CategoriasActivoController : ApiControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = Roles.AdministradorGeneral)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateCategoriaActivoCommand command, CancellationToken cancellationToken)
     {
         if (id != command.Id) return IdMismatch();
@@ -62,7 +62,7 @@ public sealed class CategoriasActivoController : ApiControllerBase
     }
 
     [HttpPost("{id:int}/disable")]
-    [Authorize(Roles = Roles.AdministradorGeneral)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Disable(int id, CancellationToken cancellationToken)
     {
         await _disable.HandleAsync(new DisableCategoriaActivoCommand(id), cancellationToken);

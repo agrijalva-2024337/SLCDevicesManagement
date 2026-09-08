@@ -34,8 +34,19 @@ public sealed class UpdateActivoCommandValidator : AbstractValidator<UpdateActiv
 
         RuleFor(x => x.IdCategoriaActivo)
             .RequiredId("id categoria activo")
-            .MustAsync(async (id, ct) => await db.CategoriasActivo.AnyAsync(c => c.Id == id, ct))
-            .WithMessage("No se encontro una categoria de activo con el id informado.");
+            .MustAsync(async (cmd, id, ct) =>
+            {
+                var categoria = await db.CategoriasActivo.IgnoreQueryFilters()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.Id == id, ct);
+                var proveedor = await db.Proveedores.IgnoreQueryFilters()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.Id == cmd.IdProveedor, ct);
+                return categoria is not null
+                    && proveedor is not null
+                    && categoria.IdEmpresa == proveedor.IdEmpresa;
+            })
+            .WithMessage("La categoria debe pertenecer a la misma empresa del proveedor.");
 
         RuleFor(x => x.IdProveedor)
             .RequiredId("id proveedor")

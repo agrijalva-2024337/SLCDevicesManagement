@@ -18,6 +18,7 @@ import { StatusBadge } from '@/shared/components/StatusBadge';
 import { useResource } from '@/shared/hooks/useResource';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
+import { resolveSavedId, saveSuccessState } from '@/shared/utils/saveFeedback';
 
 function enabledRecords(list) {
   return (list ?? []).filter((item) => item.habilitado !== false);
@@ -114,7 +115,12 @@ function SedeFormEditor({ id }) {
             ? await sedeService.update(Number(id), payload)
             : await sedeService.create(payload);
           await outlet.reload?.();
-          navigate(`/app/catalogos/sedes/${saved.id}`);
+          const recordId = resolveSavedId(saved, id);
+          if (recordId == null) {
+            navigate('/app/catalogos/sedes');
+            return;
+          }
+          navigate(`/app/catalogos/sedes/${recordId}`, { state: saveSuccessState(editing) });
         } catch (error) {
           throw applyApiFieldErrors(error);
         }

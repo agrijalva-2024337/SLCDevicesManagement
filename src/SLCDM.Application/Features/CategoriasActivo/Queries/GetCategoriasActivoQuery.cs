@@ -6,14 +6,16 @@ namespace SLCDM.Application.Features.CategoriasActivo.Queries;
 
 public sealed record GetCategoriasActivoQuery(bool IncluirInhabilitados = false);
 
-public sealed class GetCategoriasActivoQueryHandler 
+public sealed class GetCategoriasActivoQueryHandler
     : IQueryHandler<GetCategoriasActivoQuery, IReadOnlyList<CategoriaActivoDto>>
 {
     private readonly IApplicationDbContext _db;
+    private readonly ICurrentUserService _currentUser;
 
-    public GetCategoriasActivoQueryHandler(IApplicationDbContext db)
+    public GetCategoriasActivoQueryHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     {
         _db = db;
+        _currentUser = currentUser;
     }
 
     public async Task<IReadOnlyList<CategoriaActivoDto>> HandleAsync(
@@ -21,6 +23,12 @@ public sealed class GetCategoriasActivoQueryHandler
         CancellationToken cancellationToken = default)
     {
         var itemsQuery = _db.CategoriasActivo.AsNoTracking();
+
+        if (!_currentUser.IsAdministradorGeneral)
+        {
+            var idEmpresa = _currentUser.EmpresaId ?? -1;
+            itemsQuery = itemsQuery.Where(c => c.IdEmpresa == idEmpresa);
+        }
 
         if (!query.IncluirInhabilitados)
         {
