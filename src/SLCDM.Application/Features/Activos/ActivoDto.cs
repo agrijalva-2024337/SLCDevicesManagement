@@ -1,5 +1,3 @@
-namespace SLCDM.Application.Features.Activos;
-
 public sealed record ActivoDto(
     int Id,
     int IdCategoriaActivo,
@@ -10,6 +8,8 @@ public sealed record ActivoDto(
     string? Marca,
     string? Modelo,
     string? NumeroSerie,
+    string? EspecificacionesHardware,
+    string? PerifericosAdicionales,
     DateTime FechaCompra,
     decimal CostoAdquisicion,
     string? Moneda,
