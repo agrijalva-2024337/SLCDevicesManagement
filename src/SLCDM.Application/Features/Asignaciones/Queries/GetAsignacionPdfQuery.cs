@@ -38,14 +38,23 @@ public sealed class GetAsignacionPdfQueryHandler : IQueryHandler<GetAsignacionPd
         GetAsignacionPdfQuery query, CancellationToken cancellationToken = default)
     {
         await _validator.ValidateAndThrowAsync(query, cancellationToken);
-        var file = await _pdf.GenerarAsync(query.Id, cancellationToken);
 
         var tracked = await _db.Asignaciones.FirstOrDefaultAsync(a => a.Id == query.Id, cancellationToken);
+
+        // Se congela la primera vez que se genera el PDF (DocumentoPdfGenerardoEn)
+        // y se reutiliza en cada descarga posterior -- si no, cada descarga
+        // metería una hora distinta en el pie de pagina, el PDF nunca volvería
+        // a ser byte-por-byte igual, y el hash guardado dejaría de coincidir
+        // con cualquier descarga futura del mismo acta (ver nota en la sección 0).
+        var marcaTemporal = tracked?.DocumentoPdfGenerardoEn ?? DateTime.UtcNow;
+
+        var file = await _pdf.GenerarAsync(query.Id, marcaTemporal, cancellationToken);
+
         if (tracked is not null && tracked.DocumentoPdfGenerardoEn is null)
         {
             tracked.DocumentoPdfUrl ??= $"/api/asignaciones/{tracked.Id}/pdf";
             tracked.DocumentoPdfHash = _pdfHash.CalcularHash(file.Content);
-            tracked.DocumentoPdfGenerardoEn = DateTime.UtcNow;
+            tracked.DocumentoPdfGenerardoEn = marcaTemporal;
             await _db.SaveChangesAsync(cancellationToken);
         }
 

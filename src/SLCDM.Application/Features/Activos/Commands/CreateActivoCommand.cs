@@ -16,6 +16,8 @@ public sealed record CreateActivoCommand(
     string? Marca,
     string? Modelo,
     string? NumeroSerie,
+    string? EspecificacionesHardware,
+    string? PerifericosAdicionales,
     DateTime FechaCompra,
     decimal CostoAdquisicion,
     string? Moneda,
@@ -61,6 +63,14 @@ public sealed class CreateActivoCommandValidator : AbstractValidator<CreateActiv
         RuleFor(x => x.NumeroSerie)
             .MaximumLength(100).WithMessage("El campo numero serie no debe superar los 100 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.NumeroSerie));
+
+        RuleFor(x => x.EspecificacionesHardware)
+            .MaximumLength(500).WithMessage("El campo especificaciones de hardware no debe superar los 500 caracteres.")
+            .When(x => !string.IsNullOrWhiteSpace(x.EspecificacionesHardware));
+
+        RuleFor(x => x.PerifericosAdicionales)
+            .MaximumLength(500).WithMessage("El campo perifericos adicionales no debe superar los 500 caracteres.")
+            .When(x => !string.IsNullOrWhiteSpace(x.PerifericosAdicionales));
 
         RuleFor(x => x.CostoAdquisicion)
             .GreaterThanOrEqualTo(0).WithMessage("El campo costo adquisicion debe ser mayor o igual a 0.");

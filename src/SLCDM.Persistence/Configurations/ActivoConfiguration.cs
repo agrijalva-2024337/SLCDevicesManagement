@@ -95,7 +95,15 @@
                 .HasForeignKey(a => a.IdEstado)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasIndex(a => a.NumeroSerie);
+            builder.Property(a => a.EspecificacionesHardware)
+                .HasColumnName("especificaciones_hardware")
+                .HasColumnType("varchar(500)");
+
+            builder.Property(a => a.PerifericosAdicionales)
+                .HasColumnName("perifericos_adicionales")
+                .HasColumnType("varchar(500)");
+
+        builder.HasIndex(a => a.NumeroSerie);
             builder.HasIndex(a => a.IdCategoriaActivo);
             builder.HasIndex(a => a.IdProveedor);
             builder.HasIndex(a => a.IdUbicacion);
