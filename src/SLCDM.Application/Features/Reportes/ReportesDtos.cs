@@ -1,3 +1,4 @@
+using SLCDM.Domain.Entities;
 namespace SLCDM.Application.Features.Reportes;
 
 public sealed record InventarioEmpresaResumenDto(
