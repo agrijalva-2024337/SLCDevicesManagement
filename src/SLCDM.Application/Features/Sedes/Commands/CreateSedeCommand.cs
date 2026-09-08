@@ -25,8 +25,14 @@ public sealed class CreateSedeCommandValidator : AbstractValidator<CreateSedeCom
 
         RuleFor(x => x.IdPais)
             .RequiredId("id pais")
-            .MustAsync(async (id, ct) => await db.Paises.AnyAsync(p => p.Id == id, ct))
-            .WithMessage("El campo id pais no corresponde a un registro existente.");
+            .MustAsync(async (cmd, id, ct) =>
+            {
+                var pais = await db.Paises.IgnoreQueryFilters()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.Id == id, ct);
+                return pais is not null && pais.IdEmpresa == cmd.IdEmpresa;
+            })
+            .WithMessage("El pais debe pertenecer a la misma empresa de la sede.");
 
         RuleFor(x => x.Nombre)
             .NotEmpty().WithMessage("El campo nombre es obligatorio.")

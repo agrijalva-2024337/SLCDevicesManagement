@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import { getMaestro } from '@/features/catalogos/maestros';
+import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { resolveUbicacionCoords } from '@/features/catalogos/ubicaciones/resolveUbicacionCoords';
 import * as paisService from '@/features/catalogos/paises/paisService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
@@ -25,6 +26,7 @@ function enabledRecords(list) {
 function MaestroFormEditor({ slug, id }) {
   const navigate = useNavigate();
   const { rol, idEmpresa } = useAuth();
+  const { idActiva } = useEmpresaActiva();
   const outlet = useOutletContext() ?? {};
   const maestro = getMaestro(slug);
   const empresas = useResource(empresaService.getAll);
@@ -110,6 +112,7 @@ function MaestroFormEditor({ slug, id }) {
     ubicaciones: enabledRecords(ubicaciones.data),
     rol,
     idEmpresa,
+    idEmpresaActiva: idActiva,
     editing,
   };
   const initialValues = item ? maestro.toForm(item) : maestro.empty(lookups);
@@ -129,9 +132,9 @@ function MaestroFormEditor({ slug, id }) {
       fields={fields}
       initialValues={initialValues}
       submitLabel={editing ? 'Guardar cambios' : maestro.registerLabel}
-      validate={(values) => compactErrors(maestro.validate(values, records, id))}
+      validate={(values) => compactErrors(maestro.validate(values, records, id, lookups))}
       onSave={async (values) => {
-        let payload = maestro.toPayload(values, { editing });
+        let payload = maestro.toPayload(values, { editing, idEmpresaActiva: idActiva });
         if (slug === 'ubicaciones') {
           const sedeNombre = sedes.data.find((sede) => Number(sede.id) === Number(payload.idSede))?.nombre;
           payload = await resolveUbicacionCoords(payload, sedeNombre);

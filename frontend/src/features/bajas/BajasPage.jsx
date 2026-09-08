@@ -8,6 +8,10 @@ import { parseDetalleBaja } from '@/features/bajas/detalleBajaParser';
 import * as motivoBajaService from '@/features/bajas/motivoBajaService';
 import * as historialActivoService from '@/features/activos/historialActivoService';
 import * as asignacionService from '@/features/asignaciones/asignacionService';
+import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
+import { filtrarPorEmpresaDeActivo } from '@/features/inventario/trasladoRuta';
+import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
+import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import { DataTable } from '@/shared/components/DataTable';
 import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
 import { DescargarActaButton, EscanearQrButton, RegisterButton } from '@/shared/components/RecordActions';
@@ -50,6 +54,7 @@ export function BajasPage() {
   const { canWrite, usuario } = useAuth();
   const allowWrite = canWrite('bajas');
   const canReadUsuarios = canWrite('usuarios');
+  const { idActiva } = useEmpresaActiva();
   const location = useLocation();
   const navigate = useNavigate();
   const load = useCallback(() => bajaService.listar(), []);
@@ -57,6 +62,8 @@ export function BajasPage() {
   const crud = useCrudOverlay();
   const prefillOpened = useRef(false);
   const activos = useResource(activoService.getAll);
+  const ubicaciones = useResource(ubicacionService.getAll);
+  const sedes = useResource(sedeService.getAll);
   const motivos = useResource(motivoBajaService.getAll);
   const loadUsuarios = useCallback(() => usuarioService.getAllIfAllowed(canReadUsuarios), [canReadUsuarios]);
   const usuarios = useResource(loadUsuarios);
@@ -80,15 +87,23 @@ export function BajasPage() {
   const lookups = useMemo(
     () => ({
       activos: activos.data,
+      ubicaciones: ubicaciones.data,
+      sedes: sedes.data,
       motivos: motivos.data,
       usuarios: usuarios.data,
       estados: estados.data,
       detallePorAsignacion,
     }),
-    [activos.data, detallePorAsignacion, estados.data, motivos.data, usuarios.data],
+    [activos.data, detallePorAsignacion, estados.data, motivos.data, sedes.data, ubicaciones.data, usuarios.data],
   );
 
-  const tableRows = useMemo(() => rows.map((row) => hydrate(row, lookups)), [lookups, rows]);
+  const tableRows = useMemo(
+    () =>
+      filtrarPorEmpresaDeActivo(rows, idActiva, lookups.activos, lookups.ubicaciones, lookups.sedes).map((row) =>
+        hydrate(row, lookups),
+      ),
+    [idActiva, lookups, rows],
+  );
   useRecordDeepLink(tableRows, crud.openView);
 
   useEffect(() => {

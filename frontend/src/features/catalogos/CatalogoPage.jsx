@@ -85,8 +85,11 @@ export function CatalogoPage() {
       const ubicacion = (ubicaciones.data ?? []).find((item) => Number(item.id) === Number(row.idUbicacion));
       return ubicacion ? { ...row, idSede: ubicacion.idSede } : row;
     });
+    if (maestro?.scope === 'global') {
+      return withSede;
+    }
     return filterRowsByEmpresa(withSede, idActiva, { sedes: sedes.data });
-  }, [areas.data, catalogRows, idActiva, sedes.data, ubicaciones.data]);
+  }, [areas.data, catalogRows, idActiva, maestro, sedes.data, ubicaciones.data]);
   const outletContext = useMemo(
     () => ({ reload, rows, lookups }),
     [reload, rows, lookups],

@@ -26,6 +26,9 @@ function DisabledNavItem({ icon, label }) {
 }
 
 function isVisibleToRol(item, rol) {
+  if (item.adminGeneralOnly) {
+    return rol === RolUsuario.AdministradorGeneral;
+  }
   if (!item.adminOnly) return true;
   return rol != null && rol >= RolUsuario.AdministradorEmpresa;
 }

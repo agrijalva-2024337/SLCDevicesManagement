@@ -51,7 +51,7 @@ public sealed class EmpresasController : ApiControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = Roles.EscrituraEmpresa)]
+    [Authorize(Roles = Roles.AdministradorGeneral)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateEmpresaCommand command, CancellationToken cancellationToken)
     {
         if (id != command.Id) return IdMismatch();
@@ -60,7 +60,7 @@ public sealed class EmpresasController : ApiControllerBase
     }
 
     [HttpPost("{id:int}/disable")]
-    [Authorize(Roles = Roles.EscrituraEmpresa)]
+    [Authorize(Roles = Roles.AdministradorGeneral)]
     public async Task<IActionResult> Disable(int id, CancellationToken cancellationToken)
     {
         await _disable.HandleAsync(new DisableEmpresaCommand(id), cancellationToken);
