@@ -17,6 +17,11 @@ function isLoginRequest(config) {
   return url.includes('/auth/login');
 }
 
+function isPublicConsulta(config) {
+  const url = String(config?.url ?? '');
+  return url.includes('/api/consulta/');
+}
+
 function redirectToLogin() {
   const path = window.location.pathname;
   if (path === '/login' || path.startsWith('/login/')) {
@@ -28,7 +33,7 @@ function redirectToLogin() {
 httpClient.interceptors.request.use((config) => {
   const token = getAccessToken();
 
-  if (token) {
+  if (token && !isPublicConsulta(config)) {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
@@ -45,7 +50,7 @@ httpClient.interceptors.response.use(
     const status = error.response?.status;
 
     if (status === 401) {
-      if (!isLoginRequest(error.config)) {
+      if (!isLoginRequest(error.config) && !isPublicConsulta(error.config)) {
         clearAccessToken();
         redirectToLogin();
       }
