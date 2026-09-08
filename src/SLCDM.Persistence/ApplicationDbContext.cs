@@ -62,12 +62,18 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
     /// <summary>
     /// Multiempresa: el Administrador general ve todo; el resto solo datos de su id_empresa.
-    /// Pais, Estado, TipoAsignacion y CategoriaActivo son catalogos globales (sin filtro).
+    /// Estado y TipoAsignacion son catalogos globales (sin filtro).
     /// </summary>
     private void ApplyEmpresaQueryFilters(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Empresa>().HasQueryFilter(e =>
             IgnoreEmpresaFilter || e.Id == TenantEmpresaId);
+
+        modelBuilder.Entity<Pais>().HasQueryFilter(p =>
+            IgnoreEmpresaFilter || p.IdEmpresa == TenantEmpresaId);
+
+        modelBuilder.Entity<CategoriaActivo>().HasQueryFilter(c =>
+            IgnoreEmpresaFilter || c.IdEmpresa == TenantEmpresaId);
 
         modelBuilder.Entity<Sede>().HasQueryFilter(s =>
             IgnoreEmpresaFilter || s.IdEmpresa == TenantEmpresaId);

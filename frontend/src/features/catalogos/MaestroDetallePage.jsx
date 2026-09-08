@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useOutletContext, useParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import { getMaestro } from '@/features/catalogos/maestros';
-import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
+import { DetailField, DetailOverlay, SaveFlash } from '@/shared/components/DetailOverlay';
 import { EditRecordButton } from '@/shared/components/RecordActions';
 import { StatusBadge } from '@/shared/components/StatusBadge';
 import { formatDate } from '@/shared/utils/format';
@@ -88,6 +88,7 @@ export function MaestroDetallePage() {
       badge={maestro.hasHabilitado === false ? null : <StatusBadge active={item.habilitado} />}
       onClose={close}
     >
+      <SaveFlash message={location.state?.flash} />
       <div className="app-fields">
         {maestro.detail(item, outlet.lookups ?? {}).map((field) => (
           <DetailField key={field.label} label={field.label} value={field.value} />

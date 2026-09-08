@@ -28,15 +28,33 @@ public sealed class UpdatePaisCommandValidator : AbstractValidator<UpdatePaisCom
             .NotEmpty().WithMessage("El campo codigo iso2 es obligatorio.")
             .Length(2).WithMessage("El campo codigo iso2 debe tener 2 caracteres.")
             .MustAsync(async (cmd, iso2, ct) =>
-                !await db.Paises.AnyAsync(p => p.CodigoIso2 == iso2.ToUpper() && p.Id != cmd.Id, ct))
-            .WithMessage("Ya existe un pais con el mismo codigo iso2.");
+            {
+                var pais = await db.Paises.AsNoTracking().FirstOrDefaultAsync(p => p.Id == cmd.Id, ct);
+                if (pais is null)
+                {
+                    return true;
+                }
+
+                return !await db.Paises.IgnoreQueryFilters()
+                    .AnyAsync(p => p.IdEmpresa == pais.IdEmpresa && p.CodigoIso2 == iso2.ToUpper() && p.Id != cmd.Id, ct);
+            })
+            .WithMessage("Ya existe un pais con el mismo codigo iso2 en esta empresa.");
 
         RuleFor(x => x.CodigoIso3)
             .NotEmpty().WithMessage("El campo codigo iso3 es obligatorio.")
             .Length(3).WithMessage("El campo codigo iso3 debe tener 3 caracteres.")
             .MustAsync(async (cmd, iso3, ct) =>
-                !await db.Paises.AnyAsync(p => p.CodigoIso3 == iso3.ToUpper() && p.Id != cmd.Id, ct))
-            .WithMessage("Ya existe un pais con el mismo codigo iso3.");
+            {
+                var pais = await db.Paises.AsNoTracking().FirstOrDefaultAsync(p => p.Id == cmd.Id, ct);
+                if (pais is null)
+                {
+                    return true;
+                }
+
+                return !await db.Paises.IgnoreQueryFilters()
+                    .AnyAsync(p => p.IdEmpresa == pais.IdEmpresa && p.CodigoIso3 == iso3.ToUpper() && p.Id != cmd.Id, ct);
+            })
+            .WithMessage("Ya existe un pais con el mismo codigo iso3 en esta empresa.");
 
         RuleFor(x => x.CodigoTelefonico)
             .MaximumLength(5).WithMessage("El campo codigo telefonico no debe superar los 5 caracteres.")

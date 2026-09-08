@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useOutletContext, useParams } from 'react-router';
+import { Link, useLocation, useNavigate, useOutletContext, useParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
-import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
+import { DetailField, DetailOverlay, SaveFlash } from '@/shared/components/DetailOverlay';
 import { EditRecordButton } from '@/shared/components/RecordActions';
 import { StatusBadge } from '@/shared/components/StatusBadge';
 import { formatDate } from '@/shared/utils/format';
@@ -13,6 +13,7 @@ export function EmpresaDetallePage() {
   const { id } = useParams();
   const { canWrite } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const outlet = useOutletContext() ?? {};
   const close = () => navigate('/app/catalogos/empresas');
 
@@ -80,6 +81,7 @@ export function EmpresaDetallePage() {
       badge={<StatusBadge active={empresa.habilitado} />}
       onClose={close}
     >
+      <SaveFlash message={location.state?.flash} />
       <div className="app-fields">
         <DetailField label="NIT" value={empresa.nitCodigo} />
         <DetailField label="Teléfono" value={empresa.telefono} />

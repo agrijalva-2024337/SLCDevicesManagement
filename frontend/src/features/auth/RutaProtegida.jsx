@@ -74,10 +74,10 @@ export function RutaEscritura() {
   return <Outlet context={outlet} />;
 }
 
-export function RutaAdministrador() {
+export function RutaAdministradorGeneral() {
   const { rol } = useAuth();
 
-  if (rol == null || rol < RolUsuario.AdministradorEmpresa) {
+  if (rol !== RolUsuario.AdministradorGeneral) {
     return <SinPermiso />;
   }
 

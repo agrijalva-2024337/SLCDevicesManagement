@@ -74,6 +74,7 @@ function nombreDescripcionMaestro({
   description,
   emptyTitle,
   emptyDescription,
+  scope = 'empresa',
 }) {
   return {
     service,
@@ -85,6 +86,7 @@ function nombreDescripcionMaestro({
     registerLabel,
     hint,
     description,
+    scope,
     titleOf: (item) => item.nombre,
     facts: (item) => [item.descripcion].filter(Boolean),
     listView: {
@@ -189,44 +191,70 @@ export const maestros = {
     singular: 'categoría',
     kicker: 'Categoría',
     registerLabel: 'Registrar categoría',
-    hint: 'El nombre es obligatorio.',
-    description: 'Clasificación de activos para inventario y reportes.',
+    hint: 'El nombre es obligatorio. La categoría queda ligada a la empresa.',
+    description: 'Clasificación de activos de cada empresa. Solo el administrador de empresa puede registrarlas.',
     titleOf: (item) => item.nombre,
     facts: (item) => [item.descripcion].filter(Boolean),
     listView: {
       emptyTitle: 'No hay categorías',
-      emptyDescription: 'Registre la primera categoría para clasificar activos.',
-      columns: () => [
+      emptyDescription: 'Registre la primera categoría de esta empresa para clasificar activos.',
+      columns: (lookups = {}) => [
         { key: 'nombre', header: 'Nombre', primary: true },
+        {
+          key: 'empresa',
+          header: 'Empresa',
+          getValue: (item) => lookups.empresaNombres?.[item.idEmpresa] ?? '—',
+        },
         { key: 'descripcion', header: 'Descripción' },
         { key: 'habilitado', header: 'Estado', type: 'status' },
       ],
     },
-    empty: () => ({ nombre: '', descripcion: '', habilitado: true }),
+    empty: ({ idEmpresa, idEmpresaActiva } = {}) => ({
+      idEmpresa: idEmpresaActiva == null || idEmpresaActiva === '' ? String(idEmpresa ?? '') : String(idEmpresaActiva),
+      nombre: '',
+      descripcion: '',
+      habilitado: true,
+    }),
     toForm: (item) => ({
+      idEmpresa: item.idEmpresa == null ? '' : String(item.idEmpresa),
       nombre: item.nombre ?? '',
       descripcion: item.descripcion ?? '',
       habilitado: Boolean(item.habilitado),
     }),
-    fields: () => [
+    fields: ({ empresas = [], rol, editing } = {}) => [
+      ...(rol === RolUsuario.AdministradorGeneral && !editing
+        ? [{ name: 'idEmpresa', label: 'Empresa', type: 'select', required: true, options: asOptions(empresas) }]
+        : []),
       { name: 'nombre', label: 'Nombre', required: true, maxLength: 100, wide: true },
       { name: 'descripcion', label: 'Descripción', type: 'textarea', maxLength: 200 },
       switchField(),
     ],
-    validate(values) {
+    validate(values, _records, _id, { rol } = {}) {
       return {
+        idEmpresa:
+          rol === RolUsuario.AdministradorGeneral ? requireSelect(values.idEmpresa, 'una empresa') : null,
         nombre: requireText(values.nombre, 'nombre', 100),
         descripcion: optionalText(values.descripcion, 'descripción', 200),
       };
     },
-    toPayload(values) {
+    toPayload(values, { idEmpresaActiva } = {}) {
+      const idEmpresa =
+        values.idEmpresa === '' || values.idEmpresa == null
+          ? idEmpresaActiva == null || idEmpresaActiva === ''
+            ? null
+            : Number(idEmpresaActiva)
+          : Number(values.idEmpresa);
       return {
+        idEmpresa,
         nombre: values.nombre.trim(),
         descripcion: values.descripcion.trim() || null,
         habilitado: Boolean(values.habilitado),
       };
     },
-    detail: (item) => [{ label: 'Descripción', value: item.descripcion }],
+    detail: (item, lookups = {}) => [
+      { label: 'Empresa', value: lookups.empresaNombres?.[item.idEmpresa] ?? '—' },
+      { label: 'Descripción', value: item.descripcion },
+    ],
   },
   proveedores: {
     service: proveedorService,
@@ -414,48 +442,67 @@ export const maestros = {
   },
   paises: {
     service: paisService,
-    // [API] PaisDto no tiene habilitado; no hay switch ni soft-delete en este catálogo.
     hasHabilitado: false,
     title: 'Países',
     singular: 'país',
     kicker: 'País',
     registerLabel: 'Registrar país',
-    hint: 'Nombre e ISO son obligatorios.',
-    description: 'Catálogo geográfico que alimenta el registro de sedes.',
+    hint: 'Nombre e ISO son obligatorios. El país queda ligado a la empresa.',
+    description: 'Catálogo geográfico de cada empresa. Solo el administrador de empresa puede registrarlos.',
     titleOf: (item) => item.nombre,
     facts: (item) => [`${item.codigoIso2} · ${item.codigoIso3}`, item.codigoTelefonico].filter(Boolean),
-    empty: () => ({ nombre: '', codigoIso2: '', codigoIso3: '', codigoTelefonico: '' }),
+    empty: ({ idEmpresa, idEmpresaActiva } = {}) => ({
+      idEmpresa: idEmpresaActiva == null || idEmpresaActiva === '' ? String(idEmpresa ?? '') : String(idEmpresaActiva),
+      nombre: '',
+      codigoIso2: '',
+      codigoIso3: '',
+      codigoTelefonico: '',
+    }),
     toForm: (item) => ({
+      idEmpresa: item.idEmpresa == null ? '' : String(item.idEmpresa),
       nombre: item.nombre ?? '',
       codigoIso2: item.codigoIso2 ?? '',
       codigoIso3: item.codigoIso3 ?? '',
       codigoTelefonico: item.codigoTelefonico ?? '',
     }),
-    fields: () => [
+    fields: ({ empresas = [], rol, editing } = {}) => [
+      ...(rol === RolUsuario.AdministradorGeneral && !editing
+        ? [{ name: 'idEmpresa', label: 'Empresa', type: 'select', required: true, options: asOptions(empresas) }]
+        : []),
       { name: 'nombre', label: 'Nombre', required: true, maxLength: 100, wide: true },
       { name: 'codigoIso2', label: 'ISO 2', required: true, maxLength: 2 },
       { name: 'codigoIso3', label: 'ISO 3', required: true, maxLength: 3 },
       { name: 'codigoTelefonico', label: 'Código telefónico', maxLength: 5 },
     ],
-    validate(values) {
+    validate(values, _records, _id, { rol } = {}) {
       const iso2 = requireText(values.codigoIso2, 'ISO 2', 2);
       const iso3 = requireText(values.codigoIso3, 'ISO 3', 3);
       return {
+        idEmpresa:
+          rol === RolUsuario.AdministradorGeneral ? requireSelect(values.idEmpresa, 'una empresa') : null,
         nombre: requireText(values.nombre, 'nombre', 100),
         codigoIso2: iso2 ?? (values.codigoIso2.trim().length !== 2 ? 'ISO 2 debe tener 2 caracteres.' : null),
         codigoIso3: iso3 ?? (values.codigoIso3.trim().length !== 3 ? 'ISO 3 debe tener 3 caracteres.' : null),
         codigoTelefonico: optionalText(values.codigoTelefonico, 'código telefónico', 5),
       };
     },
-    toPayload(values) {
+    toPayload(values, { idEmpresaActiva } = {}) {
+      const idEmpresa =
+        values.idEmpresa === '' || values.idEmpresa == null
+          ? idEmpresaActiva == null || idEmpresaActiva === ''
+            ? null
+            : Number(idEmpresaActiva)
+          : Number(values.idEmpresa);
       return {
+        idEmpresa,
         nombre: values.nombre.trim(),
         codigoIso2: values.codigoIso2.trim().toUpperCase(),
         codigoIso3: values.codigoIso3.trim().toUpperCase(),
         codigoTelefonico: values.codigoTelefonico.trim() || null,
       };
     },
-    detail: (item) => [
+    detail: (item, lookups = {}) => [
+      { label: 'Empresa', value: lookups.empresaNombres?.[item.idEmpresa] ?? '—' },
       { label: 'ISO 2', value: item.codigoIso2 },
       { label: 'ISO 3', value: item.codigoIso3 },
       { label: 'Código telefónico', value: item.codigoTelefonico },
@@ -792,7 +839,8 @@ export const maestros = {
     kicker: 'Estado',
     registerLabel: 'Registrar estado',
     hint: 'El nombre es obligatorio y no puede repetirse.',
-    description: 'Estados operativos del activo: disponible, asignado, mantenimiento o baja.',
+    description: 'Estados operativos globales del activo: disponible, asignado, mantenimiento o baja. No se filtra por empresa.',
+    scope: 'global',
     emptyTitle: 'No hay estados',
     emptyDescription: 'Registre el primer estado para usarlo en asignaciones.',
   }),
@@ -804,7 +852,8 @@ export const maestros = {
     kicker: 'Tipo de asignación',
     registerLabel: 'Registrar tipo',
     hint: 'El nombre es obligatorio y no puede repetirse. Asignacion, Traslado, Mantenimiento y Baja alimentan los movimientos.',
-    description: 'Tipos de movimiento de un activo: entrega, traslado, mantenimiento o baja.',
+    description: 'Tipos de movimiento globales: entrega, traslado, mantenimiento o baja. No se filtra por empresa.',
+    scope: 'global',
     emptyTitle: 'No hay tipos de asignación',
     emptyDescription: 'Registre el primer tipo para clasificar movimientos.',
   }),

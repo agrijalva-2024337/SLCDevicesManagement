@@ -21,7 +21,7 @@ public sealed record UpdateUsuarioCommand(
 
 public sealed class UpdateUsuarioCommandValidator : AbstractValidator<UpdateUsuarioCommand>
 {
-    public UpdateUsuarioCommandValidator(IApplicationDbContext db)
+    public UpdateUsuarioCommandValidator(IApplicationDbContext db, ICurrentUserService currentUser)
     {
         RuleFor(x => x.Id).RequiredId("id usuario");
 
@@ -64,8 +64,20 @@ public sealed class UpdateUsuarioCommandValidator : AbstractValidator<UpdateUsua
             .MaximumLength(128).WithMessage("El campo password no debe superar los 128 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.Password));
 
+        RuleFor(x => x.IdEmpresa)
+            .NotNull()
+            .WithMessage("El campo id empresa es obligatorio para este rol.")
+            .When(x => x.Rol != RolUsuario.AdministradorGeneral);
+
+        RuleFor(x => x.IdEmpresa)
+            .Must(id => currentUser.IsAdministradorGeneral || id == currentUser.EmpresaId)
+            .WithMessage("Solo puede asignar usuarios a su empresa.")
+            .When(_ => !currentUser.IsAdministradorGeneral);
+
         RuleFor(x => x.Rol)
-            .IsInEnum().WithMessage("El campo rol no es un valor valido.");
+            .IsInEnum().WithMessage("El campo rol no es un valor valido.")
+            .Must(rol => currentUser.IsAdministradorGeneral || rol != RolUsuario.AdministradorGeneral)
+            .WithMessage("Solo el administrador general puede asignar ese rol.");
     }
 }
 

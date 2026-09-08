@@ -1,7 +1,9 @@
 import { useCallback, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
-import { nombreUbicacion } from '@/features/inventario/trasladoRuta';
+import { filtrarPorEmpresaDeUbicacion, nombreUbicacion } from '@/features/inventario/trasladoRuta';
+import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
+import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import { formatHaceCuanto, listarRastreo, mapsUrlDe } from '@/features/rastreo/rastreoService';
 import { DataTable } from '@/shared/components/DataTable';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
@@ -15,13 +17,21 @@ function resolveVista(value) {
 export function RastreoPage() {
   const [params] = useSearchParams();
   const vista = resolveVista(params.get('vista'));
+  const { idActiva } = useEmpresaActiva();
   const load = useCallback(() => listarRastreo(), []);
   const { rows, isLoading, errorMessage } = useCatalogCollection(load);
   const ubicaciones = useResource(ubicacionService.getAll);
+  const sedes = useResource(sedeService.getAll);
 
   const tableRows = useMemo(
     () =>
-      (rows ?? []).map((row) => {
+      filtrarPorEmpresaDeUbicacion(
+        rows,
+        idActiva,
+        ubicaciones.data,
+        sedes.data,
+        'idUbicacionAsignada',
+      ).map((row) => {
         const asignada = byId(ubicaciones.data, row.idUbicacionAsignada);
         const detectada = byId(ubicaciones.data, row.idUbicacionDetectada);
         return {
@@ -34,7 +44,7 @@ export function RastreoPage() {
           alerta: row.fueraDeRango ? 'Fuera de rango' : 'En rango',
         };
       }),
-    [rows, ubicaciones.data],
+    [idActiva, rows, sedes.data, ubicaciones.data],
   );
 
   const visibleRows = vista === 'fuera-de-rango' ? tableRows.filter((row) => row.fueraDeRango) : tableRows;

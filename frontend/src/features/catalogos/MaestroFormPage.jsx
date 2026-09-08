@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import { getMaestro } from '@/features/catalogos/maestros';
+import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { resolveUbicacionCoords } from '@/features/catalogos/ubicaciones/resolveUbicacionCoords';
 import * as paisService from '@/features/catalogos/paises/paisService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
@@ -17,6 +18,7 @@ import { useResource } from '@/shared/hooks/useResource';
 import { toRedConocidaWriteError } from '@/features/catalogos/redesConocidas/redConocidaErrors';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
+import { resolveSavedId, saveSuccessState } from '@/shared/utils/saveFeedback';
 
 function enabledRecords(list) {
   return (list ?? []).filter((item) => item.habilitado !== false);
@@ -25,6 +27,7 @@ function enabledRecords(list) {
 function MaestroFormEditor({ slug, id }) {
   const navigate = useNavigate();
   const { rol, idEmpresa } = useAuth();
+  const { idActiva } = useEmpresaActiva();
   const outlet = useOutletContext() ?? {};
   const maestro = getMaestro(slug);
   const empresas = useResource(empresaService.getAll);
@@ -110,6 +113,7 @@ function MaestroFormEditor({ slug, id }) {
     ubicaciones: enabledRecords(ubicaciones.data),
     rol,
     idEmpresa,
+    idEmpresaActiva: idActiva,
     editing,
   };
   const initialValues = item ? maestro.toForm(item, lookups) : maestro.empty(lookups);
@@ -129,9 +133,9 @@ function MaestroFormEditor({ slug, id }) {
       fields={fields}
       initialValues={initialValues}
       submitLabel={editing ? 'Guardar cambios' : maestro.registerLabel}
-      validate={(values) => compactErrors(maestro.validate(values, records, id))}
+      validate={(values) => compactErrors(maestro.validate(values, records, id, lookups))}
       onSave={async (values) => {
-        let payload = maestro.toPayload(values, { editing });
+        let payload = maestro.toPayload(values, { editing, idEmpresaActiva: idActiva });
         if (slug === 'ubicaciones') {
           const sede = sedes.data.find((item) => Number(item.id) === Number(payload.idSede));
           const pais = paises.data.find((item) => Number(item.id) === Number(sede?.idPais));
@@ -145,8 +149,13 @@ function MaestroFormEditor({ slug, id }) {
             invalidateCatalogoAsignacionCache();
           }
           await outlet.reload?.();
-          navigate(`/app/catalogos/${slug}/${saved.id}`, {
-            state: saved.passwordGenerada ? { passwordGenerada: saved.passwordGenerada } : undefined,
+          const recordId = resolveSavedId(saved, id);
+          if (recordId == null) {
+            navigate(`/app/catalogos/${slug}`);
+            return;
+          }
+          navigate(`/app/catalogos/${slug}/${recordId}`, {
+            state: saveSuccessState(editing, saved.passwordGenerada ? { passwordGenerada: saved.passwordGenerada } : {}),
           });
         } catch (error) {
           throw slug === 'redes-conocidas' ? toRedConocidaWriteError(error) : applyApiFieldErrors(error);

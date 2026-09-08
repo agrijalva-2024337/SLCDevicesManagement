@@ -66,8 +66,13 @@ export const router = createBrowserRouter([
           { index: true, ...named(loadDashboard, 'DashboardPage') },
           {
             path: 'catalogos/empresas',
-            ...named(loadEmpresas, 'EmpresasPage'),
-            children: writeChildren(loadEmpresas, 'EmpresaFormPage', 'EmpresaDetallePage'),
+            ...named(loadGuard, 'RutaAdministradorGeneral'),
+            children: [
+              {
+                ...named(loadEmpresas, 'EmpresasPage'),
+                children: writeChildren(loadEmpresas, 'EmpresaFormPage', 'EmpresaDetallePage'),
+              },
+            ],
           },
           {
             path: 'catalogos/sedes',

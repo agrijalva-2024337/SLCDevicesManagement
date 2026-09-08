@@ -12,7 +12,8 @@ import * as estadoService from '@/features/organizacion/estados/estadoService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
-import { nombreUbicacion } from '@/features/inventario/trasladoRuta';
+import { nombreUbicacion, filtrarPorEmpresaDeActivo } from '@/features/inventario/trasladoRuta';
+import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { DataTable } from '@/shared/components/DataTable';
 import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
 import { EscanearQrButton, RegisterButton } from '@/shared/components/RecordActions';
@@ -47,6 +48,7 @@ function hydrate(row, lookups) {
 export function MantenimientosPage() {
   const { canWrite, usuario } = useAuth();
   const allowWrite = canWrite('mantenimientos');
+  const { idActiva } = useEmpresaActiva();
   const [params] = useSearchParams();
   const load = useCallback(() => mantenimientoService.listar(), []);
   const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(load);
@@ -72,7 +74,13 @@ export function MantenimientosPage() {
     [activos.data, ubicaciones.data, sedes.data, estados.data, responsables.data],
   );
 
-  const tableRows = useMemo(() => rows.map((row) => hydrate(row, lookups)), [lookups, rows]);
+  const tableRows = useMemo(
+    () =>
+      filtrarPorEmpresaDeActivo(rows, idActiva, lookups.activos, lookups.ubicaciones, lookups.sedes).map((row) =>
+        hydrate(row, lookups),
+      ),
+    [idActiva, lookups, rows],
+  );
   useRecordDeepLink(tableRows, crud.openView);
 
   const estadoParam = params.get('estado');

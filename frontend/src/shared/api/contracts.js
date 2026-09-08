@@ -40,6 +40,7 @@
  *
  * @typedef {object} PaisDto
  * @property {number} id
+ * @property {number} idEmpresa
  * @property {string} nombre
  * @property {string} codigoIso2
  * @property {string} codigoIso3
@@ -112,6 +113,7 @@
  * @typedef {object} CategoriaActivoDto
  * @property {number} id
  * @property {boolean} habilitado
+ * @property {number} idEmpresa
  * @property {string} nombre
  * @property {string | null} descripcion
  *
@@ -123,8 +125,7 @@
  * @property {string} nit
  * @property {string | null} nombreContacto
  * @property {string | null} telefono
- * @property {string | null} corre
- * El backend serializa `Corre` (typo de Application). El servicio de catálogo lo mapea a `correo`.
+ * @property {string | null} correo
  *
  * @typedef {object} UbicacionDto
  * @property {number} id

@@ -13,11 +13,24 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function isPositiveId(value) {
+  const id = Number(value);
+  return Number.isFinite(id) && id > 0;
+}
+
 function asRecordId(value, fallbackId) {
-  if (value && typeof value === 'object' && value.id != null) {
-    return { ...value, id: Number(value.id) };
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const id = isPositiveId(value.id) ? Number(value.id) : Number(fallbackId);
+    if (isPositiveId(id)) {
+      return { ...value, id };
+    }
   }
-  return { id: Number(value ?? fallbackId) };
+
+  if (isPositiveId(value)) {
+    return { id: Number(value) };
+  }
+
+  return { id: Number(fallbackId) };
 }
 
 function matchesParams(item, params) {
@@ -55,6 +68,12 @@ export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS 
   }
 
   async function getById(id) {
+    if (!isPositiveId(id)) {
+      const error = new Error('El registro no existe o fue retirado del catálogo.');
+      error.status = 404;
+      throw error;
+    }
+
     if (env.useApiMock) {
       await wait(delayMs);
       const found = items.find((item) => item.id === Number(id));
@@ -110,7 +129,10 @@ export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS 
     const numericId = Number(id);
     const payload = { ...data, id: numericId };
     const response = await httpClient.put(`${endpoint}/${id}`, payload);
-    return asRecordId(response.data ?? payload, numericId);
+    const body = response.data;
+    const merged =
+      body && typeof body === 'object' && !Array.isArray(body) ? { ...payload, ...body } : payload;
+    return asRecordId(merged, numericId);
   }
 
   async function remove(id) {

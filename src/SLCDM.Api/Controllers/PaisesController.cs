@@ -43,7 +43,7 @@ public sealed class PaisesController : ApiControllerBase
         Ok(await _getById.HandleAsync(new GetPaisByIdQuery(id), cancellationToken));
 
     [HttpPost]
-    [Authorize(Roles = Roles.AdministradorGeneral)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Create([FromBody] CreatePaisCommand command, CancellationToken cancellationToken)
     {
         var id = await _create.HandleAsync(command, cancellationToken);
@@ -51,7 +51,7 @@ public sealed class PaisesController : ApiControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = Roles.AdministradorGeneral)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdatePaisCommand command, CancellationToken cancellationToken)
     {
         if (id != command.Id) return IdMismatch();
@@ -60,7 +60,7 @@ public sealed class PaisesController : ApiControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = Roles.AdministradorGeneral)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         await _delete.HandleAsync(new DeletePaisCommand(id), cancellationToken);

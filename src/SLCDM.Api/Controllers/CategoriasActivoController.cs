@@ -62,7 +62,7 @@ public sealed class CategoriasActivoController : ApiControllerBase
     }
 
     [HttpPost("{id:int}/disable")]
-    [Authorize(Roles =Roles.EscrituraEmpresa)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Disable(int id, CancellationToken cancellationToken)
     {
         await _disable.HandleAsync(new DisableCategoriaActivoCommand(id), cancellationToken);

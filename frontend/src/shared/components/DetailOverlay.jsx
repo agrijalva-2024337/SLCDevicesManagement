@@ -59,6 +59,18 @@ export function DetailOverlay({ open, title, kicker = 'Ficha', badge, onClose, c
   );
 }
 
+export function SaveFlash({ message }) {
+  if (!message) {
+    return null;
+  }
+
+  return (
+    <div className="app-feedback app-feedback--success" role="status">
+      {message}
+    </div>
+  );
+}
+
 export function DetailField({ label, value }) {
   return (
     <div className="app-field">

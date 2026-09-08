@@ -10,7 +10,7 @@ import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
 import { TrasladoFormOverlay } from '@/features/inventario/TrasladoFormOverlay';
 import * as trasladoService from '@/features/inventario/trasladoService';
-import { parseTrasladoRuta } from '@/features/inventario/trasladoRuta';
+import { parseTrasladoRuta, filtrarPorEmpresaDeActivo } from '@/features/inventario/trasladoRuta';
 import { DataTable } from '@/shared/components/DataTable';
 import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
 import { EscanearQrButton, RegisterButton } from '@/shared/components/RecordActions';
@@ -71,7 +71,13 @@ export function TrasladosPage() {
     [activos.data, ubicaciones.data, sedes.data, estados.data, responsables.data],
   );
 
-  const tableRows = useMemo(() => rows.map((row) => hydrate(row, lookups)), [lookups, rows]);
+  const tableRows = useMemo(
+    () =>
+      filtrarPorEmpresaDeActivo(rows, idActiva, lookups.activos, lookups.ubicaciones, lookups.sedes).map((row) =>
+        hydrate(row, lookups),
+      ),
+    [idActiva, lookups, rows],
+  );
   useRecordDeepLink(tableRows, crud.openView);
 
   const estadoOptions = useMemo(() => {

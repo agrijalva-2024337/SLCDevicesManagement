@@ -4,6 +4,7 @@ import * as paisService from '@/features/catalogos/paises/paisService';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import {
   emptySedeForm,
+  paisesDeEmpresa,
   sedeFields,
   sedeToForm,
   sedeToPayload,
@@ -17,6 +18,7 @@ import { StatusBadge } from '@/shared/components/StatusBadge';
 import { useResource } from '@/shared/hooks/useResource';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
+import { resolveSavedId, saveSuccessState } from '@/shared/utils/saveFeedback';
 
 function enabledRecords(list) {
   return (list ?? []).filter((item) => item.habilitado !== false);
@@ -93,14 +95,19 @@ function SedeFormEditor({ id }) {
       title={editing ? item.nombre : 'Nueva sede'}
       kicker={editing ? 'Editar registro' : 'Registrar sede'}
       badge={editing ? <StatusBadge active={Boolean(initialValues.habilitado)} /> : null}
-      hint="La sede pertenece a una empresa y a un país. El nombre es obligatorio."
-      fields={sedeFields({
-        empresas: enabledRecords(empresas.data),
-        paises: paises.data,
-      })}
+      hint="La sede pertenece a una empresa y a un país de esa misma empresa. El nombre es obligatorio."
+      fields={(values) =>
+        sedeFields({
+          empresas: enabledRecords(empresas.data),
+          paises: paisesDeEmpresa(paises.data, values.idEmpresa),
+        })
+      }
+      deriveValues={(next, prev) =>
+        next.idEmpresa === prev.idEmpresa ? next : { ...next, idPais: '' }
+      }
       initialValues={initialValues}
       submitLabel={editing ? 'Guardar cambios' : 'Registrar sede'}
-      validate={(values) => compactErrors(validateSedeForm(values))}
+      validate={(values) => compactErrors(validateSedeForm(values, paises.data))}
       onSave={async (values) => {
         const payload = sedeToPayload(values);
         try {
@@ -108,7 +115,12 @@ function SedeFormEditor({ id }) {
             ? await sedeService.update(Number(id), payload)
             : await sedeService.create(payload);
           await outlet.reload?.();
-          navigate(`/app/catalogos/sedes/${saved.id}`);
+          const recordId = resolveSavedId(saved, id);
+          if (recordId == null) {
+            navigate('/app/catalogos/sedes');
+            return;
+          }
+          navigate(`/app/catalogos/sedes/${recordId}`, { state: saveSuccessState(editing) });
         } catch (error) {
           throw applyApiFieldErrors(error);
         }
