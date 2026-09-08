@@ -11,12 +11,14 @@ public sealed class ActivoMappingConfig : IRegister
 
         config.NewConfig<Commands.CreateActivoCommand, Activo>()
             .Ignore(dest => dest.Id)
+            .Ignore(dest => dest.TokenPublico)
             .Ignore(dest => dest.CategoriaActivo!)
             .Ignore(dest => dest.Proveedor!)
             .Ignore(dest => dest.Ubicacion!);
 
         config.NewConfig<Commands.UpdateActivoCommand, Activo>()
             .Ignore(dest => dest.Id)
+            .Ignore(dest => dest.TokenPublico)
             .Ignore(dest => dest.CategoriaActivo!)
             .Ignore(dest => dest.Proveedor!)
             .Ignore(dest => dest.Ubicacion!);
