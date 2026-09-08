@@ -58,7 +58,7 @@ export function RecordFormOverlay({
         </div>
       ) : null}
       <SchemaForm
-        fields={fields}
+        fields={typeof fields === 'function' ? fields(values) : fields}
         values={values}
         errors={errors}
         submitLabel={saving ? 'Guardando…' : submitLabel}

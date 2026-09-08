@@ -78,7 +78,10 @@ export function PaisesGrid({ items, loading = false }) {
   return (
     <section className="paises-page">
       <header className="paises-head">
-        <h2 className="paises-title">Países</h2>
+        <div>
+          <h2 className="paises-title">Países</h2>
+          <p className="paises-lead">Catálogo de la empresa activa. Cada empresa administra los suyos.</p>
+        </div>
         {allowWrite ? <RegisterButton to="nueva" label="Registrar país" /> : null}
       </header>
 
@@ -121,7 +124,7 @@ export function PaisesGrid({ items, loading = false }) {
       {showEmpty ? (
         <div className="paises-message">
           <h3>No hay países</h3>
-          <p>Registre el primero para usarlo en las sedes.</p>
+          <p>Registre el primero para usarlo en las sedes de esta empresa.</p>
         </div>
       ) : null}
 

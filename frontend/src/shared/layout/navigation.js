@@ -1,7 +1,7 @@
 import { titleForActivosVista } from '@/features/activos/activosVistas';
 
 export const catalogos = [
-  { slug: 'empresas', label: 'Empresas', icon: 'pi pi-building' },
+  { slug: 'empresas', label: 'Empresas', icon: 'pi pi-building', adminGeneralOnly: true },
   { slug: 'sedes', label: 'Sedes', icon: 'pi pi-map-marker' },
   { slug: 'areas', label: 'Áreas', icon: 'pi pi-th-large' },
   { slug: 'proveedores', label: 'Proveedores', icon: 'pi pi-truck' },
@@ -36,6 +36,8 @@ export const navigation = [
       label: item.label,
       icon: item.icon,
       disabled: item.disabled,
+      adminOnly: item.adminOnly,
+      adminGeneralOnly: item.adminGeneralOnly,
     })),
   },
   ...modulosApp.map((item) => ({ type: 'link', ...item })),

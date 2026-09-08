@@ -32,10 +32,21 @@ public class PaisConfiguration : IEntityTypeConfiguration<Pais>
             .HasColumnName("codigo_telefonico")
             .HasColumnType("varchar(5)");
 
-        // Sin Habilitado/FechaCreacion/FechaModificacion: Pais ahora hereda
-        // de BaseEntity a secas, no lleva auditoria segun el ERD.
+        builder.Property(p => p.IdEmpresa)
+            .HasColumnName("id_empresa")
+            .IsRequired();
 
-        builder.HasIndex(p => p.CodigoIso2).IsUnique();
-        builder.HasIndex(p => p.CodigoIso3).IsUnique();
+        builder.HasOne(p => p.Empresa)
+            .WithMany()
+            .HasForeignKey(p => p.IdEmpresa)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(p => new { p.IdEmpresa, p.CodigoIso2 })
+            .IsUnique()
+            .HasDatabaseName("ix_pais_empresa_iso2");
+
+        builder.HasIndex(p => new { p.IdEmpresa, p.CodigoIso3 })
+            .IsUnique()
+            .HasDatabaseName("ix_pais_empresa_iso3");
     }
 }

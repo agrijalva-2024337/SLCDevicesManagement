@@ -38,14 +38,32 @@ export function sedeFields({ empresas = [], paises = [] } = {}) {
   ];
 }
 
-export function validateSedeForm(values) {
-  return {
+export function paisesDeEmpresa(paises, idEmpresa) {
+  if (idEmpresa == null || idEmpresa === '') {
+    return [];
+  }
+
+  const wanted = Number(idEmpresa);
+  return (paises ?? []).filter((pais) => Number(pais.idEmpresa) === wanted);
+}
+
+export function validateSedeForm(values, paises = []) {
+  const errors = {
     idEmpresa: requireSelect(values.idEmpresa, 'una empresa'),
     idPais: requireSelect(values.idPais, 'un país'),
     nombre: requireText(values.nombre, 'nombre', 100),
     direccion: optionalText(values.direccion, 'dirección', 100),
     ciudad: optionalText(values.ciudad, 'ciudad', 100),
   };
+
+  if (!errors.idPais && values.idEmpresa) {
+    const pais = (paises ?? []).find((item) => Number(item.id) === Number(values.idPais));
+    if (!pais || Number(pais.idEmpresa) !== Number(values.idEmpresa)) {
+      errors.idPais = 'El país debe pertenecer a la misma empresa de la sede.';
+    }
+  }
+
+  return errors;
 }
 
 export function sedeToPayload(values) {

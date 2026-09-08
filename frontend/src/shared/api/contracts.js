@@ -40,6 +40,7 @@
  *
  * @typedef {object} PaisDto
  * @property {number} id
+ * @property {number} idEmpresa
  * @property {string} nombre
  * @property {string} codigoIso2
  * @property {string} codigoIso3
