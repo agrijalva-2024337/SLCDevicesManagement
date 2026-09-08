@@ -24,6 +24,8 @@ function emptyActivo() {
     numeroFactura: '',
     fechaVencimientoGarantia: '',
     descripcion: '',
+    especificacionesHardware: '',
+    perifericosAdicionales: '',
     observaciones: '',
   };
 }
@@ -45,6 +47,8 @@ function activoToForm(item) {
       ? String(item.fechaVencimientoGarantia).slice(0, 10)
       : '',
     descripcion: item.descripcion ?? '',
+    especificacionesHardware: item.especificacionesHardware ?? '',
+    perifericosAdicionales: item.perifericosAdicionales ?? '',
     observaciones: item.observaciones ?? '',
   };
 }
@@ -56,6 +60,8 @@ function activoToPayload(values) {
     idUbicacion: Number(values.idUbicacion),
     nombre: values.nombre.trim(),
     descripcion: values.descripcion.trim() || null,
+    especificacionesHardware: values.especificacionesHardware.trim() || null,
+    perifericosAdicionales: values.perifericosAdicionales.trim() || null,
     marca: values.marca.trim() || null,
     modelo: values.modelo.trim() || null,
     numeroSerie: values.numeroSerie.trim() || null,
@@ -125,6 +131,20 @@ export function ActivoFormOverlay({
       { name: 'numeroFactura', label: 'Número de factura', maxLength: 50 },
       { name: 'fechaVencimientoGarantia', label: 'Vencimiento de garantía', type: 'date', required: true },
       { name: 'descripcion', label: 'Descripción', type: 'textarea', maxLength: 300, wide: true },
+      {
+        name: 'especificacionesHardware',
+        label: 'Especificaciones de hardware',
+        type: 'textarea',
+        maxLength: 500,
+        wide: true,
+      },
+      {
+        name: 'perifericosAdicionales',
+        label: 'Periféricos adicionales',
+        type: 'textarea',
+        maxLength: 500,
+        wide: true,
+      },
       { name: 'observaciones', label: 'Observaciones', type: 'textarea', maxLength: 500, wide: true },
     ],
     [categorias, destinos, idEmpresaActiva, proveedores],
@@ -152,6 +172,16 @@ export function ActivoFormOverlay({
           modelo: optionalText(values.modelo, 'modelo', 100),
           numeroSerie: optionalText(values.numeroSerie, 'número de serie', 100),
           descripcion: optionalText(values.descripcion, 'descripción', 300),
+          especificacionesHardware: optionalText(
+            values.especificacionesHardware,
+            'especificaciones de hardware',
+            500,
+          ),
+          perifericosAdicionales: optionalText(
+            values.perifericosAdicionales,
+            'periféricos adicionales',
+            500,
+          ),
           observaciones: optionalText(values.observaciones, 'observaciones', 500),
         })
       }

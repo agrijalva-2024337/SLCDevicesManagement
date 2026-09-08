@@ -103,7 +103,7 @@
                 .HasColumnName("perifericos_adicionales")
                 .HasColumnType("varchar(500)");
 
-        builder.HasIndex(a => a.NumeroSerie);
+            builder.HasIndex(a => a.NumeroSerie);
             builder.HasIndex(a => a.IdCategoriaActivo);
             builder.HasIndex(a => a.IdProveedor);
             builder.HasIndex(a => a.IdUbicacion);

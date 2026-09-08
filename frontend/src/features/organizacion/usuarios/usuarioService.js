@@ -11,25 +11,20 @@ const crud = createMockCrudService({
 
 export const { getAll, getById, update, remove } = crud;
 
-function mockGeneratedPassword() {
-  return `SLC-${Math.random().toString(36).slice(2, 10)}A1`;
-}
-
 /**
  * POST /api/Usuarios responde CreateUsuarioResult ({ id, passwordGenerada }),
  * no el UsuarioDto. En mock no se guarda la clave en el registro.
  */
 export async function create(data) {
-  const generarPassword = Boolean(data.generarPassword);
   const payload = {
     idEmpresa: data.idEmpresa ?? null,
     nombres: data.nombres,
     apellidos: data.apellidos,
     correo: data.correo,
     username: data.username,
-    password: generarPassword ? null : data.password,
+    password: data.password,
     rol: Number(data.rol),
-    generarPassword,
+    generarPassword: false,
   };
 
   if (env.useApiMock) {
@@ -45,7 +40,7 @@ export async function create(data) {
     });
     return {
       ...created,
-      passwordGenerada: generarPassword ? mockGeneratedPassword() : null,
+      passwordGenerada: null,
     };
   }
 

@@ -52,7 +52,7 @@ export function LandingHeader() {
           ease="power2.easeOut"
           baseColor="transparent"
           pillColor="transparent"
-          hoveredPillTextColor="var(--color-white)"
+          hoveredPillTextColor="var(--palette-white)"
           pillTextColor="rgb(253 253 255 / 0.86)"
           initialLoadAnimation={false}
         />

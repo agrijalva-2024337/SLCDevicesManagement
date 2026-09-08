@@ -565,7 +565,6 @@ export const maestros = {
       correo: '',
       username: '',
       password: '',
-      generarPassword: false,
       rol: String(RolUsuario.Consulta),
       habilitado: true,
     }),
@@ -576,7 +575,6 @@ export const maestros = {
       correo: item.correo ?? '',
       username: item.username ?? '',
       password: '',
-      generarPassword: false,
       rol: String(item.rol ?? RolUsuario.Consulta),
       habilitado: Boolean(item.habilitado),
     }),
@@ -598,22 +596,15 @@ export const maestros = {
         { name: 'correo', label: 'Correo', required: true, maxLength: 150, autoComplete: 'email', type: 'email' },
         { name: 'username', label: 'Usuario', required: true, maxLength: 50, autoComplete: 'username' },
         {
-          name: 'generarPassword',
-          type: 'switch',
-          label: 'Generar contraseña',
-          hint: 'El sistema crea una clave temporal. Cópiela al guardar; no se vuelve a mostrar.',
-          hiddenWhen: () => Boolean(editing),
-        },
-        {
           name: 'password',
           label: editing ? 'Nueva contraseña' : 'Contraseña',
           type: 'password',
-          autoComplete: editing ? 'new-password' : 'new-password',
+          generateAction: true,
+          autoComplete: 'new-password',
           required: !editing,
-          hiddenWhen: (values) => !editing && Boolean(values.generarPassword),
           hint: editing
-            ? 'Deje vacío para no cambiar la clave.'
-            : 'Mínimo 8 caracteres. O marque generar contraseña.',
+            ? 'Deje vacío para no cambiar la clave. Generar rellena el campo.'
+            : 'Generar rellena el campo. Cópiala ahora: al guardar solo queda el hash.',
         },
         {
           name: 'rol',
@@ -631,7 +622,6 @@ export const maestros = {
     validate(values, records = [], currentId) {
       const editing = currentId != null && currentId !== '';
       const rol = Number(values.rol);
-      const generar = Boolean(values.generarPassword);
       const password = String(values.password ?? '');
       const errors = {
         nombres: requireText(values.nombres, 'nombres', 100),
@@ -645,8 +635,11 @@ export const maestros = {
         errors.idEmpresa = requireSelect(values.idEmpresa, 'una empresa');
       }
 
-      if (!editing && !generar) {
+      if (!editing) {
         errors.password = requireText(password, 'password', 128);
+        if (!errors.password && password.trim().length < 8) {
+          errors.password = 'El campo password debe tener al menos 8 caracteres.';
+        }
       } else if (password.trim()) {
         if (password.trim().length < 8) {
           errors.password = 'El campo password debe tener al menos 8 caracteres.';
@@ -698,8 +691,8 @@ export const maestros = {
 
       return {
         ...base,
-        password: values.generarPassword ? null : String(values.password ?? '').trim(),
-        generarPassword: Boolean(values.generarPassword),
+        password: String(values.password ?? '').trim(),
+        generarPassword: false,
       };
     },
     detail: (item, lookups = {}) => [

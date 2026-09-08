@@ -2,7 +2,6 @@ import { BandaLineas } from '@/features/landing/components/BandaLineas';
 import { LandingHeader } from '@/features/landing/components/LandingHeader';
 import { HeroSection } from '@/features/landing/sections/HeroSection';
 import { PlataformaSection } from '@/features/landing/sections/PlataformaSection';
-import { SoporteSection } from '@/features/landing/sections/SoporteSection';
 import '@/features/landing/landing.css';
 
 export function LandingPage() {
@@ -19,7 +18,6 @@ export function LandingPage() {
         <HeroSection />
         <BandaLineas />
         <PlataformaSection />
-        <SoporteSection />
       </main>
     </div>
   );

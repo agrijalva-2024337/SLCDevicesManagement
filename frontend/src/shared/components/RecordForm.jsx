@@ -1,4 +1,5 @@
 import { SignaturePad } from '@/shared/components/SignaturePad';
+import { generateTemporaryPassword } from '@/shared/utils/generateTemporaryPassword';
 
 export function FormField({ id, label, required, error, hint, children, wide = false }) {
   return (
@@ -137,6 +138,40 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
                 rows={field.rows ?? 3}
                 onChange={(event) => setField(field.name, event.target.value)}
               />
+            </FormField>
+          );
+        }
+
+        if (field.generateAction) {
+          return (
+            <FormField
+              key={field.name}
+              id={id}
+              label={field.label}
+              required={field.required}
+              error={errors[field.name]}
+              hint={field.hint}
+              wide
+            >
+              <div className="app-input-with-action">
+                <input
+                  id={id}
+                  type={field.type ?? 'text'}
+                  className={controlClass(errors[field.name])}
+                  value={values[field.name] ?? ''}
+                  maxLength={field.maxLength}
+                  autoComplete={field.autoComplete}
+                  readOnly={Boolean(field.readOnly)}
+                  onChange={(event) => setField(field.name, event.target.value)}
+                />
+                <button
+                  type="button"
+                  className="app-btn app-btn--ghost app-btn--sm"
+                  onClick={() => setField(field.name, generateTemporaryPassword())}
+                >
+                  Generar
+                </button>
+              </div>
             </FormField>
           );
         }
