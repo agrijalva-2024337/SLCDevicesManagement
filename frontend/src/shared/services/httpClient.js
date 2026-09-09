@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { getApiErrorMessage, getValidationErrors } from '@/shared/api/errors';
 import { env } from '@/shared/config/env';
+import { recordRequest } from '@/shared/services/requestLog';
 import { clearAccessToken, getAccessToken } from '@/shared/services/tokenStorage';
 
 const httpClient = axios.create({
@@ -30,7 +31,18 @@ function redirectToLogin() {
   window.location.assign('/login');
 }
 
+export function isCanceledError(error) {
+  return Boolean(
+    error?.__aborted ||
+      error?.code === 'ERR_CANCELED' ||
+      error?.name === 'CanceledError' ||
+      error?.name === 'AbortError' ||
+      axios.isCancel?.(error),
+  );
+}
+
 httpClient.interceptors.request.use((config) => {
+  recordRequest(config);
   const token = getAccessToken();
 
   if (token && !isPublicConsulta(config)) {
@@ -47,6 +59,11 @@ httpClient.interceptors.request.use((config) => {
 httpClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (isCanceledError(error)) {
+      error.__aborted = true;
+      return Promise.reject(error);
+    }
+
     const status = error.response?.status;
 
     if (status === 401) {

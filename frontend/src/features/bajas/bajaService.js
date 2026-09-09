@@ -5,13 +5,18 @@ import { ESTADO_ACTIVO, TIPO_ASIGNACION, getIdEstado, getIdTipoAsignacion } from
 import { apiPaths } from '@/shared/api/paths';
 import { env } from '@/shared/config/env';
 import httpClient from '@/shared/services/httpClient';
-import { signatureToPayload } from '@/shared/utils/signaturePayload';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
+import { invalidateAfterMutation } from '@/shared/data/mutationInvalidation';
+import { signatureToPayload } from '@/shared/utils/signaturePayload';
 
-export async function listar() {
+export function filtrarBajas(rows, tipos) {
+  return asignacionService.filtrarPorNombreTipo(rows, tipos, TIPO_ASIGNACION.Baja);
+}
+
+export async function listar(rows) {
   const idTipo = await getIdTipoAsignacion(TIPO_ASIGNACION.Baja);
-  const rows = await asignacionService.getAll();
-  return (rows ?? []).filter((row) => Number(row.idTipoAsignacion) === Number(idTipo));
+  const source = rows ?? (await asignacionService.getAll());
+  return asignacionService.filtrarPorTipoId(source, idTipo);
 }
 
 export async function getById(id) {
@@ -67,6 +72,7 @@ async function persistir(command) {
       typeof response.data === 'object' && response.data?.id != null
         ? Number(response.data.id)
         : Number(response.data);
+    invalidateAfterMutation('asignaciones');
     return { id, ...command };
   } catch (error) {
     throw applyApiFieldErrors(error);

@@ -1,7 +1,8 @@
-import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, createElement, useCallback, useContext, useMemo, useState } from 'react';
 import { useAuth } from '@/features/auth/useAuth';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import { RolUsuario } from '@/shared/api/contracts';
+import { useResource } from '@/shared/hooks/useResource';
 
 const STORAGE_KEY = 'slcdm_empresa_activa';
 const EmpresaActivaContext = createContext(null);
@@ -39,38 +40,8 @@ export function filterRowsByEmpresa(rows, idEmpresa, { idField = 'idEmpresa', se
 export function EmpresaActivaProvider({ children }) {
   const { rol, idEmpresa, isReady } = useAuth();
   const isAdminGeneral = rol === RolUsuario.AdministradorGeneral;
-  const [empresas, setEmpresas] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const empresasResource = useResource(empresaService.getAll, { enabled: isReady });
   const [selectedId, setSelectedId] = useState(readStoredId);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        const data = await empresaService.getAll();
-        if (!cancelled) {
-          setEmpresas(Array.isArray(data) ? data : []);
-        }
-      } catch {
-        if (!cancelled) {
-          setEmpresas([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    if (isReady) {
-      load();
-    }
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isReady]);
 
   const selectEmpresa = useCallback((id) => {
     const next = id === '' || id == null ? null : Number(id);
@@ -105,14 +76,14 @@ export function EmpresaActivaProvider({ children }) {
 
   const value = useMemo(
     () => ({
-      empresas,
+      empresas: empresasResource.data ?? [],
       idActiva,
       isAdminGeneral,
       isLocked: !isAdminGeneral,
-      isLoading,
+      isLoading: empresasResource.isLoading,
       selectEmpresa,
     }),
-    [empresas, idActiva, isAdminGeneral, isLoading, selectEmpresa],
+    [empresasResource.data, empresasResource.isLoading, idActiva, isAdminGeneral, selectEmpresa],
   );
 
   return createElement(EmpresaActivaContext.Provider, { value }, children);

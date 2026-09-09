@@ -75,6 +75,7 @@ function nombreDescripcionMaestro({
   emptyTitle,
   emptyDescription,
   scope = 'empresa',
+  lookups = [],
 }) {
   return {
     service,
@@ -87,6 +88,7 @@ function nombreDescripcionMaestro({
     hint,
     description,
     scope,
+    lookups,
     titleOf: (item) => item.nombre,
     facts: (item) => [item.descripcion].filter(Boolean),
     listView: {
@@ -135,6 +137,7 @@ export const maestros = {
     registerLabel: 'Registrar área',
     hint: 'El área pertenece a una sede. El nombre es obligatorio.',
     description: 'Unidades internas de cada sede.',
+    lookups: ['sedes'],
     titleOf: (item) => item.nombre,
     facts: (item, lookups = {}) =>
       [lookups.sedeNombres?.[item.idSede], item.descripcion].filter(Boolean),
@@ -193,6 +196,7 @@ export const maestros = {
     registerLabel: 'Registrar categoría',
     hint: 'El nombre es obligatorio. La categoría queda ligada a la empresa.',
     description: 'Clasificación de activos de cada empresa. Solo el administrador de empresa puede registrarlas.',
+    lookups: ['empresas'],
     titleOf: (item) => item.nombre,
     facts: (item) => [item.descripcion].filter(Boolean),
     listView: {
@@ -264,6 +268,7 @@ export const maestros = {
     registerLabel: 'Registrar proveedor',
     hint: 'Nombre y NIT son obligatorios. El proveedor queda ligado a una empresa.',
     description: 'Casas comerciales ligadas a cada empresa.',
+    lookups: ['empresas', 'paises'],
     titleOf: (item) => item.nombre,
     facts: (item, lookups = {}) =>
       [`NIT ${item.nit}`, lookups.empresaNombres?.[item.idEmpresa], item.nombreContacto].filter(Boolean),
@@ -357,6 +362,7 @@ export const maestros = {
     registerLabel: 'Registrar ubicación',
     hint: 'El nombre y la sede son obligatorios. Si deja latitud y longitud vacías, se geocodifican desde la dirección y la ciudad de la sede.',
     description: 'Sitios físicos donde descansa un activo: rack, escritorio o bodega.',
+    lookups: ['sedes', 'paises'],
     titleOf: (item) => item.nombre,
     facts: (item, lookups = {}) =>
       [
@@ -449,6 +455,7 @@ export const maestros = {
     registerLabel: 'Registrar país',
     hint: 'Nombre e ISO son obligatorios. El país queda ligado a la empresa.',
     description: 'Catálogo geográfico de cada empresa. Solo el administrador de empresa puede registrarlos.',
+    lookups: ['empresas'],
     titleOf: (item) => item.nombre,
     facts: (item) => [`${item.codigoIso2} · ${item.codigoIso3}`, item.codigoTelefonico].filter(Boolean),
     empty: ({ idEmpresa, idEmpresaActiva } = {}) => ({
@@ -517,6 +524,7 @@ export const maestros = {
     registerLabel: 'Registrar red',
     hint: 'El BSSID va en formato aa:bb:cc:dd:ee:ff y debe ser único. Si se elimina la ubicación, se eliminan también sus redes.',
     description: 'Puntos de acceso Wi-Fi conocidos. El agente de rastreo los usa para inferir la ubicación de un equipo.',
+    lookups: ['ubicaciones'],
     titleOf: (item) => item.bssid,
     facts: (item, lookups = {}) => [lookups.ubicacionNombres?.[item.idUbicacion]].filter(Boolean),
     listView: {
@@ -583,6 +591,7 @@ export const maestros = {
     registerLabel: 'Registrar usuario',
     hint: 'Nombres, apellidos, correo, usuario y rol son obligatorios. La empresa es obligatoria salvo para el administrador general.',
     description: 'Cuentas con acceso al sistema. El listado exige perfil de administrador de empresa.',
+    lookups: ['empresas'],
     titleOf: usuarioNombre,
     facts: (item, lookups = {}) =>
       [item.username, rolUsuarioLabel[item.rol] ?? item.rol, lookups.empresaNombres?.[item.idEmpresa]].filter(Boolean),
@@ -759,6 +768,7 @@ export const maestros = {
     registerLabel: 'Registrar responsable',
     hint: 'El nombre y el área son obligatorios. Correo y teléfono son opcionales.',
     description: 'Personas que reciben activos. El área determina sede y empresa.',
+    lookups: ['areas', 'paises'],
     titleOf: (item) => item.nombreCompleto,
     facts: (item, lookups = {}) =>
       [lookups.areaNombres?.[item.idArea], item.cargo, item.correo].filter(Boolean),

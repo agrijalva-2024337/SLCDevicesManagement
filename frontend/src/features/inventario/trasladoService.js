@@ -10,9 +10,10 @@ import {
 import { ESTADO_ACTIVO, TIPO_ASIGNACION, getIdEstado, getIdTipoAsignacion } from '@/shared/api/tipoAsignacion';
 import { apiPaths } from '@/shared/api/paths';
 import { env } from '@/shared/config/env';
-import httpClient from '@/shared/services/httpClient';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { byId } from '@/shared/utils/format';
+import { invalidateAfterMutation } from '@/shared/data/mutationInvalidation';
+import httpClient from '@/shared/services/httpClient';
 
 export { parseTrasladoRuta };
 
@@ -23,13 +24,21 @@ function idFromCreated(response, fallback) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+export function filtrarTraslados(rows, tipos) {
+  return asignacionService.filtrarPorNombreTipo(rows, tipos, TIPO_ASIGNACION.Traslado);
+}
+
 async function filtrarPorTipo(nombreTipo) {
   const idTipo = await getIdTipoAsignacion(nombreTipo);
   const rows = await asignacionService.getAll();
-  return (rows ?? []).filter((row) => Number(row.idTipoAsignacion) === Number(idTipo));
+  return asignacionService.filtrarPorTipoId(rows, idTipo);
 }
 
-export async function listar() {
+export async function listar(rows) {
+  if (rows) {
+    const idTipo = await getIdTipoAsignacion(TIPO_ASIGNACION.Traslado);
+    return asignacionService.filtrarPorTipoId(rows, idTipo);
+  }
   return filtrarPorTipo(TIPO_ASIGNACION.Traslado);
 }
 
@@ -67,6 +76,7 @@ async function persistir(command) {
 
   try {
     const response = await httpClient.post(`${apiPaths.asignaciones}/traslado`, command);
+    invalidateAfterMutation('asignaciones');
     return { id: idFromCreated(response, null), ...command };
   } catch (error) {
     throw applyApiFieldErrors(error);

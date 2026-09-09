@@ -11,6 +11,7 @@ import { ESTADO_ACTIVO } from '@/shared/api/tipoAsignacion';
 import '@/features/reportes/dashboard.css';
 import { FeedbackState } from '@/shared/components/FeedbackState';
 import { ToneBadge } from '@/shared/components/StatusBadge';
+import { listQueryKey, reportQueryKey } from '@/shared/data/queryKeys';
 import { useResource } from '@/shared/hooks/useResource';
 import { formatDate } from '@/shared/utils/format';
 
@@ -77,12 +78,25 @@ export function DashboardPage() {
     [idActiva],
   );
 
-  const inventario = useResource(loadInventario);
-  const categorias = useResource(loadCategorias);
-  const sedes = useResource(loadSedes);
-  const garantias = useResource(loadGarantias);
-  const diferencias = useResource(loadDiferencias);
-  const jornadas = useResource(loadJornadas);
+  const empresaParams = idActiva || undefined;
+  const inventario = useResource(loadInventario, {
+    key: reportQueryKey('inventarioGeneral', { idEmpresa: empresaParams }),
+  });
+  const categorias = useResource(loadCategorias, {
+    key: reportQueryKey('activosPorCategoria', { idEmpresa: empresaParams }),
+  });
+  const sedes = useResource(loadSedes, {
+    key: reportQueryKey('activosPorSede', { idEmpresa: empresaParams }),
+  });
+  const garantias = useResource(loadGarantias, {
+    key: reportQueryKey('garantiasPorVencer', { idEmpresa: empresaParams, dias: diasGarantia }),
+  });
+  const diferencias = useResource(loadDiferencias, {
+    key: reportQueryKey('diferenciasInventario', { idEmpresa: empresaParams }),
+  });
+  const jornadas = useResource(loadJornadas, {
+    key: listQueryKey('historicosInventario', { idEmpresa: empresaParams }),
+  });
 
   const resumen = useMemo(() => consolidar(inventario.data), [inventario.data]);
   const spark = [

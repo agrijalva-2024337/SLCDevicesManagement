@@ -4,6 +4,7 @@ import { apiPaths } from '@/shared/api/paths';
 import { env } from '@/shared/config/env';
 import httpClient from '@/shared/services/httpClient';
 import { createMockCrudService } from '@/shared/services/createMockCrudService';
+import { invalidateAfterMutation } from '@/shared/data/mutationInvalidation';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 
 const crud = createMockCrudService({
@@ -72,6 +73,7 @@ export async function crear(payload) {
 
   try {
     const response = await httpClient.post(apiPaths.historicosInventario, command);
+    invalidateAfterMutation('historicosInventario');
     return { id: idFromCreated(response, null), ...command, cerrado: false, fechaCierre: null };
   } catch (error) {
     const next = applyApiFieldErrors(error);
@@ -102,6 +104,7 @@ export async function cerrar(id, fechaCierre) {
     await httpClient.post(`${apiPaths.historicosInventario}/${numericId}/cerrar`, null, {
       params: fechaCierre ? { fechaCierre } : undefined,
     });
+    invalidateAfterMutation('historicosInventario');
   } catch (error) {
     throw applyApiFieldErrors(error);
   }

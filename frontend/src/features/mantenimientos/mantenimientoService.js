@@ -4,8 +4,9 @@ import * as asignacionService from '@/features/asignaciones/asignacionService';
 import { ESTADO_ACTIVO, TIPO_ASIGNACION, getIdEstado, getIdTipoAsignacion } from '@/shared/api/tipoAsignacion';
 import { apiPaths } from '@/shared/api/paths';
 import { env } from '@/shared/config/env';
-import httpClient from '@/shared/services/httpClient';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
+import { invalidateAfterMutation } from '@/shared/data/mutationInvalidation';
+import httpClient from '@/shared/services/httpClient';
 
 function idFromCreated(response, fallback) {
   const data = response?.data;
@@ -14,10 +15,14 @@ function idFromCreated(response, fallback) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-export async function listar() {
+export function filtrarMantenimientos(rows, tipos) {
+  return asignacionService.filtrarPorNombreTipo(rows, tipos, TIPO_ASIGNACION.Mantenimiento);
+}
+
+export async function listar(rows) {
   const idTipo = await getIdTipoAsignacion(TIPO_ASIGNACION.Mantenimiento);
-  const rows = await asignacionService.getAll();
-  return (rows ?? []).filter((row) => Number(row.idTipoAsignacion) === Number(idTipo));
+  const source = rows ?? (await asignacionService.getAll());
+  return asignacionService.filtrarPorTipoId(source, idTipo);
 }
 
 export async function getById(id) {
@@ -48,6 +53,7 @@ async function persistirApertura(command) {
 
   try {
     const response = await httpClient.post(`${apiPaths.asignaciones}/mantenimiento`, command);
+    invalidateAfterMutation('asignaciones');
     return { id: idFromCreated(response, null), ...command };
   } catch (error) {
     throw applyApiFieldErrors(error);
@@ -164,6 +170,7 @@ export async function finalizar(
 
   try {
     await httpClient.post(`${apiPaths.asignaciones}/${numericId}/finalizar-mantenimiento`, command);
+    invalidateAfterMutation('asignaciones');
   } catch (error) {
     throw applyApiFieldErrors(error);
   }

@@ -12,6 +12,7 @@ import * as estadoService from '@/features/organizacion/estados/estadoService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
+import { TIPO_ASIGNACION } from '@/shared/api/tipoAsignacion';
 import { DataTable } from '@/shared/components/DataTable';
 import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
 import { DescargarActaButton, EscanearQrButton, RegisterButton } from '@/shared/components/RecordActions';
@@ -54,8 +55,14 @@ export function AsignacionesPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const load = useCallback(() => asignacionService.listarEntregas(), []);
-  const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(load);
+  const {
+    rows: asignacionesRows,
+    isLoading,
+    errorMessage,
+    banner,
+    setBanner,
+    reload,
+  } = useCatalogCollection(asignacionService.getAll);
   const crud = useCrudOverlay();
   const [closing, setClosing] = useState(false);
   const prefillOpened = useRef(false);
@@ -65,7 +72,11 @@ export function AsignacionesPage() {
   const estados = useResource(estadoService.getAll);
   const responsables = useResource(responsableService.getAll);
   const tipos = useResource(tipoAsignacionService.getAll);
-  const asignacionesAll = useResource(asignacionService.getAll);
+
+  const rows = useMemo(
+    () => asignacionService.filtrarPorNombreTipo(asignacionesRows, tipos.data, TIPO_ASIGNACION.Asignacion),
+    [asignacionesRows, tipos.data],
+  );
 
   const lookups = useMemo(
     () => ({
@@ -259,7 +270,6 @@ export function AsignacionesPage() {
                         crud.close();
                         await reload();
                         await activos.reload();
-                        await asignacionesAll.reload();
                       } finally {
                         setClosing(false);
                       }
@@ -286,7 +296,7 @@ export function AsignacionesPage() {
         activos={lookups.activos}
         ubicaciones={lookups.ubicaciones}
         responsables={lookups.responsables}
-        asignaciones={asignacionesAll.data}
+        asignaciones={asignacionesRows}
         tipos={tipos.data}
         onClose={crud.close}
         onSave={async (values) => {
@@ -303,7 +313,6 @@ export function AsignacionesPage() {
           crud.close();
           await reload();
           await activos.reload();
-          await asignacionesAll.reload();
         }}
       />
     </section>

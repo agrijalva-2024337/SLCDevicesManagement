@@ -34,6 +34,7 @@ import { DataTable } from '@/shared/components/DataTable';
 import { DetailField } from '@/shared/components/DetailOverlay';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { ToneBadge } from '@/shared/components/StatusBadge';
+import { detailQueryKey, listQueryKey } from '@/shared/data/queryKeys';
 import { useResource } from '@/shared/hooks/useResource';
 import { byId, formatDate, formatMoney } from '@/shared/utils/format';
 
@@ -71,8 +72,8 @@ export function ActivoDetallePage() {
   const loadQr = useCallback(() => consultaPublicaService.getQrDeActivo(id), [id]);
   const loadUsuarios = useCallback(() => usuarioService.getAllIfAllowed(canReadUsuarios), [canReadUsuarios]);
 
-  const activoRes = useResource(loadActivo);
-  const qrRes = useResource(loadQr);
+  const activoRes = useResource(loadActivo, { key: detailQueryKey('activos', id), initialData: null });
+  const qrRes = useResource(loadQr, { key: detailQueryKey('consultaQr', id), initialData: null });
   const activos = useResource(activoService.getAll);
   const categorias = useResource(categoriaService.getAll);
   const proveedores = useResource(proveedorService.getAll);
@@ -85,8 +86,11 @@ export function ActivoDetallePage() {
   const asignaciones = useResource(asignacionService.getAll);
   const motivos = useResource(motivoBajaService.getAll);
   const tiposMantenimiento = useResource(tipoMantenimientoService.getAll);
-  const usuarios = useResource(loadUsuarios);
-  const rastreo = useResource(listarRastreo);
+  const usuarios = useResource(loadUsuarios, {
+    key: listQueryKey('usuarios'),
+    enabled: canReadUsuarios,
+  });
+  const rastreo = useResource(listarRastreo, { key: listQueryKey('rastreo') });
 
   const activo = activoRes.data?.id ? activoRes.data : null;
   const qr = qrRes.data?.imageUrl ? qrRes.data : null;

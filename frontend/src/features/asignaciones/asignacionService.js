@@ -5,6 +5,7 @@ import { apiPaths } from '@/shared/api/paths';
 import { env } from '@/shared/config/env';
 import httpClient from '@/shared/services/httpClient';
 import { createMockCrudService } from '@/shared/services/createMockCrudService';
+import { invalidateAfterMutation } from '@/shared/data/mutationInvalidation';
 import { signatureToPayload } from '@/shared/utils/signaturePayload';
 import { sha256File } from '@/shared/utils/sha256';
 
@@ -25,10 +26,33 @@ export function estaVigente(row) {
   return Boolean(row?.activa) && !row?.fechaDevolucion;
 }
 
-export async function listarEntregas() {
-  const idTipo = await getIdTipoAsignacion(TIPO_ASIGNACION.Asignacion);
-  const rows = await getAll();
+/** Selector puro: filtra filas ya cargadas por id de tipo. */
+export function filtrarPorTipoId(rows, idTipo) {
+  if (idTipo == null || idTipo === '') return [];
   return (rows ?? []).filter((row) => Number(row.idTipoAsignacion) === Number(idTipo));
+}
+
+/** Selector puro: resuelve el tipo por nombre dentro del catálogo ya cargado. */
+export function filtrarPorNombreTipo(rows, tipos, nombreTipo) {
+  const tipo = (tipos ?? []).find((item) =>
+    String(item?.nombre ?? '')
+      .trim()
+      .replaceAll('ó', 'o')
+      .replaceAll('Ó', 'o')
+      .toLowerCase() ===
+    String(nombreTipo ?? '')
+      .trim()
+      .replaceAll('ó', 'o')
+      .replaceAll('Ó', 'o')
+      .toLowerCase(),
+  );
+  return filtrarPorTipoId(rows, tipo?.id);
+}
+
+export async function listarEntregas(rows) {
+  const idTipo = await getIdTipoAsignacion(TIPO_ASIGNACION.Asignacion);
+  const source = rows ?? (await getAll());
+  return filtrarPorTipoId(source, idTipo);
 }
 
 async function registrarMovimiento(entry) {
@@ -151,6 +175,7 @@ export async function devolver(id, data = {}) {
     fechaDevolucion,
     observaciones: data.observaciones ?? null,
   });
+  invalidateAfterMutation('asignaciones');
   return { id: numericId, ...patch };
 }
 

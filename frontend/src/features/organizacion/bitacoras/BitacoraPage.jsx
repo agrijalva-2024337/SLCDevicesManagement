@@ -7,6 +7,7 @@ import { TipoOperacionBitacora } from '@/shared/api/contracts';
 import { snapshotEntries } from '@/features/organizacion/bitacoras/bitacoraSnapshot';
 import { DataTable } from '@/shared/components/DataTable';
 import { DetailField } from '@/shared/components/DetailOverlay';
+import { listQueryKey } from '@/shared/data/queryKeys';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useResource } from '@/shared/hooks/useResource';
 import { byId, formatDateTime } from '@/shared/utils/format';
@@ -63,17 +64,22 @@ export function BitacoraPage() {
   const [fechaDesde, setFechaDesde] = useState('');
   const [fechaHasta, setFechaHasta] = useState('');
 
-  const load = useCallback(
-    () =>
-      bitacoraService.getAll({
-        idUsuario: idUsuario === 'all' ? undefined : Number(idUsuario),
-        entidadAfectada: entidadAfectada === 'all' ? undefined : entidadAfectada,
-      }),
+  const bitacoraParams = useMemo(
+    () => ({
+      idUsuario: idUsuario === 'all' ? undefined : Number(idUsuario),
+      entidadAfectada: entidadAfectada === 'all' ? undefined : entidadAfectada,
+    }),
     [entidadAfectada, idUsuario],
   );
-  const { rows, isLoading, errorMessage } = useCatalogCollection(load);
+  const load = useCallback(() => bitacoraService.getAll(bitacoraParams), [bitacoraParams]);
+  const { rows, isLoading, errorMessage } = useCatalogCollection(load, {
+    key: listQueryKey('bitacoras', bitacoraParams),
+  });
   const loadUsuarios = useCallback(() => usuarioService.getAllIfAllowed(canReadUsuarios), [canReadUsuarios]);
-  const usuarios = useResource(loadUsuarios);
+  const usuarios = useResource(loadUsuarios, {
+    key: listQueryKey('usuarios'),
+    enabled: canReadUsuarios,
+  });
 
   const usuariosDeEmpresa = useMemo(
     () => filterRowsByEmpresa(usuarios.data, idActiva),

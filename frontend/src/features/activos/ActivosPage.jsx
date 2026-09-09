@@ -33,6 +33,7 @@ import { EscanearQrButton, RegisterButton } from '@/shared/components/RecordActi
 import { RowIconActions } from '@/shared/components/RowIconActions';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
+import { listQueryKey } from '@/shared/data/queryKeys';
 import { useResource } from '@/shared/hooks/useResource';
 import { byId } from '@/shared/utils/format';
 
@@ -66,7 +67,10 @@ export function ActivosPage() {
   const tipos = useResource(tipoAsignacionService.getAll);
   const asignaciones = useResource(asignacionService.getAll);
   const loadUsuarios = useCallback(() => usuarioService.getAllIfAllowed(canReadUsuarios), [canReadUsuarios]);
-  const usuarios = useResource(loadUsuarios);
+  const usuarios = useResource(loadUsuarios, {
+    key: listQueryKey('usuarios'),
+    enabled: canReadUsuarios,
+  });
   const motivos = useResource(motivoBajaService.getAll);
   const tiposMantenimiento = useResource(tipoMantenimientoService.getAll);
 
@@ -107,7 +111,7 @@ export function ActivosPage() {
   }, [tableRows]);
 
   async function refreshAll() {
-    await Promise.all([reload(), asignaciones.reload(), ubicaciones.reload()]);
+    await Promise.all([reload(), asignaciones.reload()]);
   }
 
   function handleAccion(action, activo) {

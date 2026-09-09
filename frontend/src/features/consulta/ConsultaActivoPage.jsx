@@ -4,6 +4,7 @@ import { ConsultaShell } from '@/features/consulta/ConsultaShell';
 import * as consultaPublicaService from '@/features/consulta/consultaPublicaService';
 import { DetailField } from '@/shared/components/DetailOverlay';
 import { ToneBadge } from '@/shared/components/StatusBadge';
+import { detailQueryKey } from '@/shared/data/queryKeys';
 import { useResource } from '@/shared/hooks/useResource';
 import { formatDate } from '@/shared/utils/format';
 
@@ -19,7 +20,10 @@ function estadoTone(nombre) {
 export function ConsultaActivoPage() {
   const { codigo } = useParams();
   const load = useCallback(() => consultaPublicaService.getFichaPublica(codigo), [codigo]);
-  const { data, isLoading, errorMessage } = useResource(load);
+  const { data, isLoading, errorMessage } = useResource(load, {
+    key: detailQueryKey('consulta', codigo),
+    initialData: null,
+  });
   const ficha = data?.nombre ? data : null;
 
   return (

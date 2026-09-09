@@ -24,7 +24,8 @@ function EmpresaFormEditor({ id }) {
   const editing = Boolean(id);
   const close = () => navigate('/app/catalogos/empresas');
 
-  const paises = useResource(paisService.getAll);
+  const hasOutletPaises = Array.isArray(outlet.lookups?.paises);
+  const paises = useResource(paisService.getAll, { enabled: !hasOutletPaises });
   const [item, setItem] = useState(null);
   const [records, setRecords] = useState(outlet.rows ?? []);
   const [loadError, setLoadError] = useState(null);
@@ -78,7 +79,7 @@ function EmpresaFormEditor({ id }) {
     );
   }
 
-  if (!ready || paises.isLoading) {
+  if (!ready || (!hasOutletPaises && paises.isLoading)) {
     return (
       <DetailOverlay open title="Empresas" kicker={editing ? 'Editar registro' : 'Registrar empresa'} onClose={close}>
         <div className="app-feedback app-feedback--loading" role="status">
@@ -88,7 +89,8 @@ function EmpresaFormEditor({ id }) {
     );
   }
 
-  const initialValues = item ? empresaToForm(item, paises.data) : emptyEmpresaForm(paises.data);
+  const paisesList = hasOutletPaises ? outlet.lookups.paises : paises.data;
+  const initialValues = item ? empresaToForm(item, paisesList) : emptyEmpresaForm(paisesList);
 
   return (
     <RecordFormOverlay
@@ -97,7 +99,7 @@ function EmpresaFormEditor({ id }) {
       kicker={editing ? 'Editar registro' : 'Registrar empresa'}
       badge={editing ? <StatusBadge active={Boolean(initialValues.habilitado)} /> : null}
       hint="Complete el registro corporativo. Nombre y NIT son obligatorios."
-      fields={empresaFields(paises.data)}
+      fields={empresaFields(paisesList)}
       initialValues={initialValues}
       submitLabel={editing ? 'Guardar cambios' : 'Registrar empresa'}
       validate={(values) => compactErrors(validateEmpresaForm(values, records, id))}

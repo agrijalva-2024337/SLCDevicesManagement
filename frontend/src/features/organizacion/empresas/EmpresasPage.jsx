@@ -1,11 +1,13 @@
 import { useMemo } from 'react';
 import { useAuth } from '@/features/auth/useAuth';
 import { SinPermiso } from '@/features/auth/RutaProtegida';
+import * as paisService from '@/features/catalogos/paises/paisService';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import { DataTable } from '@/shared/components/DataTable';
 import { OverlayOutlet } from '@/shared/components/OverlayOutlet';
 import { RegisterButton } from '@/shared/components/RecordActions';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
+import { useResource } from '@/shared/hooks/useResource';
 import { RolUsuario } from '@/shared/api/contracts';
 
 export { EmpresaDetallePage } from '@/features/organizacion/empresas/EmpresaDetallePage';
@@ -39,7 +41,15 @@ export function EmpresasPage() {
   const allowEdit = canWrite('empresas') || rol === RolUsuario.AdministradorGeneral;
   const { rows, visibleRows, isLoading, errorMessage, banner, reload } =
     useCatalogCollection(empresaService.getAll);
-  const outletContext = useMemo(() => ({ reload, rows }), [reload, rows]);
+  const paises = useResource(paisService.getAll);
+  const outletContext = useMemo(
+    () => ({
+      reload,
+      rows,
+      lookups: { paises: paises.data },
+    }),
+    [paises.data, reload, rows],
+  );
 
   if (rol != null && rol !== RolUsuario.AdministradorGeneral) {
     return <SinPermiso />;

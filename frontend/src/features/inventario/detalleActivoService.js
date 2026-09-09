@@ -4,6 +4,7 @@ import { apiPaths } from '@/shared/api/paths';
 import { env } from '@/shared/config/env';
 import httpClient from '@/shared/services/httpClient';
 import { createMockCrudService } from '@/shared/services/createMockCrudService';
+import { invalidateAfterMutation } from '@/shared/data/mutationInvalidation';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 
 const crud = createMockCrudService({
@@ -71,6 +72,7 @@ export async function registrar(payload) {
 
   try {
     const response = await httpClient.post(apiPaths.detallesActivo, command);
+    invalidateAfterMutation('detallesActivo');
     return { id: idFromCreated(response, null), ...command };
   } catch (error) {
     throw applyApiFieldErrors(error);
@@ -97,6 +99,7 @@ export async function actualizar(id, payload) {
 
   try {
     await httpClient.put(`${apiPaths.detallesActivo}/${numericId}`, command);
+    invalidateAfterMutation('detallesActivo');
   } catch (error) {
     throw applyApiFieldErrors(error);
   }
@@ -118,6 +121,7 @@ export async function eliminar(id) {
 
   try {
     await httpClient.delete(`${apiPaths.detallesActivo}/${numericId}`);
+    invalidateAfterMutation('detallesActivo');
   } catch (error) {
     throw applyApiFieldErrors(error);
   }
