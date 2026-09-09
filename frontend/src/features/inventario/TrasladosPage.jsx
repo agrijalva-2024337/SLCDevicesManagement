@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useAuth } from '@/features/auth/useAuth';
 import * as activoService from '@/features/activos/activoService';
 import * as asignacionService from '@/features/asignaciones/asignacionService';
@@ -49,8 +49,14 @@ export function TrasladosPage() {
   const { canWrite, usuario } = useAuth();
   const allowWrite = canWrite('traslados');
   const { idActiva } = useEmpresaActiva();
-  const load = useCallback(() => trasladoService.listar(), []);
-  const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(load);
+  const {
+    rows: asignacionesRows,
+    isLoading,
+    errorMessage,
+    banner,
+    setBanner,
+    reload,
+  } = useCatalogCollection(asignacionService.getAll);
   const crud = useCrudOverlay();
   const activos = useResource(activoService.getAll);
   const ubicaciones = useResource(ubicacionService.getAll);
@@ -58,7 +64,11 @@ export function TrasladosPage() {
   const estados = useResource(estadoService.getAll);
   const responsables = useResource(responsableService.getAll);
   const tipos = useResource(tipoAsignacionService.getAll);
-  const asignaciones = useResource(asignacionService.getAll);
+
+  const rows = useMemo(
+    () => trasladoService.filtrarTraslados(asignacionesRows, tipos.data),
+    [asignacionesRows, tipos.data],
+  );
 
   const lookups = useMemo(
     () => ({
@@ -190,7 +200,7 @@ export function TrasladosPage() {
         ubicaciones={lookups.ubicaciones}
         sedes={lookups.sedes}
         responsables={lookups.responsables}
-        asignaciones={asignaciones.data}
+        asignaciones={asignacionesRows}
         tipos={tipos.data}
         idEmpresaActiva={idActiva}
         onClose={crud.close}

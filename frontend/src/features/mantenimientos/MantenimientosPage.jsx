@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import * as activoService from '@/features/activos/activoService';
@@ -50,8 +50,14 @@ export function MantenimientosPage() {
   const allowWrite = canWrite('mantenimientos');
   const { idActiva } = useEmpresaActiva();
   const [params] = useSearchParams();
-  const load = useCallback(() => mantenimientoService.listar(), []);
-  const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(load);
+  const {
+    rows: asignacionesRows,
+    isLoading,
+    errorMessage,
+    banner,
+    setBanner,
+    reload,
+  } = useCatalogCollection(asignacionService.getAll);
   const crud = useCrudOverlay();
   const [cierreOpen, setCierreOpen] = useState(false);
   const activos = useResource(activoService.getAll);
@@ -61,7 +67,11 @@ export function MantenimientosPage() {
   const estados = useResource(estadoService.getAll);
   const responsables = useResource(responsableService.getAll);
   const tipos = useResource(tipoAsignacionService.getAll);
-  const asignacionesAll = useResource(asignacionService.getAll);
+
+  const rows = useMemo(
+    () => mantenimientoService.filtrarMantenimientos(asignacionesRows, tipos.data),
+    [asignacionesRows, tipos.data],
+  );
 
   const lookups = useMemo(
     () => ({
@@ -240,7 +250,7 @@ export function MantenimientosPage() {
         sedes={lookups.sedes}
         responsables={lookups.responsables}
         tiposMantenimiento={tiposMantenimiento.data}
-        asignaciones={asignacionesAll.data}
+        asignaciones={asignacionesRows}
         tipos={tipos.data}
         onClose={crud.close}
         onSave={async (values) => {

@@ -19,6 +19,7 @@ import { ToneBadge } from '@/shared/components/StatusBadge';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
 import { useRecordDeepLink } from '@/shared/hooks/useRecordDeepLink';
+import { listQueryKey } from '@/shared/data/queryKeys';
 import { useResource } from '@/shared/hooks/useResource';
 import { byId, formatDate } from '@/shared/utils/format';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
@@ -57,8 +58,14 @@ export function BajasPage() {
   const { idActiva } = useEmpresaActiva();
   const location = useLocation();
   const navigate = useNavigate();
-  const load = useCallback(() => bajaService.listar(), []);
-  const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(load);
+  const {
+    rows: asignacionesRows,
+    isLoading,
+    errorMessage,
+    banner,
+    setBanner,
+    reload,
+  } = useCatalogCollection(asignacionService.getAll);
   const crud = useCrudOverlay();
   const prefillOpened = useRef(false);
   const activos = useResource(activoService.getAll);
@@ -66,12 +73,19 @@ export function BajasPage() {
   const sedes = useResource(sedeService.getAll);
   const motivos = useResource(motivoBajaService.getAll);
   const loadUsuarios = useCallback(() => usuarioService.getAllIfAllowed(canReadUsuarios), [canReadUsuarios]);
-  const usuarios = useResource(loadUsuarios);
+  const usuarios = useResource(loadUsuarios, {
+    key: listQueryKey('usuarios'),
+    enabled: canReadUsuarios,
+  });
   const responsables = useResource(responsableService.getAll);
   const estados = useResource(estadoService.getAll);
   const tipos = useResource(tipoAsignacionService.getAll);
-  const asignacionesAll = useResource(asignacionService.getAll);
   const historial = useResource(historialActivoService.getAll);
+
+  const rows = useMemo(
+    () => bajaService.filtrarBajas(asignacionesRows, tipos.data),
+    [asignacionesRows, tipos.data],
+  );
 
   const detallePorAsignacion = useMemo(() => {
     const map = new Map();
@@ -208,7 +222,7 @@ export function BajasPage() {
         usuarios={usuarios.data}
         usuariosUnavailableReason={canReadUsuarios ? null : usuarioService.USUARIOS_SIN_LECTURA}
         responsables={responsables.data}
-        asignaciones={asignacionesAll.data}
+        asignaciones={asignacionesRows}
         tipos={tipos.data}
         onClose={crud.close}
         onSave={async (values) => {
@@ -228,7 +242,7 @@ export function BajasPage() {
             });
             setBanner({ message: 'Baja registrada. El activo queda dado de baja.', variant: 'empty' });
             crud.close();
-            await Promise.all([reload(), activos.reload(), asignacionesAll.reload(), historial.reload()]);
+            await Promise.all([reload(), activos.reload(), historial.reload()]);
           } catch (error) {
             if (error.response?.status === 409 || error.status === 409) {
               setBanner({ message: error.message, variant: 'error' });
