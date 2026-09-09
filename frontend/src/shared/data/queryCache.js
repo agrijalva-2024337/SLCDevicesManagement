@@ -48,6 +48,32 @@ const store = new Map();
 const inflight = new Map();
 const listeners = new Map();
 
+const FETCH_WARN_WINDOW_MS = 5_000;
+const FETCH_WARN_THRESHOLD = 10;
+const fetchHitsDev = new Map();
+const fetchWarnedDev = new Set();
+
+function noteFetchInDev(keyStr) {
+  if (!import.meta.env.DEV) {
+    return;
+  }
+
+  const now = Date.now();
+  let bucket = fetchHitsDev.get(keyStr);
+  if (!bucket || now - bucket.startedAt > FETCH_WARN_WINDOW_MS) {
+    bucket = { startedAt: now, count: 0 };
+    fetchHitsDev.set(keyStr, bucket);
+  }
+  bucket.count += 1;
+
+  if (bucket.count > FETCH_WARN_THRESHOLD && !fetchWarnedDev.has(keyStr)) {
+    fetchWarnedDev.add(keyStr);
+    console.warn(
+      `[queryCache] la clave ${keyStr} se pidió ${bucket.count} veces en ${FETCH_WARN_WINDOW_MS}ms; revisá dependencias inestables en useQueryResource`,
+    );
+  }
+}
+
 function notify(keyStr) {
   const set = listeners.get(keyStr);
   if (!set) {
@@ -82,6 +108,7 @@ function isFresh(entry, ttlMs) {
 
 export async function fetchQuery(key, fn, { ttlMs = 30_000, signal } = {}) {
   const keyStr = serializeQueryKey(key);
+  noteFetchInDev(keyStr);
   const cached = store.get(keyStr);
   if (isFresh(cached, ttlMs)) {
     return cached.value;
