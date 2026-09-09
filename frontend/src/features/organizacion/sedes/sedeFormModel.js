@@ -1,4 +1,9 @@
-import { asOptions, optionalText, requireSelect, requireText } from '@/shared/components/recordFormUtils';
+import {
+  asOptions,
+  requireSelect,
+  validarNombreEntidad,
+  validarTextoLibre,
+} from '@/shared/components/recordFormUtils';
 
 export function emptySedeForm() {
   return {
@@ -51,9 +56,9 @@ export function validateSedeForm(values, paises = []) {
   const errors = {
     idEmpresa: requireSelect(values.idEmpresa, 'una empresa'),
     idPais: requireSelect(values.idPais, 'un país'),
-    nombre: requireText(values.nombre, 'nombre', 100),
-    direccion: optionalText(values.direccion, 'dirección', 100),
-    ciudad: optionalText(values.ciudad, 'ciudad', 100),
+    nombre: validarNombreEntidad(values.nombre, 'nombre', 100, { required: true }),
+    direccion: validarTextoLibre(values.direccion, 'dirección', 100, { required: false }),
+    ciudad: validarNombreEntidad(values.ciudad, 'ciudad', 100, { required: false }),
   };
 
   if (!errors.idPais && values.idEmpresa) {

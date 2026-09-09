@@ -107,6 +107,7 @@ function EmpresaFormEditor({ id }) {
         compactErrors(
           validateEmpresaForm(values, records, id, {
             iso2: buscarPorCodigoTelefonico(values.telefonoPrefijo)?.codigoIso2,
+            paises: paisesList,
           }),
         )
       }

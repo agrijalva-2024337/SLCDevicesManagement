@@ -1,8 +1,8 @@
 import {
-  optionalText,
   phoneField,
-  requireText,
   validarIdentificacionTributaria,
+  validarNombreEntidad,
+  validarTextoLibre,
 } from '@/shared/components/recordFormUtils';
 import { phoneFormFields, phonePayload, validatePhoneFields } from '@/shared/utils/phoneNumber';
 
@@ -49,15 +49,15 @@ export function empresaFields(paises = []) {
   ];
 }
 
-export function validateEmpresaForm(values, empresas = [], currentId, { iso2 } = {}) {
+export function validateEmpresaForm(values, empresas = [], currentId, { iso2, paises } = {}) {
   const errors = {
-    nombre: requireText(values.nombre, 'nombre', 150),
+    nombre: validarNombreEntidad(values.nombre, 'nombre', 150, { required: true }),
     nitCodigo: validarIdentificacionTributaria(values.nitCodigo, 'identificación tributaria', 50, {
       required: true,
       iso2,
     }),
-    direccion: optionalText(values.direccion, 'dirección', 150),
-    telefono: validatePhoneFields(values),
+    direccion: validarTextoLibre(values.direccion, 'dirección', 150, { required: false }),
+    telefono: validatePhoneFields(values, { paises }),
   };
   const nit = String(values.nitCodigo ?? '')
     .trim()
