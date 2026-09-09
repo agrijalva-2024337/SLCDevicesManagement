@@ -116,10 +116,8 @@ export async function fetchQuery(key, fn, { ttlMs = 30_000, signal } = {}) {
     }
     released = true;
     flight.refCount -= 1;
-    if (flight.refCount <= 0 && inflight.get(keyStr) === flight) {
-      flight.controller.abort();
-      inflight.delete(keyStr);
-    }
+    // No abortar ni borrar inflight: StrictMode remonta al instante y reusa la promesa.
+    // Solo clearQueryCache() aborta en masa; la promesa limpia inflight al resolver/fallar.
   }
 
   if (signal) {
