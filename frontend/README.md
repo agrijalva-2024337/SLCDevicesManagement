@@ -340,6 +340,8 @@ frontend/src/
     components/        DataTable, PageHeader, FeedbackState, overlays, forms…
     geo/               parseCoordinates, geocodeAddress, useResolvedPositions
     hooks/             useForm, useCatalogCollection, useResource, useApiHealth, useCrudOverlay
+    data/              queryCache, queryKeys, useQueryResource, mutationInvalidation
+    services/          httpClient, createMockCrudService, requestLog
     layout/            AppLayout, Sidebar, Topbar, navigation.js
     styles/            app-ui.css, data-table.css, tooltip.css
     theme/             theme.js, ThemeToggle.jsx
@@ -367,7 +369,22 @@ Los campos de cada catálogo coinciden con los DTOs de Application (camelCase): 
 | Inventario físico                 | `historicoInventarioService`, `detalleActivoService` | Jornadas por sede, hallazgos, `POST {id}/cerrar`, `GET {id}/diferencias` |
 | Reportes                          | `reporteService` (solo lectura)                      | `/api/Reportes/*`. `activos` pagina con skip/take y sin total |
 
-Hook `useResource(loadFn)` → `{ data, isLoading, errorMessage, reload }`.
+### Cómo cargar datos (cache)
+
+No uses TanStack Query. El cache vive en `src/shared/data/queryCache.js` y se consume con:
+
+- `useResource(loadFn, { key?, enabled?, ttlMs? })` → `{ data, isLoading, errorMessage, reload }`
+- `useCatalogCollection(loadFn, options)` → lista + filtros de habilitado + banner
+
+`createMockCrudService` registra la key de `getAll` en un `WeakMap` (`loaderKeys`). Loaders con params (`getAll({ idEmpresa })`, reportes, `getById`) deben pasar `key: listQueryKey(...)` / `detailQueryKey` / `reportQueryKey`.
+
+Reglas:
+
+1. Un GET por key; StrictMode reusa la promesa in-flight.
+2. Selectores puros sobre filas ya cargadas (p. ej. `filtrarBajas(asignacionesRows, tipos)`), no un segundo `getAll` del mismo recurso.
+3. El padre (`CatalogoPage` / sedes / empresas) carga lookups y los pasa por `OverlayOutlet`; el form hijo reusa `outlet.lookups` y solo hace fallback al cache si faltan.
+4. Mutaciones CRUD e invalidan vía `invalidateAfterMutation`; rutas API custom (baja, traslado, devolver…) también.
+5. Logout llama `clearQueryCache()`. Auditoría en dev: `window.__slcRequests.report()` → `docs/qa/fetch-audit-*.md`.
 
 ## Componentes compartidos
 

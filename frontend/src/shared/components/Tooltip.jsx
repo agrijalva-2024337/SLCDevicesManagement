@@ -52,7 +52,8 @@ export function Tooltip({ label, children, delay = 400 }) {
   useEffect(() => {
     if (!visible) return undefined;
     function dismiss() {
-      hide();
+      clearTimer();
+      setVisible(false);
     }
     window.addEventListener('scroll', dismiss, true);
     window.addEventListener('resize', dismiss);
