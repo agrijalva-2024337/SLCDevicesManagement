@@ -55,9 +55,11 @@ export async function create(data) {
 export const USUARIOS_SIN_LECTURA =
   'Tu perfil no puede listar usuarios. Pedí un administrador de empresa.';
 
+const SIN_USUARIOS = Object.freeze([]);
+
 export function getAllIfAllowed(canRead) {
   if (!canRead) {
-    return Promise.resolve([]);
+    return Promise.resolve(SIN_USUARIOS);
   }
   return getAll();
 }
