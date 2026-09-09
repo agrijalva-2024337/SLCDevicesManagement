@@ -91,6 +91,27 @@ export function useQueryResource(loadFn, { key, ttlMs, enabled = true, initialDa
     ttlRef.current = ttl;
   }, [ttl]);
 
+  // Al cambiar de clave (p. ej. slug de catálogo), no arrastrar filas del recurso anterior.
+  useEffect(() => {
+    const currentKey = resolvedKey;
+    if (!currentKey) {
+      setData(initialDataRef.current);
+      setIsLoading(Boolean(enabled));
+      setErrorMessage(null);
+      return;
+    }
+    const cached = getQueryData(currentKey);
+    if (cached !== undefined) {
+      setData(cached);
+      setIsLoading(false);
+      setErrorMessage(null);
+      return;
+    }
+    setData(initialDataRef.current);
+    setIsLoading(Boolean(enabled));
+    setErrorMessage(null);
+  }, [enabled, keyStr, resolvedKey]);
+
   const run = useCallback(async ({ force = false, signal } = {}) => {
     if (!enabledRef.current) {
       return initialDataRef.current;

@@ -87,3 +87,30 @@ const ENDPOINT_RESOURCE = {
 export function resourceFromEndpoint(endpoint) {
   return ENDPOINT_RESOURCE[endpoint] ?? endpoint.replace(/^\/api\//, '').replaceAll('/', '-');
 }
+
+/** Slug de `/app/catalogos/:slug` → resource name de listQueryKey. */
+const CATALOG_SLUG_RESOURCE = {
+  areas: 'areas',
+  categorias: 'categoriasActivo',
+  proveedores: 'proveedores',
+  ubicaciones: 'ubicaciones',
+  paises: 'paises',
+  'redes-conocidas': 'redesConocidas',
+  usuarios: 'usuarios',
+  responsables: 'responsables',
+  estados: 'estados',
+  'tipos-asignacion': 'tiposAsignacion',
+};
+
+export function resourceFromCatalogSlug(slug) {
+  return CATALOG_SLUG_RESOURCE[slug] ?? null;
+}
+
+/** Clave de lista para CatalogoPage; siempre distinta entre slugs. */
+export function catalogListQueryKey(slug, params) {
+  const resource = resourceFromCatalogSlug(slug);
+  if (!resource) {
+    return listQueryKey(`catalogo:${slug ?? 'unknown'}`, params);
+  }
+  return listQueryKey(resource, params);
+}
