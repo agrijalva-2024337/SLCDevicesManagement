@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { PhoneInput } from '@/shared/components/PhoneInput';
 import { SignaturePad } from '@/shared/components/SignaturePad';
 import { generateTemporaryPassword } from '@/shared/utils/generateTemporaryPassword';
@@ -60,8 +61,14 @@ function controlClass(error) {
 }
 
 export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCancel, submitLabel }) {
+  const [revealed, setRevealed] = useState({});
+
   function setField(name, value) {
     onChange({ ...values, [name]: value });
+  }
+
+  function setPasswordVisible(name, visible) {
+    setRevealed((current) => ({ ...current, [name]: visible }));
   }
 
   return (
@@ -174,6 +181,7 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
         }
 
         if (field.generateAction) {
+          const visible = Boolean(revealed[field.name]);
           return (
             <FormField
               key={field.name}
@@ -185,20 +193,34 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
               wide
             >
               <div className="app-input-with-action">
-                <input
-                  id={id}
-                  type={field.type ?? 'text'}
-                  className={controlClass(errors[field.name])}
-                  value={values[field.name] ?? ''}
-                  maxLength={field.maxLength}
-                  autoComplete={field.autoComplete}
-                  readOnly={Boolean(field.readOnly)}
-                  onChange={(event) => setField(field.name, event.target.value)}
-                />
+                <div className="app-input-password">
+                  <input
+                    id={id}
+                    type={visible ? 'text' : 'password'}
+                    className={controlClass(errors[field.name])}
+                    value={values[field.name] ?? ''}
+                    maxLength={field.maxLength}
+                    autoComplete={field.autoComplete}
+                    readOnly={Boolean(field.readOnly)}
+                    onChange={(event) => setField(field.name, event.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="app-icon-btn"
+                    aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    aria-pressed={visible}
+                    onClick={() => setPasswordVisible(field.name, !visible)}
+                  >
+                    <i className={visible ? 'pi pi-eye-slash' : 'pi pi-eye'} aria-hidden="true" />
+                  </button>
+                </div>
                 <button
                   type="button"
                   className="app-btn app-btn--ghost app-btn--sm"
-                  onClick={() => setField(field.name, generateTemporaryPassword())}
+                  onClick={() => {
+                    setField(field.name, generateTemporaryPassword());
+                    setPasswordVisible(field.name, true);
+                  }}
                 >
                   Generar
                 </button>
