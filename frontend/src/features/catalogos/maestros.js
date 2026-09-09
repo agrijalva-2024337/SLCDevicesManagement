@@ -10,7 +10,7 @@ import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import { RolUsuario, rolUsuarioLabel } from '@/shared/api/contracts';
-import { asOptions, optionalText, phoneField, requireSelect, requireText } from '@/shared/components/recordFormUtils';
+import { asOptions, optionalText, phoneField, requireSelect, requireText, validarCorreo } from '@/shared/components/recordFormUtils';
 import { phoneFormFields, phonePayload, validatePhoneFields } from '@/shared/utils/phoneNumber';
 
 function switchField() {
@@ -27,17 +27,11 @@ export function nameById(list) {
 }
 
 function requireEmail(value) {
-  const required = requireText(value, 'correo', 150);
-  if (required) return required;
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value).trim())) {
-    return 'El formato del correo no es válido.';
-  }
-  return null;
+  return validarCorreo(value, 'correo', 150, { required: true });
 }
 
 function optionalEmail(value) {
-  if (!String(value ?? '').trim()) return null;
-  return requireEmail(value);
+  return validarCorreo(value, 'correo', 150, { required: false });
 }
 
 function duplicateNombre(records, nombre, currentId) {
@@ -322,7 +316,7 @@ export const maestros = {
         nit: requireText(values.nit, 'NIT', 50),
         nombreContacto: optionalText(values.nombreContacto, 'contacto', 100),
         telefono: validatePhoneFields(values),
-        correo: optionalText(values.correo, 'correo', 150),
+        correo: optionalEmail(values.correo),
       };
       const nit = String(values.nit ?? '')
         .trim()
