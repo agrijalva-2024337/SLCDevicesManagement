@@ -4,6 +4,7 @@ import * as authService from '@/features/auth/authService';
 import { AuthClaimTypes, RolUsuario, rolFromClaim } from '@/shared/api/contracts';
 import { env } from '@/shared/config/env';
 import { getAccessToken, getSessionUser } from '@/shared/services/tokenStorage';
+import { clearQueryCache } from '@/shared/data/queryCache';
 
 const AuthContext = createContext(null);
 
@@ -69,6 +70,7 @@ function useAuthState() {
   const [error, setError] = useState(null);
 
   const logout = useCallback(() => {
+    clearQueryCache();
     authService.logout();
     setUsuario(null);
     setError(null);

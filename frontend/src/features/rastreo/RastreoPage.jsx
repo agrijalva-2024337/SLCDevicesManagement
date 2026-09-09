@@ -6,6 +6,7 @@ import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaAct
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import { formatHaceCuanto, listarRastreo, mapsUrlDe } from '@/features/rastreo/rastreoService';
 import { DataTable } from '@/shared/components/DataTable';
+import { listQueryKey } from '@/shared/data/queryKeys';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useResource } from '@/shared/hooks/useResource';
 import { byId } from '@/shared/utils/format';
@@ -19,7 +20,9 @@ export function RastreoPage() {
   const vista = resolveVista(params.get('vista'));
   const { idActiva } = useEmpresaActiva();
   const load = useCallback(() => listarRastreo(), []);
-  const { rows, isLoading, errorMessage } = useCatalogCollection(load);
+  const { rows, isLoading, errorMessage } = useCatalogCollection(load, {
+    key: listQueryKey('rastreo'),
+  });
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
 

@@ -8,6 +8,7 @@ import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import { DataTable } from '@/shared/components/DataTable';
 import { RegisterButton } from '@/shared/components/RecordActions';
 import { Tooltip } from '@/shared/components/Tooltip';
+import { listQueryKey } from '@/shared/data/queryKeys';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
 import { useResource } from '@/shared/hooks/useResource';
@@ -31,7 +32,9 @@ export function JornadasPage() {
     () => historicoInventarioService.listar({ idEmpresa: idActiva || undefined }),
     [idActiva],
   );
-  const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(load);
+  const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(load, {
+    key: listQueryKey('historicosInventario', { idEmpresa: idActiva || undefined }),
+  });
   const crud = useCrudOverlay();
   const sedes = useResource(sedeService.getAll);
 

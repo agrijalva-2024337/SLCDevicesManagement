@@ -1,4 +1,7 @@
 import { env } from '@/shared/config/env';
+import { registerLoaderKey } from '@/shared/data/loaderKeys';
+import { invalidateAfterMutation } from '@/shared/data/mutationInvalidation';
+import { listQueryKey, resourceFromEndpoint } from '@/shared/data/queryKeys';
 import httpClient from '@/shared/services/httpClient';
 
 const MOCK_DELAY_MS = 400;
@@ -54,8 +57,9 @@ function matchesParams(item, params) {
 export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS }) {
   let items = clone(seed);
   const usesHabilitado = seed.some((item) => Object.hasOwn(item, 'habilitado'));
+  const resource = resourceFromEndpoint(endpoint);
 
-  async function getAll(params) {
+  async function getAll(params, { signal } = {}) {
     if (env.useApiMock) {
       await wait(delayMs);
       return clone(items).filter((item) => matchesParams(item, params));
@@ -63,11 +67,16 @@ export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS 
 
     const response = await httpClient.get(endpoint, {
       params: { incluirInhabilitados: true, ...params },
+      signal,
     });
     return response.data;
   }
 
-  async function getById(id) {
+  // Asociamos esta función con una key de consulta estable para que useResource
+  // pueda deduplicar llamadas in-flight en StrictMode.
+  registerLoaderKey(getAll, listQueryKey(resource, {}));
+
+  async function getById(id, { signal } = {}) {
     if (!isPositiveId(id)) {
       const error = new Error('El registro no existe o fue retirado del catálogo.');
       error.status = 404;
@@ -87,7 +96,7 @@ export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS 
       return clone(found);
     }
 
-    const response = await httpClient.get(`${endpoint}/${id}`);
+    const response = await httpClient.get(`${endpoint}/${id}`, { signal });
     return response.data;
   }
 
@@ -102,11 +111,14 @@ export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS 
       }
 
       items = [...items, created];
+      invalidateAfterMutation(resource);
       return clone(created);
     }
 
     const response = await httpClient.post(endpoint, data);
-    return asRecordId(response.data, null);
+    const created = asRecordId(response.data, null);
+    invalidateAfterMutation(resource);
+    return created;
   }
 
   async function update(id, data) {
@@ -123,6 +135,7 @@ export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS 
 
       const updated = { ...current, ...data, id: numericId };
       items = items.map((item) => (item.id === numericId ? updated : item));
+      invalidateAfterMutation(resource);
       return clone(updated);
     }
 
@@ -132,7 +145,9 @@ export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS 
     const body = response.data;
     const merged =
       body && typeof body === 'object' && !Array.isArray(body) ? { ...payload, ...body } : payload;
-    return asRecordId(merged, numericId);
+    const result = asRecordId(merged, numericId);
+    invalidateAfterMutation(resource);
+    return result;
   }
 
   async function remove(id) {
@@ -150,10 +165,12 @@ export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS 
       if (usesHabilitado) {
         const updated = { ...current, habilitado: false };
         items = items.map((item) => (item.id === numericId ? updated : item));
+        invalidateAfterMutation(resource);
         return clone(updated);
       }
 
       items = items.filter((item) => item.id !== numericId);
+      invalidateAfterMutation(resource);
       return clone(current);
     }
 
@@ -163,6 +180,7 @@ export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS 
     } else {
       await httpClient.delete(`${endpoint}/${id}`);
     }
+    invalidateAfterMutation(resource);
     return { id: numericId };
   }
 

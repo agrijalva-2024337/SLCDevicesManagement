@@ -8,6 +8,7 @@ import * as reporteService from '@/features/reportes/reporteService';
 import { ESTADO_OPERATIVO, ESTADO_OPERATIVO_LABEL, ESTADO_OPERATIVO_TONE } from '@/shared/api/contracts';
 import { DataTable } from '@/shared/components/DataTable';
 import { PageHeader } from '@/shared/components/PageHeader';
+import { reportQueryKey } from '@/shared/data/queryKeys';
 import { useResource } from '@/shared/hooks/useResource';
 import { formatMoney } from '@/shared/utils/format';
 
@@ -43,20 +44,22 @@ export function ActivosReportePage() {
     setSkip(0);
   }
 
-  const load = useCallback(
-    () =>
-      reporteService.activos({
-        estado: estado || undefined,
-        idEmpresa: idActiva || undefined,
-        idSede: idSede || undefined,
-        idCategoriaActivo: idCategoriaActivo || undefined,
-        idResponsable: idResponsable || undefined,
-        skip,
-        take: TAKE,
-      }),
+  const reportParams = useMemo(
+    () => ({
+      estado: estado || undefined,
+      idEmpresa: idActiva || undefined,
+      idSede: idSede || undefined,
+      idCategoriaActivo: idCategoriaActivo || undefined,
+      idResponsable: idResponsable || undefined,
+      skip,
+      take: TAKE,
+    }),
     [estado, idActiva, idCategoriaActivo, idResponsable, idSede, skip],
   );
-  const { data, isLoading, errorMessage } = useResource(load);
+  const load = useCallback(() => reporteService.activos(reportParams), [reportParams]);
+  const { data, isLoading, errorMessage } = useResource(load, {
+    key: reportQueryKey('activos', reportParams),
+  });
   const tieneMas = (data?.length ?? 0) === TAKE;
 
   const rows = useMemo(

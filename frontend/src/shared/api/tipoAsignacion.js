@@ -5,6 +5,8 @@
  */
 import * as estadoService from '@/features/organizacion/estados/estadoService';
 import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
+import { fetchQuery, invalidateQueries } from '@/shared/data/queryCache';
+import { listQueryKey, ttlForKey } from '@/shared/data/queryKeys';
 
 export const TIPO_ASIGNACION = {
   Asignacion: 'Asignacion',
@@ -41,40 +43,26 @@ export function nombresCatalogoIguales(actual, esperado) {
   return normalizarNombreCatalogo(actual) === normalizarNombreCatalogo(esperado);
 }
 
-let tiposCache = null;
-let estadosCache = null;
-let tiposPending = null;
-let estadosPending = null;
+const TIPOS_KEY = listQueryKey('tiposAsignacion');
+const ESTADOS_KEY = listQueryKey('estados');
 
 export function invalidateCatalogoAsignacionCache() {
-  tiposCache = null;
-  estadosCache = null;
-  tiposPending = null;
-  estadosPending = null;
+  invalidateQueries(['tiposAsignacion']);
+  invalidateQueries(['estados']);
 }
 
 async function loadTipos() {
-  if (tiposCache) return tiposCache;
-  if (!tiposPending) {
-    tiposPending = tipoAsignacionService.getAll().then((rows) => {
-      tiposCache = Array.isArray(rows) ? rows : [];
-      tiposPending = null;
-      return tiposCache;
-    });
-  }
-  return tiposPending;
+  const rows = await fetchQuery(TIPOS_KEY, () => tipoAsignacionService.getAll(), {
+    ttlMs: ttlForKey(TIPOS_KEY),
+  });
+  return Array.isArray(rows) ? rows : [];
 }
 
 async function loadEstados() {
-  if (estadosCache) return estadosCache;
-  if (!estadosPending) {
-    estadosPending = estadoService.getAll().then((rows) => {
-      estadosCache = Array.isArray(rows) ? rows : [];
-      estadosPending = null;
-      return estadosCache;
-    });
-  }
-  return estadosPending;
+  const rows = await fetchQuery(ESTADOS_KEY, () => estadoService.getAll(), {
+    ttlMs: ttlForKey(ESTADOS_KEY),
+  });
+  return Array.isArray(rows) ? rows : [];
 }
 
 function findByNombre(items, nombre, kind) {

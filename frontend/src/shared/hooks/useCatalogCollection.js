@@ -1,53 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { getErrorMessage } from '@/shared/utils/getErrorMessage';
+import { useEffect, useMemo, useState } from 'react';
+import { useQueryResource } from '@/shared/data/useQueryResource';
 
-export function useCatalogCollection(loadFn) {
-  const [rows, setRows] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState(null);
+export function useCatalogCollection(loadFn, options) {
+  const { data, isLoading, errorMessage, reload } = useQueryResource(loadFn, options);
+  const rows = useMemo(() => (Array.isArray(data) ? data : []), [data]);
   const [filter, setFilter] = useState('activos');
   const [banner, setBanner] = useState(null);
-
-  const reload = useCallback(async () => {
-    setIsLoading(true);
-
-    try {
-      const data = await loadFn();
-      setRows(data);
-      setErrorMessage(null);
-    } catch (error) {
-      setErrorMessage(getErrorMessage(error));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [loadFn]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function run() {
-      try {
-        const data = await loadFn();
-
-        if (!cancelled) {
-          setRows(data);
-          setErrorMessage(null);
-          setIsLoading(false);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setErrorMessage(getErrorMessage(error));
-          setIsLoading(false);
-        }
-      }
-    }
-
-    run();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [loadFn]);
 
   useEffect(() => {
     if (!banner) {
