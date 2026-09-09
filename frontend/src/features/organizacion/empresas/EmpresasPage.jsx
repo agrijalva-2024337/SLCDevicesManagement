@@ -15,7 +15,7 @@ export { EmpresaFormPage } from '@/features/organizacion/empresas/EmpresaFormPag
 
 const columns = [
   { key: 'nombre', header: 'Nombre', primary: true },
-  { key: 'nitCodigo', header: 'NIT', numeric: true },
+  { key: 'nitCodigo', header: 'Identificación tributaria', numeric: true },
   { key: 'direccion', header: 'Dirección' },
   { key: 'telefono', header: 'Teléfono' },
   { key: 'habilitado', header: 'Estado', type: 'status' },
@@ -75,7 +75,7 @@ export function EmpresasPage() {
         columns={columns}
         rows={visibleRows}
         loading={isLoading}
-        searchPlaceholder="Buscar por nombre, NIT, dirección o teléfono"
+        searchPlaceholder="Buscar por nombre, identificación, dirección o teléfono"
         statusFilter={{ key: 'habilitado' }}
         emptyTitle="No hay empresas"
         emptyDescription="Registre la primera empresa para comenzar."

@@ -1,5 +1,12 @@
-import { optionalText, phoneField, requireText } from '@/shared/components/recordFormUtils';
+import {
+  optionalText,
+  phoneField,
+  requireText,
+  validarIdentificacionTributaria,
+} from '@/shared/components/recordFormUtils';
 import { phoneFormFields, phonePayload, validatePhoneFields } from '@/shared/utils/phoneNumber';
+
+const IDENTIFICACION_HINT = 'NIT, RUC, RFC o equivalente según el país';
 
 export function emptyEmpresaForm(paises = []) {
   return {
@@ -24,7 +31,13 @@ export function empresaToForm(empresa, paises = []) {
 export function empresaFields(paises = []) {
   return [
     { name: 'nombre', label: 'Nombre', required: true, maxLength: 150, wide: true },
-    { name: 'nitCodigo', label: 'NIT / código', required: true, maxLength: 50 },
+    {
+      name: 'nitCodigo',
+      label: 'Identificación tributaria',
+      required: true,
+      maxLength: 50,
+      hint: IDENTIFICACION_HINT,
+    },
     { name: 'direccion', label: 'Dirección', maxLength: 150, wide: true },
     phoneField({ paises }),
     {
@@ -36,10 +49,13 @@ export function empresaFields(paises = []) {
   ];
 }
 
-export function validateEmpresaForm(values, empresas = [], currentId) {
+export function validateEmpresaForm(values, empresas = [], currentId, { iso2 } = {}) {
   const errors = {
     nombre: requireText(values.nombre, 'nombre', 150),
-    nitCodigo: requireText(values.nitCodigo, 'NIT', 50),
+    nitCodigo: validarIdentificacionTributaria(values.nitCodigo, 'identificación tributaria', 50, {
+      required: true,
+      iso2,
+    }),
     direccion: optionalText(values.direccion, 'dirección', 150),
     telefono: validatePhoneFields(values),
   };
@@ -48,11 +64,12 @@ export function validateEmpresaForm(values, empresas = [], currentId) {
     .toLowerCase();
   if (
     nit &&
+    !errors.nitCodigo &&
     empresas.some(
       (item) => String(item.nitCodigo).toLowerCase() === nit && String(item.id) !== String(currentId),
     )
   ) {
-    errors.nitCodigo = 'Ya existe una empresa registrada con este NIT.';
+    errors.nitCodigo = 'Ya existe una empresa registrada con esta identificación tributaria.';
   }
   return errors;
 }

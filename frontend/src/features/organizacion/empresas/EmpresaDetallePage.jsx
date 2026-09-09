@@ -83,7 +83,7 @@ export function EmpresaDetallePage() {
     >
       <SaveFlash message={location.state?.flash} />
       <div className="app-fields">
-        <DetailField label="NIT" value={empresa.nitCodigo} />
+        <DetailField label="Identificación tributaria" value={empresa.nitCodigo} />
         <DetailField label="Teléfono" value={empresa.telefono} />
         <DetailField label="Dirección" value={empresa.direccion} />
         {empresa.fechaCreacion ? (

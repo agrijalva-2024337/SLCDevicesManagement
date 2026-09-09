@@ -10,8 +10,9 @@ import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import { RolUsuario, rolUsuarioLabel } from '@/shared/api/contracts';
-import { asOptions, optionalText, phoneField, requireSelect, requireText, validarCorreo } from '@/shared/components/recordFormUtils';
+import { asOptions, optionalText, phoneField, requireSelect, requireText, validarCorreo, validarIdentificacionTributaria } from '@/shared/components/recordFormUtils';
 import { phoneFormFields, phonePayload, validatePhoneFields } from '@/shared/utils/phoneNumber';
+import { buscarPorCodigoTelefonico } from '@/shared/validation/paisesIso';
 
 function switchField() {
   return {
@@ -33,6 +34,8 @@ function requireEmail(value) {
 function optionalEmail(value) {
   return validarCorreo(value, 'correo', 150, { required: false });
 }
+
+const IDENTIFICACION_HINT = 'NIT, RUC, RFC o equivalente según el país';
 
 function duplicateNombre(records, nombre, currentId) {
   const needle = String(nombre ?? '')
@@ -260,18 +263,18 @@ export const maestros = {
     singular: 'proveedor',
     kicker: 'Proveedor',
     registerLabel: 'Registrar proveedor',
-    hint: 'Nombre y NIT son obligatorios. El proveedor queda ligado a una empresa.',
+    hint: 'Nombre e identificación tributaria son obligatorios. El proveedor queda ligado a una empresa.',
     description: 'Casas comerciales ligadas a cada empresa.',
     lookups: ['empresas', 'paises'],
     titleOf: (item) => item.nombre,
     facts: (item, lookups = {}) =>
-      [`NIT ${item.nit}`, lookups.empresaNombres?.[item.idEmpresa], item.nombreContacto].filter(Boolean),
+      [`ID ${item.nit}`, lookups.empresaNombres?.[item.idEmpresa], item.nombreContacto].filter(Boolean),
     listView: {
       emptyTitle: 'No hay proveedores',
       emptyDescription: 'Registre el primer proveedor para usarlo en compras y mantenimiento.',
       columns: (lookups = {}) => [
         { key: 'nombre', header: 'Nombre', primary: true },
-        { key: 'nit', header: 'NIT', numeric: true },
+        { key: 'nit', header: 'Identificación tributaria', numeric: true },
         {
           key: 'empresa',
           header: 'Empresa',
@@ -303,19 +306,30 @@ export const maestros = {
     fields: ({ empresas, paises } = {}) => [
       { name: 'idEmpresa', label: 'Empresa', type: 'select', required: true, options: asOptions(empresas ?? []) },
       { name: 'nombre', label: 'Nombre', required: true, maxLength: 150 },
-      { name: 'nit', label: 'NIT', required: true, maxLength: 50 },
+      {
+        name: 'nit',
+        label: 'Identificación tributaria',
+        required: true,
+        maxLength: 50,
+        hint: IDENTIFICACION_HINT,
+      },
       { name: 'nombreContacto', label: 'Contacto', maxLength: 100 },
       phoneField({ paises }),
       { name: 'correo', label: 'Correo', maxLength: 150, autoComplete: 'email' },
       switchField(),
     ],
-    validate(values, records = [], currentId) {
+    validate(values, records = [], currentId, ctx = {}) {
+      const iso2 =
+        ctx.iso2 ?? buscarPorCodigoTelefonico(values.telefonoPrefijo)?.codigoIso2 ?? undefined;
       const errors = {
         idEmpresa: requireSelect(values.idEmpresa, 'una empresa'),
         nombre: requireText(values.nombre, 'nombre', 150),
-        nit: requireText(values.nit, 'NIT', 50),
+        nit: validarIdentificacionTributaria(values.nit, 'identificación tributaria', 50, {
+          required: true,
+          iso2,
+        }),
         nombreContacto: optionalText(values.nombreContacto, 'contacto', 100),
-        telefono: validatePhoneFields(values),
+        telefono: validatePhoneFields(values, { paises: ctx.paises }),
         correo: optionalEmail(values.correo),
       };
       const nit = String(values.nit ?? '')
@@ -323,9 +337,10 @@ export const maestros = {
         .toLowerCase();
       if (
         nit &&
+        !errors.nit &&
         records.some((item) => String(item.nit).toLowerCase() === nit && String(item.id) !== String(currentId))
       ) {
-        errors.nit = 'Ya existe un proveedor registrado con este NIT.';
+        errors.nit = 'Ya existe un proveedor registrado con esta identificación tributaria.';
       }
       return errors;
     },
@@ -342,7 +357,7 @@ export const maestros = {
     },
     detail: (item, lookups = {}) => [
       { label: 'Empresa', value: lookups.empresaNombres?.[item.idEmpresa] ?? '—' },
-      { label: 'NIT', value: item.nit },
+      { label: 'Identificación tributaria', value: item.nit },
       { label: 'Contacto', value: item.nombreContacto },
       { label: 'Teléfono', value: item.telefono },
       { label: 'Correo', value: item.correo },

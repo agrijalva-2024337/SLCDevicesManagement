@@ -17,6 +17,7 @@ import { StatusBadge } from '@/shared/components/StatusBadge';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 import { resolveSavedId, saveSuccessState } from '@/shared/utils/saveFeedback';
+import { buscarPorCodigoTelefonico } from '@/shared/validation/paisesIso';
 
 function EmpresaFormEditor({ id }) {
   const navigate = useNavigate();
@@ -98,11 +99,17 @@ function EmpresaFormEditor({ id }) {
       title={editing ? item.nombre : 'Nueva empresa'}
       kicker={editing ? 'Editar registro' : 'Registrar empresa'}
       badge={editing ? <StatusBadge active={Boolean(initialValues.habilitado)} /> : null}
-      hint="Complete el registro corporativo. Nombre y NIT son obligatorios."
+      hint="Complete el registro corporativo. Nombre e identificación tributaria son obligatorios."
       fields={empresaFields(paisesList)}
       initialValues={initialValues}
       submitLabel={editing ? 'Guardar cambios' : 'Registrar empresa'}
-      validate={(values) => compactErrors(validateEmpresaForm(values, records, id))}
+      validate={(values) =>
+        compactErrors(
+          validateEmpresaForm(values, records, id, {
+            iso2: buscarPorCodigoTelefonico(values.telefonoPrefijo)?.codigoIso2,
+          }),
+        )
+      }
       onSave={async (values) => {
         const payload = empresaToPayload(values);
         try {
