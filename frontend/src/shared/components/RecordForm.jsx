@@ -110,6 +110,8 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
 
         if (field.type === 'tel') {
           const prefijoName = field.prefijoName ?? `${field.name}Prefijo`;
+          // El prefijo (`values[prefijoName]`) alimenta validarTelefono vía resolvePhoneCountry.
+          // `field.pais` fija el país cuando el formulario ya conoce el ISO (p. ej. sede).
           return (
             <FormField
               key={field.name}
@@ -123,7 +125,7 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
               <PhoneInput
                 id={id}
                 paises={field.paises}
-                prefijo={values[prefijoName] ?? ''}
+                prefijo={values[prefijoName] ?? field.pais?.codigoTelefonico ?? ''}
                 numero={values[field.name] ?? ''}
                 error={errors[field.name]}
                 disabled={Boolean(field.readOnly)}

@@ -1,8 +1,31 @@
 import { optionalText } from '@/shared/components/recordFormUtils';
+import { buscarPorCodigoTelefonico, buscarPorIso2 } from '@/shared/validation/paisesIso';
+import { validarTelefono } from '@/shared/validation/validators';
 
 export function normalizeDialCode(code) {
   const digits = String(code ?? '').replace(/\D/g, '');
   return digits ? `+${digits}` : '';
+}
+
+/** Resuelve el país ISO (con digitos) a partir del prefijo o de un registro de catálogo. */
+export function resolvePhoneCountry({ prefijo, pais, paises } = {}) {
+  if (pais?.digitos) return pais;
+
+  const fromDial = buscarPorCodigoTelefonico(prefijo);
+  if (fromDial) return fromDial;
+
+  const dial = normalizeDialCode(prefijo);
+  const fromList = (paises ?? []).find(
+    (item) => normalizeDialCode(item.codigoTelefonico) === dial,
+  );
+  if (!fromList) return null;
+
+  return (
+    buscarPorIso2(fromList.codigoIso2) ||
+    buscarPorCodigoTelefonico(fromList.codigoTelefonico) || {
+      nombre: fromList.nombre,
+    }
+  );
 }
 
 export function paisesConPrefijo(paises = []) {
@@ -64,11 +87,17 @@ export function phonePayload(values) {
   return joinPhone(values.telefonoPrefijo, values.telefono) || null;
 }
 
-export function validatePhoneFields(values, { label = 'teléfono', max = 30 } = {}) {
+export function validatePhoneFields(
+  values,
+  { label = 'teléfono', max = 30, required = false, pais, paises } = {},
+) {
   const numero = String(values.telefono ?? '').trim();
   const prefijo = String(values.telefonoPrefijo ?? '').trim();
   if (numero && !prefijo) {
     return 'Seleccione el prefijo del país.';
   }
+  const resolved = resolvePhoneCountry({ prefijo, pais, paises });
+  const formatError = validarTelefono(numero, { pais: resolved, label, required });
+  if (formatError) return formatError;
   return optionalText(joinPhone(prefijo, numero), label, max);
 }
