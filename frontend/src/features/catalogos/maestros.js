@@ -10,9 +10,10 @@ import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import { RolUsuario, rolUsuarioLabel } from '@/shared/api/contracts';
-import { asOptions, optionalText, phoneField, requireSelect, requireText, validarCorreo, validarIdentificacionTributaria, validarNombreEntidad, validarNombrePersona, validarTextoLibre } from '@/shared/components/recordFormUtils';
+import { asOptions, optionalText, phoneField, requireSelect, requireText, validarCodigoTelefonico, validarCorreo, validarIdentificacionTributaria, validarIso2, validarIso3, validarNombreEntidad, validarNombrePersona, validarTextoLibre } from '@/shared/components/recordFormUtils';
 import { phoneFormFields, phonePayload, validatePhoneFields } from '@/shared/utils/phoneNumber';
-import { buscarPorCodigoTelefonico } from '@/shared/validation/paisesIso';
+import { buscarPorCodigoTelefonico, buscarPorIso2, buscarPorIso3, buscarPorNombre } from '@/shared/validation/paisesIso';
+import { mensajePaisDesconocido } from '@/features/catalogos/paises/paisForm';
 
 function switchField() {
   return {
@@ -463,7 +464,7 @@ export const maestros = {
     singular: 'país',
     kicker: 'País',
     registerLabel: 'Registrar país',
-    hint: 'Nombre e ISO son obligatorios. El país queda ligado a la empresa.',
+    hint: 'Escriba el nombre, ISO o código telefónico: el resto se completa solo. Solo países del catálogo local.',
     description: 'Catálogo geográfico de cada empresa. Solo el administrador de empresa puede registrarlos.',
     lookups: ['empresas'],
     titleOf: (item) => item.nombre,
@@ -478,8 +479,8 @@ export const maestros = {
     toForm: (item) => ({
       idEmpresa: item.idEmpresa == null ? '' : String(item.idEmpresa),
       nombre: item.nombre ?? '',
-      codigoIso2: item.codigoIso2 ?? '',
-      codigoIso3: item.codigoIso3 ?? '',
+      codigoIso2: String(item.codigoIso2 ?? '').toLowerCase(),
+      codigoIso3: String(item.codigoIso3 ?? '').toLowerCase(),
       codigoTelefonico: item.codigoTelefonico ?? '',
     }),
     fields: ({ empresas = [], rol, editing } = {}) => [
@@ -487,21 +488,48 @@ export const maestros = {
         ? [{ name: 'idEmpresa', label: 'Empresa', type: 'select', required: true, options: asOptions(empresas) }]
         : []),
       { name: 'nombre', label: 'Nombre', required: true, maxLength: 100, wide: true },
-      { name: 'codigoIso2', label: 'ISO 2', required: true, maxLength: 2 },
+      { name: 'codigoIso2', label: 'ISO 2', required: true, maxLength: 2, hint: 'Dos letras en minúsculas (ej. gt)' },
       { name: 'codigoIso3', label: 'ISO 3', required: true, maxLength: 3 },
-      { name: 'codigoTelefonico', label: 'Código telefónico', maxLength: 5 },
+      { name: 'codigoTelefonico', label: 'Código telefónico', maxLength: 5, hint: 'Con o sin + (ej. +502)' },
     ],
     validate(values, _records, _id, { rol } = {}) {
-      const iso2 = requireText(values.codigoIso2, 'ISO 2', 2);
-      const iso3 = requireText(values.codigoIso3, 'ISO 3', 3);
-      return {
+      const errors = {
         idEmpresa:
           rol === RolUsuario.AdministradorGeneral ? requireSelect(values.idEmpresa, 'una empresa') : null,
-        nombre: requireText(values.nombre, 'nombre', 100),
-        codigoIso2: iso2 ?? (values.codigoIso2.trim().length !== 2 ? 'ISO 2 debe tener 2 caracteres.' : null),
-        codigoIso3: iso3 ?? (values.codigoIso3.trim().length !== 3 ? 'ISO 3 debe tener 3 caracteres.' : null),
-        codigoTelefonico: optionalText(values.codigoTelefonico, 'código telefónico', 5),
+        nombre: validarNombreEntidad(values.nombre, 'nombre', 100, { required: true }),
+        codigoIso2: validarIso2(values.codigoIso2, 'ISO-2', { required: true }),
+        codigoIso3: validarIso3(values.codigoIso3, 'ISO-3', { required: true }),
+        codigoTelefonico: validarCodigoTelefonico(values.codigoTelefonico, 'código telefónico', {
+          required: false,
+        }),
       };
+
+      const known = buscarPorNombre(values.nombre);
+      if (!errors.nombre && !known) {
+        errors.nombre = mensajePaisDesconocido(values.nombre);
+      }
+
+      const byIso2 = buscarPorIso2(values.codigoIso2);
+      const byIso3 = buscarPorIso3(values.codigoIso3);
+      if (!errors.codigoIso2 && !byIso2) {
+        errors.codigoIso2 = 'ISO-2 no está en el catálogo local.';
+      }
+      if (!errors.codigoIso3 && !byIso3) {
+        errors.codigoIso3 = 'ISO-3 no está en el catálogo local.';
+      }
+      if (!errors.codigoIso2 && !errors.codigoIso3 && byIso2 && byIso3 && byIso2.codigoIso2 !== byIso3.codigoIso2) {
+        errors.codigoIso3 = `ISO-3 no corresponde a ${byIso2.codigoIso2.toUpperCase()} (esperado ${byIso2.codigoIso3}).`;
+      }
+      if (
+        !errors.codigoTelefonico &&
+        String(values.codigoTelefonico ?? '').trim() &&
+        byIso2 &&
+        buscarPorCodigoTelefonico(values.codigoTelefonico)?.codigoIso2 !== byIso2.codigoIso2
+      ) {
+        errors.codigoTelefonico = `El código telefónico no corresponde a ${byIso2.nombre}.`;
+      }
+
+      return errors;
     },
     toPayload(values, { idEmpresaActiva } = {}) {
       const idEmpresa =
@@ -513,8 +541,8 @@ export const maestros = {
       return {
         idEmpresa,
         nombre: values.nombre.trim(),
-        codigoIso2: values.codigoIso2.trim().toUpperCase(),
-        codigoIso3: values.codigoIso3.trim().toUpperCase(),
+        codigoIso2: values.codigoIso2.trim().toLowerCase(),
+        codigoIso3: values.codigoIso3.trim().toLowerCase(),
         codigoTelefonico: values.codigoTelefonico.trim() || null,
       };
     },
