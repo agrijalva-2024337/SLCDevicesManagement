@@ -263,12 +263,12 @@ export const maestros = {
     singular: 'proveedor',
     kicker: 'Proveedor',
     registerLabel: 'Registrar proveedor',
-    hint: 'Nombre e identificación tributaria son obligatorios. El proveedor queda ligado a una empresa.',
+    hint: 'Nombre e identificación tributaria son obligatorios. Contacto, teléfono y correo son opcionales.',
     description: 'Casas comerciales ligadas a cada empresa.',
     lookups: ['empresas', 'paises'],
     titleOf: (item) => item.nombre,
     facts: (item, lookups = {}) =>
-      [`ID ${item.nit}`, lookups.empresaNombres?.[item.idEmpresa], item.nombreContacto].filter(Boolean),
+      [item.nit, lookups.empresaNombres?.[item.idEmpresa], item.nombreContacto].filter(Boolean),
     listView: {
       emptyTitle: 'No hay proveedores',
       emptyDescription: 'Registre el primer proveedor para usarlo en compras y mantenimiento.',
@@ -282,6 +282,7 @@ export const maestros = {
         },
         { key: 'nombreContacto', header: 'Contacto' },
         { key: 'telefono', header: 'Teléfono' },
+        { key: 'correo', header: 'Correo' },
         { key: 'habilitado', header: 'Estado', type: 'status' },
       ],
     },
@@ -315,7 +316,7 @@ export const maestros = {
       },
       { name: 'nombreContacto', label: 'Contacto', maxLength: 100 },
       phoneField({ paises }),
-      { name: 'correo', label: 'Correo', maxLength: 150, autoComplete: 'email' },
+      { name: 'correo', label: 'Correo', type: 'email', maxLength: 150, autoComplete: 'email' },
       switchField(),
     ],
     validate(values, records = [], currentId, ctx = {}) {
