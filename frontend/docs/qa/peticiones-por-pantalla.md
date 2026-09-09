@@ -44,6 +44,28 @@ Medición del bucle de fetches antes/después del arreglo de `useQueryResource` 
 
 Criterio de rechazo: el mismo recurso >2 veces en desarrollo tras la carga inicial, o cualquier crecimiento en reposo.
 
+## Regresión: datos cruzados entre catálogos
+
+**Bug:** navegar Estados → Países (sin F5) mostraba filas de Estados bajo el título de Países, porque `CatalogoPage` reutiliza la instancia y `catalogKey` era `undefined` → `keyStr === ''` para todos los slugs → el efecto de carga no se reejecutaba.
+
+**Fix:** `catalogListQueryKey(slug, params)` siempre distingue el recurso. Al cambiar `keyStr`, `useQueryResource` resetea `data` al cache del nuevo recurso (o vacío) y vuelve a cargar.
+
+### Checklist manual
+
+1. Abrir `/app/catalogos/estados` → ver nombres de estado.
+2. Clic en Países (sin recargar) → **solo** países (El Salvador, etc.); nada de “Asignado”/“Disponible”.
+3. Volver a Estados → 4 estados con nombre/descripción (no filas “—” arrastradas).
+4. Repetir con Categorías ↔ Proveedores.
+5. `/app/activos`: Network → un GET Activos (×2 solo en StrictMode/dev).
+6. Consola: no debe aparecer el warn de `[queryCache] la clave … se pidió`.
+
+### Prueba automática de claves
+
+```bash
+cd frontend
+node src/shared/data/catalogListQueryKey.check.js
+```
+
 ## Call site Usuarios (Paso 0)
 
 No hay `usuarioService` en `SedesPage`. Quien dispara `GET /api/Usuarios`:

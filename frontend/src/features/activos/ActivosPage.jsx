@@ -54,8 +54,9 @@ export function ActivosPage() {
   const canRetire = canWrite('bajas');
   const canReadUsuarios = canWrite('usuarios');
   const { idActiva } = useEmpresaActiva();
-  const load = useCallback(() => activoService.getAll(), []);
-  const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(load);
+  const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(
+    activoService.getAll,
+  );
   const crud = useCrudOverlay();
   const [movimiento, setMovimiento] = useState(null);
   const categorias = useResource(categoriaService.getAll);

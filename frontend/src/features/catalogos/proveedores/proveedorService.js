@@ -1,5 +1,7 @@
 import { proveedores } from '@/features/catalogos/mocks/proveedores';
 import { apiPaths } from '@/shared/api/paths';
+import { registerLoaderKey } from '@/shared/data/loaderKeys';
+import { listQueryKey, resourceFromEndpoint } from '@/shared/data/queryKeys';
 import { createMockCrudService } from '@/shared/services/createMockCrudService';
 
 const crud = createMockCrudService({
@@ -29,6 +31,8 @@ export async function getAll(params) {
   const rows = await crud.getAll(params);
   return Array.isArray(rows) ? rows.map(fromApi) : rows;
 }
+
+registerLoaderKey(getAll, listQueryKey(resourceFromEndpoint(apiPaths.proveedores), {}));
 
 export async function getById(id) {
   return fromApi(await crud.getById(id));

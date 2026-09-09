@@ -16,7 +16,7 @@ import { OverlayOutlet } from '@/shared/components/OverlayOutlet';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { RecordActions, RegisterButton } from '@/shared/components/RecordActions';
 import { RecordCard } from '@/shared/components/RecordCard';
-import { listQueryKey } from '@/shared/data/queryKeys';
+import { catalogListQueryKey } from '@/shared/data/queryKeys';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useResource } from '@/shared/hooks/useResource';
 import MagicBento from '@/shared/vendor/react-bits/MagicBento';
@@ -47,10 +47,9 @@ export function CatalogoPage() {
   const canList = !maestro?.requiresWriteToList || allowWrite;
   const neededLookups = maestro?.lookups ?? [];
   const needsSedes = maestro?.scope !== 'global' || neededLookups.includes('sedes');
-  const catalogKey =
-    slug === 'usuarios' && idActiva != null
-      ? listQueryKey('usuarios', { idEmpresa: idActiva })
-      : undefined;
+  const listParams =
+    slug === 'usuarios' && idActiva != null ? { idEmpresa: idActiva } : {};
+  const catalogKey = catalogListQueryKey(slug, listParams);
   const loadAll = async () => {
     if (!maestro?.service?.getAll || !canList) return [];
     if (slug === 'usuarios' && idActiva != null) {
