@@ -44,7 +44,8 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(corsOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials());
+            .AllowCredentials()
+            .WithExposedHeaders("Content-Disposition"));
 });
 
 var app = builder.Build();
