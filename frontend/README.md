@@ -376,15 +376,31 @@ No uses TanStack Query. El cache vive en `src/shared/data/queryCache.js` y se co
 - `useResource(loadFn, { key?, enabled?, ttlMs? })` → `{ data, isLoading, errorMessage, reload }`
 - `useCatalogCollection(loadFn, options)` → lista + filtros de habilitado + banner
 
-`createMockCrudService` registra la key de `getAll` en un `WeakMap` (`loaderKeys`). Loaders con params (`getAll({ idEmpresa })`, reportes, `getById`) deben pasar `key: listQueryKey(...)` / `detailQueryKey` / `reportQueryKey`.
+`createMockCrudService` registra la key **base** de `getAll` (`[resource, 'list']`) en un `WeakMap`. **Cualquier `getAll(params)` exige `key: listQueryKey(resource, params)` en el call site** (igual reportes con `reportQueryKey` y detalles con `detailQueryKey`).
 
-Reglas:
+#### Regla de dependencias del efecto
 
-1. Un GET por key; StrictMode reusa la promesa in-flight.
-2. Selectores puros sobre filas ya cargadas (p. ej. `filtrarBajas(asignacionesRows, tipos)`), no un segundo `getAll` del mismo recurso.
-3. El padre (`CatalogoPage` / sedes / empresas) carga lookups y los pasa por `OverlayOutlet`; el form hijo reusa `outlet.lookups` y solo hace fallback al cache si faltan.
-4. Mutaciones CRUD e invalidan vía `invalidateAfterMutation`; rutas API custom (baja, traslado, devolver…) también.
-5. Logout llama `clearQueryCache()`. Auditoría en dev: `window.__slcRequests.report()` → `docs/qa/fetch-audit-*.md`.
+En `useQueryResource`, las dependencias del efecto de carga deben ser **strings serializados o refs**, nunca un arreglo/objeto construido en el render (`listQueryKey(...)` / `reportQueryKey(...)` crean un arreglo nuevo cada vez). La identidad estable se obtiene serializando la key (`keyStr`) y reusando la misma referencia de arreglo mientras el string no cambie.
+
+#### TTL
+
+| Tipo | TTL |
+| --- | --- |
+| Catálogos | 10 min |
+| Transaccionales (activos, asignaciones, …) | 30 s |
+| Reportes | 60 s |
+
+#### Aviso en desarrollo
+
+Si una key se pide **más de 10 veces en 5 s**, `queryCache` emite un `console.warn` una sola vez por clave (solo `import.meta.env.DEV`). Si aparece, hay un bucle o una dependencia inestable. No bloquea la UI.
+
+Reglas operativas:
+
+1. Un GET por key; StrictMode reusa la promesa in-flight (no se aborta al soltar el último suscriptor).
+2. Selectores puros sobre filas ya cargadas; no un segundo `getAll` del mismo recurso.
+3. El padre carga lookups y los pasa por `OverlayOutlet`; el form hijo reusa `outlet.lookups`.
+4. Mutaciones invalidan vía `invalidateAfterMutation`.
+5. Logout llama `clearQueryCache()`. Auditoría: `window.__slcRequests.report()` y `docs/qa/peticiones-por-pantalla.md`.
 
 ## Componentes compartidos
 
