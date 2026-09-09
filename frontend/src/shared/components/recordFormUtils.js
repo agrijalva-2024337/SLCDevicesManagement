@@ -36,3 +36,21 @@ export function phoneField({ label = 'Teléfono', paises = [], maxLength = 30, r
     paises,
   };
 }
+
+export {
+  validarAlfanumerico,
+  validarCodigoTelefonico,
+  validarCorreo,
+  validarCosto,
+  validarIdentificacionTributaria,
+  validarIso2,
+  validarIso3,
+  validarMarcaModelo,
+  validarMoneda,
+  validarNombreEntidad,
+  validarNombrePersona,
+  validarPassword,
+  validarTelefono,
+  validarTextoLibre,
+  validarUsername,
+} from '@/shared/validation/validators';
