@@ -10,7 +10,7 @@ import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import { RolUsuario, rolUsuarioLabel } from '@/shared/api/contracts';
-import { asOptions, optionalText, phoneField, requireSelect, requireText, validarCodigoTelefonico, validarCorreo, validarIdentificacionTributaria, validarIso2, validarIso3, validarNombreEntidad, validarNombrePersona, validarTextoLibre } from '@/shared/components/recordFormUtils';
+import { asOptions, phoneField, requireSelect, validarCodigoTelefonico, validarCorreo, validarIdentificacionTributaria, validarIso2, validarIso3, validarNombreEntidad, validarNombrePersona, validarPassword, validarTextoLibre, validarUsername } from '@/shared/components/recordFormUtils';
 import { phoneFormFields, phonePayload, validatePhoneFields } from '@/shared/utils/phoneNumber';
 import { buscarPorCodigoTelefonico, buscarPorIso2, buscarPorIso3, buscarPorNombre } from '@/shared/validation/paisesIso';
 import { mensajePaisDesconocido } from '@/features/catalogos/paises/paisForm';
@@ -719,10 +719,10 @@ export const maestros = {
       const rol = Number(values.rol);
       const password = String(values.password ?? '');
       const errors = {
-        nombres: requireText(values.nombres, 'nombres', 100),
-        apellidos: requireText(values.apellidos, 'apellidos', 100),
+        nombres: validarNombrePersona(values.nombres, 'nombres', 100, { required: true }),
+        apellidos: validarNombrePersona(values.apellidos, 'apellidos', 100, { required: true }),
         correo: requireEmail(values.correo),
-        username: requireText(values.username, 'username', 50),
+        username: validarUsername(values.username, 'usuario', 50, { required: true }),
         rol: requireSelect(values.rol, 'un rol'),
       };
 
@@ -731,16 +731,9 @@ export const maestros = {
       }
 
       if (!editing) {
-        errors.password = requireText(password, 'password', 128);
-        if (!errors.password && password.trim().length < 8) {
-          errors.password = 'El campo password debe tener al menos 8 caracteres.';
-        }
+        errors.password = validarPassword(password, 'contraseña', { required: true });
       } else if (password.trim()) {
-        if (password.trim().length < 8) {
-          errors.password = 'El campo password debe tener al menos 8 caracteres.';
-        } else if (password.trim().length > 128) {
-          errors.password = 'El campo password no debe superar los 128 caracteres.';
-        }
+        errors.password = validarPassword(password, 'contraseña', { required: true });
       }
 
       const correo = String(values.correo ?? '')
@@ -748,6 +741,7 @@ export const maestros = {
         .toLowerCase();
       if (
         correo &&
+        !errors.correo &&
         records.some((item) => String(item.correo).trim().toLowerCase() === correo && String(item.id) !== String(currentId))
       ) {
         errors.correo = 'Ya existe un usuario con el mismo correo.';
@@ -756,9 +750,10 @@ export const maestros = {
       const username = String(values.username ?? '').trim();
       if (
         username &&
+        !errors.username &&
         records.some((item) => String(item.username) === username && String(item.id) !== String(currentId))
       ) {
-        errors.username = 'Ya existe un usuario con el mismo username.';
+        errors.username = 'Ya existe un usuario con el mismo usuario.';
       }
 
       return errors;
@@ -850,13 +845,15 @@ export const maestros = {
       phoneField({ paises }),
       { ...switchField(), hiddenWhen: () => !editing },
     ],
-    validate(values) {
+    validate(values, _records, _id, ctx = {}) {
       return {
         idArea: requireSelect(values.idArea, 'un área'),
-        nombreCompleto: requireText(values.nombreCompleto, 'nombre completo', 150),
-        cargo: optionalText(values.cargo, 'cargo', 100),
+        nombreCompleto: validarNombrePersona(values.nombreCompleto, 'nombre completo', 150, {
+          required: true,
+        }),
+        cargo: validarNombrePersona(values.cargo, 'cargo', 100, { required: false }),
         correo: optionalEmail(values.correo),
-        telefono: validatePhoneFields(values),
+        telefono: validatePhoneFields(values, { paises: ctx.paises }),
       };
     },
     toPayload(values, { editing } = {}) {
