@@ -1,8 +1,26 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { fetchQuery, getQueryData, invalidateQueries, serializeQueryKey, subscribe } from '@/shared/data/queryCache';
 import { getLoaderQueryKey } from '@/shared/data/loaderKeys';
 import { ttlForKey } from '@/shared/data/queryKeys';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
+
+const EMPTY_LIST = Object.freeze([]);
+
+/** Reusa la misma referencia de arreglo mientras la clave serializada no cambie. */
+const keyIdentityByStr = new Map();
+
+function stableResolvedKey(resolved) {
+  if (!resolved) {
+    return undefined;
+  }
+  const keyStr = serializeQueryKey(resolved);
+  const cached = keyIdentityByStr.get(keyStr);
+  if (cached) {
+    return cached;
+  }
+  keyIdentityByStr.set(keyStr, resolved);
+  return resolved;
+}
 
 function isAbortError(error) {
   return Boolean(
@@ -20,10 +38,13 @@ function resolveKey(loadFn, explicitKey) {
   return getLoaderQueryKey(loadFn);
 }
 
-export function useQueryResource(loadFn, { key, ttlMs, enabled = true, initialData = [] } = {}) {
-  const resolvedKey = resolveKey(loadFn, key);
+export function useQueryResource(loadFn, { key, ttlMs, enabled = true, initialData = EMPTY_LIST } = {}) {
+  const resolvedKey = stableResolvedKey(resolveKey(loadFn, key));
   const keyStr = resolvedKey ? serializeQueryKey(resolvedKey) : '';
-  const ttl = ttlMs ?? (resolvedKey ? ttlForKey(resolvedKey) : 30_000);
+  const ttl = useMemo(
+    () => ttlMs ?? (resolvedKey ? ttlForKey(resolvedKey) : 30_000),
+    [resolvedKey, ttlMs],
+  );
 
   const [data, setData] = useState(() => {
     if (!resolvedKey) {
@@ -42,50 +63,70 @@ export function useQueryResource(loadFn, { key, ttlMs, enabled = true, initialDa
     return getQueryData(resolvedKey) === undefined;
   });
   const [errorMessage, setErrorMessage] = useState(null);
+
   const loadFnRef = useRef(loadFn);
+  const initialDataRef = useRef(initialData);
+  const enabledRef = useRef(enabled);
+  const resolvedKeyRef = useRef(resolvedKey);
+  const ttlRef = useRef(ttl);
   const cancelRef = useRef(false);
+
   useEffect(() => {
     loadFnRef.current = loadFn;
   }, [loadFn]);
 
-  const run = useCallback(
-    async ({ force = false, signal } = {}) => {
-      if (!enabled) {
-        return initialData;
+  useEffect(() => {
+    initialDataRef.current = initialData;
+  }, [initialData]);
+
+  useEffect(() => {
+    enabledRef.current = enabled;
+  }, [enabled]);
+
+  useEffect(() => {
+    resolvedKeyRef.current = resolvedKey;
+  }, [resolvedKey]);
+
+  useEffect(() => {
+    ttlRef.current = ttl;
+  }, [ttl]);
+
+  const run = useCallback(async ({ force = false, signal } = {}) => {
+    if (!enabledRef.current) {
+      return initialDataRef.current;
+    }
+
+    const currentFn = loadFnRef.current;
+    const currentKey = resolvedKeyRef.current;
+    const currentTtl = ttlRef.current;
+    const fallback = initialDataRef.current;
+
+    try {
+      let result;
+      if (!currentKey) {
+        result = await currentFn();
+      } else {
+        result = await fetchQuery(currentKey, () => currentFn(), {
+          ttlMs: force ? 0 : currentTtl,
+          signal,
+        });
       }
 
-      const currentFn = loadFnRef.current;
-
-      try {
-        let result;
-        if (!resolvedKey) {
-          result = await currentFn();
-        } else {
-          // El AbortController compartido vive en fetchQuery; no se pasa el signal
-          // del componente para no cancelar la petición de otros suscriptores.
-          result = await fetchQuery(resolvedKey, () => currentFn(), {
-            ttlMs: force ? 0 : ttl,
-            signal,
-          });
-        }
-
-        const next = result === undefined ? initialData : result;
-        if (cancelRef.current || signal?.aborted) {
-          return next;
-        }
-        setData(next);
-        setErrorMessage(null);
+      const next = result === undefined ? fallback : result;
+      if (cancelRef.current || signal?.aborted) {
         return next;
-      } catch (error) {
-        if (isAbortError(error) || signal?.aborted) {
-          throw error;
-        }
-        setErrorMessage(getErrorMessage(error));
+      }
+      setData(next);
+      setErrorMessage(null);
+      return next;
+    } catch (error) {
+      if (isAbortError(error) || signal?.aborted) {
         throw error;
       }
-    },
-    [enabled, initialData, resolvedKey, ttl],
-  );
+      setErrorMessage(getErrorMessage(error));
+      throw error;
+    }
+  }, []);
 
   useEffect(() => {
     if (!enabled) {
@@ -95,9 +136,10 @@ export function useQueryResource(loadFn, { key, ttlMs, enabled = true, initialDa
     const controller = new AbortController();
     let cancelled = false;
     cancelRef.current = false;
+    const currentKey = resolvedKeyRef.current;
 
     async function load() {
-      const cached = resolvedKey ? getQueryData(resolvedKey) : undefined;
+      const cached = currentKey ? getQueryData(currentKey) : undefined;
       if (cached === undefined) {
         setIsLoading(true);
       }
@@ -115,8 +157,8 @@ export function useQueryResource(loadFn, { key, ttlMs, enabled = true, initialDa
       }
     }
 
-    const unsubscribe = resolvedKey
-      ? subscribe(resolvedKey, (value, entry) => {
+    const unsubscribe = currentKey
+      ? subscribe(currentKey, (value, entry) => {
           if (cancelled) {
             return;
           }
@@ -140,11 +182,13 @@ export function useQueryResource(loadFn, { key, ttlMs, enabled = true, initialDa
       controller.abort();
       unsubscribe();
     };
-  }, [enabled, keyStr, resolvedKey, run]);
+    // Solo enabled + keyStr: resolvedKey/run son estables o se leen de refs.
+  }, [enabled, keyStr, run]);
 
   const reload = useCallback(async () => {
-    if (resolvedKey) {
-      invalidateQueries(resolvedKey);
+    const currentKey = resolvedKeyRef.current;
+    if (currentKey) {
+      invalidateQueries(currentKey);
     }
     setIsLoading(true);
     try {
@@ -156,7 +200,7 @@ export function useQueryResource(loadFn, { key, ttlMs, enabled = true, initialDa
     } finally {
       setIsLoading(false);
     }
-  }, [resolvedKey, run]);
+  }, [run]);
 
   return { data, isLoading, errorMessage, reload };
 }

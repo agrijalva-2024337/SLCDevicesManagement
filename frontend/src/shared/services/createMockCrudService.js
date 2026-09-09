@@ -72,8 +72,10 @@ export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS 
     return response.data;
   }
 
-  // Asociamos esta función con una key de consulta estable para que useResource
-  // pueda deduplicar llamadas in-flight en StrictMode.
+  // Clave base sin params: [resource, 'list'].
+  // WeakMap solo admite una key por función; getAll(params) NO puede deducir params.
+  // Cualquier llamada con filtros exige key explícito en el call site:
+  //   useResource(() => service.getAll(params), { key: listQueryKey(resource, params) })
   registerLoaderKey(getAll, listQueryKey(resource, {}));
 
   async function getById(id, { signal } = {}) {

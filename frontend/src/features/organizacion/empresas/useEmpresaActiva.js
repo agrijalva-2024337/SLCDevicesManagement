@@ -55,8 +55,8 @@ export function EmpresaActivaProvider({ children }) {
   }, []);
 
   const empresasValidas = useMemo(
-    () => (empresas ?? []).filter((empresa) => empresa.habilitado !== false),
-    [empresas],
+    () => (empresasResource.data ?? []).filter((empresa) => empresa.habilitado !== false),
+    [empresasResource.data],
   );
 
   const idActiva = useMemo(() => {
@@ -66,13 +66,13 @@ export function EmpresaActivaProvider({ children }) {
     if (selectedId == null) {
       return null;
     }
-    if (isLoading) {
+    if (empresasResource.isLoading) {
       return selectedId;
     }
     return empresasValidas.some((empresa) => Number(empresa.id) === Number(selectedId))
       ? selectedId
       : null;
-  }, [empresasValidas, idEmpresa, isAdminGeneral, isLoading, selectedId]);
+  }, [empresasResource.isLoading, empresasValidas, idEmpresa, isAdminGeneral, selectedId]);
 
   const value = useMemo(
     () => ({

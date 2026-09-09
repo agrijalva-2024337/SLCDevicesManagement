@@ -10,6 +10,11 @@ import { apiPaths } from '@/shared/api/paths';
 import { env } from '@/shared/config/env';
 import httpClient from '@/shared/services/httpClient';
 
+/**
+ * Reportes no registran loaderKeys: cada función recibe params distintos y el call site
+ * debe pasar siempre `key: reportQueryKey(nombre, params)` (DashboardPage, ActivosReportePage).
+ */
+
 function wait() {
   return new Promise((resolve) => {
     setTimeout(resolve, 280);
