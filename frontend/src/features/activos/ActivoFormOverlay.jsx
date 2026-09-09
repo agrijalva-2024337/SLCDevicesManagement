@@ -3,9 +3,13 @@ import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import {
   asOptions,
   compactErrors,
-  optionalText,
   requireSelect,
-  requireText,
+  validarAlfanumerico,
+  validarCosto,
+  validarMarcaModelo,
+  validarMoneda,
+  validarNombreEntidad,
+  validarTextoLibre,
 } from '@/shared/components/recordFormUtils';
 import { ubicacionesDeEmpresa } from '@/features/inventario/trasladoRuta';
 
@@ -67,7 +71,10 @@ function activoToPayload(values) {
     numeroSerie: values.numeroSerie.trim() || null,
     fechaCompra: values.fechaCompra,
     costoAdquisicion: Number(values.costoAdquisicion || 0),
-    moneda: values.moneda.trim() || 'GTQ',
+    moneda:
+      String(values.moneda ?? '')
+        .trim()
+        .toUpperCase() || 'GTQ',
     numeroFactura: values.numeroFactura.trim() || null,
     fechaVencimientoGarantia: values.fechaVencimientoGarantia,
     observaciones: values.observaciones.trim() || null,
@@ -126,8 +133,15 @@ export function ActivoFormOverlay({
       { name: 'modelo', label: 'Modelo', maxLength: 100 },
       { name: 'numeroSerie', label: 'Número de serie', maxLength: 100 },
       { name: 'fechaCompra', label: 'Fecha de compra', type: 'date', required: true },
-      { name: 'costoAdquisicion', label: 'Costo de adquisición', type: 'number', min: 0, step: '0.01' },
-      { name: 'moneda', label: 'Moneda', maxLength: 10 },
+      {
+        name: 'costoAdquisicion',
+        label: 'Costo de adquisición',
+        type: 'number',
+        min: 0,
+        step: '0.01',
+        hint: 'Hasta dos decimales, con punto. Ejemplo: 1250.50. Máximo 9999999999.99',
+      },
+      { name: 'moneda', label: 'Moneda', maxLength: 10, hint: 'Código ISO de 3 letras (ej. GTQ)' },
       { name: 'numeroFactura', label: 'Número de factura', maxLength: 50 },
       { name: 'fechaVencimientoGarantia', label: 'Vencimiento de garantía', type: 'date', required: true },
       { name: 'descripcion', label: 'Descripción', type: 'textarea', maxLength: 300, wide: true },
@@ -162,27 +176,38 @@ export function ActivoFormOverlay({
       submitLabel={editing ? 'Guardar cambios' : 'Registrar activo'}
       validate={(values) =>
         compactErrors({
-          nombre: requireText(values.nombre, 'nombre', 150),
+          nombre: validarNombreEntidad(values.nombre, 'nombre', 150, { required: true }),
           idCategoriaActivo: requireSelect(values.idCategoriaActivo, 'una categoría'),
           idProveedor: requireSelect(values.idProveedor, 'un proveedor'),
           idUbicacion: requireSelect(values.idUbicacion, 'una ubicación'),
           fechaCompra: requireSelect(values.fechaCompra, 'una fecha de compra'),
           fechaVencimientoGarantia: requireSelect(values.fechaVencimientoGarantia, 'una fecha de garantía'),
-          marca: optionalText(values.marca, 'marca', 100),
-          modelo: optionalText(values.modelo, 'modelo', 100),
-          numeroSerie: optionalText(values.numeroSerie, 'número de serie', 100),
-          descripcion: optionalText(values.descripcion, 'descripción', 300),
-          especificacionesHardware: optionalText(
+          marca: validarMarcaModelo(values.marca, 'marca', 100, { required: false }),
+          modelo: validarMarcaModelo(values.modelo, 'modelo', 100, { required: false }),
+          numeroSerie: validarAlfanumerico(values.numeroSerie, 'número de serie', 100, {
+            required: false,
+          }),
+          costoAdquisicion: validarCosto(values.costoAdquisicion, 'costo', { required: false }),
+          moneda: validarMoneda(values.moneda, 'moneda', { required: false }),
+          numeroFactura: validarAlfanumerico(values.numeroFactura, 'número de factura', 50, {
+            required: false,
+          }),
+          descripcion: validarTextoLibre(values.descripcion, 'descripción', 300, { required: false }),
+          especificacionesHardware: validarTextoLibre(
             values.especificacionesHardware,
             'especificaciones de hardware',
             500,
+            { required: false },
           ),
-          perifericosAdicionales: optionalText(
+          perifericosAdicionales: validarTextoLibre(
             values.perifericosAdicionales,
             'periféricos adicionales',
             500,
+            { required: false },
           ),
-          observaciones: optionalText(values.observaciones, 'observaciones', 500),
+          observaciones: validarTextoLibre(values.observaciones, 'observaciones', 500, {
+            required: false,
+          }),
         })
       }
       onSave={(values) => onSave(activoToPayload(values))}
