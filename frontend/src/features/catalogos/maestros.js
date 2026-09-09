@@ -10,7 +10,7 @@ import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import { RolUsuario, rolUsuarioLabel } from '@/shared/api/contracts';
-import { asOptions, optionalText, phoneField, requireSelect, requireText, validarCorreo, validarIdentificacionTributaria } from '@/shared/components/recordFormUtils';
+import { asOptions, optionalText, phoneField, requireSelect, requireText, validarCorreo, validarIdentificacionTributaria, validarNombreEntidad, validarNombrePersona, validarTextoLibre } from '@/shared/components/recordFormUtils';
 import { phoneFormFields, phonePayload, validatePhoneFields } from '@/shared/utils/phoneNumber';
 import { buscarPorCodigoTelefonico } from '@/shared/validation/paisesIso';
 
@@ -107,8 +107,8 @@ function nombreDescripcionMaestro({
     ],
     validate(values, records = [], currentId) {
       const errors = {
-        nombre: requireText(values.nombre, 'nombre', 50),
-        descripcion: optionalText(values.descripcion, 'descripción', 150),
+        nombre: validarNombreEntidad(values.nombre, 'nombre', 50, { required: true }),
+        descripcion: validarTextoLibre(values.descripcion, 'descripción', 150, { required: false }),
       };
       if (!errors.nombre && duplicateNombre(records, values.nombre, currentId)) {
         errors.nombre = `Ya existe un ${singular} con el mismo nombre.`;
@@ -168,8 +168,8 @@ export const maestros = {
     validate(values) {
       return {
         idSede: requireSelect(values.idSede, 'una sede'),
-        nombre: requireText(values.nombre, 'nombre', 100),
-        descripcion: optionalText(values.descripcion, 'descripción', 200),
+        nombre: validarNombreEntidad(values.nombre, 'nombre', 100, { required: true }),
+        descripcion: validarTextoLibre(values.descripcion, 'descripción', 200, { required: false }),
       };
     },
     toPayload(values) {
@@ -234,8 +234,8 @@ export const maestros = {
       return {
         idEmpresa:
           rol === RolUsuario.AdministradorGeneral ? requireSelect(values.idEmpresa, 'una empresa') : null,
-        nombre: requireText(values.nombre, 'nombre', 100),
-        descripcion: optionalText(values.descripcion, 'descripción', 200),
+        nombre: validarNombreEntidad(values.nombre, 'nombre', 100, { required: true }),
+        descripcion: validarTextoLibre(values.descripcion, 'descripción', 200, { required: false }),
       };
     },
     toPayload(values, { idEmpresaActiva } = {}) {
@@ -323,12 +323,12 @@ export const maestros = {
         ctx.iso2 ?? buscarPorCodigoTelefonico(values.telefonoPrefijo)?.codigoIso2 ?? undefined;
       const errors = {
         idEmpresa: requireSelect(values.idEmpresa, 'una empresa'),
-        nombre: requireText(values.nombre, 'nombre', 150),
+        nombre: validarNombreEntidad(values.nombre, 'nombre', 150, { required: true }),
         nit: validarIdentificacionTributaria(values.nit, 'identificación tributaria', 50, {
           required: true,
           iso2,
         }),
-        nombreContacto: optionalText(values.nombreContacto, 'contacto', 100),
+        nombreContacto: validarNombrePersona(values.nombreContacto, 'contacto', 100, { required: false }),
         telefono: validatePhoneFields(values, { paises: ctx.paises }),
         correo: optionalEmail(values.correo),
       };
@@ -411,8 +411,8 @@ export const maestros = {
     validate(values) {
       const errors = {
         idSede: requireSelect(values.idSede, 'una sede'),
-        nombre: requireText(values.nombre, 'nombre', 100),
-        descripcion: optionalText(values.descripcion, 'descripción', 200),
+        nombre: validarNombreEntidad(values.nombre, 'nombre', 100, { required: true }),
+        descripcion: validarTextoLibre(values.descripcion, 'descripción', 200, { required: false }),
       };
       const latEmpty = String(values.latitud ?? '').trim() === '';
       const lngEmpty = String(values.longitud ?? '').trim() === '';
