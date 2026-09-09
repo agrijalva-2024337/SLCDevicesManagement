@@ -1,11 +1,13 @@
 import { useMemo } from 'react';
 import { useAuth } from '@/features/auth/useAuth';
+import * as paisService from '@/features/catalogos/paises/paisService';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import { filterRowsByEmpresa, useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { DataTable } from '@/shared/components/DataTable';
 import { OverlayOutlet } from '@/shared/components/OverlayOutlet';
 import { RegisterButton } from '@/shared/components/RecordActions';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
+import { useResource } from '@/shared/hooks/useResource';
 
 export { EmpresaDetallePage } from '@/features/organizacion/empresas/EmpresaDetallePage';
 export { EmpresaFormPage } from '@/features/organizacion/empresas/EmpresaFormPage';
@@ -39,11 +41,19 @@ export function EmpresasPage() {
   const allowEdit = canWrite('empresas');
   const { rows, visibleRows, isLoading, errorMessage, banner, reload } =
     useCatalogCollection(empresaService.getAll);
+  const paises = useResource(paisService.getAll);
   const scopedRows = useMemo(
     () => filterRowsByEmpresa(visibleRows, idActiva, { idField: 'id' }),
     [visibleRows, idActiva],
   );
-  const outletContext = useMemo(() => ({ reload, rows }), [reload, rows]);
+  const outletContext = useMemo(
+    () => ({
+      reload,
+      rows,
+      lookups: { paises: paises.data },
+    }),
+    [paises.data, reload, rows],
+  );
 
   if (errorMessage) {
     return (

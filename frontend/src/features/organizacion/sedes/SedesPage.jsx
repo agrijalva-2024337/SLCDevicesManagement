@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useAuth } from '@/features/auth/useAuth';
 import { nameById } from '@/features/catalogos/maestros';
+import * as paisService from '@/features/catalogos/paises/paisService';
 import { filterRowsByEmpresa, useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
@@ -38,8 +39,20 @@ export function SedesPage() {
     [visibleRows, idActiva],
   );
   const empresas = useResource(empresaService.getAll);
+  const paises = useResource(paisService.getAll);
   const empresaNombres = useMemo(() => nameById(empresas.data), [empresas.data]);
-  const outletContext = useMemo(() => ({ reload, rows }), [reload, rows]);
+  const outletContext = useMemo(
+    () => ({
+      reload,
+      rows,
+      lookups: {
+        empresas: empresas.data,
+        paises: paises.data,
+        empresaNombres,
+      },
+    }),
+    [empresas.data, empresaNombres, paises.data, reload, rows],
+  );
 
   const columns = useMemo(
     () => [

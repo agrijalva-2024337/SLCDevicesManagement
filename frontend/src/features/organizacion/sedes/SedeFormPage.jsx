@@ -27,8 +27,10 @@ function enabledRecords(list) {
 function SedeFormEditor({ id }) {
   const navigate = useNavigate();
   const outlet = useOutletContext() ?? {};
-  const empresas = useResource(empresaService.getAll);
-  const paises = useResource(paisService.getAll);
+  const hasOutletEmpresas = Array.isArray(outlet.lookups?.empresas);
+  const hasOutletPaises = Array.isArray(outlet.lookups?.paises);
+  const empresas = useResource(empresaService.getAll, { enabled: !hasOutletEmpresas });
+  const paises = useResource(paisService.getAll, { enabled: !hasOutletPaises });
   const editing = Boolean(id);
   const close = () => navigate('/app/catalogos/sedes');
 
@@ -77,7 +79,7 @@ function SedeFormEditor({ id }) {
     );
   }
 
-  if (!ready) {
+  if (!ready || (!hasOutletEmpresas && empresas.isLoading) || (!hasOutletPaises && paises.isLoading)) {
     return (
       <DetailOverlay open title="Sedes" kicker={editing ? 'Editar registro' : 'Registrar sede'} onClose={close}>
         <div className="app-feedback app-feedback--loading" role="status">
@@ -87,6 +89,8 @@ function SedeFormEditor({ id }) {
     );
   }
 
+  const empresasList = hasOutletEmpresas ? outlet.lookups.empresas : empresas.data;
+  const paisesList = hasOutletPaises ? outlet.lookups.paises : paises.data;
   const initialValues = item ? sedeToForm(item) : emptySedeForm();
 
   return (
@@ -98,8 +102,8 @@ function SedeFormEditor({ id }) {
       hint="La sede pertenece a una empresa y a un país de esa misma empresa. El nombre es obligatorio."
       fields={(values) =>
         sedeFields({
-          empresas: enabledRecords(empresas.data),
-          paises: paisesDeEmpresa(paises.data, values.idEmpresa),
+          empresas: enabledRecords(empresasList),
+          paises: paisesDeEmpresa(paisesList, values.idEmpresa),
         })
       }
       deriveValues={(next, prev) =>
@@ -107,7 +111,7 @@ function SedeFormEditor({ id }) {
       }
       initialValues={initialValues}
       submitLabel={editing ? 'Guardar cambios' : 'Registrar sede'}
-      validate={(values) => compactErrors(validateSedeForm(values, paises.data))}
+      validate={(values) => compactErrors(validateSedeForm(values, paisesList))}
       onSave={async (values) => {
         const payload = sedeToPayload(values);
         try {

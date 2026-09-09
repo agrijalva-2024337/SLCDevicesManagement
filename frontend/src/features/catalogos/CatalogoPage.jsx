@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import { SinPermiso } from '@/features/auth/RutaProtegida';
@@ -16,6 +16,7 @@ import { OverlayOutlet } from '@/shared/components/OverlayOutlet';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { RecordActions, RegisterButton } from '@/shared/components/RecordActions';
 import { RecordCard } from '@/shared/components/RecordCard';
+import { listQueryKey } from '@/shared/data/queryKeys';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useResource } from '@/shared/hooks/useResource';
 import MagicBento from '@/shared/vendor/react-bits/MagicBento';
@@ -44,19 +45,29 @@ export function CatalogoPage() {
   const allowWrite = canWrite(slug);
   const maestro = getMaestro(slug);
   const canList = !maestro?.requiresWriteToList || allowWrite;
-  const loadAll = useCallback(async () => {
-    if (!maestro?.service.getAll || !canList) return [];
+  const neededLookups = maestro?.lookups ?? [];
+  const needsSedes = maestro?.scope !== 'global' || neededLookups.includes('sedes');
+  const catalogKey =
+    slug === 'usuarios' && idActiva != null
+      ? listQueryKey('usuarios', { idEmpresa: idActiva })
+      : undefined;
+  const loadAll = async () => {
+    if (!maestro?.service?.getAll || !canList) return [];
     if (slug === 'usuarios' && idActiva != null) {
       return maestro.service.getAll({ idEmpresa: idActiva });
     }
     return maestro.service.getAll();
-  }, [canList, idActiva, maestro, slug]);
-  const { rows, visibleRows, isLoading, errorMessage, banner, reload } = useCatalogCollection(loadAll);
-  const empresas = useResource(empresaService.getAll);
-  const sedes = useResource(sedeService.getAll);
-  const areas = useResource(areaService.getAll);
-  const paises = useResource(paisService.getAll);
-  const ubicaciones = useResource(ubicacionService.getAll);
+  };
+  const { rows, visibleRows, isLoading, errorMessage, banner, reload } = useCatalogCollection(loadAll, {
+    key: catalogKey,
+  });
+  const empresas = useResource(empresaService.getAll, { enabled: neededLookups.includes('empresas') });
+  const sedes = useResource(sedeService.getAll, { enabled: needsSedes });
+  const areas = useResource(areaService.getAll, { enabled: neededLookups.includes('areas') });
+  const paises = useResource(paisService.getAll, { enabled: neededLookups.includes('paises') });
+  const ubicaciones = useResource(ubicacionService.getAll, {
+    enabled: neededLookups.includes('ubicaciones'),
+  });
 
   const lookups = useMemo(
     () => ({

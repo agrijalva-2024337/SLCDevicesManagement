@@ -24,17 +24,32 @@ function enabledRecords(list) {
   return (list ?? []).filter((item) => item.habilitado !== false);
 }
 
+function hasOutletList(outlet, key) {
+  return Array.isArray(outlet?.lookups?.[key]);
+}
+
 function MaestroFormEditor({ slug, id }) {
   const navigate = useNavigate();
   const { rol, idEmpresa } = useAuth();
   const { idActiva } = useEmpresaActiva();
   const outlet = useOutletContext() ?? {};
   const maestro = getMaestro(slug);
-  const empresas = useResource(empresaService.getAll);
-  const sedes = useResource(sedeService.getAll);
-  const areas = useResource(areaService.getAll);
-  const paises = useResource(paisService.getAll);
-  const ubicaciones = useResource(ubicacionService.getAll);
+  const needed = maestro?.lookups ?? [];
+  const empresas = useResource(empresaService.getAll, {
+    enabled: needed.includes('empresas') && !hasOutletList(outlet, 'empresas'),
+  });
+  const sedes = useResource(sedeService.getAll, {
+    enabled: needed.includes('sedes') && !hasOutletList(outlet, 'sedes'),
+  });
+  const areas = useResource(areaService.getAll, {
+    enabled: needed.includes('areas') && !hasOutletList(outlet, 'areas'),
+  });
+  const paises = useResource(paisService.getAll, {
+    enabled: needed.includes('paises') && !hasOutletList(outlet, 'paises'),
+  });
+  const ubicaciones = useResource(ubicacionService.getAll, {
+    enabled: needed.includes('ubicaciones') && !hasOutletList(outlet, 'ubicaciones'),
+  });
   const editing = Boolean(id);
   const close = () => navigate(`/app/catalogos/${slug}`);
 
@@ -95,7 +110,14 @@ function MaestroFormEditor({ slug, id }) {
     );
   }
 
-  if (!ready || paises.isLoading) {
+  const waitingLookups =
+    (needed.includes('paises') && !hasOutletList(outlet, 'paises') && paises.isLoading) ||
+    (needed.includes('empresas') && !hasOutletList(outlet, 'empresas') && empresas.isLoading) ||
+    (needed.includes('sedes') && !hasOutletList(outlet, 'sedes') && sedes.isLoading) ||
+    (needed.includes('areas') && !hasOutletList(outlet, 'areas') && areas.isLoading) ||
+    (needed.includes('ubicaciones') && !hasOutletList(outlet, 'ubicaciones') && ubicaciones.isLoading);
+
+  if (!ready || waitingLookups) {
     return (
       <DetailOverlay open title={maestro.title} kicker={editing ? 'Editar registro' : maestro.registerLabel} onClose={close}>
         <div className="app-feedback app-feedback--loading" role="status">
@@ -105,12 +127,20 @@ function MaestroFormEditor({ slug, id }) {
     );
   }
 
+  const empresasList = hasOutletList(outlet, 'empresas') ? outlet.lookups.empresas : empresas.data;
+  const sedesList = hasOutletList(outlet, 'sedes') ? outlet.lookups.sedes : sedes.data;
+  const areasList = hasOutletList(outlet, 'areas') ? outlet.lookups.areas : areas.data;
+  const paisesList = hasOutletList(outlet, 'paises') ? outlet.lookups.paises : paises.data;
+  const ubicacionesList = hasOutletList(outlet, 'ubicaciones')
+    ? outlet.lookups.ubicaciones
+    : ubicaciones.data;
+
   const lookups = {
-    empresas: enabledRecords(empresas.data),
-    sedes: enabledRecords(sedes.data),
-    areas: enabledRecords(areas.data),
-    paises: paises.data,
-    ubicaciones: enabledRecords(ubicaciones.data),
+    empresas: enabledRecords(empresasList),
+    sedes: enabledRecords(sedesList),
+    areas: enabledRecords(areasList),
+    paises: paisesList,
+    ubicaciones: enabledRecords(ubicacionesList),
     rol,
     idEmpresa,
     idEmpresaActiva: idActiva,
@@ -137,8 +167,8 @@ function MaestroFormEditor({ slug, id }) {
       onSave={async (values) => {
         let payload = maestro.toPayload(values, { editing, idEmpresaActiva: idActiva });
         if (slug === 'ubicaciones') {
-          const sede = sedes.data.find((item) => Number(item.id) === Number(payload.idSede));
-          const pais = paises.data.find((item) => Number(item.id) === Number(sede?.idPais));
+          const sede = (sedesList ?? []).find((row) => Number(row.id) === Number(payload.idSede));
+          const pais = (paisesList ?? []).find((row) => Number(row.id) === Number(sede?.idPais));
           payload = await resolveUbicacionCoords(payload, sede, pais?.nombre);
         }
         try {
