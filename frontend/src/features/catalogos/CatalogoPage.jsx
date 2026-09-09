@@ -57,7 +57,7 @@ export function CatalogoPage() {
     }
     return maestro.service.getAll();
   };
-  const { rows, visibleRows, isLoading, errorMessage, banner, reload } = useCatalogCollection(loadAll, {
+  const { rows, isLoading, errorMessage, banner, reload } = useCatalogCollection(loadAll, {
     key: catalogKey,
   });
   const empresas = useResource(empresaService.getAll, { enabled: neededLookups.includes('empresas') });
@@ -83,9 +83,8 @@ export function CatalogoPage() {
     [areas.data, empresas.data, paises.data, sedes.data, ubicaciones.data],
   );
 
-  const catalogRows = maestro?.hasHabilitado === false ? rows : visibleRows;
   const items = useMemo(() => {
-    const withSede = catalogRows.map((row) => {
+    const withSede = rows.map((row) => {
       if (row.idSede != null) return row;
       if (row.idArea != null) {
         const area = (areas.data ?? []).find((item) => Number(item.id) === Number(row.idArea));
@@ -99,7 +98,7 @@ export function CatalogoPage() {
       return withSede;
     }
     return filterRowsByEmpresa(withSede, idActiva, { sedes: sedes.data });
-  }, [areas.data, catalogRows, idActiva, maestro, sedes.data, ubicaciones.data]);
+  }, [areas.data, idActiva, maestro, rows, sedes.data, ubicaciones.data]);
   const outletContext = useMemo(
     () => ({ reload, rows, lookups }),
     [reload, rows, lookups],

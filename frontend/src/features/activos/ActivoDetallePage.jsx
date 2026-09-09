@@ -38,6 +38,7 @@ import { ToneBadge } from '@/shared/components/StatusBadge';
 import { detailQueryKey, listQueryKey } from '@/shared/data/queryKeys';
 import { useResource } from '@/shared/hooks/useResource';
 import { byId, formatDate, formatMoney } from '@/shared/utils/format';
+import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
 
 const ETIQUETA_ACCION = {
   edit: 'Editar registro',
@@ -67,7 +68,6 @@ export function ActivoDetallePage() {
 
   const [movimiento, setMovimiento] = useState(null);
   const [editando, setEditando] = useState(false);
-  const [banner, setBanner] = useState(null);
 
   const loadActivo = useCallback(() => activoService.getById(id), [id]);
   const loadQr = useCallback(() => consultaPublicaService.getQrDeActivo(id), [id]);
@@ -214,12 +214,6 @@ export function ActivoDetallePage() {
           </>
         }
       />
-
-      {banner ? (
-        <div className="app-feedback app-feedback--empty mb-4" role="status">
-          {banner}
-        </div>
-      ) : null}
 
       <div className="app-ficha-grid">
         <div className="app-panel">
@@ -397,9 +391,8 @@ export function ActivoDetallePage() {
           onClose={() => setEditando(false)}
           onSave={async (payload) => {
             await activoService.update(activo.id, payload);
-            setBanner('Activo actualizado.');
-            setEditando(false);
             await refrescar();
+            return saveSuccessResult({ created: false, entityLabel: 'activo' });
           }}
         />
       ) : null}
@@ -424,9 +417,8 @@ export function ActivoDetallePage() {
             fecha: values.fecha,
             motivo: values.motivo,
           });
-          setBanner('Traslado registrado.');
-          setMovimiento(null);
           await refrescar();
+          return saveSuccessResult({ created: true, entityLabel: 'traslado' });
         }}
       />
 
@@ -451,9 +443,8 @@ export function ActivoDetallePage() {
             idTipoMantenimiento: Number(values.idTipoMantenimiento),
             descripcionProblema: values.descripcionProblema,
           });
-          setBanner('Mantenimiento abierto.');
-          setMovimiento(null);
           await refrescar();
+          return saveSuccessResult({ created: true, entityLabel: 'mantenimiento' });
         }}
       />
 
@@ -482,9 +473,8 @@ export function ActivoDetallePage() {
             firmaEntrega: values.firmaEntrega,
             firmaRecibe: values.firmaRecibe,
           });
-          setBanner('Baja registrada. El activo queda dado de baja.');
-          setMovimiento(null);
           await refrescar();
+          return saveSuccessResult({ created: true, entityLabel: 'baja' });
         }}
       />
     </section>

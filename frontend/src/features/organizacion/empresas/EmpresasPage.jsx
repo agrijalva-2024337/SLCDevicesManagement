@@ -39,7 +39,7 @@ export function EmpresasPage() {
   const { canWrite, rol } = useAuth();
   const allowCreate = canWrite('empresas-create') || rol === RolUsuario.AdministradorGeneral;
   const allowEdit = canWrite('empresas') || rol === RolUsuario.AdministradorGeneral;
-  const { rows, visibleRows, isLoading, errorMessage, banner, reload } =
+  const { rows, isLoading, errorMessage, banner, reload } =
     useCatalogCollection(empresaService.getAll);
   const paises = useResource(paisService.getAll);
   const outletContext = useMemo(
@@ -73,7 +73,7 @@ export function EmpresasPage() {
         description="Registro corporativo."
         primaryAction={allowCreate ? <RegisterButton to="nueva" label="Registrar empresa" /> : null}
         columns={columns}
-        rows={visibleRows}
+        rows={rows}
         loading={isLoading}
         searchPlaceholder="Buscar por nombre, identificación, dirección o teléfono"
         statusFilter={{ key: 'habilitado' }}

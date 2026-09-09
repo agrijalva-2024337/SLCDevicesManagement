@@ -16,7 +16,7 @@ import { compactErrors } from '@/shared/components/recordFormUtils';
 import { StatusBadge } from '@/shared/components/StatusBadge';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
-import { resolveSavedId, saveSuccessState } from '@/shared/utils/saveFeedback';
+import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
 import { buscarPorCodigoTelefonico } from '@/shared/validation/paisesIso';
 
 function EmpresaFormEditor({ id }) {
@@ -114,16 +114,13 @@ function EmpresaFormEditor({ id }) {
       onSave={async (values) => {
         const payload = empresaToPayload(values);
         try {
-          const saved = editing
-            ? await empresaService.update(Number(id), payload)
-            : await empresaService.create(payload);
-          await outlet.reload?.();
-          const recordId = resolveSavedId(saved, id);
-          if (recordId == null) {
-            navigate('/app/catalogos/empresas');
-            return;
+          if (editing) {
+            await empresaService.update(Number(id), payload);
+          } else {
+            await empresaService.create(payload);
           }
-          navigate(`/app/catalogos/empresas/${recordId}`, { state: saveSuccessState(editing) });
+          await outlet.reload?.();
+          return saveSuccessResult({ created: !editing, entityLabel: 'empresa' });
         } catch (error) {
           throw applyApiFieldErrors(error);
         }

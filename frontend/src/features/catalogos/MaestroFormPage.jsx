@@ -19,7 +19,7 @@ import { toRedConocidaWriteError } from '@/features/catalogos/redesConocidas/red
 import { derivePaisValues } from '@/features/catalogos/paises/paisForm';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
-import { resolveSavedId, saveSuccessState } from '@/shared/utils/saveFeedback';
+import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
 
 function enabledRecords(list) {
   return (list ?? []).filter((item) => item.habilitado !== false);
@@ -181,13 +181,10 @@ function MaestroFormEditor({ slug, id }) {
             invalidateCatalogoAsignacionCache();
           }
           await outlet.reload?.();
-          const recordId = resolveSavedId(saved, id);
-          if (recordId == null) {
-            navigate(`/app/catalogos/${slug}`);
-            return;
-          }
-          navigate(`/app/catalogos/${slug}/${recordId}`, {
-            state: saveSuccessState(editing, saved.passwordGenerada ? { passwordGenerada: saved.passwordGenerada } : {}),
+          return saveSuccessResult({
+            created: !editing,
+            entityLabel: maestro.singular,
+            passwordGenerada: saved.passwordGenerada,
           });
         } catch (error) {
           throw slug === 'redes-conocidas' ? toRedConocidaWriteError(error) : applyApiFieldErrors(error);

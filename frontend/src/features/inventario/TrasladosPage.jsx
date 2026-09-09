@@ -20,6 +20,7 @@ import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
 import { useRecordDeepLink } from '@/shared/hooks/useRecordDeepLink';
 import { useResource } from '@/shared/hooks/useResource';
 import { formatDate, byId } from '@/shared/utils/format';
+import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
 
 function hydrate(row, lookups) {
   const ruta = parseTrasladoRuta(row.observaciones);
@@ -54,7 +55,6 @@ export function TrasladosPage() {
     isLoading,
     errorMessage,
     banner,
-    setBanner,
     reload,
   } = useCatalogCollection(asignacionService.getAll);
   const crud = useCrudOverlay();
@@ -213,10 +213,9 @@ export function TrasladosPage() {
             fecha: values.fecha,
             motivo: values.motivo,
           });
-          setBanner({ message: 'Traslado registrado.', variant: 'empty' });
-          crud.close();
           await reload();
           await activos.reload();
+          return saveSuccessResult({ created: true, entityLabel: 'traslado' });
         }}
       />
     </section>
