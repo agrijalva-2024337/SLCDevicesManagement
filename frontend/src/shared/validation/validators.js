@@ -41,7 +41,7 @@ export function validarNombreEntidad(value, label, max, { required = true } = {}
   return matchOrEmpty(
     text,
     NOMBRE_ENTIDAD,
-    `El ${label} solo admite letras, números, espacios y los signos . , - & ' ( ) /`,
+    `El ${label} solo admite letras, números, espacios y los signos . , - — & ' ( ) /`,
   );
 }
 

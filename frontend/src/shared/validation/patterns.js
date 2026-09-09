@@ -7,11 +7,12 @@
  * Por decisión de producto usamos el alfabeto amplio (incluye ambiguos).
  */
 
-/** Letras con acentos, números, espacios y signos de razón social. */
+/** Letras con acentos, números, espacios y signos de razón social (incluye raya tipográfica). */
 export const NOMBRE_ENTIDAD =
-  /^(?! )(?!.* $)[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-&'()/]+$/;
-// Válido: "Sistemas Logísticos y Corporativos, S.A."
+  /^(?! )(?!.* $)[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-&'()/—–]+$/;
+// Válido: "Sistemas Logísticos y Corporativos, S.A." / "CD Zona 12 — andén 1"
 // Inválido: "Bodega #2" (el # no está permitido)
+// La raya em/en (— –) se admitió porque las ubicaciones mock ya la usan como separador.
 
 /** Solo letras con acentos, espacios, guion y apóstrofo. Sin números. */
 export const NOMBRE_PERSONA =
