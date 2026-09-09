@@ -3,7 +3,6 @@ import {
   buscarPorIso2,
   buscarPorIso3,
   buscarPorNombre,
-  sugerirPorNombre,
 } from '@/shared/validation/paisesIso';
 
 function changedKey(next, prev) {
@@ -23,7 +22,10 @@ function matchFromField(key, values) {
   return null;
 }
 
-/** Autorrelleno bidireccional nombre ↔ ISO-2 ↔ ISO-3 ↔ código telefónico. */
+/**
+ * Autorrelleno bidireccional cuando el valor coincide con la tabla local.
+ * Si no hay coincidencia, deja el formulario tal cual (país nuevo permitido).
+ */
 export function derivePaisValues(next, prev) {
   const key = changedKey(next, prev);
   if (!key) return next;
@@ -36,12 +38,4 @@ export function derivePaisValues(next, prev) {
     codigoIso3: match.codigoIso3,
     codigoTelefonico: match.codigoTelefonico,
   };
-}
-
-export function mensajePaisDesconocido(nombre) {
-  const tips = sugerirPorNombre(nombre, 3).map((pais) => pais.nombre);
-  if (tips.length) {
-    return `País no reconocido. ¿Quiso decir ${tips.join(', ')}?`;
-  }
-  return 'País no reconocido. Elija un país del catálogo ISO local.';
 }

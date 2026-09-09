@@ -161,9 +161,6 @@ for (const row of paises) {
     row.codigoTelefonico,
     validarCodigoTelefonico(row.codigoTelefonico),
   );
-  if (!buscarPorIso2(row.codigoIso2)) {
-    check('Pais', row.id, 'codigoIso2', row.codigoIso2, 'ISO-2 ausente del catálogo local paisesIso');
-  }
 }
 
 for (const row of activos) {

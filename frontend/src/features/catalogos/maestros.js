@@ -12,8 +12,7 @@ import * as responsableService from '@/features/organizacion/responsables/respon
 import { RolUsuario, rolUsuarioLabel } from '@/shared/api/contracts';
 import { asOptions, phoneField, requireSelect, validarCodigoTelefonico, validarCorreo, validarIdentificacionTributaria, validarIso2, validarIso3, validarNombreEntidad, validarNombrePersona, validarPassword, validarTextoLibre, validarUsername } from '@/shared/components/recordFormUtils';
 import { phoneFormFields, phonePayload, validatePhoneFields } from '@/shared/utils/phoneNumber';
-import { buscarPorCodigoTelefonico, buscarPorIso2, buscarPorIso3, buscarPorNombre } from '@/shared/validation/paisesIso';
-import { mensajePaisDesconocido } from '@/features/catalogos/paises/paisForm';
+import { buscarPorCodigoTelefonico, buscarPorIso2, buscarPorIso3 } from '@/shared/validation/paisesIso';
 
 function switchField() {
   return {
@@ -464,7 +463,7 @@ export const maestros = {
     singular: 'país',
     kicker: 'País',
     registerLabel: 'Registrar país',
-    hint: 'Escriba el nombre, ISO o código telefónico: el resto se completa solo. Solo países del catálogo local.',
+    hint: 'Si el país está en la tabla local, el nombre o el ISO completan el resto. También puede registrar países nuevos a mano.',
     description: 'Catálogo geográfico de cada empresa. Solo el administrador de empresa puede registrarlos.',
     lookups: ['empresas'],
     titleOf: (item) => item.nombre,
@@ -504,27 +503,20 @@ export const maestros = {
         }),
       };
 
-      const known = buscarPorNombre(values.nombre);
-      if (!errors.nombre && !known) {
-        errors.nombre = mensajePaisDesconocido(values.nombre);
-      }
-
+      // La tabla local solo ayuda: si coinciden entradas conocidas, deben ser consistentes.
+      // Un país nuevo (fuera de paisesIso) se admite con formato válido.
       const byIso2 = buscarPorIso2(values.codigoIso2);
       const byIso3 = buscarPorIso3(values.codigoIso3);
-      if (!errors.codigoIso2 && !byIso2) {
-        errors.codigoIso2 = 'ISO-2 no está en el catálogo local.';
-      }
-      if (!errors.codigoIso3 && !byIso3) {
-        errors.codigoIso3 = 'ISO-3 no está en el catálogo local.';
-      }
       if (!errors.codigoIso2 && !errors.codigoIso3 && byIso2 && byIso3 && byIso2.codigoIso2 !== byIso3.codigoIso2) {
         errors.codigoIso3 = `ISO-3 no corresponde a ${byIso2.codigoIso2.toUpperCase()} (esperado ${byIso2.codigoIso3}).`;
       }
+      const dialKnown = buscarPorCodigoTelefonico(values.codigoTelefonico);
       if (
         !errors.codigoTelefonico &&
         String(values.codigoTelefonico ?? '').trim() &&
         byIso2 &&
-        buscarPorCodigoTelefonico(values.codigoTelefonico)?.codigoIso2 !== byIso2.codigoIso2
+        dialKnown &&
+        dialKnown.codigoIso2 !== byIso2.codigoIso2
       ) {
         errors.codigoTelefonico = `El código telefónico no corresponde a ${byIso2.nombre}.`;
       }
