@@ -16,6 +16,7 @@ import { compactErrors } from '@/shared/components/recordFormUtils';
 import { StatusBadge } from '@/shared/components/StatusBadge';
 import { useResource } from '@/shared/hooks/useResource';
 import { toRedConocidaWriteError } from '@/features/catalogos/redesConocidas/redConocidaErrors';
+import { derivePaisValues } from '@/features/catalogos/paises/paisForm';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 import { resolveSavedId, saveSuccessState } from '@/shared/utils/saveFeedback';
@@ -163,6 +164,7 @@ function MaestroFormEditor({ slug, id }) {
       fields={fields}
       initialValues={initialValues}
       submitLabel={editing ? 'Guardar cambios' : maestro.registerLabel}
+      deriveValues={slug === 'paises' ? derivePaisValues : undefined}
       validate={(values) => compactErrors(maestro.validate(values, records, id, lookups))}
       onSave={async (values) => {
         let payload = maestro.toPayload(values, { editing, idEmpresaActiva: idActiva });

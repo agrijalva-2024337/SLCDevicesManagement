@@ -513,6 +513,11 @@ select.app-input {
   min-width: 0;
 }
 
+.app-input-with-action .app-input-password {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .app-input-with-action .app-btn {
   flex: 0 0 auto;
 }

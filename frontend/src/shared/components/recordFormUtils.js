@@ -24,7 +24,13 @@ export function requireSelect(value, label) {
   return null;
 }
 
-export function phoneField({ label = 'Teléfono', paises = [], maxLength = 30, required = false } = {}) {
+export function phoneField({
+  label = 'Teléfono',
+  paises = [],
+  pais = null,
+  maxLength = 30,
+  required = false,
+} = {}) {
   return {
     name: 'telefono',
     type: 'tel',
@@ -34,5 +40,24 @@ export function phoneField({ label = 'Teléfono', paises = [], maxLength = 30, r
     autoComplete: 'tel',
     wide: true,
     paises,
+    pais,
   };
 }
+
+export {
+  validarAlfanumerico,
+  validarCodigoTelefonico,
+  validarCorreo,
+  validarCosto,
+  validarIdentificacionTributaria,
+  validarIso2,
+  validarIso3,
+  validarMarcaModelo,
+  validarMoneda,
+  validarNombreEntidad,
+  validarNombrePersona,
+  validarPassword,
+  validarTelefono,
+  validarTextoLibre,
+  validarUsername,
+} from '@/shared/validation/validators';

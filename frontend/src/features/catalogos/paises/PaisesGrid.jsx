@@ -3,16 +3,14 @@ import { Link } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import { RegisterButton } from '@/shared/components/RecordActions';
 import { matchesSearch } from '@/shared/utils/search';
+import { iso2Conocido } from '@/shared/validation/paisesIso';
 import '@/features/catalogos/paises/paises.css';
 
 function flagClassName(iso2) {
   const code = String(iso2 ?? '')
     .trim()
     .toLowerCase();
-  if (!/^[a-z]{2}$/.test(code)) {
-    return null;
-  }
-  return `fi fi-${code}`;
+  return iso2Conocido(code) ? `fi fi-${code}` : null;
 }
 
 function PaisCard({ pais, allowWrite }) {
@@ -27,7 +25,11 @@ function PaisCard({ pais, allowWrite }) {
 
   return (
     <article className="paises-card">
-      {flagClass ? <span className={`${flagClass} paises-card-flag`} aria-hidden="true" /> : null}
+      {flagClass ? (
+        <span className={`${flagClass} paises-card-flag`} aria-hidden="true" />
+      ) : (
+        <span className="paises-card-flag paises-card-flag--neutral" aria-hidden="true" />
+      )}
       <span className="paises-card-veil" aria-hidden="true" />
       <Link to={`${pais.id}`} className="paises-card-link" aria-label={pais.nombre}>
         <span className="paises-card-name">{pais.nombre}</span>

@@ -105,6 +105,18 @@
   content: none;
 }
 
+.paises-card-flag--neutral {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-navy) 35%, transparent),
+    color-mix(in srgb, var(--color-accent) 25%, transparent)
+  );
+}
+
 .paises-card-veil {
   position: absolute;
   inset: 0;

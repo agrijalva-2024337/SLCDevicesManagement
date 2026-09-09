@@ -10,8 +10,9 @@ import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import { RolUsuario, rolUsuarioLabel } from '@/shared/api/contracts';
-import { asOptions, optionalText, phoneField, requireSelect, requireText } from '@/shared/components/recordFormUtils';
+import { asOptions, phoneField, requireSelect, validarCodigoTelefonico, validarCorreo, validarIdentificacionTributaria, validarIso2, validarIso3, validarNombreEntidad, validarNombrePersona, validarPassword, validarTextoLibre, validarUsername } from '@/shared/components/recordFormUtils';
 import { phoneFormFields, phonePayload, validatePhoneFields } from '@/shared/utils/phoneNumber';
+import { buscarPorCodigoTelefonico, buscarPorIso2, buscarPorIso3 } from '@/shared/validation/paisesIso';
 
 function switchField() {
   return {
@@ -27,18 +28,14 @@ export function nameById(list) {
 }
 
 function requireEmail(value) {
-  const required = requireText(value, 'correo', 150);
-  if (required) return required;
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value).trim())) {
-    return 'El formato del correo no es válido.';
-  }
-  return null;
+  return validarCorreo(value, 'correo', 150, { required: true });
 }
 
 function optionalEmail(value) {
-  if (!String(value ?? '').trim()) return null;
-  return requireEmail(value);
+  return validarCorreo(value, 'correo', 150, { required: false });
 }
+
+const IDENTIFICACION_HINT = 'NIT, RUC, RFC o equivalente según el país';
 
 function duplicateNombre(records, nombre, currentId) {
   const needle = String(nombre ?? '')
@@ -110,8 +107,8 @@ function nombreDescripcionMaestro({
     ],
     validate(values, records = [], currentId) {
       const errors = {
-        nombre: requireText(values.nombre, 'nombre', 50),
-        descripcion: optionalText(values.descripcion, 'descripción', 150),
+        nombre: validarNombreEntidad(values.nombre, 'nombre', 50, { required: true }),
+        descripcion: validarTextoLibre(values.descripcion, 'descripción', 150, { required: false }),
       };
       if (!errors.nombre && duplicateNombre(records, values.nombre, currentId)) {
         errors.nombre = `Ya existe un ${singular} con el mismo nombre.`;
@@ -171,8 +168,8 @@ export const maestros = {
     validate(values) {
       return {
         idSede: requireSelect(values.idSede, 'una sede'),
-        nombre: requireText(values.nombre, 'nombre', 100),
-        descripcion: optionalText(values.descripcion, 'descripción', 200),
+        nombre: validarNombreEntidad(values.nombre, 'nombre', 100, { required: true }),
+        descripcion: validarTextoLibre(values.descripcion, 'descripción', 200, { required: false }),
       };
     },
     toPayload(values) {
@@ -237,8 +234,8 @@ export const maestros = {
       return {
         idEmpresa:
           rol === RolUsuario.AdministradorGeneral ? requireSelect(values.idEmpresa, 'una empresa') : null,
-        nombre: requireText(values.nombre, 'nombre', 100),
-        descripcion: optionalText(values.descripcion, 'descripción', 200),
+        nombre: validarNombreEntidad(values.nombre, 'nombre', 100, { required: true }),
+        descripcion: validarTextoLibre(values.descripcion, 'descripción', 200, { required: false }),
       };
     },
     toPayload(values, { idEmpresaActiva } = {}) {
@@ -266,18 +263,18 @@ export const maestros = {
     singular: 'proveedor',
     kicker: 'Proveedor',
     registerLabel: 'Registrar proveedor',
-    hint: 'Nombre y NIT son obligatorios. El proveedor queda ligado a una empresa.',
+    hint: 'Nombre e identificación tributaria son obligatorios. Contacto, teléfono y correo son opcionales.',
     description: 'Casas comerciales ligadas a cada empresa.',
     lookups: ['empresas', 'paises'],
     titleOf: (item) => item.nombre,
     facts: (item, lookups = {}) =>
-      [`NIT ${item.nit}`, lookups.empresaNombres?.[item.idEmpresa], item.nombreContacto].filter(Boolean),
+      [item.nit, lookups.empresaNombres?.[item.idEmpresa], item.nombreContacto].filter(Boolean),
     listView: {
       emptyTitle: 'No hay proveedores',
       emptyDescription: 'Registre el primer proveedor para usarlo en compras y mantenimiento.',
       columns: (lookups = {}) => [
         { key: 'nombre', header: 'Nombre', primary: true },
-        { key: 'nit', header: 'NIT', numeric: true },
+        { key: 'nit', header: 'Identificación tributaria', numeric: true },
         {
           key: 'empresa',
           header: 'Empresa',
@@ -285,6 +282,7 @@ export const maestros = {
         },
         { key: 'nombreContacto', header: 'Contacto' },
         { key: 'telefono', header: 'Teléfono' },
+        { key: 'correo', header: 'Correo' },
         { key: 'habilitado', header: 'Estado', type: 'status' },
       ],
     },
@@ -309,29 +307,41 @@ export const maestros = {
     fields: ({ empresas, paises } = {}) => [
       { name: 'idEmpresa', label: 'Empresa', type: 'select', required: true, options: asOptions(empresas ?? []) },
       { name: 'nombre', label: 'Nombre', required: true, maxLength: 150 },
-      { name: 'nit', label: 'NIT', required: true, maxLength: 50 },
+      {
+        name: 'nit',
+        label: 'Identificación tributaria',
+        required: true,
+        maxLength: 50,
+        hint: IDENTIFICACION_HINT,
+      },
       { name: 'nombreContacto', label: 'Contacto', maxLength: 100 },
       phoneField({ paises }),
-      { name: 'correo', label: 'Correo', maxLength: 150, autoComplete: 'email' },
+      { name: 'correo', label: 'Correo', type: 'email', maxLength: 150, autoComplete: 'email' },
       switchField(),
     ],
-    validate(values, records = [], currentId) {
+    validate(values, records = [], currentId, ctx = {}) {
+      const iso2 =
+        ctx.iso2 ?? buscarPorCodigoTelefonico(values.telefonoPrefijo)?.codigoIso2 ?? undefined;
       const errors = {
         idEmpresa: requireSelect(values.idEmpresa, 'una empresa'),
-        nombre: requireText(values.nombre, 'nombre', 150),
-        nit: requireText(values.nit, 'NIT', 50),
-        nombreContacto: optionalText(values.nombreContacto, 'contacto', 100),
-        telefono: validatePhoneFields(values),
-        correo: optionalText(values.correo, 'correo', 150),
+        nombre: validarNombreEntidad(values.nombre, 'nombre', 150, { required: true }),
+        nit: validarIdentificacionTributaria(values.nit, 'identificación tributaria', 50, {
+          required: true,
+          iso2,
+        }),
+        nombreContacto: validarNombrePersona(values.nombreContacto, 'contacto', 100, { required: false }),
+        telefono: validatePhoneFields(values, { paises: ctx.paises }),
+        correo: optionalEmail(values.correo),
       };
       const nit = String(values.nit ?? '')
         .trim()
         .toLowerCase();
       if (
         nit &&
+        !errors.nit &&
         records.some((item) => String(item.nit).toLowerCase() === nit && String(item.id) !== String(currentId))
       ) {
-        errors.nit = 'Ya existe un proveedor registrado con este NIT.';
+        errors.nit = 'Ya existe un proveedor registrado con esta identificación tributaria.';
       }
       return errors;
     },
@@ -348,7 +358,7 @@ export const maestros = {
     },
     detail: (item, lookups = {}) => [
       { label: 'Empresa', value: lookups.empresaNombres?.[item.idEmpresa] ?? '—' },
-      { label: 'NIT', value: item.nit },
+      { label: 'Identificación tributaria', value: item.nit },
       { label: 'Contacto', value: item.nombreContacto },
       { label: 'Teléfono', value: item.telefono },
       { label: 'Correo', value: item.correo },
@@ -402,8 +412,8 @@ export const maestros = {
     validate(values) {
       const errors = {
         idSede: requireSelect(values.idSede, 'una sede'),
-        nombre: requireText(values.nombre, 'nombre', 100),
-        descripcion: optionalText(values.descripcion, 'descripción', 200),
+        nombre: validarNombreEntidad(values.nombre, 'nombre', 100, { required: true }),
+        descripcion: validarTextoLibre(values.descripcion, 'descripción', 200, { required: false }),
       };
       const latEmpty = String(values.latitud ?? '').trim() === '';
       const lngEmpty = String(values.longitud ?? '').trim() === '';
@@ -453,7 +463,7 @@ export const maestros = {
     singular: 'país',
     kicker: 'País',
     registerLabel: 'Registrar país',
-    hint: 'Nombre e ISO son obligatorios. El país queda ligado a la empresa.',
+    hint: 'Si el país está en la tabla local, el nombre o el ISO completan el resto. También puede registrar países nuevos a mano.',
     description: 'Catálogo geográfico de cada empresa. Solo el administrador de empresa puede registrarlos.',
     lookups: ['empresas'],
     titleOf: (item) => item.nombre,
@@ -468,8 +478,8 @@ export const maestros = {
     toForm: (item) => ({
       idEmpresa: item.idEmpresa == null ? '' : String(item.idEmpresa),
       nombre: item.nombre ?? '',
-      codigoIso2: item.codigoIso2 ?? '',
-      codigoIso3: item.codigoIso3 ?? '',
+      codigoIso2: String(item.codigoIso2 ?? '').toLowerCase(),
+      codigoIso3: String(item.codigoIso3 ?? '').toLowerCase(),
       codigoTelefonico: item.codigoTelefonico ?? '',
     }),
     fields: ({ empresas = [], rol, editing } = {}) => [
@@ -477,21 +487,41 @@ export const maestros = {
         ? [{ name: 'idEmpresa', label: 'Empresa', type: 'select', required: true, options: asOptions(empresas) }]
         : []),
       { name: 'nombre', label: 'Nombre', required: true, maxLength: 100, wide: true },
-      { name: 'codigoIso2', label: 'ISO 2', required: true, maxLength: 2 },
+      { name: 'codigoIso2', label: 'ISO 2', required: true, maxLength: 2, hint: 'Dos letras en minúsculas (ej. gt)' },
       { name: 'codigoIso3', label: 'ISO 3', required: true, maxLength: 3 },
-      { name: 'codigoTelefonico', label: 'Código telefónico', maxLength: 5 },
+      { name: 'codigoTelefonico', label: 'Código telefónico', maxLength: 5, hint: 'Con o sin + (ej. +502)' },
     ],
     validate(values, _records, _id, { rol } = {}) {
-      const iso2 = requireText(values.codigoIso2, 'ISO 2', 2);
-      const iso3 = requireText(values.codigoIso3, 'ISO 3', 3);
-      return {
+      const errors = {
         idEmpresa:
           rol === RolUsuario.AdministradorGeneral ? requireSelect(values.idEmpresa, 'una empresa') : null,
-        nombre: requireText(values.nombre, 'nombre', 100),
-        codigoIso2: iso2 ?? (values.codigoIso2.trim().length !== 2 ? 'ISO 2 debe tener 2 caracteres.' : null),
-        codigoIso3: iso3 ?? (values.codigoIso3.trim().length !== 3 ? 'ISO 3 debe tener 3 caracteres.' : null),
-        codigoTelefonico: optionalText(values.codigoTelefonico, 'código telefónico', 5),
+        nombre: validarNombreEntidad(values.nombre, 'nombre', 100, { required: true }),
+        codigoIso2: validarIso2(values.codigoIso2, 'ISO-2', { required: true }),
+        codigoIso3: validarIso3(values.codigoIso3, 'ISO-3', { required: true }),
+        codigoTelefonico: validarCodigoTelefonico(values.codigoTelefonico, 'código telefónico', {
+          required: false,
+        }),
       };
+
+      // La tabla local solo ayuda: si coinciden entradas conocidas, deben ser consistentes.
+      // Un país nuevo (fuera de paisesIso) se admite con formato válido.
+      const byIso2 = buscarPorIso2(values.codigoIso2);
+      const byIso3 = buscarPorIso3(values.codigoIso3);
+      if (!errors.codigoIso2 && !errors.codigoIso3 && byIso2 && byIso3 && byIso2.codigoIso2 !== byIso3.codigoIso2) {
+        errors.codigoIso3 = `ISO-3 no corresponde a ${byIso2.codigoIso2.toUpperCase()} (esperado ${byIso2.codigoIso3}).`;
+      }
+      const dialKnown = buscarPorCodigoTelefonico(values.codigoTelefonico);
+      if (
+        !errors.codigoTelefonico &&
+        String(values.codigoTelefonico ?? '').trim() &&
+        byIso2 &&
+        dialKnown &&
+        dialKnown.codigoIso2 !== byIso2.codigoIso2
+      ) {
+        errors.codigoTelefonico = `El código telefónico no corresponde a ${byIso2.nombre}.`;
+      }
+
+      return errors;
     },
     toPayload(values, { idEmpresaActiva } = {}) {
       const idEmpresa =
@@ -503,8 +533,8 @@ export const maestros = {
       return {
         idEmpresa,
         nombre: values.nombre.trim(),
-        codigoIso2: values.codigoIso2.trim().toUpperCase(),
-        codigoIso3: values.codigoIso3.trim().toUpperCase(),
+        codigoIso2: values.codigoIso2.trim().toLowerCase(),
+        codigoIso3: values.codigoIso3.trim().toLowerCase(),
         codigoTelefonico: values.codigoTelefonico.trim() || null,
       };
     },
@@ -681,10 +711,10 @@ export const maestros = {
       const rol = Number(values.rol);
       const password = String(values.password ?? '');
       const errors = {
-        nombres: requireText(values.nombres, 'nombres', 100),
-        apellidos: requireText(values.apellidos, 'apellidos', 100),
+        nombres: validarNombrePersona(values.nombres, 'nombres', 100, { required: true }),
+        apellidos: validarNombrePersona(values.apellidos, 'apellidos', 100, { required: true }),
         correo: requireEmail(values.correo),
-        username: requireText(values.username, 'username', 50),
+        username: validarUsername(values.username, 'usuario', 50, { required: true }),
         rol: requireSelect(values.rol, 'un rol'),
       };
 
@@ -693,16 +723,9 @@ export const maestros = {
       }
 
       if (!editing) {
-        errors.password = requireText(password, 'password', 128);
-        if (!errors.password && password.trim().length < 8) {
-          errors.password = 'El campo password debe tener al menos 8 caracteres.';
-        }
+        errors.password = validarPassword(password, 'contraseña', { required: true });
       } else if (password.trim()) {
-        if (password.trim().length < 8) {
-          errors.password = 'El campo password debe tener al menos 8 caracteres.';
-        } else if (password.trim().length > 128) {
-          errors.password = 'El campo password no debe superar los 128 caracteres.';
-        }
+        errors.password = validarPassword(password, 'contraseña', { required: true });
       }
 
       const correo = String(values.correo ?? '')
@@ -710,6 +733,7 @@ export const maestros = {
         .toLowerCase();
       if (
         correo &&
+        !errors.correo &&
         records.some((item) => String(item.correo).trim().toLowerCase() === correo && String(item.id) !== String(currentId))
       ) {
         errors.correo = 'Ya existe un usuario con el mismo correo.';
@@ -718,9 +742,10 @@ export const maestros = {
       const username = String(values.username ?? '').trim();
       if (
         username &&
+        !errors.username &&
         records.some((item) => String(item.username) === username && String(item.id) !== String(currentId))
       ) {
-        errors.username = 'Ya existe un usuario con el mismo username.';
+        errors.username = 'Ya existe un usuario con el mismo usuario.';
       }
 
       return errors;
@@ -812,13 +837,15 @@ export const maestros = {
       phoneField({ paises }),
       { ...switchField(), hiddenWhen: () => !editing },
     ],
-    validate(values) {
+    validate(values, _records, _id, ctx = {}) {
       return {
         idArea: requireSelect(values.idArea, 'un área'),
-        nombreCompleto: requireText(values.nombreCompleto, 'nombre completo', 150),
-        cargo: optionalText(values.cargo, 'cargo', 100),
+        nombreCompleto: validarNombrePersona(values.nombreCompleto, 'nombre completo', 150, {
+          required: true,
+        }),
+        cargo: validarNombrePersona(values.cargo, 'cargo', 100, { required: false }),
         correo: optionalEmail(values.correo),
-        telefono: validatePhoneFields(values),
+        telefono: validatePhoneFields(values, { paises: ctx.paises }),
       };
     },
     toPayload(values, { editing } = {}) {

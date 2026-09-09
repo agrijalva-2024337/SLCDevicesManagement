@@ -1,7 +1,13 @@
 import { useMemo } from 'react';
 import { todayIsoDate } from '@/features/inventario/trasladoRuta';
 import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
-import { asOptions, compactErrors, optionalText, requireSelect } from '@/shared/components/recordFormUtils';
+import {
+  asOptions,
+  compactErrors,
+  requireSelect,
+  validarNombrePersona,
+  validarTextoLibre,
+} from '@/shared/components/recordFormUtils';
 
 export function JornadaFormOverlay({ open, sedes, jornadasAbiertas = [], onSave, onClose }) {
   const ocupadas = useMemo(
@@ -58,9 +64,13 @@ export function JornadaFormOverlay({ open, sedes, jornadasAbiertas = [], onSave,
       validate={(values) =>
         compactErrors({
           idSede: requireSelect(values.idSede, 'una sede'),
-          responsable: optionalText(values.responsable, 'responsable', 150),
+          responsable: validarNombrePersona(values.responsable, 'responsable', 150, {
+            required: false,
+          }),
           fechaInicio: requireSelect(values.fechaInicio, 'una fecha de inicio'),
-          observaciones: optionalText(values.observaciones, 'observaciones', 300),
+          observaciones: validarTextoLibre(values.observaciones, 'observaciones', 300, {
+            required: false,
+          }),
         })
       }
       onSave={onSave}

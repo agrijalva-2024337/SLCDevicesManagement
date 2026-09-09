@@ -8,6 +8,52 @@ import { StatusBadge } from '@/shared/components/StatusBadge';
 import { formatDate } from '@/shared/utils/format';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 
+function GeneratedPasswordNotice({ password }) {
+  const [visible, setVisible] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  async function copyPassword() {
+    try {
+      await navigator.clipboard.writeText(password);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return (
+    <div className="app-feedback app-feedback--success" role="status">
+      <p className="font-semibold">Contraseña temporal generada</p>
+      <p className="mt-1 text-sm">
+        Cópiela ahora: no se podrá recuperar después. Al cerrar este detalle desaparece del estado.
+      </p>
+      <div className="app-input-password mt-3">
+        <input
+          className="app-input app-hash"
+          type={visible ? 'text' : 'password'}
+          value={password}
+          readOnly
+          aria-label="Contraseña temporal generada"
+        />
+        <button
+          type="button"
+          className="app-icon-btn"
+          aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+          aria-pressed={visible}
+          onClick={() => setVisible((open) => !open)}
+        >
+          <i className={visible ? 'pi pi-eye-slash' : 'pi pi-eye'} aria-hidden="true" />
+        </button>
+      </div>
+      <div className="mt-2 flex flex-wrap gap-2">
+        <button type="button" className="app-btn app-btn--ghost app-btn--sm" onClick={copyPassword}>
+          {copied ? 'Copiada' : 'Copiar'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function MaestroDetallePage() {
   const { slug, id } = useParams();
   const { canWrite } = useAuth();
@@ -101,10 +147,7 @@ export function MaestroDetallePage() {
         ) : null}
       </div>
       {passwordGenerada ? (
-        <div className="app-feedback app-feedback--success" role="status">
-          <p className="font-semibold">Contraseña temporal (cópiela ahora; no se vuelve a mostrar):</p>
-          <p className="app-hash mt-2">{passwordGenerada}</p>
-        </div>
+        <GeneratedPasswordNotice password={passwordGenerada} />
       ) : null}
       {canWrite(slug) ? (
         <div className="flex flex-wrap gap-3">
