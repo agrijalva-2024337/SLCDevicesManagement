@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { todayIsoDate } from '@/features/inventario/trasladoRuta';
 import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
-import { compactErrors, optionalText, requireSelect, requireText } from '@/shared/components/recordFormUtils';
+import { compactErrors, requireSelect, validarTextoLibre } from '@/shared/components/recordFormUtils';
 
 export function HallazgoFormOverlay({ open, prefill, onSave, onClose }) {
   const lockActivo = Boolean(prefill?.idActivo);
@@ -79,9 +79,9 @@ export function HallazgoFormOverlay({ open, prefill, onSave, onClose }) {
         const errors = {
           idActivo: values.idActivo ? null : requireSelect(values.idActivo, 'un activo'),
           fechaVerificacion: isEdit ? null : requireSelect(values.fechaVerificacion, 'una fecha'),
-          observaciones: negativo
-            ? requireText(values.observaciones, 'observaciones', 300)
-            : optionalText(values.observaciones, 'observaciones', 300),
+          observaciones: validarTextoLibre(values.observaciones, 'observaciones', 300, {
+            required: negativo,
+          }),
         };
         return compactErrors(errors);
       }}
