@@ -60,11 +60,24 @@ function controlClass(error) {
   return error ? 'app-input app-input--error' : 'app-input';
 }
 
-export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCancel, submitLabel }) {
+export function SchemaForm({
+  fields,
+  values,
+  errors,
+  onChange,
+  onSubmit,
+  onCancel,
+  submitLabel,
+  onBlurField,
+}) {
   const [revealed, setRevealed] = useState({});
 
   function setField(name, value) {
     onChange({ ...values, [name]: value });
+  }
+
+  function blurField(name) {
+    onBlurField?.(name);
   }
 
   function setPasswordVisible(name, visible) {
@@ -103,6 +116,7 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
                 value={values[field.name] ?? ''}
                 disabled={Boolean(field.readOnly)}
                 onChange={(event) => setField(field.name, event.target.value)}
+                onBlur={() => blurField(field.name)}
               >
                 <option value="">{field.placeholder ?? 'Seleccione…'}</option>
                 {field.options.map((option) => (
@@ -140,6 +154,7 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
                 autoComplete={field.autoComplete}
                 onPrefijoChange={(next) => setField(prefijoName, next)}
                 onNumeroChange={(next) => setField(field.name, next)}
+                onBlurNumero={() => blurField(field.name)}
               />
             </FormField>
           );
@@ -175,6 +190,7 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
                 maxLength={field.maxLength}
                 rows={field.rows ?? 3}
                 onChange={(event) => setField(field.name, event.target.value)}
+                onBlur={() => blurField(field.name)}
               />
             </FormField>
           );
@@ -203,6 +219,7 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
                     autoComplete={field.autoComplete}
                     readOnly={Boolean(field.readOnly)}
                     onChange={(event) => setField(field.name, event.target.value)}
+                    onBlur={() => blurField(field.name)}
                   />
                   <button
                     type="button"
@@ -239,10 +256,19 @@ export function SchemaForm({ fields, values, errors, onChange, onSubmit, onCance
               maxLength={field.maxLength}
               step={field.step}
               min={field.min}
-              autoComplete={field.autoComplete}
+              autoComplete={field.autoComplete ?? (field.suggestions ? 'off' : undefined)}
+              list={field.suggestions?.length ? `${id}-list` : undefined}
               readOnly={Boolean(field.readOnly)}
               onChange={(event) => setField(field.name, event.target.value)}
+              onBlur={() => blurField(field.name)}
             />
+            {field.suggestions?.length ? (
+              <datalist id={`${id}-list`}>
+                {field.suggestions.map((option) => (
+                  <option key={option} value={option} />
+                ))}
+              </datalist>
+            ) : null}
           </FormField>
         );
       })}
