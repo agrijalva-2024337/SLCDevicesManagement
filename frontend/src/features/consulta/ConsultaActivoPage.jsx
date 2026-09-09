@@ -72,7 +72,7 @@ export function ConsultaActivoPage() {
 
       <p className="consulta-links">
         <Link to="/escanear">Escanear otro QR</Link>
-        <Link to="/app">Entrar al inventario</Link>
+        <Link to="/">Volver al inicio</Link>
       </p>
     </ConsultaShell>
   );

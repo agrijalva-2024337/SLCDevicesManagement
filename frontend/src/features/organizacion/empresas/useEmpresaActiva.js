@@ -54,7 +54,25 @@ export function EmpresaActivaProvider({ children }) {
     window.localStorage.setItem(STORAGE_KEY, String(stored));
   }, []);
 
-  const idActiva = isAdminGeneral ? selectedId : idEmpresa;
+  const empresasValidas = useMemo(
+    () => (empresas ?? []).filter((empresa) => empresa.habilitado !== false),
+    [empresas],
+  );
+
+  const idActiva = useMemo(() => {
+    if (!isAdminGeneral) {
+      return idEmpresa;
+    }
+    if (selectedId == null) {
+      return null;
+    }
+    if (isLoading) {
+      return selectedId;
+    }
+    return empresasValidas.some((empresa) => Number(empresa.id) === Number(selectedId))
+      ? selectedId
+      : null;
+  }, [empresasValidas, idEmpresa, isAdminGeneral, isLoading, selectedId]);
 
   const value = useMemo(
     () => ({

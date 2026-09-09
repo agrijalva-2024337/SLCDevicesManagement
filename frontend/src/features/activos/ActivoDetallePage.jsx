@@ -272,9 +272,11 @@ export function ActivoDetallePage() {
               <>
                 <img src={qr.imageUrl} alt={`Código QR de ${activo.nombre}`} width={216} height={216} />
                 <p className="app-ficha-qr-nombre">{activo.nombre}</p>
-                <a className="app-ficha-qr-url" href={qr.consultaUrl} target="_blank" rel="noreferrer">
-                  {qr.consultaUrl}
-                </a>
+                {qr.consultaUrl ? (
+                  <a className="app-ficha-qr-url" href={qr.consultaUrl} target="_blank" rel="noreferrer">
+                    {qr.consultaUrl}
+                  </a>
+                ) : null}
                 <a
                   className="app-btn app-btn--primary"
                   href={qr.imageUrl}

@@ -39,3 +39,6 @@ obj/
 .vs/
 appsettings.Development.json
 appsettings.json
+src/SLCDM.Api/appsettings.json
+src/SLCDM.Api/appsettings.*.json
+!src/SLCDM.Api/appsettings.example.json

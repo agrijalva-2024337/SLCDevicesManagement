@@ -1,13 +1,14 @@
 import { useMemo } from 'react';
 import { useAuth } from '@/features/auth/useAuth';
+import { SinPermiso } from '@/features/auth/RutaProtegida';
 import * as paisService from '@/features/catalogos/paises/paisService';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
-import { filterRowsByEmpresa, useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { DataTable } from '@/shared/components/DataTable';
 import { OverlayOutlet } from '@/shared/components/OverlayOutlet';
 import { RegisterButton } from '@/shared/components/RecordActions';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useResource } from '@/shared/hooks/useResource';
+import { RolUsuario } from '@/shared/api/contracts';
 
 export { EmpresaDetallePage } from '@/features/organizacion/empresas/EmpresaDetallePage';
 export { EmpresaFormPage } from '@/features/organizacion/empresas/EmpresaFormPage';
@@ -35,17 +36,12 @@ function CatalogBanner({ banner }) {
 }
 
 export function EmpresasPage() {
-  const { canWrite } = useAuth();
-  const { idActiva } = useEmpresaActiva();
-  const allowCreate = canWrite('empresas-create');
-  const allowEdit = canWrite('empresas');
+  const { canWrite, rol } = useAuth();
+  const allowCreate = canWrite('empresas-create') || rol === RolUsuario.AdministradorGeneral;
+  const allowEdit = canWrite('empresas') || rol === RolUsuario.AdministradorGeneral;
   const { rows, visibleRows, isLoading, errorMessage, banner, reload } =
     useCatalogCollection(empresaService.getAll);
   const paises = useResource(paisService.getAll);
-  const scopedRows = useMemo(
-    () => filterRowsByEmpresa(visibleRows, idActiva, { idField: 'id' }),
-    [visibleRows, idActiva],
-  );
   const outletContext = useMemo(
     () => ({
       reload,
@@ -54,6 +50,10 @@ export function EmpresasPage() {
     }),
     [paises.data, reload, rows],
   );
+
+  if (rol != null && rol !== RolUsuario.AdministradorGeneral) {
+    return <SinPermiso />;
+  }
 
   if (errorMessage) {
     return (
@@ -73,7 +73,7 @@ export function EmpresasPage() {
         description="Registro corporativo."
         primaryAction={allowCreate ? <RegisterButton to="nueva" label="Registrar empresa" /> : null}
         columns={columns}
-        rows={scopedRows}
+        rows={visibleRows}
         loading={isLoading}
         searchPlaceholder="Buscar por nombre, NIT, dirección o teléfono"
         statusFilter={{ key: 'habilitado' }}

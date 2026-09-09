@@ -17,4 +17,5 @@ public sealed record ActivoDto(
     string? Moneda,
     string? NumeroFactura,
     DateTime FechaVencimientoGarantia,
-    string? Observaciones);
+    string? Observaciones,
+    string TokenPublico);
