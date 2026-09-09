@@ -13,6 +13,7 @@ import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
 import { useResource } from '@/shared/hooks/useResource';
 import { byId, formatDate } from '@/shared/utils/format';
+import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
 
 function hydrate(row, sedes) {
   const sede = byId(sedes, row.idSede);
@@ -32,7 +33,7 @@ export function JornadasPage() {
     () => historicoInventarioService.listar({ idEmpresa: idActiva || undefined }),
     [idActiva],
   );
-  const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(load, {
+  const { rows, isLoading, errorMessage, banner, reload } = useCatalogCollection(load, {
     key: listQueryKey('historicosInventario', { idEmpresa: idActiva || undefined }),
   });
   const crud = useCrudOverlay();
@@ -134,16 +135,14 @@ export function JornadasPage() {
         jornadasAbiertas={jornadasAbiertas}
         onClose={crud.close}
         onSave={async (values) => {
-          const created = await historicoInventarioService.crear({
+          await historicoInventarioService.crear({
             idSede: Number(values.idSede),
             responsable: values.responsable,
             fechaInicio: values.fechaInicio,
             observaciones: values.observaciones,
           });
-          setBanner({ message: 'Jornada abierta.', variant: 'empty' });
-          crud.close();
           await reload();
-          navigate(`/app/inventario-fisico/${created.id}`);
+          return saveSuccessResult({ created: true, entityLabel: 'jornada' });
         }}
       />
     </section>

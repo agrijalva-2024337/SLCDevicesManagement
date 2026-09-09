@@ -32,11 +32,11 @@ export function SedesPage() {
   const { canWrite } = useAuth();
   const { idActiva } = useEmpresaActiva();
   const allowWrite = canWrite('sedes');
-  const { rows, visibleRows, isLoading, errorMessage, banner, reload } =
+  const { rows, isLoading, errorMessage, banner, reload } =
     useCatalogCollection(sedeService.getAll);
   const scopedRows = useMemo(
-    () => filterRowsByEmpresa(visibleRows, idActiva),
-    [visibleRows, idActiva],
+    () => filterRowsByEmpresa(rows, idActiva),
+    [rows, idActiva],
   );
   const empresas = useResource(empresaService.getAll);
   const paises = useResource(paisService.getAll);

@@ -1,81 +1,26 @@
 import { foldSearch } from '@/shared/utils/search';
+import { PAISES_ISO_ROWS } from '@/shared/validation/paisesIso.data';
 
 /**
- * Catálogo local ISO 3166 + rangos de dígitos nacionales (FE-19).
- * Sin dependencia de libphonenumber-js: solo países de operación real.
+ * Catálogo ISO 3166 mundial (español) + rangos de dígitos nacionales.
+ * Sin libphonenumber-js. Fuente: paisesIso.data.js (~230 países).
  */
-export const PAISES_ISO = Object.freeze([
-  {
-    nombre: 'Guatemala',
-    codigoIso2: 'gt',
-    codigoIso3: 'gtm',
-    codigoTelefonico: '+502',
-    digitos: { min: 8, max: 8 },
-  },
-  {
-    nombre: 'Belice',
-    codigoIso2: 'bz',
-    codigoIso3: 'blz',
-    codigoTelefonico: '+501',
-    digitos: { min: 7, max: 7 },
-  },
-  {
-    nombre: 'El Salvador',
-    codigoIso2: 'sv',
-    codigoIso3: 'slv',
-    codigoTelefonico: '+503',
-    digitos: { min: 8, max: 8 },
-  },
-  {
-    nombre: 'Honduras',
-    codigoIso2: 'hn',
-    codigoIso3: 'hnd',
-    codigoTelefonico: '+504',
-    digitos: { min: 8, max: 8 },
-  },
-  {
-    nombre: 'Nicaragua',
-    codigoIso2: 'ni',
-    codigoIso3: 'nic',
-    codigoTelefonico: '+505',
-    digitos: { min: 8, max: 8 },
-  },
-  {
-    nombre: 'Costa Rica',
-    codigoIso2: 'cr',
-    codigoIso3: 'cri',
-    codigoTelefonico: '+506',
-    digitos: { min: 8, max: 8 },
-  },
-  {
-    nombre: 'Panamá',
-    codigoIso2: 'pa',
-    codigoIso3: 'pan',
-    codigoTelefonico: '+507',
-    digitos: { min: 7, max: 8 },
-  },
-  {
-    nombre: 'México',
-    codigoIso2: 'mx',
-    codigoIso3: 'mex',
-    codigoTelefonico: '+52',
-    digitos: { min: 10, max: 10 },
-  },
-  {
-    nombre: 'Estados Unidos',
-    codigoIso2: 'us',
-    codigoIso3: 'usa',
-    codigoTelefonico: '+1',
-    digitos: { min: 10, max: 10 },
-  },
-  {
-    nombre: 'Colombia',
-    codigoIso2: 'co',
-    codigoIso3: 'col',
-    codigoTelefonico: '+57',
-    digitos: { min: 10, max: 10 },
-  },
-]);
+export const PAISES_ISO = Object.freeze(PAISES_ISO_ROWS.map((row) => Object.freeze({ ...row })));
+
+const ALIASES = Object.freeze({
+  chile: 'cl',
+  eeuu: 'us',
+  usa: 'us',
+  'estados unidos de america': 'us',
+  uk: 'gb',
+  england: 'gb',
+  britain: 'gb',
+  'gran bretana': 'gb',
+  spain: 'es',
+  mexico: 'mx',
+  brasil: 'br',
+  brazil: 'br',
+});
 
 function normalizeDial(code) {
   const digits = String(code ?? '').replace(/\D/g, '');
@@ -87,29 +32,59 @@ function scoreNombre(pais, query) {
   const needle = foldSearch(query);
   if (!needle) return 0;
   if (folded === needle) return 100;
-  if (folded.startsWith(needle)) return 80;
-  if (folded.includes(needle)) return 60;
+  if (folded.startsWith(needle)) return 80 + Math.min(19, needle.length);
+  if (folded.includes(` ${needle}`)) return 55;
+  if (folded.includes(needle)) return 45;
   const tokens = needle.split(/\s+/);
   if (tokens.every((t) => folded.includes(t))) return 40;
   return 0;
 }
 
-export function buscarPorNombre(nombre) {
+function byAlias(nombre) {
+  const key = foldSearch(nombre).replace(/\s+/g, ' ');
+  const iso2 = ALIASES[key];
+  return iso2 ? buscarPorIso2(iso2) : null;
+}
+
+/**
+ * Mejor coincidencia por nombre.
+ * Para autorrelleno (`modo: 'autofill'`): exige exacto, alias, o prefijo único (≥2 letras).
+ */
+export function buscarPorNombre(nombre, { modo = 'buscar' } = {}) {
   const text = String(nombre ?? '').trim();
   if (!text) return null;
+
+  const alias = byAlias(text);
+  if (alias) return alias;
+
+  const needle = foldSearch(text);
   let best = null;
   let bestScore = 0;
+  const prefixHits = [];
+
   for (const pais of PAISES_ISO) {
     const score = scoreNombre(pais, text);
     if (score > bestScore) {
       best = pais;
       bestScore = score;
     }
+    if (foldSearch(pais.nombre).startsWith(needle) && needle.length >= 2) {
+      prefixHits.push(pais);
+    }
   }
-  return bestScore >= 60 ? best : null;
+
+  if (modo === 'autofill') {
+    if (bestScore >= 100) return best;
+    if (prefixHits.length === 1) return prefixHits[0];
+    // Prefijo que ya es el nombre completo de un candidato (p. ej. "Chile" entre China/Chile).
+    const exactPrefix = prefixHits.find((pais) => foldSearch(pais.nombre) === needle);
+    return exactPrefix ?? null;
+  }
+
+  return bestScore >= 45 ? best : null;
 }
 
-export function sugerirPorNombre(nombre, limit = 3) {
+export function sugerirPorNombre(nombre, limit = 8) {
   const text = String(nombre ?? '').trim();
   if (!text) return [];
   return PAISES_ISO.map((pais) => ({ pais, score: scoreNombre(pais, text) }))
@@ -117,6 +92,10 @@ export function sugerirPorNombre(nombre, limit = 3) {
     .sort((a, b) => b.score - a.score || a.pais.nombre.localeCompare(b.pais.nombre, 'es'))
     .slice(0, limit)
     .map((row) => row.pais);
+}
+
+export function nombresPaisesIso() {
+  return PAISES_ISO.map((pais) => pais.nombre);
 }
 
 export function buscarPorIso2(codigo) {
@@ -135,10 +114,21 @@ export function buscarPorIso3(codigo) {
   return PAISES_ISO.find((pais) => pais.codigoIso3 === code) ?? null;
 }
 
+/** Preferencia cuando un código (+1, +7, +44…) es compartido. */
+const DIAL_PREFERENCE = Object.freeze({
+  '+1': 'us',
+  '+7': 'ru',
+  '+44': 'gb',
+});
+
 export function buscarPorCodigoTelefonico(codigo) {
   const dial = normalizeDial(codigo);
   if (!dial) return null;
-  return PAISES_ISO.find((pais) => normalizeDial(pais.codigoTelefonico) === dial) ?? null;
+  const matches = PAISES_ISO.filter((pais) => normalizeDial(pais.codigoTelefonico) === dial);
+  if (matches.length === 0) return null;
+  if (matches.length === 1) return matches[0];
+  const preferred = DIAL_PREFERENCE[dial];
+  return matches.find((pais) => pais.codigoIso2 === preferred) ?? matches[0];
 }
 
 export function iso2Conocido(codigo) {

@@ -22,6 +22,7 @@ import { useRecordDeepLink } from '@/shared/hooks/useRecordDeepLink';
 import { listQueryKey } from '@/shared/data/queryKeys';
 import { useResource } from '@/shared/hooks/useResource';
 import { byId, formatDate } from '@/shared/utils/format';
+import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
@@ -240,9 +241,8 @@ export function BajasPage() {
               firmaEntrega: values.firmaEntrega,
               firmaRecibe: values.firmaRecibe,
             });
-            setBanner({ message: 'Baja registrada. El activo queda dado de baja.', variant: 'empty' });
-            crud.close();
             await Promise.all([reload(), activos.reload(), historial.reload()]);
+            return saveSuccessResult({ created: true, entityLabel: 'baja' });
           } catch (error) {
             if (error.response?.status === 409 || error.status === 409) {
               setBanner({ message: error.message, variant: 'error' });

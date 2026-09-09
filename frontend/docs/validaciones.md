@@ -48,7 +48,7 @@ ISO3 = ^[A-Za-z]{3}$
 1. **Contraseña.** Alfabeto amplio `[A-Za-z0-9!@#$%&*?]` (generador **más** caracteres ambiguos) con composición obligatoria y largo 8–128. El alfabeto estricto del `PasswordGenerator` (sin 0/O/1/l/I) queda documentado en comentario de `patterns.js` por si se quiere volver a transcripción manual.
 2. **Identificación tributaria.** Etiqueta global; payload sigue `nitCodigo` / `nit`. Patrón general letras/dígitos/guiones; `NIT_GT` cuando el país (o prefijo telefónico) es Guatemala.
 3. **Teléfono de Empresa.** Sin `IdPais` en el DTO: se valida con el prefijo elegido (tabla local) o, si no hay país conocido, E.164 7–15 dígitos.
-4. **Países.** Tabla local `paisesIso.js` (sin `libphonenumber-js`) para **autorrelleno** y rangos de teléfono. No bloquea países nuevos: basta formato de nombre/ISO/código.
+4. **Países.** Catálogo mundial en `paisesIso.data.js` (~230 países, nombres en español) para autorrelleno y rangos de teléfono. No bloquea países fuera de lista: basta formato válido.
 
 ## Relajaciones posteriores a datos existentes
 

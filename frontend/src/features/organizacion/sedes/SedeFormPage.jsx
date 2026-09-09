@@ -18,7 +18,7 @@ import { StatusBadge } from '@/shared/components/StatusBadge';
 import { useResource } from '@/shared/hooks/useResource';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
-import { resolveSavedId, saveSuccessState } from '@/shared/utils/saveFeedback';
+import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
 
 function enabledRecords(list) {
   return (list ?? []).filter((item) => item.habilitado !== false);
@@ -115,16 +115,13 @@ function SedeFormEditor({ id }) {
       onSave={async (values) => {
         const payload = sedeToPayload(values);
         try {
-          const saved = editing
-            ? await sedeService.update(Number(id), payload)
-            : await sedeService.create(payload);
-          await outlet.reload?.();
-          const recordId = resolveSavedId(saved, id);
-          if (recordId == null) {
-            navigate('/app/catalogos/sedes');
-            return;
+          if (editing) {
+            await sedeService.update(Number(id), payload);
+          } else {
+            await sedeService.create(payload);
           }
-          navigate(`/app/catalogos/sedes/${recordId}`, { state: saveSuccessState(editing) });
+          await outlet.reload?.();
+          return saveSuccessResult({ created: !editing, entityLabel: 'sede' });
         } catch (error) {
           throw applyApiFieldErrors(error);
         }

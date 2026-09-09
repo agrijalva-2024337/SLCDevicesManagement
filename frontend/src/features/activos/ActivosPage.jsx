@@ -36,6 +36,7 @@ import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
 import { listQueryKey } from '@/shared/data/queryKeys';
 import { useResource } from '@/shared/hooks/useResource';
 import { byId } from '@/shared/utils/format';
+import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
 
 function estadoTone(nombre) {
   const key = String(nombre ?? '').toLowerCase();
@@ -216,15 +217,13 @@ export function ActivosPage() {
           idEmpresaActiva={idActiva}
           onClose={crud.close}
           onSave={async (payload) => {
-            const saved = crud.isEdit
-              ? await activoService.update(crud.record.id, payload)
-              : await activoService.create(payload);
-            setBanner({
-              message: crud.isEdit ? 'Activo actualizado.' : 'Activo registrado.',
-            });
-            crud.close();
+            if (crud.isEdit) {
+              await activoService.update(crud.record.id, payload);
+            } else {
+              await activoService.create(payload);
+            }
             await refreshAll();
-            navigate(`/app/activos/${saved.id ?? crud.record.id}`);
+            return saveSuccessResult({ created: !crud.isEdit, entityLabel: 'activo' });
           }}
         />
       ) : null}
@@ -249,9 +248,8 @@ export function ActivosPage() {
             fecha: values.fecha,
             motivo: values.motivo,
           });
-          setBanner({ message: 'Traslado registrado desde la ficha.' });
-          setMovimiento(null);
           await refreshAll();
+          return saveSuccessResult({ created: true, entityLabel: 'traslado' });
         }}
       />
 
@@ -276,9 +274,8 @@ export function ActivosPage() {
             idTipoMantenimiento: Number(values.idTipoMantenimiento),
             descripcionProblema: values.descripcionProblema,
           });
-          setBanner({ message: 'Mantenimiento abierto desde la ficha.' });
-          setMovimiento(null);
           await refreshAll();
+          return saveSuccessResult({ created: true, entityLabel: 'mantenimiento' });
         }}
       />
 
@@ -308,9 +305,8 @@ export function ActivosPage() {
               firmaEntrega: values.firmaEntrega,
               firmaRecibe: values.firmaRecibe,
             });
-            setBanner({ message: 'Baja registrada. El activo queda dado de baja.' });
-            setMovimiento(null);
             await refreshAll();
+            return saveSuccessResult({ created: true, entityLabel: 'baja' });
           } catch (error) {
             if (error.response?.status === 409 || error.status === 409) {
               setBanner({ message: error.message, variant: 'error' });

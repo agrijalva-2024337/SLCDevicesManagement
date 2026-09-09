@@ -22,6 +22,7 @@ import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
 import { useRecordDeepLink } from '@/shared/hooks/useRecordDeepLink';
 import { useResource } from '@/shared/hooks/useResource';
 import { byId, formatDate } from '@/shared/utils/format';
+import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
 
 const ESTADOS_VISTA = ['Vigente', 'Devuelta'];
 
@@ -309,10 +310,9 @@ export function AsignacionesPage() {
             firmaEntrega: values.firmaEntrega,
             firmaRecibe: values.firmaRecibe,
           });
-          setBanner({ message: 'Entrega registrada.', variant: 'empty' });
-          crud.close();
           await reload();
           await activos.reload();
+          return saveSuccessResult({ created: true, entityLabel: 'entrega' });
         }}
       />
     </section>

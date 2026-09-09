@@ -19,6 +19,7 @@ export function PhoneInput({
   autoComplete = 'tel',
   onPrefijoChange,
   onNumeroChange,
+  onBlurNumero,
 }) {
   const options = useMemo(() => paisesConPrefijo(paises), [paises]);
   const fallback = defaultDialCode(options);
@@ -69,6 +70,7 @@ export function PhoneInput({
         placeholder="Número"
         disabled={disabled}
         onChange={(event) => onNumeroChange(sanitizeLocalNumber(event.target.value))}
+        onBlur={onBlurNumero}
       />
     </div>
   );

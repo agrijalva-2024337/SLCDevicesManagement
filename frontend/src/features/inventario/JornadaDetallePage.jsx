@@ -20,6 +20,7 @@ import { useRecordDeepLink } from '@/shared/hooks/useRecordDeepLink';
 import { useResource } from '@/shared/hooks/useResource';
 import { byId, formatDate } from '@/shared/utils/format';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
+import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
 
 function resultadoDe(hallazgo) {
   if (!hallazgo) return { label: 'Pendiente', tone: 'muted' };
@@ -310,20 +311,19 @@ export function JornadaDetallePage() {
               buenEstado: values.buenEstado,
               observaciones: values.observaciones,
             });
-            setBanner({ message: 'Hallazgo actualizado.', variant: 'empty' });
-          } else {
-            await detalleActivoService.registrar({
-              idActivo: Number(values.idActivo || crud.record?.idActivo),
-              idHistoricoInventario: Number(jornada.id),
-              encontrado: values.encontrado,
-              buenEstado: values.buenEstado,
-              observaciones: values.observaciones,
-              fechaVerificacion: values.fechaVerificacion,
-            });
-            setBanner({ message: 'Hallazgo registrado.', variant: 'empty' });
+            await reload();
+            return saveSuccessResult({ created: false, entityLabel: 'hallazgo' });
           }
-          crud.close();
+          await detalleActivoService.registrar({
+            idActivo: Number(values.idActivo || crud.record?.idActivo),
+            idHistoricoInventario: Number(jornada.id),
+            encontrado: values.encontrado,
+            buenEstado: values.buenEstado,
+            observaciones: values.observaciones,
+            fechaVerificacion: values.fechaVerificacion,
+          });
           await reload();
+          return saveSuccessResult({ created: true, entityLabel: 'hallazgo' });
         }}
       />
 

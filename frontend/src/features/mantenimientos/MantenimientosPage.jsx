@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import * as activoService from '@/features/activos/activoService';
@@ -23,6 +23,7 @@ import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
 import { useRecordDeepLink } from '@/shared/hooks/useRecordDeepLink';
 import { useResource } from '@/shared/hooks/useResource';
 import { byId, formatDate } from '@/shared/utils/format';
+import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
 
 function sedeLabel(activo, ubicaciones, sedes) {
   const ubicacion = byId(ubicaciones, activo?.idUbicacion);
@@ -55,11 +56,11 @@ export function MantenimientosPage() {
     isLoading,
     errorMessage,
     banner,
-    setBanner,
     reload,
   } = useCatalogCollection(asignacionService.getAll);
   const crud = useCrudOverlay();
   const [cierreOpen, setCierreOpen] = useState(false);
+  const cierreSavedRef = useRef(false);
   const activos = useResource(activoService.getAll);
   const tiposMantenimiento = useResource(tipoMantenimientoService.getAll);
   const ubicaciones = useResource(ubicacionService.getAll);
@@ -263,17 +264,22 @@ export function MantenimientosPage() {
             idTipoMantenimiento: Number(values.idTipoMantenimiento),
             descripcionProblema: values.descripcionProblema,
           });
-          setBanner({ message: 'Mantenimiento abierto.', variant: 'empty' });
-          crud.close();
           await reload();
           await activos.reload();
+          return saveSuccessResult({ created: true, entityLabel: 'mantenimiento' });
         }}
       />
 
       <MantenimientoCierreOverlay
         open={cierreOpen && crud.isView}
         record={crud.record}
-        onClose={() => setCierreOpen(false)}
+        onClose={() => {
+          setCierreOpen(false);
+          if (cierreSavedRef.current) {
+            cierreSavedRef.current = false;
+            crud.close();
+          }
+        }}
         onSave={async (values) => {
           await mantenimientoService.finalizar(crud.record.id, {
             trabajoRealizado: values.trabajoRealizado,
@@ -282,11 +288,10 @@ export function MantenimientosPage() {
             fechaDevolucion: values.fechaDevolucion,
             observaciones: values.observaciones,
           });
-          setBanner({ message: 'Mantenimiento finalizado. El activo vuelve a Disponible.', variant: 'empty' });
-          setCierreOpen(false);
-          crud.close();
           await reload();
           await activos.reload();
+          cierreSavedRef.current = true;
+          return saveSuccessResult({ created: false, entityLabel: 'mantenimiento' });
         }}
       />
     </section>

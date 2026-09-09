@@ -12,7 +12,7 @@ import * as responsableService from '@/features/organizacion/responsables/respon
 import { RolUsuario, rolUsuarioLabel } from '@/shared/api/contracts';
 import { asOptions, phoneField, requireSelect, validarCodigoTelefonico, validarCorreo, validarIdentificacionTributaria, validarIso2, validarIso3, validarNombreEntidad, validarNombrePersona, validarPassword, validarTextoLibre, validarUsername } from '@/shared/components/recordFormUtils';
 import { phoneFormFields, phonePayload, validatePhoneFields } from '@/shared/utils/phoneNumber';
-import { buscarPorCodigoTelefonico, buscarPorIso2, buscarPorIso3 } from '@/shared/validation/paisesIso';
+import { buscarPorCodigoTelefonico, buscarPorIso2, buscarPorIso3, nombresPaisesIso } from '@/shared/validation/paisesIso';
 
 function switchField() {
   return {
@@ -463,7 +463,7 @@ export const maestros = {
     singular: 'país',
     kicker: 'País',
     registerLabel: 'Registrar país',
-    hint: 'Si el país está en la tabla local, el nombre o el ISO completan el resto. También puede registrar países nuevos a mano.',
+    hint: 'Escriba el país (ej. Chile): se completa ISO y código. También puede elegir de la lista o registrar uno nuevo a mano.',
     description: 'Catálogo geográfico de cada empresa. Solo el administrador de empresa puede registrarlos.',
     lookups: ['empresas'],
     titleOf: (item) => item.nombre,
@@ -486,10 +486,18 @@ export const maestros = {
       ...(rol === RolUsuario.AdministradorGeneral && !editing
         ? [{ name: 'idEmpresa', label: 'Empresa', type: 'select', required: true, options: asOptions(empresas) }]
         : []),
-      { name: 'nombre', label: 'Nombre', required: true, maxLength: 100, wide: true },
-      { name: 'codigoIso2', label: 'ISO 2', required: true, maxLength: 2, hint: 'Dos letras en minúsculas (ej. gt)' },
+      {
+        name: 'nombre',
+        label: 'Nombre',
+        required: true,
+        maxLength: 100,
+        wide: true,
+        suggestions: nombresPaisesIso(),
+        hint: 'Empiece a escribir (Chile, México…) o elija de las sugerencias.',
+      },
+      { name: 'codigoIso2', label: 'ISO 2', required: true, maxLength: 2, hint: 'Dos letras en minúsculas (ej. cl)' },
       { name: 'codigoIso3', label: 'ISO 3', required: true, maxLength: 3 },
-      { name: 'codigoTelefonico', label: 'Código telefónico', maxLength: 5, hint: 'Con o sin + (ej. +502)' },
+      { name: 'codigoTelefonico', label: 'Código telefónico', maxLength: 5, hint: 'Con o sin + (ej. +56)' },
     ],
     validate(values, _records, _id, { rol } = {}) {
       const errors = {
