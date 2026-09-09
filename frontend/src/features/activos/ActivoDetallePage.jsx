@@ -33,6 +33,7 @@ import { formatHaceCuanto, listarRastreo, mapsUrlDe } from '@/features/rastreo/r
 import { DataTable } from '@/shared/components/DataTable';
 import { DetailField } from '@/shared/components/DetailOverlay';
 import { PageHeader } from '@/shared/components/PageHeader';
+import { DescargarActaButton } from '@/shared/components/RecordActions';
 import { ToneBadge } from '@/shared/components/StatusBadge';
 import { detailQueryKey, listQueryKey } from '@/shared/data/queryKeys';
 import { useResource } from '@/shared/hooks/useResource';
@@ -371,16 +372,11 @@ export function ActivoDetallePage() {
           emptyDescription="Cuando se registre una entrega, traslado o baja aparecerá en esta lista."
           renderRowActions={(row) =>
             row.documentoPdfUrl ? (
-              <a
+              <DescargarActaButton
+                url={row.documentoPdfUrl}
+                label="Descargar PDF"
                 className="app-btn app-btn--ghost app-btn--sm"
-                href={row.documentoPdfUrl}
-                download
-                target="_blank"
-                rel="noreferrer"
-              >
-                <i className="pi pi-download" aria-hidden="true" />
-                Descargar PDF
-              </a>
+              />
             ) : (
               <span className="text-sm text-text-muted">Sin acta</span>
             )

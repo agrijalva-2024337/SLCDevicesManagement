@@ -33,6 +33,7 @@ export const apiPaths = {
   // [API] ficha pública sin login; confirmar path y nombre del código
   consultaPublica: (codigo) => `/api/consulta/activos/${encodeURIComponent(codigo)}`,
   asignaciones: '/api/Asignaciones',
+  asignacionPdf: (id) => `/api/Asignaciones/${id}/pdf`,
   // [API] multipart archivo PDF; confirmar cuando exista el controller
   asignacionVerificarPdf: (id) => `/api/Asignaciones/${id}/pdf/verificar`,
   historicosInventario: '/api/HistoricosInventario',

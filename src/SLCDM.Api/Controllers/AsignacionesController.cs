@@ -71,6 +71,7 @@ public sealed class AsignacionesController : ApiControllerBase
     public async Task<IActionResult> GetPdf(int id, CancellationToken cancellationToken)
     {
         var file = await _pdf.HandleAsync(new GetAsignacionPdfQuery(id), cancellationToken);
+        Response.Headers.XContentTypeOptions = "nosniff";
         return File(file.Content, "application/pdf", file.FileName);
     }
 

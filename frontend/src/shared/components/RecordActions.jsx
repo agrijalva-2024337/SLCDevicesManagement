@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
+import { getErrorMessage } from '@/shared/utils/getErrorMessage';
+import { downloadActaPdf } from '@/shared/utils/downloadFile';
 
 const viewClass = 'app-btn app-btn--ghost app-btn--sm';
 const editClass = 'app-btn app-btn--primary app-btn--sm';
@@ -51,13 +54,36 @@ export function EditRecordButton({ to, onClick }) {
   );
 }
 
-export function DescargarActaButton({ url }) {
+export function DescargarActaButton({ url, label = 'Descargar acta en PDF', className = 'app-btn app-btn--ghost' }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
   if (!url) return null;
+
+  async function onClick() {
+    setError(null);
+    setBusy(true);
+    try {
+      await downloadActaPdf(url);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <a className="app-btn app-btn--ghost" href={url} download target="_blank" rel="noreferrer">
-      <i className="pi pi-download" aria-hidden="true" />
-      Descargar acta en PDF
-    </a>
+    <span className="inline-flex flex-col items-start gap-1">
+      <button type="button" className={className} onClick={onClick} disabled={busy}>
+        <i className="pi pi-download" aria-hidden="true" />
+        {busy ? 'Descargando…' : label}
+      </button>
+      {error ? (
+        <span className="text-sm" role="alert">
+          {error}
+        </span>
+      ) : null}
+    </span>
   );
 }
 
