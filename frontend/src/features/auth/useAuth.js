@@ -60,6 +60,8 @@ function sessionFromToken(token, stored) {
     rol: rol ?? stored?.rol ?? null,
     role: payload[AuthClaimTypes.role] ?? stored?.role,
     idEmpresa: Number.isFinite(idEmpresa) ? idEmpresa : (stored?.idEmpresa ?? null),
+    // La lista autorizada viene de /me o login (no del JWT: claims repetidos no parsean bien en JSON).
+    empresasAutorizadas: Array.isArray(stored?.empresasAutorizadas) ? stored.empresasAutorizadas : [],
   };
 }
 
@@ -153,12 +155,14 @@ function useAuthState() {
 
   const rol = usuario?.rol ?? null;
   const idEmpresa = usuario?.idEmpresa ?? null;
+  const empresasAutorizadas = usuario?.empresasAutorizadas ?? [];
 
   const value = useMemo(
     () => ({
       usuario,
       rol,
       idEmpresa,
+      empresasAutorizadas,
       isAuthenticated: Boolean(getAccessToken() && usuario),
       isLoading,
       isReady,
@@ -167,7 +171,7 @@ function useAuthState() {
       logout,
       canWrite: (resource) => canWriteCatalog(rol, resource),
     }),
-    [usuario, rol, idEmpresa, isLoading, isReady, error, login, logout],
+    [usuario, rol, idEmpresa, empresasAutorizadas, isLoading, isReady, error, login, logout],
   );
 
   return value;

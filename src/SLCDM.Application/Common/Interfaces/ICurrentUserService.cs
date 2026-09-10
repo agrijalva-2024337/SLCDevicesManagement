@@ -16,5 +16,11 @@ public interface ICurrentUserService
 
     int? EmpresaId { get; }
 
+    /// <summary>
+    /// Empresas del JWT (claims <c>id_empresa</c>). Vacío para AdministradorGeneral
+    /// (ve todo vía <see cref="IsAdministradorGeneral"/>).
+    /// </summary>
+    IReadOnlyList<int> EmpresasAutorizadas { get; }
+
     bool IsAdministradorGeneral { get; }
 }

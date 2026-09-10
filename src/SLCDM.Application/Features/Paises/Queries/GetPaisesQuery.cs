@@ -25,8 +25,8 @@ public sealed class GetPaisesQueryHandler : IQueryHandler<GetPaisesQuery, IReadO
 
         if (!_currentUser.IsAdministradorGeneral)
         {
-            var idEmpresa = _currentUser.EmpresaId ?? -1;
-            items = items.Where(p => p.IdEmpresa == idEmpresa);
+            var autorizadas = _currentUser.EmpresasAutorizadas;
+            items = items.Where(p => autorizadas.Contains(p.IdEmpresa));
         }
 
         var list = await items

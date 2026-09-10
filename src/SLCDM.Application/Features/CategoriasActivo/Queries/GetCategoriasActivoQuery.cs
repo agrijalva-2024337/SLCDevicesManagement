@@ -26,8 +26,8 @@ public sealed class GetCategoriasActivoQueryHandler
 
         if (!_currentUser.IsAdministradorGeneral)
         {
-            var idEmpresa = _currentUser.EmpresaId ?? -1;
-            itemsQuery = itemsQuery.Where(c => c.IdEmpresa == idEmpresa);
+            var autorizadas = _currentUser.EmpresasAutorizadas;
+            itemsQuery = itemsQuery.Where(c => autorizadas.Contains(c.IdEmpresa));
         }
 
         if (!query.IncluirInhabilitados)

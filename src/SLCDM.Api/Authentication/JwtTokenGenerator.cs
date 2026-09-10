@@ -19,7 +19,7 @@ public sealed class JwtTokenGenerator : IJwtTokenGenerator
         _options = options.Value;
     }
 
-    public GeneratedJwt Generate(Usuario usuario)
+    public GeneratedJwt Generate(Usuario usuario, IReadOnlyList<int>? empresasAutorizadas = null)
     {
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SecretKey));
         var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
@@ -34,9 +34,27 @@ public sealed class JwtTokenGenerator : IJwtTokenGenerator
             new(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
             new(AuthClaimTypes.Name, nombre),
             new(AuthClaimTypes.Email, usuario.Correo),
-            new(AuthClaimTypes.Role, rol),
-            new(AuthClaimTypes.IdEmpresa, usuario.IdEmpresa?.ToString() ?? string.Empty)
+            new(AuthClaimTypes.Role, rol)
         };
+
+        var empresas = empresasAutorizadas ?? [];
+        if (empresas.Count == 0 && usuario.IdEmpresa is int idLegacy)
+        {
+            empresas = [idLegacy];
+        }
+
+        if (empresas.Count == 0)
+        {
+            // AdministradorGeneral / sin empresa: claim vacío para no romper clientes viejos.
+            claims.Add(new Claim(AuthClaimTypes.IdEmpresa, string.Empty));
+        }
+        else
+        {
+            foreach (var idEmpresa in empresas.Distinct())
+            {
+                claims.Add(new Claim(AuthClaimTypes.IdEmpresa, idEmpresa.ToString()));
+            }
+        }
 
         var token = new JwtSecurityToken(
             issuer: _options.Issuer,

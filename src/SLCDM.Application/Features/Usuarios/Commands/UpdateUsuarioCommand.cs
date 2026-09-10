@@ -3,7 +3,9 @@ using Mapster;
 using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
+using SLCDM.Application.Common.Security;
 using SLCDM.Application.Common.Validation;
+using SLCDM.Domain.Entities;
 using SLCDM.Domain.Enums;
 
 namespace SLCDM.Application.Features.Usuarios.Commands;
@@ -70,8 +72,8 @@ public sealed class UpdateUsuarioCommandValidator : AbstractValidator<UpdateUsua
             .When(x => x.Rol != RolUsuario.AdministradorGeneral);
 
         RuleFor(x => x.IdEmpresa)
-            .Must(id => currentUser.IsAdministradorGeneral || id == currentUser.EmpresaId)
-            .WithMessage("Solo puede asignar usuarios a su empresa.")
+            .Must(id => currentUser.IsAdministradorGeneral || currentUser.TieneAccesoAEmpresa(id))
+            .WithMessage("Solo puede asignar usuarios a sus empresas autorizadas.")
             .When(_ => !currentUser.IsAdministradorGeneral);
 
         RuleFor(x => x.Rol)
@@ -111,6 +113,41 @@ public sealed class UpdateUsuarioCommandHandler : ICommandHandler<UpdateUsuarioC
             entity.PasswordHash = _passwordHashService.HashPassword(command.Password);
         }
 
+        await SyncUsuarioEmpresaAsync(entity, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task SyncUsuarioEmpresaAsync(Usuario entity, CancellationToken cancellationToken)
+    {
+        var existentes = await _db.UsuariosEmpresas
+            .Where(ue => ue.IdUsuario == entity.Id)
+            .ToListAsync(cancellationToken);
+
+        if (entity.IdEmpresa is not int idEmpresa)
+        {
+            _db.UsuariosEmpresas.RemoveRange(existentes);
+            return;
+        }
+
+        var match = existentes.FirstOrDefault(ue => ue.IdEmpresa == idEmpresa);
+        if (match is null)
+        {
+            _db.UsuariosEmpresas.Add(new UsuarioEmpresa
+            {
+                IdUsuario = entity.Id,
+                IdEmpresa = idEmpresa,
+                Rol = entity.Rol
+            });
+        }
+        else
+        {
+            match.Rol = entity.Rol;
+        }
+
+        // Mientras el formulario solo maneja un IdEmpresa, las filas extra se retiran.
+        foreach (var extra in existentes.Where(ue => ue.IdEmpresa != idEmpresa))
+        {
+            _db.UsuariosEmpresas.Remove(extra);
+        }
     }
 }

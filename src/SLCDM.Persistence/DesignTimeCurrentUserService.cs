@@ -18,5 +18,7 @@ internal sealed class DesignTimeCurrentUserService : ICurrentUserService
 
     public int? EmpresaId => null;
 
+    public IReadOnlyList<int> EmpresasAutorizadas => [];
+
     public bool IsAdministradorGeneral => true;
 }

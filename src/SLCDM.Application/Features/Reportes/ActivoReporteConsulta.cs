@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Interfaces;
+using SLCDM.Application.Common.Security;
 using SLCDM.Application.Features.Asignaciones;
 using SLCDM.Domain.Entities;
 
@@ -59,7 +60,7 @@ internal static class ActivoReporteConsulta
             return idEmpresaSolicitada is > 0 ? idEmpresaSolicitada : null;
         }
 
-        return user.EmpresaId;
+        return user.ResolverEmpresaDestino(idEmpresaSolicitada) ?? user.EmpresaId;
     }
 
     // NOTA (fix aplicado en BE-23-reportes-historiales, ver guia de

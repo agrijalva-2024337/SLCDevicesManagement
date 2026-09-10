@@ -17,4 +17,5 @@ public sealed record AuthenticatedUserDto(
     string Email,
     RolUsuario Rol,
     string Role,
-    int? IdEmpresa);
+    int? IdEmpresa,
+    IReadOnlyList<int> EmpresasAutorizadas);

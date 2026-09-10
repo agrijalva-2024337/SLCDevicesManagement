@@ -8,7 +8,9 @@ import { ThemeToggle } from '@/shared/theme/ThemeToggle';
 
 function EmpresaSelector() {
   const { empresas, idActiva, isAdminGeneral, isLocked, isLoading, selectEmpresa } = useEmpresaActiva();
-  const options = isLocked ? empresas.filter((empresa) => Number(empresa.id) === Number(idActiva)) : empresas;
+  const options = isLocked
+    ? empresas.filter((empresa) => Number(empresa.id) === Number(idActiva))
+    : empresas;
 
   return (
     <label className="app-empresa-select">

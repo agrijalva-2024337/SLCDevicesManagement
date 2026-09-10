@@ -26,9 +26,14 @@ export function mapAuthenticatedUser(details) {
     return null;
   }
 
+  const empresasAutorizadas = Array.isArray(details.empresasAutorizadas)
+    ? details.empresasAutorizadas.map((id) => Number(id)).filter((id) => Number.isFinite(id))
+    : [];
+
   return {
     id: details.id,
-    idEmpresa: details.idEmpresa ?? null,
+    idEmpresa: details.idEmpresa ?? (empresasAutorizadas[0] ?? null),
+    empresasAutorizadas,
     nombres: details.nombre ?? details.nombres ?? '',
     correo: details.email ?? details.correo ?? '',
     username: details.username,
