@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router';
+import { useAuth } from '@/features/auth/useAuth';
 import * as paisService from '@/features/catalogos/paises/paisService';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
+import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import {
   emptySedeForm,
   paisesDeEmpresa,
@@ -15,10 +17,11 @@ import { DetailOverlay } from '@/shared/components/DetailOverlay';
 import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import { compactErrors } from '@/shared/components/recordFormUtils';
 import { StatusBadge } from '@/shared/components/StatusBadge';
+import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
+import { RolUsuario } from '@/shared/api/contracts';
 import { useResource } from '@/shared/hooks/useResource';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
-import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
 
 function enabledRecords(list) {
   return (list ?? []).filter((item) => item.habilitado !== false);
@@ -27,6 +30,10 @@ function enabledRecords(list) {
 function SedeFormEditor({ id }) {
   const navigate = useNavigate();
   const outlet = useOutletContext() ?? {};
+  const { rol } = useAuth();
+  const { idActiva } = useEmpresaActiva();
+  const isAdminGeneral = rol === RolUsuario.AdministradorGeneral;
+  const lockEmpresa = !isAdminGeneral;
   const hasOutletEmpresas = Array.isArray(outlet.lookups?.empresas);
   const hasOutletPaises = Array.isArray(outlet.lookups?.paises);
   const empresas = useResource(empresaService.getAll, { enabled: !hasOutletEmpresas });
@@ -91,7 +98,9 @@ function SedeFormEditor({ id }) {
 
   const empresasList = hasOutletEmpresas ? outlet.lookups.empresas : empresas.data;
   const paisesList = hasOutletPaises ? outlet.lookups.paises : paises.data;
-  const initialValues = item ? sedeToForm(item) : emptySedeForm();
+  const initialValues = item
+    ? sedeToForm(item)
+    : emptySedeForm(lockEmpresa ? idActiva : idActiva ?? '');
 
   return (
     <RecordFormOverlay
@@ -104,16 +113,20 @@ function SedeFormEditor({ id }) {
         sedeFields({
           empresas: enabledRecords(empresasList),
           paises: paisesDeEmpresa(paisesList, values.idEmpresa),
+          lockEmpresa,
         })
       }
       deriveValues={(next, prev) =>
-        next.idEmpresa === prev.idEmpresa ? next : { ...next, idPais: '' }
+        lockEmpresa || next.idEmpresa === prev.idEmpresa ? next : { ...next, idPais: '' }
       }
       initialValues={initialValues}
       submitLabel={editing ? 'Guardar cambios' : 'Registrar sede'}
       validate={(values) => compactErrors(validateSedeForm(values, paisesList))}
       onSave={async (values) => {
-        const payload = sedeToPayload(values);
+        const payload = sedeToPayload({
+          ...values,
+          idEmpresa: lockEmpresa ? String(idActiva ?? values.idEmpresa) : values.idEmpresa,
+        });
         try {
           if (editing) {
             await sedeService.update(Number(id), payload);

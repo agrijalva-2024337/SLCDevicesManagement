@@ -141,14 +141,16 @@ function MaestroFormEditor({ slug, id }) {
     sedes: enabledRecords(sedesList),
     areas: enabledRecords(areasList),
     paises: paisesList,
-    ubicaciones: enabledRecords(ubicacionesList),
+    ubicaciones: ubicacionesList,
     rol,
     idEmpresa,
     idEmpresaActiva: idActiva,
     editing,
+    recordId: id,
   };
   const initialValues = item ? maestro.toForm(item, lookups) : maestro.empty(lookups);
-  const fields = maestro.fields(lookups);
+  const fields =
+    typeof maestro.fields === 'function' ? maestro.fields(lookups) : maestro.fields;
 
   return (
     <RecordFormOverlay

@@ -186,7 +186,32 @@ export function createMockCrudService({ endpoint, seed, delayMs = MOCK_DELAY_MS 
     return { id: numericId };
   }
 
-  return { getAll, getById, create, update, remove };
+  async function hardRemove(id) {
+    if (env.useApiMock) {
+      await wait(delayMs);
+      const numericId = Number(id);
+      const current = items.find((item) => item.id === numericId);
+      if (!current) {
+        const error = new Error('No se encontró el registro solicitado.');
+        error.status = 404;
+        throw error;
+      }
+      if (usesHabilitado && current.habilitado !== false) {
+        const error = new Error('Solo se pueden eliminar registros deshabilitados.');
+        error.status = 409;
+        throw error;
+      }
+      items = items.filter((item) => item.id !== numericId);
+      invalidateAfterMutation(resource);
+      return clone(current);
+    }
+
+    await httpClient.delete(`${endpoint}/${id}`);
+    invalidateAfterMutation(resource);
+    return { id: Number(id) };
+  }
+
+  return { getAll, getById, create, update, remove, hardRemove };
 }
 
 export function createReadService(options) {

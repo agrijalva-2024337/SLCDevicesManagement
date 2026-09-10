@@ -7,12 +7,11 @@
  * Por decisión de producto usamos el alfabeto amplio (incluye ambiguos).
  */
 
-/** Letras con acentos, números, espacios y signos de razón social (incluye raya tipográfica). */
+/** Letras con acentos, números, espacios y signos permitidos (T3). */
 export const NOMBRE_ENTIDAD =
-  /^(?! )(?!.* $)[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-&'()/—–]+$/;
+  /^(?=.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-_&/()'―—–]+$/;
 // Válido: "Sistemas Logísticos y Corporativos, S.A." / "CD Zona 12 — andén 1"
 // Inválido: "Bodega #2" (el # no está permitido)
-// La raya em/en (— –) se admitió porque las ubicaciones mock ya la usan como separador.
 
 /** Solo letras con acentos, espacios, guion y apóstrofo. Sin números. */
 export const NOMBRE_PERSONA =
@@ -58,15 +57,10 @@ export const PASSWORD_ALFABETO = /^[A-Za-z0-9!@#$%&*?]+$/;
 export const PASSWORD_COMPOSICION =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%&*?])[A-Za-z0-9!@#$%&*?]+$/;
 
-/** Identificación tributaria genérica: letras, dígitos y guiones. */
-export const IDENTIFICACION_TRIBUTARIA = /^[A-Za-z0-9-]+$/;
+/** Identificación tributaria genérica: letras, dígitos y guiones (5–20). */
+export const IDENTIFICACION_TRIBUTARIA = /^[A-Za-z0-9-]{5,20}$/;
 // Válido: "1234567-K" / "XAXX010101000"
-// Inválido: "12 345"
-
-/** NIT guatemalteco: dígitos, guion opcional y verificador 0-9 o K. */
-export const NIT_GT = /^[0-9]+-?[0-9K]$/i;
-// Válido: "1234567-K"
-// Inválido: "1234567-A"
+// Inválido: "12 345" / "AB"
 
 /** Moneda ISO 4217 (3 letras); la columna admite hasta 10. */
 export const MONEDA_ISO = /^[A-Z]{3}$/;

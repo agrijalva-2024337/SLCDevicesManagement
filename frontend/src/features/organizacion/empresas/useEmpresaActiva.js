@@ -33,7 +33,8 @@ export function filterRowsByEmpresa(rows, idEmpresa, { idField = 'idEmpresa', se
       const sede = sedes.find((item) => Number(item.id) === Number(row.idSede));
       return sede ? Number(sede.idEmpresa) === wanted : false;
     }
-    return false;
+    // Sin idEmpresa (catálogo aún global en API): no ocultar por empresa.
+    return true;
   });
 }
 

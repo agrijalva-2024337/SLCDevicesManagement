@@ -146,7 +146,7 @@ function SkeletonRows() {
   ));
 }
 
-export function UbicacionesMapPage({ items, loading = false }) {
+export function UbicacionesMapPage({ items, loading = false, onDelete }) {
   const searchId = useId();
   const { canWrite } = useAuth();
   const allowWrite = canWrite('ubicaciones');
@@ -291,7 +291,7 @@ export function UbicacionesMapPage({ items, loading = false }) {
                           </td>
                           <td>
                             <span className={`ubicaciones-badge ${item.habilitado ? 'is-on' : 'is-off'}`}>
-                              {item.habilitado ? 'Habilitado' : 'Inactivo'}
+                              {item.habilitado ? 'Habilitado' : 'Deshabilitado'}
                             </span>
                           </td>
                           <td data-align="right" onClick={(event) => event.stopPropagation()}>
@@ -313,6 +313,17 @@ export function UbicacionesMapPage({ items, loading = false }) {
                                 >
                                   <i className="pi pi-pencil" aria-hidden="true" />
                                 </Link>
+                              ) : null}
+                              {allowWrite && item.habilitado === false && typeof onDelete === 'function' ? (
+                                <button
+                                  type="button"
+                                  className="ubicaciones-action"
+                                  title="Eliminar"
+                                  aria-label={`Eliminar ${item.nombre}`}
+                                  onClick={() => onDelete(item)}
+                                >
+                                  <i className="pi pi-trash" aria-hidden="true" />
+                                </button>
                               ) : null}
                             </div>
                           </td>

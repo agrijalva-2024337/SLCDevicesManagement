@@ -1,7 +1,8 @@
 /* Lenguaje visual compartido del panel — paleta SLC */
 
 .app-canvas {
-  background: var(--surface);
+  background: var(--surface-canvas, var(--surface));
+  min-height: 100%;
 }
 
 .app-main {
@@ -19,9 +20,10 @@
 }
 
 .app-topbar {
-  background: var(--surface-elevated);
+  background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
-  box-shadow: none;
+  box-shadow: var(--shadow-sm);
   padding-inline: var(--content-gutter);
 }
 
@@ -119,11 +121,14 @@
 .app-panel,
 .dash-panel {
   height: 100%;
-  border-radius: 12px;
+  border-radius: 16px;
   background: var(--surface-elevated);
   padding: 1.35rem 1.35rem 1.4rem;
-  box-shadow: none;
+  box-shadow: var(--shadow-sm);
   border: 1px solid var(--border);
+  transition:
+    box-shadow 0.25s var(--ease-out, ease),
+    border-color 0.25s ease;
 }
 
 .app-kpi,
@@ -133,11 +138,22 @@
   overflow: hidden;
   overflow-wrap: anywhere;
   word-break: break-word;
-  border-radius: 12px;
+  border-radius: 16px;
   background: var(--surface-elevated);
   padding: 1.2rem 1.25rem 1.25rem;
-  box-shadow: none;
+  box-shadow: var(--shadow-sm);
   border: 1px solid var(--border);
+  transition:
+    transform 0.25s var(--ease-out, ease),
+    box-shadow 0.25s var(--ease-out, ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .app-kpi:hover,
+  .dash-kpi:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
 }
 
 .app-kpi--featured,
@@ -346,8 +362,9 @@
   text-decoration: none;
   transition:
     background 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+    box-shadow 0.2s var(--ease-out, ease),
+    transform 0.2s var(--ease-out, ease),
+    opacity 0.2s ease;
 }
 
 a.app-btn {
@@ -357,7 +374,7 @@ a.app-btn {
 .app-btn--primary {
   background: var(--accent);
   color: var(--palette-white);
-  box-shadow: none;
+  box-shadow: 0 8px 20px rgb(38 166 33 / 0.28);
 }
 
 a.app-btn--primary {
@@ -366,6 +383,8 @@ a.app-btn--primary {
 
 .app-btn--primary:hover {
   background: var(--color-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgb(38 166 33 / 0.34);
 }
 
 .app-btn--ghost {
