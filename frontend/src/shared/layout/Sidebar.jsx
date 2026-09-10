@@ -53,12 +53,20 @@ export function Sidebar({ open, onClose }) {
     >
       <div className="flex h-full w-[var(--sidebar-width)] flex-col">
         <div className="app-sidebar-head flex h-[var(--header-height)] items-center gap-2 px-4">
-          <NavLink to="/app" className="min-w-0" onClick={closeOnMobile}>
+          <NavLink to="/app" className="min-w-0 flex-1" onClick={closeOnMobile}>
             <span className="app-kicker block">SLCDM</span>
             <span className="font-display text-base font-extrabold tracking-display text-text-on-dark">
               Dispositivos
             </span>
           </NavLink>
+          <button
+            type="button"
+            className="app-icon-btn app-icon-btn--on-dark"
+            onClick={onClose}
+            aria-label="Cerrar menú de navegación"
+          >
+            <i className="pi pi-times" aria-hidden="true" />
+          </button>
         </div>
 
         <nav aria-label="Módulos del sistema" className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
