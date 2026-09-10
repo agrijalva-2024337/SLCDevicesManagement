@@ -23,6 +23,7 @@ import { MantenimientoFormOverlay } from '@/features/mantenimientos/Mantenimient
 import * as mantenimientoService from '@/features/mantenimientos/mantenimientoService';
 import * as tipoMantenimientoService from '@/features/mantenimientos/tipoMantenimientoService';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
+import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import * as estadoService from '@/features/organizacion/estados/estadoService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
@@ -64,6 +65,7 @@ export function ActivosPage() {
   const proveedores = useResource(proveedorService.getAll);
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
+  const empresas = useResource(empresaService.getAll);
   const estados = useResource(estadoService.getAll);
   const responsables = useResource(responsableService.getAll);
   const tipos = useResource(tipoAsignacionService.getAll);
@@ -92,10 +94,12 @@ export function ActivosPage() {
     () =>
       scopedRows.map((row) => {
         const vigente = asignacionActivaDe(row, asignaciones.data);
+        const idEmpresa = empresaIdDeActivo(row, ubicaciones.data, sedes.data);
         return {
           ...row,
           codigo: row.numeroSerie || String(row.id),
           categoriaNombre: byId(categorias.data, row.idCategoriaActivo)?.nombre ?? '—',
+          empresaNombre: byId(empresas.data, idEmpresa)?.nombre ?? '—',
           ubicacionNombre: nombreUbicacion(byId(ubicaciones.data, row.idUbicacion)),
           responsableNombre: vigente
             ? (byId(responsables.data, vigente.idResponsable)?.nombreCompleto ?? '—')
@@ -103,7 +107,16 @@ export function ActivosPage() {
           estadoNombre: estadoNombreDeActivo(row, ctx) ?? 'Disponible',
         };
       }),
-    [asignaciones.data, categorias.data, ctx, responsables.data, scopedRows, ubicaciones.data],
+    [
+      asignaciones.data,
+      categorias.data,
+      ctx,
+      empresas.data,
+      responsables.data,
+      scopedRows,
+      sedes.data,
+      ubicaciones.data,
+    ],
   );
 
   const estadoInicial = params.get('estado');
@@ -172,6 +185,7 @@ export function ActivosPage() {
         columns={[
           { key: 'codigo', header: 'Código', primary: true },
           { key: 'nombre', header: 'Descripción' },
+          { key: 'empresaNombre', header: 'Empresa' },
           { key: 'categoriaNombre', header: 'Categoría' },
           { key: 'ubicacionNombre', header: 'Ubicación' },
           { key: 'responsableNombre', header: 'Responsable' },
@@ -184,7 +198,7 @@ export function ActivosPage() {
         ]}
         rows={tableRows}
         loading={isLoading}
-        searchPlaceholder="Buscar por código, descripción, categoría o responsable"
+        searchPlaceholder="Buscar por código, descripción, empresa, categoría o responsable"
         statusFilter={{
           key: 'estadoNombre',
           label: 'Estado',

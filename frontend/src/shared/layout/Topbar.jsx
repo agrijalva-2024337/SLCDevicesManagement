@@ -1,5 +1,8 @@
-import { Link, useLocation } from 'react-router';
+import { useEffect, useId, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router';
+import { useAuth } from '@/features/auth/useAuth';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
+import { rolUsuarioLabel } from '@/shared/api/contracts';
 import { getPageTitle } from '@/shared/layout/navigation';
 import { ThemeToggle } from '@/shared/theme/ThemeToggle';
 
@@ -29,6 +32,79 @@ function EmpresaSelector() {
   );
 }
 
+function UserMenu() {
+  const { usuario, logout } = useAuth();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef(null);
+  const menuId = useId();
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    function onPointerDown(event) {
+      if (rootRef.current && !rootRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+
+    function onKeyDown(event) {
+      if (event.key === 'Escape') setOpen(false);
+    }
+
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open]);
+
+  if (!usuario) return null;
+
+  const nombre =
+    String(usuario.nombres ?? '').trim() ||
+    String(usuario.username ?? '').trim() ||
+    'Usuario';
+  const correo = String(usuario.correo ?? '').trim();
+  const rol = rolUsuarioLabel[usuario.rol] ?? usuario.role ?? '—';
+
+  function handleLogout() {
+    setOpen(false);
+    logout();
+    navigate('/login', { replace: true });
+  }
+
+  return (
+    <div className="app-user-menu" ref={rootRef}>
+      <button
+        type="button"
+        className="app-icon-btn"
+        aria-label="Cuenta de usuario"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={menuId}
+        onClick={() => setOpen((value) => !value)}
+      >
+        <i className="pi pi-user" aria-hidden="true" />
+      </button>
+      {open ? (
+        <div id={menuId} className="app-user-panel" role="menu">
+          <div className="app-user-panel-head">
+            <p className="app-user-panel-name">{nombre}</p>
+            {correo ? <p className="app-user-panel-meta">{correo}</p> : null}
+            <p className="app-user-panel-meta">{rol}</p>
+          </div>
+          <button type="button" className="app-user-panel-logout" role="menuitem" onClick={handleLogout}>
+            <i className="pi pi-sign-out" aria-hidden="true" />
+            Cerrar sesión
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function Topbar({ sidebarOpen, onMenuToggle }) {
   const { pathname, search } = useLocation();
   const title = getPageTitle(pathname, search);
@@ -44,7 +120,7 @@ export function Topbar({ sidebarOpen, onMenuToggle }) {
           aria-controls="app-sidebar"
           aria-expanded={sidebarOpen}
         >
-          <i className={sidebarOpen ? 'pi pi-times' : 'pi pi-bars'} aria-hidden="true" />
+          <i className="pi pi-bars" aria-hidden="true" />
         </button>
         <h1 className="truncate font-display text-base font-bold tracking-tight text-navy sm:text-xl">
           {title}
@@ -54,9 +130,7 @@ export function Topbar({ sidebarOpen, onMenuToggle }) {
       <div className="flex shrink-0 items-center gap-3">
         <EmpresaSelector />
         <ThemeToggle />
-        <Link to="/" className="app-link-quiet sm:text-sm">
-          Volver al sitio
-        </Link>
+        <UserMenu />
       </div>
     </header>
   );
