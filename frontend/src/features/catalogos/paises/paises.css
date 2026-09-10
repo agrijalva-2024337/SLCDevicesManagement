@@ -83,7 +83,8 @@
 }
 
 .paises-card:has(.paises-card-link:focus-visible),
-.paises-card:has(.paises-card-edit:focus-visible) {
+.paises-card:has(.paises-card-edit:focus-visible),
+.paises-card:has(.paises-card-delete:focus-visible) {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
@@ -138,7 +139,8 @@
 }
 
 .paises-card-link:focus-visible,
-.paises-card-edit:focus-visible {
+.paises-card-edit:focus-visible,
+.paises-card-delete:focus-visible {
   outline: none;
 }
 
@@ -199,11 +201,39 @@
   vertical-align: -0.08em;
 }
 
-.paises-card-edit {
+.paises-card-actions {
   position: absolute;
   right: 0.7rem;
   bottom: 0.7rem;
   z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.paises-card-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  margin: 0;
+  border: 0;
+  border-radius: 8px;
+  padding: 0;
+  background: color-mix(in srgb, var(--surface-inverse) 35%, transparent);
+  color: var(--text-on-inverse);
+  font-size: 0.8125rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.paises-card-delete:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.paises-card-edit {
   display: inline-flex;
   align-items: center;
   min-height: 1.85rem;
@@ -280,7 +310,8 @@
     background: color-mix(in srgb, var(--surface-inverse) 68%, transparent);
   }
 
-  .paises-card-edit:hover {
+  .paises-card-edit:hover,
+  .paises-card-delete:hover:not(:disabled) {
     background: color-mix(in srgb, var(--text-on-inverse) 16%, transparent);
     color: var(--text-on-inverse);
   }
@@ -288,7 +319,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .paises-card-veil,
-  .paises-card-edit {
+  .paises-card-edit,
+  .paises-card-delete {
     transition: none;
   }
 }

@@ -12,6 +12,9 @@ import {
 
 const MOCK_DELAY_MS = 400;
 
+/** Shared in-flight profile fetch (StrictMode remounts must not double-hit /profile). */
+let profileInflight = null;
+
 function wait(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -87,12 +90,25 @@ export async function getMe() {
     return usuario;
   }
 
-  const response = await httpClient.get(apiPaths.auth.me);
-  const usuario = mapAuthenticatedUser(response.data);
-  setSessionUser(usuario);
-  return usuario;
+  if (profileInflight) {
+    return profileInflight;
+  }
+
+  profileInflight = httpClient
+    .get(apiPaths.auth.me)
+    .then((response) => {
+      const usuario = mapAuthenticatedUser(response.data);
+      setSessionUser(usuario);
+      return usuario;
+    })
+    .finally(() => {
+      profileInflight = null;
+    });
+
+  return profileInflight;
 }
 
 export function logout() {
+  profileInflight = null;
   clearAccessToken();
 }
