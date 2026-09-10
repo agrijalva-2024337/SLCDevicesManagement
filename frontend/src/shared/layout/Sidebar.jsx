@@ -52,8 +52,8 @@ export function Sidebar({ open, onClose }) {
       inert={!open || undefined}
     >
       <div className="flex h-full w-[var(--sidebar-width)] flex-col">
-        <div className="app-sidebar-head flex h-[var(--header-height)] items-center justify-between gap-2 px-4">
-          <NavLink to="/app" className="min-w-0" onClick={closeOnMobile}>
+        <div className="app-sidebar-head flex h-[var(--header-height)] items-center gap-2 px-4">
+          <NavLink to="/app" className="min-w-0 flex-1" onClick={closeOnMobile}>
             <span className="app-kicker block">SLCDM</span>
             <span className="font-display text-base font-extrabold tracking-display text-text-on-dark">
               Dispositivos
