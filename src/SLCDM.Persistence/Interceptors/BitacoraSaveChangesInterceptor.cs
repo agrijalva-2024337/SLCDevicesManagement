@@ -188,6 +188,7 @@ public sealed class BitacoraSaveChangesInterceptor : SaveChangesInterceptor
             rows.Add(new Bitacora
             {
                 IdUsuario = userId,
+                IdEmpresa = BitacoraEmpresaResolver.TryResolve(context, item.Entity),
                 FechaHora = now,
                 TipoOperacion = item.Tipo,
                 EntidadAfectada = item.Entidad,

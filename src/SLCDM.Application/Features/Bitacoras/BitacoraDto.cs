@@ -5,6 +5,7 @@ namespace SLCDM.Application.Features.Bitacoras;
 public sealed record BitacoraDto(
     int Id,
     int IdUsuario,
+    int? IdEmpresa,
     DateTime FechaHora,
     TipoOperacionBitacora TipoOperacion,
     string EntidadAfectada,

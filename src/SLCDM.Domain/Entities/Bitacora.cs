@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using SLCDM.Domain.Enums;
 
 namespace SLCDM.Domain.Entities;
@@ -9,6 +10,14 @@ namespace SLCDM.Domain.Entities;
 public class Bitacora : SLCDM.Domain.Common.BaseEntity
 {
     public int IdUsuario { get; set; }
+
+    /// <summary>
+    /// Empresa afectada por la operacion. Null en catálogos globales o si no se pudo resolver.
+    /// </summary>
+    public int? IdEmpresa { get; set; }
+
+    [ForeignKey(nameof(IdEmpresa))]
+    public Empresa? Empresa { get; set; }
 
     public DateTime FechaHora { get; set; }
 

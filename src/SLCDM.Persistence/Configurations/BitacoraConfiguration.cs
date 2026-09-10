@@ -15,6 +15,8 @@ public class BitacoraConfiguration : IEntityTypeConfiguration<Bitacora>
 
         builder.Property(b => b.IdUsuario).HasColumnName("id_usuario").IsRequired();
 
+        builder.Property(b => b.IdEmpresa).HasColumnName("id_empresa");
+
         builder.Property(b => b.FechaHora).HasColumnName("fecha_hora").IsRequired();
 
         builder.Property(b => b.TipoOperacion)
@@ -39,13 +41,19 @@ public class BitacoraConfiguration : IEntityTypeConfiguration<Bitacora>
         builder.Property(b => b.InformacionNueva)
             .HasColumnName("informacion_nueva")
             .HasColumnType("nvarchar(max)");
-            
+
         builder.HasOne<Usuario>()
             .WithMany()
             .HasForeignKey(b => b.IdUsuario)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(b => b.Empresa)
+            .WithMany()
+            .HasForeignKey(b => b.IdEmpresa)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(b => b.IdUsuario);
+        builder.HasIndex(b => b.IdEmpresa);
         builder.HasIndex(b => b.FechaHora);
     }
 }

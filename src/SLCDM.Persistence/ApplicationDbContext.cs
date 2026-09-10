@@ -105,8 +105,10 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         modelBuilder.Entity<DetalleActivo>().HasQueryFilter(d =>
             IgnoreEmpresaFilter || Activos.Any(a => a.Id == d.IdActivo));
 
+        // AdminGeneral (IgnoreEmpresaFilter) ve todas las filas, incluidas IdEmpresa NULL
+        // (catalogos globales). Usuarios de empresa solo ven bitacora de su tenant.
         modelBuilder.Entity<Bitacora>().HasQueryFilter(b =>
-            IgnoreEmpresaFilter || Usuarios.Any(u => u.Id == b.IdUsuario));
+            IgnoreEmpresaFilter || b.IdEmpresa == TenantEmpresaId);
 
         modelBuilder.Entity<HistorialActivo>().HasQueryFilter(h =>
             IgnoreEmpresaFilter
