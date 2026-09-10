@@ -15,19 +15,22 @@ public sealed class SedesController : ApiControllerBase
     private readonly ICommandHandler<CreateSedeCommand, int> _create;
     private readonly ICommandHandler<UpdateSedeCommand> _update;
     private readonly ICommandHandler<DisableSedeCommand> _disable;
+    private readonly ICommandHandler<DeleteSedeCommand> _delete;
 
     public SedesController(
         IQueryHandler<GetSedesQuery, IReadOnlyList<SedeDto>> getAll,
         IQueryHandler<GetSedeByIdQuery, SedeDto> getById,
         ICommandHandler<CreateSedeCommand, int> create,
         ICommandHandler<UpdateSedeCommand> update,
-        ICommandHandler<DisableSedeCommand> disable)
+        ICommandHandler<DisableSedeCommand> disable,
+        ICommandHandler<DeleteSedeCommand> delete)
     {
         _getAll = getAll;
         _getById = getById;
         _create = create;
         _update = update;
         _disable = disable;
+        _delete = delete;
     }
 
     [HttpGet]
@@ -65,6 +68,14 @@ public sealed class SedesController : ApiControllerBase
     public async Task<IActionResult> Disable(int id, CancellationToken cancellationToken)
     {
         await _disable.HandleAsync(new DisableSedeCommand(id), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    {
+        await _delete.HandleAsync(new DeleteSedeCommand(id), cancellationToken);
         return NoContent();
     }
 }

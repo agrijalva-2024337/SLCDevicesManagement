@@ -15,19 +15,22 @@ public sealed class UbicacionesController : ApiControllerBase
     private readonly ICommandHandler<CreateUbicacionCommand, int> _create;
     private readonly ICommandHandler<UpdateUbicacionCommand> _update;
     private readonly ICommandHandler<DisableUbicacionCommand> _disable;
+    private readonly ICommandHandler<DeleteUbicacionCommand> _delete;
 
     public UbicacionesController(
         IQueryHandler<GetUbicacionesQuery, IReadOnlyList<UbicacionDto>> getAll,
         IQueryHandler<GetUbicacionByIdQuery, UbicacionDto> getById,
         ICommandHandler<CreateUbicacionCommand, int> create,
         ICommandHandler<UpdateUbicacionCommand> update,
-        ICommandHandler<DisableUbicacionCommand> disable)
+        ICommandHandler<DisableUbicacionCommand> disable,
+        ICommandHandler<DeleteUbicacionCommand> delete)
     {
         _getAll = getAll;
         _getById = getById;
         _create = create;
         _update = update;
         _disable = disable;
+        _delete = delete;
     }
 
     [HttpGet]
@@ -65,6 +68,14 @@ public sealed class UbicacionesController : ApiControllerBase
     public async Task<IActionResult> Disable(int id, CancellationToken cancellationToken)
     {
         await _disable.HandleAsync(new DisableUbicacionCommand(id), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = Roles.EscrituraOperativa)]
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    {
+        await _delete.HandleAsync(new DeleteUbicacionCommand(id), cancellationToken);
         return NoContent();
     }
 }
