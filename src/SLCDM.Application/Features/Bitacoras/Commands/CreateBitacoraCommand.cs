@@ -55,9 +55,25 @@ public sealed class CreateBitacoraCommandHandler : ICommandHandler<CreateBitacor
 
         var entity = command.Adapt<Bitacora>();
         entity.FechaHora = DateTime.UtcNow;
+        entity.IdEmpresa = await TryResolveIdEmpresaAsync(command.IdUsuario, cancellationToken);
 
         _db.Bitacoras.Add(entity);
         await _db.SaveChangesAsync(cancellationToken);
         return entity.Id;
+    }
+
+    private async Task<int?> TryResolveIdEmpresaAsync(int idUsuario, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await _db.Usuarios.IgnoreQueryFilters().AsNoTracking()
+                .Where(u => u.Id == idUsuario)
+                .Select(u => (int?)u.IdEmpresa)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+        catch
+        {
+            return null;
+        }
     }
 }

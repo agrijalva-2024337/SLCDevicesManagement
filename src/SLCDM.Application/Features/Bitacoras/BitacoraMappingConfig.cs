@@ -11,6 +11,8 @@ public sealed class BitacoraMappingConfig : IRegister
 
         config.NewConfig<Commands.CreateBitacoraCommand, Bitacora>()
             .Ignore(dest => dest.Id)
-            .Ignore(dest => dest.FechaHora);
+            .Ignore(dest => dest.FechaHora)
+            .Ignore(dest => dest.IdEmpresa)
+            .Ignore(dest => dest.Empresa);
     }
 }

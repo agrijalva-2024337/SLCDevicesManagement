@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SLCDM.Persistence;
 
@@ -11,9 +12,11 @@ using SLCDM.Persistence;
 namespace SLCDM.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260910231202_AgregarIdEmpresaABitacora")]
+    partial class AgregarIdEmpresaABitacora
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -126,10 +129,7 @@ namespace SLCDM.Persistence.Migrations
 
                     b.HasIndex("IdUbicacion");
 
-                    b.HasIndex("NumeroSerie")
-                        .IsUnique()
-                        .HasDatabaseName("ix_activo_numero_serie_unico")
-                        .HasFilter("[numero_serie] IS NOT NULL AND [numero_serie] <> ''");
+                    b.HasIndex("NumeroSerie");
 
                     b.HasIndex("TokenPublico")
                         .IsUnique();
@@ -1300,17 +1300,6 @@ namespace SLCDM.Persistence.Migrations
                     b.HasOne("SLCDM.Domain.Entities.Usuario", null)
                         .WithMany()
                         .HasForeignKey("IdUsuario")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Empresa");
-                });
-
-            modelBuilder.Entity("SLCDM.Domain.Entities.CategoriaActivo", b =>
-                {
-                    b.HasOne("SLCDM.Domain.Entities.Empresa", "Empresa")
-                        .WithMany()
-                        .HasForeignKey("IdEmpresa")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
