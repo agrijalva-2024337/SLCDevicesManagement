@@ -22,7 +22,6 @@ export const modulosApp = [
   { path: '/app/activos', label: 'Activos', icon: 'pi pi-box' },
   { path: '/app/inventario-fisico', label: 'Inventario físico', icon: 'pi pi-clipboard' },
   { path: '/app/rastreo', label: 'Rastreo', icon: 'pi pi-map' },
-  { path: '/app/reportes', label: 'Reportes', icon: 'pi pi-chart-bar' },
 ];
 
 export const navigation = [
@@ -118,9 +117,6 @@ export function getPageTitle(pathname, search = '') {
   if (/^\/app\/inventario-fisico\/\d+/.test(pathname)) {
     return 'Jornada';
   }
-  if (/^\/app\/reportes\/activos/.test(pathname)) {
-    return 'Activos detallados';
-  }
   return 'SLCDM';
 }
 
@@ -146,6 +142,5 @@ export function getPageKicker(pathname) {
     return 'Inventario';
   }
   if (pathname.startsWith('/app/bitacora')) return 'Auditoría';
-  if (pathname.startsWith('/app/reportes')) return 'Informes';
   return 'SLCDM';
 }

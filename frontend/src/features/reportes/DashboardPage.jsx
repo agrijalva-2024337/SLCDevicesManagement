@@ -206,7 +206,7 @@ export function DashboardPage() {
         severity: dias <= 7 ? 'alta' : dias <= 30 ? 'media' : 'baja',
         label: row.activo?.nombre ?? 'Activo',
         detail: `Garantía vence ${formatDate(row.fechaVencimientoGarantia)} · ${dias} días`,
-        to: '/app/reportes',
+        to: '/app/activos',
       };
     }),
     ...(diferencias.data ?? []).slice(0, 6).map((row) => ({
@@ -375,7 +375,9 @@ export function DashboardPage() {
                     tone: CATEGORY_TONE[index % CATEGORY_TONE.length],
                   }))}
                   total={resumen.totalActivos || undefined}
-                  onSelect={(item) => navigate(`/app/reportes/activos?idCategoriaActivo=${item.key}`)}
+                  onSelect={(item) =>
+                    navigate(`/app/activos?idCategoriaActivo=${encodeURIComponent(item.key)}`)
+                  }
                 />
               )}
             </section>

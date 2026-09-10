@@ -166,7 +166,22 @@ function MaestroFormEditor({ slug, id }) {
       fields={fields}
       initialValues={initialValues}
       submitLabel={editing ? 'Guardar cambios' : maestro.registerLabel}
-      deriveValues={slug === 'paises' ? derivePaisValues : undefined}
+      deriveValues={
+        slug === 'paises'
+          ? derivePaisValues
+          : slug === 'responsables'
+            ? (next, prev) => {
+                if (String(next.idArea ?? '') === String(prev?.idArea ?? '')) {
+                  return next;
+                }
+                const area = (areasList ?? []).find((row) => String(row.id) === String(next.idArea));
+                return {
+                  ...next,
+                  idSede: area?.idSede == null ? '' : String(area.idSede),
+                };
+              }
+            : undefined
+      }
       validate={(values) => compactErrors(maestro.validate(values, records, id, lookups))}
       onSave={async (values) => {
         let payload = maestro.toPayload(values, { editing, idEmpresaActiva: idActiva });

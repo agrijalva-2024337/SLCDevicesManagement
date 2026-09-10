@@ -57,8 +57,8 @@ export const modulos = [
   },
   {
     id: 'auditoria',
-    titulo: 'Bitácora y reportes',
-    descripcion: 'Trazabilidad de operaciones y reportes operativos para dirección y TI.',
+    titulo: 'Bitácora y control',
+    descripcion: 'Trazabilidad de operaciones para dirección y TI.',
     icono: 'chart',
     color: 'accent',
   },

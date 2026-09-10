@@ -868,21 +868,49 @@ export const maestros = {
     newTitle: 'Nuevo responsable',
     kicker: 'Responsable',
     registerLabel: 'Registrar responsable',
-    hint: 'El nombre y el área son obligatorios. Correo y teléfono son opcionales.',
+    hint: 'El nombre y el área son obligatorios. La sede se completa con el área. Correo y teléfono son opcionales.',
     description: 'Personas que reciben activos. El área determina sede y empresa.',
-    lookups: ['areas', 'paises'],
+    lookups: ['areas', 'sedes', 'paises'],
     titleOf: (item) => item.nombreCompleto,
     facts: (item, lookups = {}) =>
-      [lookups.areaNombres?.[item.idArea], item.cargo, item.correo].filter(Boolean),
+      [
+        lookups.areaNombres?.[item.idArea],
+        lookups.sedeNombres?.[item.idSede],
+        item.cargo,
+        item.correo,
+      ].filter(Boolean),
     listView: {
       emptyTitle: 'No hay responsables',
       emptyDescription: 'Registre el primer responsable para asignarle equipos.',
+      filters: (lookups = {}) => [
+        {
+          key: 'idArea',
+          label: 'Área',
+          options: [
+            { value: 'all', label: 'Todas' },
+            ...asOptions(lookups.areas ?? []),
+          ],
+        },
+        {
+          key: 'idSede',
+          label: 'Sede',
+          options: [
+            { value: 'all', label: 'Todas' },
+            ...asOptions(lookups.sedes ?? []),
+          ],
+        },
+      ],
       columns: (lookups = {}) => [
         { key: 'nombreCompleto', header: 'Nombre', primary: true },
         {
           key: 'area',
           header: 'Área',
           getValue: (item) => lookups.areaNombres?.[item.idArea] ?? '—',
+        },
+        {
+          key: 'sede',
+          header: 'Sede',
+          getValue: (item) => lookups.sedeNombres?.[item.idSede] ?? '—',
         },
         { key: 'cargo', header: 'Cargo' },
         { key: 'correo', header: 'Correo' },
@@ -892,22 +920,35 @@ export const maestros = {
     },
     empty: ({ paises } = {}) => ({
       idArea: '',
+      idSede: '',
       nombreCompleto: '',
       cargo: '',
       correo: '',
       ...phoneFormFields('', paises),
       habilitado: true,
     }),
-    toForm: (item, { paises } = {}) => ({
-      idArea: String(item.idArea ?? ''),
-      nombreCompleto: item.nombreCompleto ?? '',
-      cargo: item.cargo ?? '',
-      correo: item.correo ?? '',
-      ...phoneFormFields(item.telefono, paises),
-      habilitado: Boolean(item.habilitado),
-    }),
-    fields: ({ areas, paises, editing } = {}) => [
+    toForm: (item, { areas, paises } = {}) => {
+      const area = (areas ?? []).find((row) => Number(row.id) === Number(item.idArea));
+      return {
+        idArea: String(item.idArea ?? ''),
+        idSede: String(item.idSede ?? area?.idSede ?? ''),
+        nombreCompleto: item.nombreCompleto ?? '',
+        cargo: item.cargo ?? '',
+        correo: item.correo ?? '',
+        ...phoneFormFields(item.telefono, paises),
+        habilitado: Boolean(item.habilitado),
+      };
+    },
+    fields: ({ areas, sedes, paises, editing } = {}) => [
       { name: 'idArea', label: 'Área', type: 'select', required: true, options: asOptions(areas ?? []) },
+      {
+        name: 'idSede',
+        label: 'Sede',
+        type: 'select',
+        readOnly: true,
+        options: asOptions(sedes ?? []),
+        hint: 'Se rellena automáticamente según el área.',
+      },
       { name: 'nombreCompleto', label: 'Nombre completo', required: true, maxLength: 150, wide: true },
       { name: 'cargo', label: 'Cargo', maxLength: 100 },
       { name: 'correo', label: 'Correo', maxLength: 150, type: 'email', autoComplete: 'email' },
@@ -938,12 +979,17 @@ export const maestros = {
       }
       return base;
     },
-    detail: (item, lookups = {}) => [
-      { label: 'Área', value: lookups.areaNombres?.[item.idArea] ?? '—' },
-      { label: 'Cargo', value: item.cargo },
-      { label: 'Correo', value: item.correo },
-      { label: 'Teléfono', value: item.telefono },
-    ],
+    detail: (item, lookups = {}) => {
+      const area = (lookups.areas ?? []).find((row) => Number(row.id) === Number(item.idArea));
+      const idSede = item.idSede ?? area?.idSede;
+      return [
+        { label: 'Área', value: lookups.areaNombres?.[item.idArea] ?? '—' },
+        { label: 'Sede', value: lookups.sedeNombres?.[idSede] ?? '—' },
+        { label: 'Cargo', value: item.cargo },
+        { label: 'Correo', value: item.correo },
+        { label: 'Teléfono', value: item.telefono },
+      ];
+    },
   },
   estados: nombreDescripcionMaestro({
     service: estadoService,
