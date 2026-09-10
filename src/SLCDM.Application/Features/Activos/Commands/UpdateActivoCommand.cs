@@ -76,7 +76,11 @@ public sealed class UpdateActivoCommandValidator : AbstractValidator<UpdateActiv
 
         RuleFor(x => x.NumeroSerie)
             .MaximumLength(100).WithMessage("El campo numero serie no debe superar los 100 caracteres.")
-            .When(x => !string.IsNullOrWhiteSpace(x.NumeroSerie));
+            .MustAsync(async (cmd, numeroSerie, ct) =>
+                !await db.Activos.IgnoreQueryFilters()
+                    .AnyAsync(a => a.NumeroSerie == numeroSerie && a.Id != cmd.Id, ct))
+            .WithMessage("Ya existe un activo registrado con este número de serie.")
+            .When(x => !string.IsNullOrWhiteSpace(x.NumeroSerie), ApplyConditionTo.AllValidators);
 
         RuleFor(x => x.EspecificacionesHardware)
             .MaximumLength(500).WithMessage("El campo especificaciones de hardware no debe superar los 500 caracteres.")

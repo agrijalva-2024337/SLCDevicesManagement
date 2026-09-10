@@ -81,10 +81,67 @@ function activoToPayload(values) {
   };
 }
 
+function duplicateNumeroSerie(records, numeroSerie, currentId) {
+  const needle = String(numeroSerie ?? '')
+    .trim()
+    .toLowerCase();
+  if (!needle) return false;
+  return (records ?? []).some(
+    (item) =>
+      String(item.numeroSerie ?? '')
+        .trim()
+        .toLowerCase() === needle && String(item.id) !== String(currentId),
+  );
+}
+
+function validateActivoForm(values, records = [], currentId) {
+  const errors = {
+    nombre: validarNombreEntidad(values.nombre, 'nombre', 150, { required: true }),
+    idCategoriaActivo: requireSelect(values.idCategoriaActivo, 'una categoría'),
+    idProveedor: requireSelect(values.idProveedor, 'un proveedor'),
+    idUbicacion: requireSelect(values.idUbicacion, 'una ubicación'),
+    fechaCompra: requireSelect(values.fechaCompra, 'una fecha de compra'),
+    fechaVencimientoGarantia: requireSelect(values.fechaVencimientoGarantia, 'una fecha de garantía'),
+    marca: validarMarcaModelo(values.marca, 'marca', 100, { required: false }),
+    modelo: validarMarcaModelo(values.modelo, 'modelo', 100, { required: false }),
+    numeroSerie: validarAlfanumerico(values.numeroSerie, 'número de serie', 100, {
+      required: false,
+    }),
+    costoAdquisicion: validarCosto(values.costoAdquisicion, 'costo', { required: false }),
+    moneda: validarMoneda(values.moneda, 'moneda', { required: false }),
+    numeroFactura: validarAlfanumerico(values.numeroFactura, 'número de factura', 50, {
+      required: false,
+    }),
+    descripcion: validarTextoLibre(values.descripcion, 'descripción', 300, { required: false }),
+    especificacionesHardware: validarTextoLibre(
+      values.especificacionesHardware,
+      'especificaciones de hardware',
+      500,
+      { required: false },
+    ),
+    perifericosAdicionales: validarTextoLibre(
+      values.perifericosAdicionales,
+      'periféricos adicionales',
+      500,
+      { required: false },
+    ),
+    observaciones: validarTextoLibre(values.observaciones, 'observaciones', 500, {
+      required: false,
+    }),
+  };
+
+  if (!errors.numeroSerie && duplicateNumeroSerie(records, values.numeroSerie, currentId)) {
+    errors.numeroSerie = 'Ya existe un activo registrado con este número de serie.';
+  }
+
+  return compactErrors(errors);
+}
+
 export function ActivoFormOverlay({
   open,
   editing,
   record,
+  records = [],
   categorias,
   proveedores,
   ubicaciones,
@@ -174,42 +231,7 @@ export function ActivoFormOverlay({
       fields={fields}
       initialValues={editing && record ? activoToForm(record) : emptyActivo()}
       submitLabel={editing ? 'Guardar cambios' : 'Registrar activo'}
-      validate={(values) =>
-        compactErrors({
-          nombre: validarNombreEntidad(values.nombre, 'nombre', 150, { required: true }),
-          idCategoriaActivo: requireSelect(values.idCategoriaActivo, 'una categoría'),
-          idProveedor: requireSelect(values.idProveedor, 'un proveedor'),
-          idUbicacion: requireSelect(values.idUbicacion, 'una ubicación'),
-          fechaCompra: requireSelect(values.fechaCompra, 'una fecha de compra'),
-          fechaVencimientoGarantia: requireSelect(values.fechaVencimientoGarantia, 'una fecha de garantía'),
-          marca: validarMarcaModelo(values.marca, 'marca', 100, { required: false }),
-          modelo: validarMarcaModelo(values.modelo, 'modelo', 100, { required: false }),
-          numeroSerie: validarAlfanumerico(values.numeroSerie, 'número de serie', 100, {
-            required: false,
-          }),
-          costoAdquisicion: validarCosto(values.costoAdquisicion, 'costo', { required: false }),
-          moneda: validarMoneda(values.moneda, 'moneda', { required: false }),
-          numeroFactura: validarAlfanumerico(values.numeroFactura, 'número de factura', 50, {
-            required: false,
-          }),
-          descripcion: validarTextoLibre(values.descripcion, 'descripción', 300, { required: false }),
-          especificacionesHardware: validarTextoLibre(
-            values.especificacionesHardware,
-            'especificaciones de hardware',
-            500,
-            { required: false },
-          ),
-          perifericosAdicionales: validarTextoLibre(
-            values.perifericosAdicionales,
-            'periféricos adicionales',
-            500,
-            { required: false },
-          ),
-          observaciones: validarTextoLibre(values.observaciones, 'observaciones', 500, {
-            required: false,
-          }),
-        })
-      }
+      validate={(values) => validateActivoForm(values, records, editing ? record?.id : undefined)}
       onSave={(values) => onSave(activoToPayload(values))}
       onClose={onClose}
     />

@@ -383,6 +383,7 @@ export function ActivoDetallePage() {
           open
           editing
           record={activo}
+          records={activos.data}
           categorias={categorias.data}
           proveedores={proveedores.data}
           ubicaciones={ubicaciones.data}
