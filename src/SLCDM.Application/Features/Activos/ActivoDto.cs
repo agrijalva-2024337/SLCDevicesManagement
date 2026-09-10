@@ -10,6 +10,7 @@ public sealed record ActivoDto(
     string? Marca,
     string? Modelo,
     string? NumeroSerie,
+    string? CodigoInterno,
     string? EspecificacionesHardware,
     string? PerifericosAdicionales,
     DateTime FechaCompra,

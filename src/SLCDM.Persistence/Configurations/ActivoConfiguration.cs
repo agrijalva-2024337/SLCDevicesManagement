@@ -42,6 +42,10 @@
                 .HasColumnName("numero_serie")
                 .HasColumnType("varchar(100)");
 
+            builder.Property(a => a.CodigoInterno)
+                .HasColumnName("codigo_interno")
+                .HasColumnType("varchar(50)");
+
             builder.Property(a => a.FechaCompra)
                 .HasColumnName("fecha_compra")
                 .HasColumnType("date")
@@ -107,6 +111,15 @@
                 .IsUnique()
                 .HasFilter("[numero_serie] IS NOT NULL AND [numero_serie] <> ''")
                 .HasDatabaseName("ix_activo_numero_serie_unico");
+
+            // Activo no tiene IdEmpresa: la unicidad “por empresa” se valida en Application
+            // (Proveedor -> IdEmpresa). El índice filtrado evita duplicados no nulos a nivel BD
+            // (mismo patrón que numero_serie).
+            builder.HasIndex(a => a.CodigoInterno)
+                .IsUnique()
+                .HasFilter("[codigo_interno] IS NOT NULL AND [codigo_interno] <> ''")
+                .HasDatabaseName("ix_activo_codigo_interno_unico");
+
             builder.HasIndex(a => a.IdCategoriaActivo);
             builder.HasIndex(a => a.IdProveedor);
             builder.HasIndex(a => a.IdUbicacion);
