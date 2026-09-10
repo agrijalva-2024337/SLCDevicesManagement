@@ -103,7 +103,10 @@
                 .HasColumnName("perifericos_adicionales")
                 .HasColumnType("varchar(500)");
 
-            builder.HasIndex(a => a.NumeroSerie);
+            builder.HasIndex(a => a.NumeroSerie)
+                .IsUnique()
+                .HasFilter("[numero_serie] IS NOT NULL AND [numero_serie] <> ''")
+                .HasDatabaseName("ix_activo_numero_serie_unico");
             builder.HasIndex(a => a.IdCategoriaActivo);
             builder.HasIndex(a => a.IdProveedor);
             builder.HasIndex(a => a.IdUbicacion);

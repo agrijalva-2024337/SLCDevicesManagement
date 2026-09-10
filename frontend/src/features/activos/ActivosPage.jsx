@@ -210,6 +210,7 @@ export function ActivosPage() {
           open
           editing={crud.isEdit}
           record={crud.record}
+          records={rows}
           categorias={categorias.data}
           proveedores={proveedores.data}
           ubicaciones={ubicaciones.data}
