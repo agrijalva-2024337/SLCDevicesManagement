@@ -37,6 +37,20 @@ public sealed class GetMeQueryHandler : IQueryHandler<GetMeQuery, AuthenticatedU
             throw new UnauthorizedException();
         }
 
+        var empresasAutorizadas = await _db.UsuariosEmpresas.AsNoTracking()
+            .Where(ue => ue.IdUsuario == usuario.Id)
+            .Select(ue => ue.IdEmpresa)
+            .Distinct()
+            .OrderBy(id => id)
+            .ToListAsync(cancellationToken);
+
+        if (empresasAutorizadas.Count == 0 && usuario.IdEmpresa is int idLegacy)
+        {
+            empresasAutorizadas = [idLegacy];
+        }
+
+        var idEmpresa = empresasAutorizadas.Count > 0 ? empresasAutorizadas[0] : usuario.IdEmpresa;
+
         return new AuthenticatedUserDto(
             usuario.Id,
             usuario.Username,
@@ -44,6 +58,7 @@ public sealed class GetMeQueryHandler : IQueryHandler<GetMeQuery, AuthenticatedU
             usuario.Correo,
             usuario.Rol,
             usuario.Rol.ToClaimValue(),
-            usuario.IdEmpresa);
+            idEmpresa,
+            empresasAutorizadas);
     }
 }

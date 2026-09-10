@@ -38,9 +38,26 @@ export function filterRowsByEmpresa(rows, idEmpresa, { idField = 'idEmpresa', se
   });
 }
 
+function normalizeEmpresasAutorizadas(raw) {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  return raw
+    .map((id) => Number(id))
+    .filter((id) => Number.isFinite(id));
+}
+
 export function EmpresaActivaProvider({ children }) {
-  const { rol, idEmpresa, isReady } = useAuth();
+  const { rol, idEmpresa, empresasAutorizadas, isReady } = useAuth();
   const isAdminGeneral = rol === RolUsuario.AdministradorGeneral;
+  const autorizadas = useMemo(
+    () => normalizeEmpresasAutorizadas(empresasAutorizadas),
+    [empresasAutorizadas],
+  );
+  // Selector para AdminGeneral o cualquier usuario con más de una empresa del backend.
+  const canSwitchEmpresa = isAdminGeneral || autorizadas.length > 1;
+  const isLocked = !canSwitchEmpresa;
+
   const empresasResource = useResource(empresaService.getAll, { enabled: isReady });
   const [selectedId, setSelectedId] = useState(readStoredId);
 
@@ -55,36 +72,69 @@ export function EmpresaActivaProvider({ children }) {
     window.localStorage.setItem(STORAGE_KEY, String(stored));
   }, []);
 
-  const empresasValidas = useMemo(
-    () => (empresasResource.data ?? []).filter((empresa) => empresa.habilitado !== false),
-    [empresasResource.data],
-  );
+  const empresasValidas = useMemo(() => {
+    const all = (empresasResource.data ?? []).filter((empresa) => empresa.habilitado !== false);
+    if (isAdminGeneral) {
+      return all;
+    }
+    if (autorizadas.length === 0) {
+      return all.filter((empresa) => Number(empresa.id) === Number(idEmpresa));
+    }
+    const allowed = new Set(autorizadas);
+    return all.filter((empresa) => allowed.has(Number(empresa.id)));
+  }, [autorizadas, empresasResource.data, idEmpresa, isAdminGeneral]);
 
   const idActiva = useMemo(() => {
-    if (!isAdminGeneral) {
+    if (isLocked) {
+      if (autorizadas.length === 1) {
+        return autorizadas[0];
+      }
       return idEmpresa;
     }
+
     if (selectedId == null) {
-      return null;
+      // AdminGeneral: null = todas. Multi-empresa: default a la primera autorizada.
+      return isAdminGeneral ? null : (autorizadas[0] ?? idEmpresa ?? null);
     }
+
     if (empresasResource.isLoading) {
       return selectedId;
     }
+
     return empresasValidas.some((empresa) => Number(empresa.id) === Number(selectedId))
       ? selectedId
-      : null;
-  }, [empresasResource.isLoading, empresasValidas, idEmpresa, isAdminGeneral, selectedId]);
+      : isAdminGeneral
+        ? null
+        : (autorizadas[0] ?? idEmpresa ?? null);
+  }, [
+    autorizadas,
+    empresasResource.isLoading,
+    empresasValidas,
+    idEmpresa,
+    isAdminGeneral,
+    isLocked,
+    selectedId,
+  ]);
 
   const value = useMemo(
     () => ({
-      empresas: empresasResource.data ?? [],
+      empresas: empresasValidas,
       idActiva,
       isAdminGeneral,
-      isLocked: !isAdminGeneral,
+      canSwitchEmpresa,
+      isLocked,
       isLoading: empresasResource.isLoading,
       selectEmpresa,
     }),
-    [empresasResource.data, empresasResource.isLoading, idActiva, isAdminGeneral, selectEmpresa],
+    [
+      canSwitchEmpresa,
+      empresasResource.isLoading,
+      empresasValidas,
+      idActiva,
+      isAdminGeneral,
+      isLocked,
+      selectEmpresa,
+    ],
   );
 
   return createElement(EmpresaActivaContext.Provider, { value }, children);

@@ -26,13 +26,22 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     /// </summary>
     public bool IgnoreEmpresaFilter => _currentUser.IsAdministradorGeneral;
 
-    public int TenantEmpresaId => _currentUser.EmpresaId ?? -1;
+    /// <summary>
+    /// Empresas del usuario autenticado. Usado por los query filters multiempresa.
+    /// </summary>
+    public int[] EmpresasAutorizadas =>
+        _currentUser.EmpresasAutorizadas as int[]
+        ?? _currentUser.EmpresasAutorizadas.ToArray();
+
+    /// <summary>Compat: primera empresa autorizada (o -1 si ninguna).</summary>
+    public int TenantEmpresaId => EmpresasAutorizadas.Length > 0 ? EmpresasAutorizadas[0] : -1;
 
     public DbSet<Pais> Paises => Set<Pais>();
     public DbSet<Empresa> Empresas => Set<Empresa>();
     public DbSet<Sede> Sedes => Set<Sede>();
     public DbSet<Area> Areas => Set<Area>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<UsuarioEmpresa> UsuariosEmpresas => Set<UsuarioEmpresa>();
     public DbSet<Responsable> Responsables => Set<Responsable>();
     public DbSet<Bitacora> Bitacoras => Set<Bitacora>();
     public DbSet<Estado> Estados => Set<Estado>();
@@ -61,28 +70,30 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     }
 
     /// <summary>
-    /// Multiempresa: el Administrador general ve todo; el resto solo datos de su id_empresa.
+    /// Multiempresa: el Administrador general ve todo; el resto solo datos de
+    /// sus empresas autorizadas (claims JWT / usuario_empresa).
     /// Estado y TipoAsignacion son catalogos globales (sin filtro).
     /// </summary>
     private void ApplyEmpresaQueryFilters(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Empresa>().HasQueryFilter(e =>
-            IgnoreEmpresaFilter || e.Id == TenantEmpresaId);
+            IgnoreEmpresaFilter || EmpresasAutorizadas.Contains(e.Id));
 
         modelBuilder.Entity<Pais>().HasQueryFilter(p =>
-            IgnoreEmpresaFilter || p.IdEmpresa == TenantEmpresaId);
+            IgnoreEmpresaFilter || EmpresasAutorizadas.Contains(p.IdEmpresa));
 
         modelBuilder.Entity<CategoriaActivo>().HasQueryFilter(c =>
-            IgnoreEmpresaFilter || c.IdEmpresa == TenantEmpresaId);
+            IgnoreEmpresaFilter || EmpresasAutorizadas.Contains(c.IdEmpresa));
 
         modelBuilder.Entity<Sede>().HasQueryFilter(s =>
-            IgnoreEmpresaFilter || s.IdEmpresa == TenantEmpresaId);
+            IgnoreEmpresaFilter || EmpresasAutorizadas.Contains(s.IdEmpresa));
 
         modelBuilder.Entity<Usuario>().HasQueryFilter(u =>
-            IgnoreEmpresaFilter || u.IdEmpresa == TenantEmpresaId);
+            IgnoreEmpresaFilter
+            || (u.IdEmpresa.HasValue && EmpresasAutorizadas.Contains(u.IdEmpresa.Value)));
 
         modelBuilder.Entity<Proveedor>().HasQueryFilter(p =>
-            IgnoreEmpresaFilter || p.IdEmpresa == TenantEmpresaId);
+            IgnoreEmpresaFilter || EmpresasAutorizadas.Contains(p.IdEmpresa));
 
         modelBuilder.Entity<Area>().HasQueryFilter(a =>
             IgnoreEmpresaFilter || Sedes.Any(s => s.Id == a.IdSede));
@@ -106,15 +117,16 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             IgnoreEmpresaFilter || Activos.Any(a => a.Id == d.IdActivo));
 
         // AdminGeneral (IgnoreEmpresaFilter) ve todas las filas, incluidas IdEmpresa NULL
-        // (catalogos globales). Usuarios de empresa solo ven bitacora de su tenant.
+        // (catalogos globales). Usuarios de empresa solo ven bitacora de sus tenants.
         modelBuilder.Entity<Bitacora>().HasQueryFilter(b =>
-            IgnoreEmpresaFilter || b.IdEmpresa == TenantEmpresaId);
+            IgnoreEmpresaFilter
+            || (b.IdEmpresa.HasValue && EmpresasAutorizadas.Contains(b.IdEmpresa.Value)));
 
         modelBuilder.Entity<HistorialActivo>().HasQueryFilter(h =>
             IgnoreEmpresaFilter
             || (h.IdAsignacion.HasValue && Asignaciones.Any(a => a.Id == h.IdAsignacion))
             || (h.IdDetalleActivo.HasValue && DetallesActivos.Any(d => d.Id == h.IdDetalleActivo)));
-        
+
         modelBuilder.Entity<DetalleMantenimiento>().HasQueryFilter(d =>
             IgnoreEmpresaFilter || Asignaciones.Any(a => a.Id == d.IdAsignacion));
 
@@ -124,7 +136,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         modelBuilder.Entity<DetalleTraslado>().HasQueryFilter(d =>
             IgnoreEmpresaFilter || Asignaciones.Any(a => a.Id == d.IdAsignacion));
 
-            modelBuilder.Entity<DispositivoToken>().HasQueryFilter(d =>
+        modelBuilder.Entity<DispositivoToken>().HasQueryFilter(d =>
             IgnoreEmpresaFilter || Activos.Any(a => a.Id == d.IdActivo));
 
         modelBuilder.Entity<RedConocida>().HasQueryFilter(r =>

@@ -2,6 +2,7 @@ using FluentValidation;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Interfaces;
+using SLCDM.Application.Common.Security;
 using SLCDM.Domain.Entities;
 
 namespace SLCDM.Application.Features.Paises.Commands;
@@ -64,7 +65,7 @@ public sealed class CreatePaisCommandValidator : AbstractValidator<CreatePaisCom
     }
 
     internal static int? EmpresaDestino(ICurrentUserService currentUser, int? idEmpresaSolicitada) =>
-        currentUser.IsAdministradorGeneral ? idEmpresaSolicitada : currentUser.EmpresaId;
+        currentUser.ResolverEmpresaDestino(idEmpresaSolicitada);
 }
 
 public sealed class CreatePaisCommandHandler : ICommandHandler<CreatePaisCommand, int>

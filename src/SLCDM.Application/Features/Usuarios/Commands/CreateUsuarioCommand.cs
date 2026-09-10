@@ -2,6 +2,7 @@ using FluentValidation;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Interfaces;
+using SLCDM.Application.Common.Security;
 using SLCDM.Application.Common.Validation;
 using SLCDM.Domain.Entities;
 using SLCDM.Domain.Enums;
@@ -34,8 +35,8 @@ public sealed class CreateUsuarioCommandValidator : AbstractValidator<CreateUsua
             .When(x => x.Rol != RolUsuario.AdministradorGeneral);
 
         RuleFor(x => x.IdEmpresa)
-            .Must(id => currentUser.IsAdministradorGeneral || id == currentUser.EmpresaId)
-            .WithMessage("Solo puede crear usuarios de su empresa.")
+            .Must(id => currentUser.IsAdministradorGeneral || currentUser.TieneAccesoAEmpresa(id))
+            .WithMessage("Solo puede crear usuarios de sus empresas autorizadas.")
             .When(_ => !currentUser.IsAdministradorGeneral);
 
         RuleFor(x => x.Nombres)
@@ -122,6 +123,17 @@ public sealed class CreateUsuarioCommandHandler : ICommandHandler<CreateUsuarioC
 
         _db.Usuarios.Add(entity);
         await _db.SaveChangesAsync(cancellationToken);
+
+        if (entity.IdEmpresa is int idEmpresa)
+        {
+            _db.UsuariosEmpresas.Add(new UsuarioEmpresa
+            {
+                IdUsuario = entity.Id,
+                IdEmpresa = idEmpresa,
+                Rol = entity.Rol
+            });
+            await _db.SaveChangesAsync(cancellationToken);
+        }
 
         await _correo.EnviarCredencialesAsync(
             entity.Correo,

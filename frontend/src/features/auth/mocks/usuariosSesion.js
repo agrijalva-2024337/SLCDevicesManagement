@@ -6,6 +6,7 @@ export const usuariosSesion = [
   {
     id: 1,
     idEmpresa: null,
+    empresasAutorizadas: [],
     nombres: 'María Isabel',
     apellidos: 'Barrios Soto',
     correo: 'admin.general@slc.com.gt',
@@ -17,6 +18,7 @@ export const usuariosSesion = [
   {
     id: 2,
     idEmpresa: 1,
+    empresasAutorizadas: [1],
     nombres: 'Carlos Eduardo',
     apellidos: 'Morales Paz',
     correo: 'admin.empresa@slc.com.gt',
@@ -28,6 +30,7 @@ export const usuariosSesion = [
   {
     id: 3,
     idEmpresa: 1,
+    empresasAutorizadas: [1],
     nombres: 'Ana Lucía',
     apellidos: 'Hernández Cú',
     correo: 'operador@slc.com.gt',
@@ -39,6 +42,7 @@ export const usuariosSesion = [
   {
     id: 4,
     idEmpresa: 1,
+    empresasAutorizadas: [1],
     nombres: 'José Andrés',
     apellidos: 'López Choc',
     correo: 'consulta@slc.com.gt',

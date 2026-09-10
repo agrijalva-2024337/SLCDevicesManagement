@@ -3,6 +3,7 @@ using Mapster;
 using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
+using SLCDM.Application.Common.Security;
 using SLCDM.Application.Common.Validation;
 using SLCDM.Domain.Entities;
 
@@ -70,9 +71,9 @@ public sealed class CreateHistoricoInventarioCommandHandler : ICommandHandler<Cr
             ?? throw new NotFoundException("Sede", command.IdSede);
 
         if (!_currentUser.IsAdministradorGeneral
-            && (!_currentUser.EmpresaId.HasValue || sede.IdEmpresa != _currentUser.EmpresaId.Value))
+            && !_currentUser.TieneAccesoAEmpresa(sede.IdEmpresa))
         {
-            throw new ConflictException("La sede no pertenece a la empresa del usuario.");
+            throw new ConflictException("La sede no pertenece a las empresas autorizadas del usuario.");
         }
 
         if (await _db.HistoricosInventario.AnyAsync(h => h.IdSede == command.IdSede && !h.Cerrado, cancellationToken))

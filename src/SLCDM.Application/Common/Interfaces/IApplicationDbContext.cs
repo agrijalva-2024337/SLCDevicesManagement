@@ -24,6 +24,7 @@ public interface IApplicationDbContext
     DbSet<Sede> Sedes { get; }
     DbSet<Area> Areas { get; }
     DbSet<Usuario> Usuarios { get; }
+    DbSet<UsuarioEmpresa> UsuariosEmpresas { get; }
     DbSet<Responsable> Responsables { get; }
     DbSet<Bitacora> Bitacoras { get; }
     DbSet<Estado> Estados { get; }
