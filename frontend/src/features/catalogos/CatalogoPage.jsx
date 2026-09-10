@@ -218,7 +218,7 @@ export function CatalogoPage() {
     return (
       <section>
         <CatalogBanner banner={banner} />
-        <PaisesGrid items={items} loading={isLoading} />
+        <PaisesGrid items={items} loading={isLoading} onReload={reload} />
         <OverlayOutlet context={outletContext} />
       </section>
     );

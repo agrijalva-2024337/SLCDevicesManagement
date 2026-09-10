@@ -523,7 +523,7 @@ export const maestros = {
   },
   paises: {
     service: paisService,
-    hasHabilitado: false,
+    hasHabilitado: true,
     title: 'Países',
     singular: 'país',
     kicker: 'País',
@@ -539,6 +539,7 @@ export const maestros = {
       codigoIso2: '',
       codigoIso3: '',
       codigoTelefonico: '',
+      habilitado: true,
     }),
     toForm: (item) => ({
       idEmpresa: item.idEmpresa == null ? '' : String(item.idEmpresa),
@@ -546,6 +547,7 @@ export const maestros = {
       codigoIso2: String(item.codigoIso2 ?? '').toLowerCase(),
       codigoIso3: String(item.codigoIso3 ?? '').toLowerCase(),
       codigoTelefonico: item.codigoTelefonico ?? '',
+      habilitado: item.habilitado !== false,
     }),
     fields: ({ empresas = [], rol, editing } = {}) => [
       ...(rol === RolUsuario.AdministradorGeneral && !editing
@@ -563,6 +565,7 @@ export const maestros = {
       { name: 'codigoIso2', label: 'ISO 2', required: true, maxLength: 2, hint: 'Dos letras en minúsculas (ej. cl)' },
       { name: 'codigoIso3', label: 'ISO 3', required: true, maxLength: 3 },
       { name: 'codigoTelefonico', label: 'Código telefónico', maxLength: 5, hint: 'Con o sin + (ej. +56)' },
+      switchField(),
     ],
     validate(values, _records, _id, { rol } = {}) {
       const errors = {
@@ -609,6 +612,7 @@ export const maestros = {
         codigoIso2: values.codigoIso2.trim().toLowerCase(),
         codigoIso3: values.codigoIso3.trim().toLowerCase(),
         codigoTelefonico: values.codigoTelefonico.trim() || null,
+        habilitado: Boolean(values.habilitado),
       };
     },
     detail: (item, lookups = {}) => [

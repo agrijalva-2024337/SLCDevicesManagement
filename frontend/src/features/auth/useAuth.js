@@ -13,16 +13,16 @@ export function canWriteCatalog(rol, resource) {
     return false;
   }
 
-  if (
-    resource === 'empresas-create' ||
-    resource === 'empresas' ||
-    resource === 'estados' ||
-    resource === 'tipos-asignacion'
-  ) {
+  if (resource === 'empresas-create' || resource === 'empresas') {
     return rol === RolUsuario.AdministradorGeneral;
   }
 
-  if (resource === 'paises' || resource === 'categorias') {
+  if (
+    resource === 'paises' ||
+    resource === 'categorias' ||
+    resource === 'estados' ||
+    resource === 'tipos-asignacion'
+  ) {
     return rol >= RolUsuario.AdministradorEmpresa;
   }
 
