@@ -218,7 +218,10 @@ export function ActivoDetallePage() {
       <div className="app-ficha-grid">
         <div className="app-panel">
           <div className="app-fields app-fields-plain">
-            <DetailField label="Código interno" value={activo.numeroSerie || `A-${String(activo.id).padStart(5, '0')}`} />
+            <DetailField
+              label="Código interno"
+              value={activo.codigoInterno || activo.numeroSerie || `A-${String(activo.id).padStart(5, '0')}`}
+            />
             <DetailField label="Serie / etiqueta" value={activo.numeroSerie} />
             <DetailField label="Empresa" value={empresa?.nombre} />
             <DetailField label="Sede" value={sede?.nombre} />

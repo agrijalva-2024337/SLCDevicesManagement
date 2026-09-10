@@ -22,6 +22,7 @@ function emptyActivo() {
     marca: '',
     modelo: '',
     numeroSerie: '',
+    codigoInterno: '',
     fechaCompra: '',
     costoAdquisicion: '',
     moneda: 'GTQ',
@@ -43,6 +44,7 @@ function activoToForm(item) {
     marca: item.marca ?? '',
     modelo: item.modelo ?? '',
     numeroSerie: item.numeroSerie ?? '',
+    codigoInterno: item.codigoInterno ?? '',
     fechaCompra: item.fechaCompra ? String(item.fechaCompra).slice(0, 10) : '',
     costoAdquisicion: String(item.costoAdquisicion ?? ''),
     moneda: item.moneda ?? 'GTQ',
@@ -69,6 +71,7 @@ function activoToPayload(values) {
     marca: values.marca.trim() || null,
     modelo: values.modelo.trim() || null,
     numeroSerie: values.numeroSerie.trim() || null,
+    codigoInterno: values.codigoInterno.trim() || null,
     fechaCompra: values.fechaCompra,
     costoAdquisicion: Number(values.costoAdquisicion || 0),
     moneda:
@@ -94,7 +97,29 @@ function duplicateNumeroSerie(records, numeroSerie, currentId) {
   );
 }
 
-function validateActivoForm(values, records = [], currentId) {
+function duplicateCodigoInterno(records, codigoInterno, currentId, idProveedor, proveedores) {
+  const needle = String(codigoInterno ?? '')
+    .trim()
+    .toLowerCase();
+  if (!needle) return false;
+
+  const proveedorActual = (proveedores ?? []).find((p) => Number(p.id) === Number(idProveedor));
+  const idEmpresa = proveedorActual?.idEmpresa;
+
+  return (records ?? []).some((item) => {
+    if (String(item.id) === String(currentId)) return false;
+    const sameCodigo =
+      String(item.codigoInterno ?? '')
+        .trim()
+        .toLowerCase() === needle;
+    if (!sameCodigo) return false;
+    if (idEmpresa == null || idEmpresa === '') return true;
+    const proveedorItem = (proveedores ?? []).find((p) => Number(p.id) === Number(item.idProveedor));
+    return Number(proveedorItem?.idEmpresa) === Number(idEmpresa);
+  });
+}
+
+function validateActivoForm(values, records = [], currentId, proveedores = []) {
   const errors = {
     nombre: validarNombreEntidad(values.nombre, 'nombre', 150, { required: true }),
     idCategoriaActivo: requireSelect(values.idCategoriaActivo, 'una categoría'),
@@ -105,6 +130,9 @@ function validateActivoForm(values, records = [], currentId) {
     marca: validarMarcaModelo(values.marca, 'marca', 100, { required: false }),
     modelo: validarMarcaModelo(values.modelo, 'modelo', 100, { required: false }),
     numeroSerie: validarAlfanumerico(values.numeroSerie, 'número de serie', 100, {
+      required: false,
+    }),
+    codigoInterno: validarAlfanumerico(values.codigoInterno, 'código interno', 50, {
       required: false,
     }),
     costoAdquisicion: validarCosto(values.costoAdquisicion, 'costo', { required: false }),
@@ -132,6 +160,13 @@ function validateActivoForm(values, records = [], currentId) {
 
   if (!errors.numeroSerie && duplicateNumeroSerie(records, values.numeroSerie, currentId)) {
     errors.numeroSerie = 'Ya existe un activo registrado con este número de serie.';
+  }
+
+  if (
+    !errors.codigoInterno &&
+    duplicateCodigoInterno(records, values.codigoInterno, currentId, values.idProveedor, proveedores)
+  ) {
+    errors.codigoInterno = 'Ya existe un activo con este código interno en la empresa.';
   }
 
   return compactErrors(errors);
@@ -188,7 +223,18 @@ export function ActivoFormOverlay({
       },
       { name: 'marca', label: 'Marca', maxLength: 100 },
       { name: 'modelo', label: 'Modelo', maxLength: 100 },
-      { name: 'numeroSerie', label: 'Número de serie', maxLength: 100 },
+      {
+        name: 'numeroSerie',
+        label: 'Número de serie',
+        maxLength: 100,
+        hint: 'Serie del fabricante (placa de fábrica).',
+      },
+      {
+        name: 'codigoInterno',
+        label: 'Código interno',
+        maxLength: 50,
+        hint: 'Código de etiqueta interna (QR/barras). No es el número de serie de fábrica.',
+      },
       { name: 'fechaCompra', label: 'Fecha de compra', type: 'date', required: true },
       {
         name: 'costoAdquisicion',
@@ -231,7 +277,9 @@ export function ActivoFormOverlay({
       fields={fields}
       initialValues={editing && record ? activoToForm(record) : emptyActivo()}
       submitLabel={editing ? 'Guardar cambios' : 'Registrar activo'}
-      validate={(values) => validateActivoForm(values, records, editing ? record?.id : undefined)}
+      validate={(values) =>
+        validateActivoForm(values, records, editing ? record?.id : undefined, proveedores)
+      }
       onSave={(values) => onSave(activoToPayload(values))}
       onClose={onClose}
     />

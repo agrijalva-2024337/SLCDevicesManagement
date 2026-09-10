@@ -42,6 +42,12 @@ public class Activo: SLCDM.Domain.Common.BaseEntity {
 
     [MaxLength(100, ErrorMessage = "El campo numero de serie no debe superar los 100 caracteres")]
     public string? NumeroSerie { get; set; }
+
+    /// <summary>
+    /// Código de etiqueta interna de la empresa (QR/barras). Independiente del número de serie del fabricante.
+    /// </summary>
+    [MaxLength(50, ErrorMessage = "El campo codigo interno no debe superar los 50 caracteres")]
+    public string? CodigoInterno { get; set; }
     
     [DataType(DataType.Date)]
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]

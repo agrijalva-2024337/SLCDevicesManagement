@@ -17,6 +17,7 @@ public sealed record UpdateActivoCommand(
     string? Marca,
     string? Modelo,
     string? NumeroSerie,
+    string? CodigoInterno,
     DateTime FechaCompra,
     decimal CostoAdquisicion,
     string? Moneda,
@@ -81,6 +82,31 @@ public sealed class UpdateActivoCommandValidator : AbstractValidator<UpdateActiv
                     .AnyAsync(a => a.NumeroSerie == numeroSerie && a.Id != cmd.Id, ct))
             .WithMessage("Ya existe un activo registrado con este número de serie.")
             .When(x => !string.IsNullOrWhiteSpace(x.NumeroSerie), ApplyConditionTo.AllValidators);
+
+        RuleFor(x => x.CodigoInterno)
+            .MaximumLength(50).WithMessage("El campo codigo interno no debe superar los 50 caracteres.")
+            .MustAsync(async (cmd, codigoInterno, ct) =>
+            {
+                var idEmpresa = await db.Proveedores.IgnoreQueryFilters()
+                    .AsNoTracking()
+                    .Where(p => p.Id == cmd.IdProveedor)
+                    .Select(p => (int?)p.IdEmpresa)
+                    .FirstOrDefaultAsync(ct);
+                if (idEmpresa is null)
+                {
+                    return true;
+                }
+
+                return !await db.Activos.IgnoreQueryFilters()
+                    .AnyAsync(
+                        a => a.Id != cmd.Id
+                            && a.CodigoInterno == codigoInterno
+                            && db.Proveedores.IgnoreQueryFilters()
+                                .Any(p => p.Id == a.IdProveedor && p.IdEmpresa == idEmpresa),
+                        ct);
+            })
+            .WithMessage("Ya existe un activo con este código interno en la empresa.")
+            .When(x => !string.IsNullOrWhiteSpace(x.CodigoInterno), ApplyConditionTo.AllValidators);
 
         RuleFor(x => x.EspecificacionesHardware)
             .MaximumLength(500).WithMessage("El campo especificaciones de hardware no debe superar los 500 caracteres.")

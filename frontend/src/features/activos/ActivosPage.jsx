@@ -97,7 +97,7 @@ export function ActivosPage() {
         const idEmpresa = empresaIdDeActivo(row, ubicaciones.data, sedes.data);
         return {
           ...row,
-          codigo: row.numeroSerie || String(row.id),
+          codigo: row.codigoInterno || row.numeroSerie || String(row.id),
           categoriaNombre: byId(categorias.data, row.idCategoriaActivo)?.nombre ?? '—',
           empresaNombre: byId(empresas.data, idEmpresa)?.nombre ?? '—',
           ubicacionNombre: nombreUbicacion(byId(ubicaciones.data, row.idUbicacion)),
