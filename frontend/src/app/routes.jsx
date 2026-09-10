@@ -26,8 +26,6 @@ const loadBitacora = () => import('@/features/organizacion/bitacoras/BitacoraPag
 const loadJornadas = () => import('@/features/inventario/JornadasPage');
 const loadJornadaDetalle = () => import('@/features/inventario/JornadaDetallePage');
 const loadRastreo = () => import('@/features/rastreo/RastreoPage');
-const loadReportes = () => import('@/features/reportes/ReportesPage');
-const loadActivosReporte = () => import('@/features/reportes/ActivosReportePage');
 
 const writeChildren = (loader, formExport, detailExport) => [
   {
@@ -96,8 +94,6 @@ export const router = createBrowserRouter([
           { path: 'inventario-fisico', ...named(loadJornadas, 'JornadasPage') },
           { path: 'inventario-fisico/:id', ...named(loadJornadaDetalle, 'JornadaDetallePage') },
           { path: 'rastreo', ...named(loadRastreo, 'RastreoPage') },
-          { path: 'reportes', ...named(loadReportes, 'ReportesPage') },
-          { path: 'reportes/activos', ...named(loadActivosReporte, 'ActivosReportePage') },
           {
             path: 'bitacora',
             ...named(loadGuard, 'RutaAdministrador'),
