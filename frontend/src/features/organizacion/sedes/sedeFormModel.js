@@ -1,13 +1,14 @@
 import {
   asOptions,
   requireSelect,
+  normalizeNombreEntidad,
   validarNombreEntidad,
   validarTextoLibre,
 } from '@/shared/components/recordFormUtils';
 
-export function emptySedeForm() {
+export function emptySedeForm(idEmpresa = '') {
   return {
-    idEmpresa: '',
+    idEmpresa: idEmpresa == null || idEmpresa === '' ? '' : String(idEmpresa),
     idPais: '',
     nombre: '',
     direccion: '',
@@ -27,9 +28,17 @@ export function sedeToForm(sede) {
   };
 }
 
-export function sedeFields({ empresas = [], paises = [] } = {}) {
+export function sedeFields({ empresas = [], paises = [], lockEmpresa = false } = {}) {
   return [
-    { name: 'idEmpresa', label: 'Empresa', type: 'select', required: true, options: asOptions(empresas) },
+    {
+      name: 'idEmpresa',
+      label: 'Empresa',
+      type: 'select',
+      required: true,
+      options: asOptions(empresas),
+      readOnly: lockEmpresa,
+      hint: lockEmpresa ? 'Se toma de la empresa de su sesión.' : undefined,
+    },
     { name: 'idPais', label: 'País', type: 'select', required: true, options: asOptions(paises) },
     { name: 'nombre', label: 'Nombre', required: true, maxLength: 100, wide: true },
     { name: 'ciudad', label: 'Ciudad', maxLength: 100 },
@@ -75,9 +84,9 @@ export function sedeToPayload(values) {
   return {
     idEmpresa: Number(values.idEmpresa),
     idPais: Number(values.idPais),
-    nombre: values.nombre.trim(),
+    nombre: normalizeNombreEntidad(values.nombre),
     direccion: values.direccion.trim() || null,
-    ciudad: values.ciudad.trim() || null,
+    ciudad: normalizeNombreEntidad(values.ciudad) || null,
     habilitado: Boolean(values.habilitado),
   };
 }

@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router';
+import { RouteFallback } from '@/app/RouteFallback';
 
 function named(importer, exportName) {
   return {
@@ -43,25 +44,31 @@ export const router = createBrowserRouter([
   {
     path: '/',
     ...named(loadLanding, 'LandingPage'),
+    HydrateFallback: RouteFallback,
   },
   {
     path: '/login',
     ...named(loadLogin, 'LoginPage'),
+    HydrateFallback: RouteFallback,
   },
   {
     path: '/escanear',
     ...named(() => import('@/features/consulta/EscanearPage'), 'EscanearPage'),
+    HydrateFallback: RouteFallback,
   },
   {
     path: '/consulta/:codigo',
     ...named(() => import('@/features/consulta/ConsultaActivoPage'), 'ConsultaActivoPage'),
+    HydrateFallback: RouteFallback,
   },
   {
     path: '/app',
     ...named(loadGuard, 'RutaProtegida'),
+    HydrateFallback: RouteFallback,
     children: [
       {
         ...named(loadAppLayout, 'AppLayout'),
+        HydrateFallback: RouteFallback,
         children: [
           { index: true, ...named(loadDashboard, 'DashboardPage') },
           {

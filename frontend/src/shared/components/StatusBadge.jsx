@@ -1,7 +1,7 @@
 export function StatusBadge({
   active,
   activeLabel = 'Habilitado',
-  inactiveLabel = 'Inactivo',
+  inactiveLabel = 'Deshabilitado',
   tone = 'default',
 }) {
   const styles = {

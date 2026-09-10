@@ -1,5 +1,9 @@
 export function asOptions(items, labelKey = 'nombre') {
-  return items.map((item) => ({ value: String(item.id), label: item[labelKey] }));
+  return (items ?? []).map((item) => ({
+    value: String(item.id),
+    label: item[labelKey],
+    disabled: Boolean(item.disabled),
+  }));
 }
 
 export function compactErrors(errors) {
@@ -54,6 +58,7 @@ export {
   validarIso3,
   validarMarcaModelo,
   validarMoneda,
+  normalizeNombreEntidad,
   validarNombreEntidad,
   validarNombrePersona,
   validarPassword,

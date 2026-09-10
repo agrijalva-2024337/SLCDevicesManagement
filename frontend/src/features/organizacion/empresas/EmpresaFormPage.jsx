@@ -17,7 +17,6 @@ import { StatusBadge } from '@/shared/components/StatusBadge';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
-import { buscarPorCodigoTelefonico } from '@/shared/validation/paisesIso';
 
 function EmpresaFormEditor({ id }) {
   const navigate = useNavigate();
@@ -104,12 +103,7 @@ function EmpresaFormEditor({ id }) {
       initialValues={initialValues}
       submitLabel={editing ? 'Guardar cambios' : 'Registrar empresa'}
       validate={(values) =>
-        compactErrors(
-          validateEmpresaForm(values, records, id, {
-            iso2: buscarPorCodigoTelefonico(values.telefonoPrefijo)?.codigoIso2,
-            paises: paisesList,
-          }),
-        )
+        compactErrors(validateEmpresaForm(values, records, id, { paises: paisesList }))
       }
       onSave={async (values) => {
         const payload = empresaToPayload(values);

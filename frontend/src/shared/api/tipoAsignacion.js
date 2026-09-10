@@ -1,6 +1,6 @@
 /**
  * Lookup de Tipo_Asignacion y Estado por nombre.
- * Los ids salen del seed (Scripts/SeedCatalogosAddendum.sql) y no se hardcodean.
+ * Los ids salen del seed / catálogo por empresa y no se hardcodean.
  * Comparación acento-insensible, igual que TipoAsignacionNombres en Application.
  */
 import * as estadoService from '@/features/organizacion/estados/estadoService';
@@ -45,10 +45,34 @@ export function nombresCatalogoIguales(actual, esperado) {
 
 const TIPOS_KEY = listQueryKey('tiposAsignacion');
 const ESTADOS_KEY = listQueryKey('estados');
+const EMPRESA_STORAGE_KEY = 'slcdm_empresa_activa';
 
 export function invalidateCatalogoAsignacionCache() {
   invalidateQueries(['tiposAsignacion']);
   invalidateQueries(['estados']);
+}
+
+function readEmpresaActivaId() {
+  try {
+    const raw = window.localStorage.getItem(EMPRESA_STORAGE_KEY);
+    if (raw == null || raw === '') return null;
+    const id = Number(raw);
+    return Number.isFinite(id) ? id : null;
+  } catch {
+    return null;
+  }
+}
+
+function scopeByEmpresa(items, idEmpresa) {
+  const rows = Array.isArray(items) ? items : [];
+  if (idEmpresa == null || idEmpresa === '') {
+    return rows;
+  }
+  if (!rows.some((item) => item?.idEmpresa != null && item.idEmpresa !== '')) {
+    return rows;
+  }
+  const wanted = Number(idEmpresa);
+  return rows.filter((item) => Number(item.idEmpresa) === wanted);
 }
 
 async function loadTipos() {
@@ -74,13 +98,20 @@ function findByNombre(items, nombre, kind) {
   return found;
 }
 
-export async function getIdTipoAsignacion(nombre) {
-  const tipos = await loadTipos();
+function resolveEmpresaId(idEmpresa) {
+  if (idEmpresa != null && idEmpresa !== '') {
+    return Number(idEmpresa);
+  }
+  return readEmpresaActivaId();
+}
+
+export async function getIdTipoAsignacion(nombre, idEmpresa) {
+  const tipos = scopeByEmpresa(await loadTipos(), resolveEmpresaId(idEmpresa));
   return findByNombre(tipos, nombre, 'el tipo de asignación').id;
 }
 
-export async function getIdEstado(nombre) {
-  const estados = await loadEstados();
+export async function getIdEstado(nombre, idEmpresa) {
+  const estados = scopeByEmpresa(await loadEstados(), resolveEmpresaId(idEmpresa));
   return findByNombre(estados, nombre, 'el estado').id;
 }
 

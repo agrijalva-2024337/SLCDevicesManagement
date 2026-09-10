@@ -120,7 +120,7 @@ export function SchemaForm({
               >
                 <option value="">{field.placeholder ?? 'Seleccione…'}</option>
                 {field.options.map((option) => (
-                  <option key={option.value} value={option.value}>
+                  <option key={option.value} value={option.value} disabled={Boolean(option.disabled)}>
                     {option.label}
                   </option>
                 ))}

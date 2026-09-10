@@ -8,7 +8,6 @@ import {
   ISO3,
   MARCA_MODELO,
   MONEDA_ISO,
-  NIT_GT,
   NOMBRE_ENTIDAD,
   NOMBRE_PERSONA,
   PASSWORD_ALFABETO,
@@ -34,15 +33,34 @@ function matchOrEmpty(text, pattern, message) {
   return pattern.test(text) ? null : message;
 }
 
-export function validarNombreEntidad(value, label, max, { required = true } = {}) {
-  const text = asText(value);
+/** Colapsa espacios y hace trim (T3). */
+export function normalizeNombreEntidad(value) {
+  return String(value ?? '')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+/**
+ * Validador reutilizable de nombre de entidad (T3).
+ * Reglas: obligatorio, 3–100, al menos una letra, caracteres permitidos,
+ * vocal si supera 8 caracteres.
+ */
+export function validarNombreEntidad(value, label = 'nombre', max = 100, { required = true } = {}) {
+  const text = normalizeNombreEntidad(value);
   if (!text) return required ? requiredError(label) : null;
-  if (max && text.length > max) return lengthError(label, max);
-  return matchOrEmpty(
-    text,
-    NOMBRE_ENTIDAD,
-    `El ${label} solo admite letras, números, espacios y los signos . , - — & ' ( ) /`,
-  );
+  if (text.length < 3) return `El ${label} debe tener al menos 3 caracteres.`;
+  const limit = Math.min(max || 100, 100);
+  if (text.length > limit) return lengthError(label, limit);
+  if (!/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(text)) {
+    return `El ${label} debe contener al menos una letra.`;
+  }
+  if (!NOMBRE_ENTIDAD.test(text)) {
+    return `El ${label} solo admite letras, números, espacios y los signos . , - _ & / ( ) ' ―`;
+  }
+  if (text.length > 8 && !/[AEIOUÁÉÍÓÚÜaeiouáéíóúü]/.test(text)) {
+    return `El ${label} debe incluir al menos una vocal cuando supera 8 caracteres.`;
+  }
+  return null;
 }
 
 export function validarNombrePersona(value, label, max, { required = true } = {}) {
@@ -131,28 +149,16 @@ export function validarPassword(value, label = 'contraseña', { required = true 
 export function validarIdentificacionTributaria(
   value,
   label = 'identificación tributaria',
-  max = 50,
-  { required = true, iso2 } = {},
+  max = 20,
+  { required = true } = {},
 ) {
-  const text = asText(value);
+  const text = asText(value).toUpperCase();
   if (!text) return required ? requiredError(label) : null;
-  if (max && text.length > max) return lengthError(label, max);
-  if (text.length < 3) {
-    return `La ${label} debe tener al menos 3 caracteres.`;
+  const limit = Math.min(max || 20, 20);
+  if (text.length < 5 || text.length > limit || !IDENTIFICACION_TRIBUTARIA.test(text)) {
+    return `La ${label} solo admite letras, números y guiones (5 a 20 caracteres).`;
   }
-  const country = String(iso2 ?? '').toLowerCase();
-  if (country === 'gt') {
-    return matchOrEmpty(
-      text,
-      NIT_GT,
-      `El NIT guatemalteco admite dígitos, guion opcional y verificador 0-9 o K (ej. 1234567-K)`,
-    );
-  }
-  return matchOrEmpty(
-    text,
-    IDENTIFICACION_TRIBUTARIA,
-    `La ${label} solo admite letras, números y guiones`,
-  );
+  return null;
 }
 
 export function validarCosto(value, label = 'costo', { required = false } = {}) {

@@ -82,11 +82,11 @@ export const ubicaciones = [
   },
   {
     id: 10,
-    idSede: 1,
-    nombre: 'Quetzaltenango — sucursal',
-    descripcion: 'Punto de apoyo en el altiplano occidental.',
-    latitud: 14.8347,
-    longitud: -91.5181,
+    idSede: 4,
+    nombre: 'Hub San Salvador — patio',
+    descripcion: 'Patio de transferencia en el hub salvadoreño.',
+    latitud: 13.717,
+    longitud: -89.155,
     habilitado: true,
   },
 ];

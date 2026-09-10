@@ -88,8 +88,9 @@
   overflow: auto;
   max-height: calc(100dvh - 14.5rem);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: 16px;
   background: var(--color-white);
+  box-shadow: var(--shadow-sm);
 }
 
 .data-table {

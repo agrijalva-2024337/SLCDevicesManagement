@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import { SinPermiso } from '@/features/auth/RutaProtegida';
@@ -12,6 +12,7 @@ import * as empresaService from '@/features/organizacion/empresas/empresaService
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import * as areaService from '@/features/organizacion/areas/areaService';
 import { DataTable } from '@/shared/components/DataTable';
+import { DetailOverlay } from '@/shared/components/DetailOverlay';
 import { OverlayOutlet } from '@/shared/components/OverlayOutlet';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { RecordActions, RegisterButton } from '@/shared/components/RecordActions';
@@ -19,6 +20,7 @@ import { RecordCard } from '@/shared/components/RecordCard';
 import { catalogListQueryKey } from '@/shared/data/queryKeys';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useResource } from '@/shared/hooks/useResource';
+import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 import MagicBento from '@/shared/vendor/react-bits/MagicBento';
 
 export { MaestroDetallePage } from '@/features/catalogos/MaestroDetallePage';
@@ -57,9 +59,12 @@ export function CatalogoPage() {
     }
     return maestro.service.getAll();
   };
-  const { rows, isLoading, errorMessage, banner, reload } = useCatalogCollection(loadAll, {
+  const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(loadAll, {
     key: catalogKey,
   });
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const empresas = useResource(empresaService.getAll, { enabled: neededLookups.includes('empresas') });
   const sedes = useResource(sedeService.getAll, { enabled: needsSedes });
   const areas = useResource(areaService.getAll, { enabled: neededLookups.includes('areas') });
@@ -145,7 +150,65 @@ export function CatalogoPage() {
             };
           })}
           loading={isLoading}
+          onDelete={(item) => {
+            setDeleteError(null);
+            setPendingDelete(item);
+          }}
         />
+        <DetailOverlay
+          open={Boolean(pendingDelete)}
+          title="Eliminar ubicación"
+          kicker="Confirmación"
+          onClose={() => {
+            if (deleting) return;
+            setPendingDelete(null);
+            setDeleteError(null);
+          }}
+        >
+          <p className="text-base text-navy">
+            Se eliminará permanentemente la ubicación <strong>{pendingDelete?.nombre}</strong>. Esta acción
+            no se puede revertir.
+          </p>
+          {deleteError ? (
+            <div className="app-feedback app-feedback--error" role="alert">
+              {deleteError}
+            </div>
+          ) : null}
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              className="app-btn app-btn--primary"
+              disabled={deleting}
+              onClick={async () => {
+                setDeleting(true);
+                setDeleteError(null);
+                try {
+                  await ubicacionService.hardRemove(pendingDelete.id);
+                  setPendingDelete(null);
+                  setBanner({ message: 'Ubicación eliminada.', variant: 'empty' });
+                  await reload();
+                } catch (error) {
+                  setDeleteError(getErrorMessage(error));
+                } finally {
+                  setDeleting(false);
+                }
+              }}
+            >
+              {deleting ? 'Eliminando…' : 'Eliminar'}
+            </button>
+            <button
+              type="button"
+              className="app-btn app-btn--ghost"
+              disabled={deleting}
+              onClick={() => {
+                setPendingDelete(null);
+                setDeleteError(null);
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </DetailOverlay>
         <OverlayOutlet context={outletContext} />
       </>
     );
