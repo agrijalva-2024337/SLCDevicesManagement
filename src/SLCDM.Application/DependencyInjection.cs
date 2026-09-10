@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Security;
 using SLCDM.Application.Features.Asignaciones;
+using SLCDM.Application.Features.Usuarios;
 
 namespace SLCDM.Application;
 
@@ -25,6 +26,7 @@ public static class DependencyInjection
         services.AddSingleton<IPdfHashService, PdfHashService>();
         services.AddScoped<IAsignacionPdfService, AsignacionPdfService>();
         services.AddScoped<IAsignacionCorreoService, AsignacionCorreoService>();
+        services.AddScoped<IUsuarioCredencialesCorreoService, UsuarioCredencialesCorreoService>();
 
         services.AddValidatorsFromAssembly(assembly);
         RegisterHandlers(services, assembly);

@@ -83,17 +83,20 @@ public sealed class CreateUsuarioCommandHandler : ICommandHandler<CreateUsuarioC
     private readonly IApplicationDbContext _db;
     private readonly IPasswordHashService _passwordHashService;
     private readonly IPasswordGenerator _passwordGenerator;
+    private readonly IUsuarioCredencialesCorreoService _correo;
     private readonly IValidator<CreateUsuarioCommand> _validator;
 
     public CreateUsuarioCommandHandler(
         IApplicationDbContext db,
         IPasswordHashService passwordHashService,
         IPasswordGenerator passwordGenerator,
+        IUsuarioCredencialesCorreoService correo,
         IValidator<CreateUsuarioCommand> validator)
     {
         _db = db;
         _passwordHashService = passwordHashService;
         _passwordGenerator = passwordGenerator;
+        _correo = correo;
         _validator = validator;
     }
 
@@ -119,6 +122,14 @@ public sealed class CreateUsuarioCommandHandler : ICommandHandler<CreateUsuarioC
 
         _db.Usuarios.Add(entity);
         await _db.SaveChangesAsync(cancellationToken);
+
+        await _correo.EnviarCredencialesAsync(
+            entity.Correo,
+            entity.Nombres,
+            entity.Username,
+            plain!,
+            cancellationToken);
+
         return new CreateUsuarioResult(entity.Id, passwordGenerada);
     }
 }
