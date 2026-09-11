@@ -7,7 +7,8 @@ public sealed class UsuarioMappingConfig : IRegister
 {
     public void Register(TypeAdapterConfig config)
     {
-        config.NewConfig<Usuario, UsuarioDto>();
+        config.NewConfig<Usuario, UsuarioDto>()
+            .Ignore(dest => dest.IdsEmpresas);
 
         config.NewConfig<Commands.CreateUsuarioCommand, Usuario>()
             .Ignore(dest => dest.Id)

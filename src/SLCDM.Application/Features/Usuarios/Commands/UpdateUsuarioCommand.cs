@@ -12,7 +12,7 @@ namespace SLCDM.Application.Features.Usuarios.Commands;
 
 public sealed record UpdateUsuarioCommand(
     int Id,
-    int? IdEmpresa,
+    IReadOnlyList<int> IdsEmpresas,
     string Nombres,
     string Apellidos,
     string Correo,
@@ -27,11 +27,32 @@ public sealed class UpdateUsuarioCommandValidator : AbstractValidator<UpdateUsua
     {
         RuleFor(x => x.Id).RequiredId("id usuario");
 
-        RuleFor(x => x.IdEmpresa)
-            .OptionalId("id empresa")
-            .MustAsync(async (id, ct) =>
-                !id.HasValue || await db.Empresas.AnyAsync(e => e.Id == id.Value, ct))
-            .WithMessage("El campo id empresa no corresponde a un registro existente.");
+        RuleFor(x => x.IdsEmpresas)
+            .Must((cmd, ids) => cmd.Rol == RolUsuario.AdministradorGeneral || (ids?.Count ?? 0) > 0)
+            .WithMessage("El campo ids empresas es obligatorio para este rol.");
+
+        RuleFor(x => x.IdsEmpresas)
+            .Must(ids => (ids ?? []).All(id => id > 0))
+            .WithMessage("El campo ids empresas debe ser mayor a 0 cuando se informa.");
+
+        RuleFor(x => x.IdsEmpresas)
+            .MustAsync(async (ids, ct) =>
+            {
+                var list = UsuarioEmpresaList.Normalize(ids);
+                if (list.Count == 0)
+                {
+                    return true;
+                }
+
+                var existentes = await db.Empresas.CountAsync(e => list.Contains(e.Id), ct);
+                return existentes == list.Count;
+            })
+            .WithMessage("El campo ids empresas no corresponde a un registro existente.");
+
+        RuleFor(x => x.IdsEmpresas)
+            .Must(ids => (ids ?? []).All(id => currentUser.TieneAccesoAEmpresa(id)))
+            .WithMessage("Solo puede asignar usuarios a sus empresas autorizadas.")
+            .When(_ => !currentUser.IsAdministradorGeneral);
 
         RuleFor(x => x.Nombres)
             .NotEmpty().WithMessage("El campo nombres es obligatorio.")
@@ -65,16 +86,6 @@ public sealed class UpdateUsuarioCommandValidator : AbstractValidator<UpdateUsua
             .MinimumLength(8).WithMessage("El campo password debe tener al menos 8 caracteres.")
             .MaximumLength(128).WithMessage("El campo password no debe superar los 128 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.Password));
-
-        RuleFor(x => x.IdEmpresa)
-            .NotNull()
-            .WithMessage("El campo id empresa es obligatorio para este rol.")
-            .When(x => x.Rol != RolUsuario.AdministradorGeneral);
-
-        RuleFor(x => x.IdEmpresa)
-            .Must(id => currentUser.IsAdministradorGeneral || currentUser.TieneAccesoAEmpresa(id))
-            .WithMessage("Solo puede asignar usuarios a sus empresas autorizadas.")
-            .When(_ => !currentUser.IsAdministradorGeneral);
 
         RuleFor(x => x.Rol)
             .IsInEnum().WithMessage("El campo rol no es un valor valido.")
@@ -113,45 +124,44 @@ public sealed class UpdateUsuarioCommandHandler : ICommandHandler<UpdateUsuarioC
             entity.PasswordHash = _passwordHashService.HashPassword(command.Password);
         }
 
-        await SyncUsuarioEmpresaAsync(entity.Id, command.IdEmpresa, command.Rol, cancellationToken);
+        await SyncUsuarioEmpresaAsync(entity.Id, command.IdsEmpresas, command.Rol, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
     private async Task SyncUsuarioEmpresaAsync(
         int idUsuario,
-        int? idEmpresa,
+        IReadOnlyList<int>? idsEmpresas,
         RolUsuario rol,
         CancellationToken cancellationToken)
     {
+        var wanted = UsuarioEmpresaList.Normalize(idsEmpresas);
+        var wantedSet = wanted.ToHashSet();
+
         var existentes = await _db.UsuariosEmpresas
             .Where(ue => ue.IdUsuario == idUsuario)
             .ToListAsync(cancellationToken);
 
-        if (idEmpresa is not int id)
+        foreach (var fila in existentes.Where(ue => !wantedSet.Contains(ue.IdEmpresa)))
         {
-            _db.UsuariosEmpresas.RemoveRange(existentes);
-            return;
+            _db.UsuariosEmpresas.Remove(fila);
         }
 
-        var match = existentes.FirstOrDefault(ue => ue.IdEmpresa == id);
-        if (match is null)
+        var existentesPorEmpresa = existentes.ToDictionary(ue => ue.IdEmpresa);
+        foreach (var id in wanted)
         {
-            _db.UsuariosEmpresas.Add(new UsuarioEmpresa
+            if (existentesPorEmpresa.TryGetValue(id, out var match))
             {
-                IdUsuario = idUsuario,
-                IdEmpresa = id,
-                Rol = rol
-            });
-        }
-        else
-        {
-            match.Rol = rol;
-        }
-
-        // Mientras el formulario solo maneja un IdEmpresa, las filas extra se retiran.
-        foreach (var extra in existentes.Where(ue => ue.IdEmpresa != id))
-        {
-            _db.UsuariosEmpresas.Remove(extra);
+                match.Rol = rol;
+            }
+            else
+            {
+                _db.UsuariosEmpresas.Add(new UsuarioEmpresa
+                {
+                    IdUsuario = idUsuario,
+                    IdEmpresa = id,
+                    Rol = rol
+                });
+            }
         }
     }
 }
