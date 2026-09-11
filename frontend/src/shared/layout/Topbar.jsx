@@ -1,38 +1,9 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
-import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { rolUsuarioLabel } from '@/shared/api/contracts';
 import { getPageTitle } from '@/shared/layout/navigation';
 import { ThemeToggle } from '@/shared/theme/ThemeToggle';
-
-function EmpresaSelector() {
-  const { empresas, idActiva, isAdminGeneral, isLocked, isLoading, selectEmpresa } = useEmpresaActiva();
-  const options = isLocked
-    ? empresas.filter((empresa) => Number(empresa.id) === Number(idActiva))
-    : empresas;
-
-  return (
-    <label className="app-empresa-select">
-      <span className="sr-only">Empresa activa</span>
-      <select
-        className="app-input"
-        value={idActiva ?? ''}
-        disabled={isLocked || isLoading}
-        onChange={(event) => selectEmpresa(event.target.value)}
-        aria-label="Empresa activa"
-      >
-        {isAdminGeneral ? <option value="">Todas las empresas</option> : null}
-        {options.map((empresa) => (
-          <option key={empresa.id} value={empresa.id}>
-            {empresa.nombre}
-          </option>
-        ))}
-        {isLocked && options.length === 0 ? <option value={idActiva ?? ''}>Empresa asignada</option> : null}
-      </select>
-    </label>
-  );
-}
 
 function UserMenu() {
   const { usuario, logout } = useAuth();
@@ -132,7 +103,6 @@ export function Topbar({ sidebarOpen, onMenuToggle }) {
       </div>
 
       <div className="flex shrink-0 items-center gap-3">
-        <EmpresaSelector />
         <ThemeToggle />
         <UserMenu />
       </div>
