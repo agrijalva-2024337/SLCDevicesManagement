@@ -6,6 +6,7 @@ public sealed record UsuarioDto(
     int Id,
     bool Habilitado,
     int? IdEmpresa,
+    IReadOnlyList<int> IdsEmpresas,
     string Nombres,
     string Apellidos,
     string Correo,
@@ -13,7 +14,7 @@ public sealed record UsuarioDto(
     RolUsuario Rol,
     DateTime FechaCreacion);
 
-    /// <summary>
+/// <summary>
 /// Alta de usuario. <see cref="PasswordGenerada"/> solo viene llena cuando
 /// el cliente pidió <c>generarPassword</c>; es la única vez que la API
 /// expone la clave en claro.

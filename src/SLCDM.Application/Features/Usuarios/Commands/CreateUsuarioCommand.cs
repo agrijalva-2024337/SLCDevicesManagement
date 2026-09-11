@@ -3,14 +3,13 @@ using Mapster;
 using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Security;
-using SLCDM.Application.Common.Validation;
 using SLCDM.Domain.Entities;
 using SLCDM.Domain.Enums;
 
 namespace SLCDM.Application.Features.Usuarios.Commands;
 
 public sealed record CreateUsuarioCommand(
-    int? IdEmpresa,
+    IReadOnlyList<int> IdsEmpresas,
     string Nombres,
     string Apellidos,
     string Correo,
@@ -23,19 +22,30 @@ public sealed class CreateUsuarioCommandValidator : AbstractValidator<CreateUsua
 {
     public CreateUsuarioCommandValidator(IApplicationDbContext db, ICurrentUserService currentUser)
     {
-        RuleFor(x => x.IdEmpresa)
-            .OptionalId("id empresa")
-            .MustAsync(async (id, ct) =>
-                !id.HasValue || await db.Empresas.AnyAsync(e => e.Id == id.Value, ct))
-            .WithMessage("El campo id empresa no corresponde a un registro existente.");
+        RuleFor(x => x.IdsEmpresas)
+            .Must((cmd, ids) => cmd.Rol == RolUsuario.AdministradorGeneral || (ids?.Count ?? 0) > 0)
+            .WithMessage("El campo ids empresas es obligatorio para este rol.");
 
-        RuleFor(x => x.IdEmpresa)
-            .NotNull()
-            .WithMessage("El campo id empresa es obligatorio para este rol.")
-            .When(x => x.Rol != RolUsuario.AdministradorGeneral);
+        RuleFor(x => x.IdsEmpresas)
+            .Must(ids => (ids ?? []).All(id => id > 0))
+            .WithMessage("El campo ids empresas debe ser mayor a 0 cuando se informa.");
 
-        RuleFor(x => x.IdEmpresa)
-            .Must(id => currentUser.IsAdministradorGeneral || currentUser.TieneAccesoAEmpresa(id))
+        RuleFor(x => x.IdsEmpresas)
+            .MustAsync(async (ids, ct) =>
+            {
+                var list = UsuarioEmpresaList.Normalize(ids);
+                if (list.Count == 0)
+                {
+                    return true;
+                }
+
+                var existentes = await db.Empresas.CountAsync(e => list.Contains(e.Id), ct);
+                return existentes == list.Count;
+            })
+            .WithMessage("El campo ids empresas no corresponde a un registro existente.");
+
+        RuleFor(x => x.IdsEmpresas)
+            .Must(ids => (ids ?? []).All(id => currentUser.TieneAccesoAEmpresa(id)))
             .WithMessage("Solo puede crear usuarios de sus empresas autorizadas.")
             .When(_ => !currentUser.IsAdministradorGeneral);
 
@@ -124,7 +134,8 @@ public sealed class CreateUsuarioCommandHandler : ICommandHandler<CreateUsuarioC
         _db.Usuarios.Add(entity);
         await _db.SaveChangesAsync(cancellationToken);
 
-        if (command.IdEmpresa is int idEmpresa)
+        var idsEmpresas = UsuarioEmpresaList.Normalize(command.IdsEmpresas);
+        foreach (var idEmpresa in idsEmpresas)
         {
             _db.UsuariosEmpresas.Add(new UsuarioEmpresa
             {
@@ -132,6 +143,10 @@ public sealed class CreateUsuarioCommandHandler : ICommandHandler<CreateUsuarioC
                 IdEmpresa = idEmpresa,
                 Rol = entity.Rol
             });
+        }
+
+        if (idsEmpresas.Count > 0)
+        {
             await _db.SaveChangesAsync(cancellationToken);
         }
 
