@@ -28,13 +28,15 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
     /// <summary>
     /// Empresas del usuario autenticado. Usado por los query filters multiempresa.
+    /// Debe ser List (no int[]): en .NET 9+/10 int[].Contains resuelve a
+    /// MemoryExtensions.Contains y EF no puede traducirlo a SQL (500 en catálogos/reportes).
     /// </summary>
-    public int[] EmpresasAutorizadas =>
-        _currentUser.EmpresasAutorizadas as int[]
-        ?? _currentUser.EmpresasAutorizadas.ToArray();
+    public List<int> EmpresasAutorizadas =>
+        _currentUser.EmpresasAutorizadas as List<int>
+        ?? _currentUser.EmpresasAutorizadas.ToList();
 
     /// <summary>Compat: primera empresa autorizada (o -1 si ninguna).</summary>
-    public int TenantEmpresaId => EmpresasAutorizadas.Length > 0 ? EmpresasAutorizadas[0] : -1;
+    public int TenantEmpresaId => EmpresasAutorizadas.Count > 0 ? EmpresasAutorizadas[0] : -1;
 
     public DbSet<Pais> Paises => Set<Pais>();
     public DbSet<Empresa> Empresas => Set<Empresa>();

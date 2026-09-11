@@ -7,11 +7,21 @@ namespace SLCDM.Api.Middleware;
 
 public sealed class ApiExceptionHandler : IExceptionHandler
 {
+    private readonly ILogger<ApiExceptionHandler> _logger;
+
+    public ApiExceptionHandler(ILogger<ApiExceptionHandler> logger)
+    {
+        _logger = logger;
+    }
+
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
         Exception exception,
         CancellationToken cancellationToken)
     {
+        _logger.LogError(exception, "Unhandled exception on {Method} {Path}",
+            httpContext.Request.Method, httpContext.Request.Path);
+
         var (status, problem) = exception switch
         {
             ValidationException validation => (

@@ -56,7 +56,7 @@ public sealed class CurrentUserService : ICurrentUserService
             .Where(id => id.HasValue)
             .Select(id => id!.Value)
             .Distinct()
-            .ToArray();
+            .ToList();
     }
 
     private string? Find(string claimType) => User?.FindFirstValue(claimType);
