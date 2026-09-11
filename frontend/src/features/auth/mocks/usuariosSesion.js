@@ -6,6 +6,7 @@ export const usuariosSesion = [
   {
     id: 1,
     idEmpresa: null,
+    idsEmpresas: [],
     empresasAutorizadas: [],
     nombres: 'María Isabel',
     apellidos: 'Barrios Soto',
@@ -18,6 +19,7 @@ export const usuariosSesion = [
   {
     id: 2,
     idEmpresa: 1,
+    idsEmpresas: [1, 2],
     empresasAutorizadas: [1, 2],
     nombres: 'Carlos Eduardo',
     apellidos: 'Morales Paz',
@@ -30,6 +32,7 @@ export const usuariosSesion = [
   {
     id: 3,
     idEmpresa: 1,
+    idsEmpresas: [1],
     empresasAutorizadas: [1],
     nombres: 'Ana Lucía',
     apellidos: 'Hernández Cú',
@@ -42,6 +45,7 @@ export const usuariosSesion = [
   {
     id: 4,
     idEmpresa: 1,
+    idsEmpresas: [1],
     empresasAutorizadas: [1],
     nombres: 'José Andrés',
     apellidos: 'López Choc',

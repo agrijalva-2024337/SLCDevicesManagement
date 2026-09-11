@@ -17,7 +17,7 @@ export const { getAll, getById, update, remove } = crud;
  */
 export async function create(data) {
   const payload = {
-    idEmpresa: data.idEmpresa ?? null,
+    idsEmpresas: data.idsEmpresas ?? [],
     nombres: data.nombres,
     apellidos: data.apellidos,
     correo: data.correo,
@@ -28,8 +28,10 @@ export async function create(data) {
   };
 
   if (env.useApiMock) {
+    const idsEmpresas = (payload.idsEmpresas ?? []).map(Number);
     const created = await crud.create({
-      idEmpresa: payload.idEmpresa,
+      idsEmpresas,
+      idEmpresa: idsEmpresas.length > 0 ? idsEmpresas[0] : null,
       nombres: payload.nombres,
       apellidos: payload.apellidos,
       correo: payload.correo,

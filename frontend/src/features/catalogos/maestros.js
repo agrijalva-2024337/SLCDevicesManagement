@@ -51,6 +51,16 @@ function usuarioNombre(item) {
   return [item?.nombres, item?.apellidos].filter(Boolean).join(' ') || item?.username || '—';
 }
 
+function empresasUsuarioLabel(item, lookups = {}) {
+  if (Number(item?.rol) === RolUsuario.AdministradorGeneral) {
+    return 'Todas';
+  }
+  const names = (item?.idsEmpresas ?? [])
+    .map((id) => lookups.empresaNombres?.[id])
+    .filter(Boolean);
+  return names.join(', ') || '—';
+}
+
 function rolOptions(rolActual) {
   return Object.entries(rolUsuarioLabel)
     .filter(
@@ -696,12 +706,12 @@ export const maestros = {
     newTitle: 'Nuevo usuario',
     kicker: 'Usuario',
     registerLabel: 'Registrar usuario',
-    hint: 'Nombres, apellidos, correo, usuario y rol son obligatorios. La empresa es obligatoria salvo para el administrador general.',
+    hint: 'Nombres, apellidos, correo, usuario y rol son obligatorios. Al menos una empresa es obligatoria salvo para el administrador general.',
     description: 'Cuentas con acceso al sistema. El listado exige perfil de administrador de empresa.',
     lookups: ['empresas'],
     titleOf: usuarioNombre,
     facts: (item, lookups = {}) =>
-      [item.username, rolUsuarioLabel[item.rol] ?? item.rol, lookups.empresaNombres?.[item.idEmpresa]].filter(Boolean),
+      [item.username, rolUsuarioLabel[item.rol] ?? item.rol, empresasUsuarioLabel(item, lookups)].filter(Boolean),
     listView: {
       emptyTitle: 'No hay usuarios',
       emptyDescription: 'Registre la primera cuenta para dar acceso al sistema.',
@@ -715,15 +725,15 @@ export const maestros = {
           getValue: (item) => rolUsuarioLabel[item.rol] ?? String(item.rol ?? '—'),
         },
         {
-          key: 'empresa',
-          header: 'Empresa',
-          getValue: (item) => lookups.empresaNombres?.[item.idEmpresa] ?? '—',
+          key: 'empresas',
+          header: 'Empresas',
+          getValue: (item) => empresasUsuarioLabel(item, lookups),
         },
         { key: 'habilitado', header: 'Estado', type: 'status' },
       ],
     },
     empty: ({ idEmpresa } = {}) => ({
-      idEmpresa: idEmpresa == null || idEmpresa === '' ? '' : String(idEmpresa),
+      idsEmpresas: idEmpresa == null || idEmpresa === '' ? [] : [String(idEmpresa)],
       nombres: '',
       apellidos: '',
       correo: '',
@@ -733,7 +743,7 @@ export const maestros = {
       habilitado: true,
     }),
     toForm: (item) => ({
-      idEmpresa: item.idEmpresa == null ? '' : String(item.idEmpresa),
+      idsEmpresas: (item.idsEmpresas ?? []).map(String),
       nombres: item.nombres ?? '',
       apellidos: item.apellidos ?? '',
       correo: item.correo ?? '',
@@ -746,14 +756,14 @@ export const maestros = {
       const lockEmpresa = rol != null && rol < RolUsuario.AdministradorGeneral;
       return [
         {
-          name: 'idEmpresa',
-          label: 'Empresa',
-          type: 'select',
+          name: 'idsEmpresas',
+          label: 'Empresas',
+          type: 'multiselect',
           options: asOptions(empresas),
           readOnly: lockEmpresa,
           hint: lockEmpresa
             ? 'El usuario queda en su empresa.'
-            : 'Obligatoria salvo que el rol sea administrador general.',
+            : 'Obligatorias salvo que el rol sea administrador general. Puede marcar varias.',
         },
         { name: 'nombres', label: 'Nombres', required: true, maxLength: 100 },
         { name: 'apellidos', label: 'Apellidos', required: true, maxLength: 100 },
@@ -796,7 +806,9 @@ export const maestros = {
       };
 
       if (rol !== RolUsuario.AdministradorGeneral) {
-        errors.idEmpresa = requireSelect(values.idEmpresa, 'una empresa');
+        if (!Array.isArray(values.idsEmpresas) || values.idsEmpresas.length === 0) {
+          errors.idsEmpresas = 'Seleccione al menos una empresa.';
+        }
       }
 
       if (!editing) {
@@ -829,10 +841,9 @@ export const maestros = {
     },
     toPayload(values, { editing } = {}) {
       const rol = Number(values.rol);
-      const idEmpresa =
-        values.idEmpresa === '' || values.idEmpresa == null ? null : Number(values.idEmpresa);
+      const idsEmpresas = (values.idsEmpresas ?? []).map(Number);
       const base = {
-        idEmpresa,
+        idsEmpresas,
         nombres: values.nombres.trim(),
         apellidos: values.apellidos.trim(),
         correo: values.correo.trim().toLowerCase(),
@@ -858,7 +869,7 @@ export const maestros = {
       { label: 'Usuario', value: item.username },
       { label: 'Correo', value: item.correo },
       { label: 'Rol', value: rolUsuarioLabel[item.rol] ?? String(item.rol ?? '—') },
-      { label: 'Empresa', value: lookups.empresaNombres?.[item.idEmpresa] ?? '—' },
+      { label: 'Empresas', value: empresasUsuarioLabel(item, lookups) },
     ],
   },
   responsables: {
