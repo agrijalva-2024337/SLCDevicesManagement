@@ -129,6 +129,68 @@ export function SchemaForm({
           );
         }
 
+        if (field.type === 'multiselect') {
+          const selected = Array.isArray(values[field.name]) ? values[field.name].map(String) : [];
+          const disabled = Boolean(field.readOnly);
+          return (
+            <FormField
+              key={field.name}
+              id={id}
+              label={field.label}
+              required={field.required}
+              error={errors[field.name]}
+              hint={field.hint}
+              wide
+            >
+              <div
+                id={id}
+                role="group"
+                aria-labelledby={`${id}-legend`}
+                className={`max-h-48 space-y-2 overflow-y-auto rounded-md border px-3 py-2 ${
+                  errors[field.name]
+                    ? 'border-[var(--color-error)]'
+                    : 'border-[var(--color-border)]'
+                } ${disabled ? 'opacity-70' : 'bg-[var(--color-surface-card)]'}`}
+                onBlur={() => blurField(field.name)}
+              >
+                <span id={`${id}-legend`} className="sr-only">
+                  {field.label}
+                </span>
+                {(field.options ?? []).length === 0 ? (
+                  <p className="text-sm text-text-muted">No hay empresas disponibles.</p>
+                ) : (
+                  (field.options ?? []).map((option) => {
+                    const value = String(option.value);
+                    const checked = selected.includes(value);
+                    return (
+                      <label
+                        key={value}
+                        className={`flex items-center gap-2 text-sm text-navy ${
+                          disabled || option.disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="size-4 accent-[var(--color-accent)]"
+                          checked={checked}
+                          disabled={disabled || Boolean(option.disabled)}
+                          onChange={(event) => {
+                            const next = event.target.checked
+                              ? [...selected, value]
+                              : selected.filter((idValue) => idValue !== value);
+                            setField(field.name, next);
+                          }}
+                        />
+                        <span>{option.label}</span>
+                      </label>
+                    );
+                  })
+                )}
+              </div>
+            </FormField>
+          );
+        }
+
         if (field.type === 'tel') {
           const prefijoName = field.prefijoName ?? `${field.name}Prefijo`;
           // El prefijo (`values[prefijoName]`) alimenta validarTelefono vía resolvePhoneCountry.
