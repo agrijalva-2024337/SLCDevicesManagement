@@ -2,8 +2,8 @@
  * Contratos del cliente HTTP alineados a los DTOs de Application.
  * No se importan en runtime: sirven de referencia para servicios y hooks.
  *
- * @typedef {0 | 1 | 2 | 3} RolUsuario
- * Consulta = 0, OperadorInventario = 1, AdministradorEmpresa = 2, AdministradorGeneral = 3
+ * @typedef {1 | 2 | 3} RolUsuario
+ * OperadorInventario = 1, AdministradorEmpresa = 2, AdministradorGeneral = 3
  *
  * @typedef {0 | 1 | 2} TipoOperacionBitacora
  * Creacion = 0, Modificacion = 1, Eliminacion = 2
@@ -312,14 +312,12 @@
  */
 
 export const RolUsuario = {
-  Consulta: 0,
   OperadorInventario: 1,
   AdministradorEmpresa: 2,
   AdministradorGeneral: 3,
 };
 
 export const RolUsuarioClaim = {
-  Consulta: 'Consulta',
   OperadorInventario: 'OperadorInventario',
   AdministradorEmpresa: 'AdministradorEmpresa',
   AdministradorGeneral: 'AdministradorGeneral',
@@ -332,7 +330,6 @@ export const TipoOperacionBitacora = {
 };
 
 export const rolUsuarioLabel = {
-  [RolUsuario.Consulta]: 'Consulta',
   [RolUsuario.OperadorInventario]: 'Operador de inventario',
   [RolUsuario.AdministradorEmpresa]: 'Administrador de empresa',
   [RolUsuario.AdministradorGeneral]: 'Administrador general',
@@ -365,7 +362,6 @@ export const ESTADO_OPERATIVO_TONE = {
 };
 
 export function rolFromClaim(role) {
-  if (role === RolUsuarioClaim.Consulta || role === RolUsuario.Consulta) return RolUsuario.Consulta;
   if (role === RolUsuarioClaim.OperadorInventario || role === RolUsuario.OperadorInventario) {
     return RolUsuario.OperadorInventario;
   }

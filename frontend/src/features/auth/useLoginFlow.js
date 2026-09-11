@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
@@ -30,7 +30,6 @@ function resolveEmpresasLista(autorizadas, catalogo) {
  */
 export function useLoginFlow() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { login, logout } = useAuth();
   const { selectEmpresa } = useEmpresaActiva();
 
@@ -49,9 +48,9 @@ export function useLoginFlow() {
   const [seleccionandoId, setSeleccionandoId] = useState(null);
 
   const irAlApp = useCallback(() => {
-    const from = location.state?.from;
-    navigate(typeof from === 'string' && from.startsWith('/') ? from : '/app', { replace: true });
-  }, [location.state?.from, navigate]);
+    // Siempre al dashboard: no reutilizar state.from de otra sesión/ruta protegida.
+    navigate('/app', { replace: true });
+  }, [navigate]);
 
   const cargarEmpresas = useCallback(async (autorizadas) => {
     setEmpresasLoading(true);

@@ -42,17 +42,4 @@ export const usuariosSesion = [
     habilitado: true,
     fechaCreacion: '2026-03-12T10:00:00',
   },
-  {
-    id: 4,
-    idEmpresa: 1,
-    idsEmpresas: [1],
-    empresasAutorizadas: [1],
-    nombres: 'José Andrés',
-    apellidos: 'López Choc',
-    correo: 'consulta@slc.com.gt',
-    username: 'jlopez',
-    rol: RolUsuario.Consulta,
-    habilitado: true,
-    fechaCreacion: '2026-04-01T11:15:00',
-  },
 ];
