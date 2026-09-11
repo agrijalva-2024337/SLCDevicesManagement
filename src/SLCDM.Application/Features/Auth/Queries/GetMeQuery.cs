@@ -44,12 +44,7 @@ public sealed class GetMeQueryHandler : IQueryHandler<GetMeQuery, AuthenticatedU
             .OrderBy(id => id)
             .ToListAsync(cancellationToken);
 
-        if (empresasAutorizadas.Count == 0 && usuario.IdEmpresa is int idLegacy)
-        {
-            empresasAutorizadas = [idLegacy];
-        }
-
-        var idEmpresa = empresasAutorizadas.Count > 0 ? empresasAutorizadas[0] : usuario.IdEmpresa;
+        var idEmpresa = empresasAutorizadas.Count > 0 ? empresasAutorizadas[0] : (int?)null;
 
         return new AuthenticatedUserDto(
             usuario.Id,

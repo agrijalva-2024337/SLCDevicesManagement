@@ -1,5 +1,4 @@
 using FluentValidation;
-using Mapster;
 using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Validation;
@@ -41,7 +40,8 @@ public sealed class GetUsuariosQueryHandler : IQueryHandler<GetUsuariosQuery, IR
 
         if (query.IdEmpresa.HasValue)
         {
-            q = q.Where(u => u.IdEmpresa == query.IdEmpresa.Value);
+            var idEmpresa = query.IdEmpresa.Value;
+            q = q.Where(u => _db.UsuariosEmpresas.Any(ue => ue.IdUsuario == u.Id && ue.IdEmpresa == idEmpresa));
         }
 
         var items = await q
@@ -49,6 +49,6 @@ public sealed class GetUsuariosQueryHandler : IQueryHandler<GetUsuariosQuery, IR
             .ThenBy(u => u.Nombres)
             .ToListAsync(cancellationToken);
 
-        return items.Adapt<List<UsuarioDto>>();
+        return await UsuarioDtoMapper.MapAsync(_db, items, cancellationToken);
     }
 }

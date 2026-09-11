@@ -4,9 +4,8 @@ using SLCDM.Domain.Enums;
 namespace SLCDM.Domain.Entities;
 
 /// <summary>
-/// Tabla puente usuario ↔ empresa. Permite asociar un usuario a varias
-/// empresas (AdministradorEmpresa de un subconjunto). La columna
-/// <see cref="Usuario.IdEmpresa"/> se mantiene temporalmente (Tarea 5 la retira).
+/// Tabla puente usuario ↔ empresa. Fuente de verdad de las empresas
+/// autorizadas de un usuario (reemplaza la columna retirada usuario.id_empresa).
 /// </summary>
 public class UsuarioEmpresa : SLCDM.Domain.Common.BaseEntity
 {

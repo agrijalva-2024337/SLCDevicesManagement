@@ -67,8 +67,7 @@ public sealed class CreateTrasladoCommandValidator : AbstractValidator<CreateTra
             .MustAsync(async (cmd, ct) =>
             {
                 var empresaActivo = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(db, cmd.IdActivo, ct);
-                var empresaUsuario = await AsignacionEmpresaRules.EmpresaIdDeUsuarioAsync(db, cmd.IdUsuario, ct);
-                return AsignacionEmpresaRules.EmpresasCoinciden(empresaActivo, empresaUsuario);
+                return await AsignacionEmpresaRules.UsuarioPerteneceAEmpresaAsync(db, cmd.IdUsuario, empresaActivo, ct);
             })
             .WithMessage("El usuario debe pertenecer a la misma empresa del activo.");
 

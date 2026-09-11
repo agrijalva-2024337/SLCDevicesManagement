@@ -113,39 +113,43 @@ public sealed class UpdateUsuarioCommandHandler : ICommandHandler<UpdateUsuarioC
             entity.PasswordHash = _passwordHashService.HashPassword(command.Password);
         }
 
-        await SyncUsuarioEmpresaAsync(entity, cancellationToken);
+        await SyncUsuarioEmpresaAsync(entity.Id, command.IdEmpresa, command.Rol, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task SyncUsuarioEmpresaAsync(Usuario entity, CancellationToken cancellationToken)
+    private async Task SyncUsuarioEmpresaAsync(
+        int idUsuario,
+        int? idEmpresa,
+        RolUsuario rol,
+        CancellationToken cancellationToken)
     {
         var existentes = await _db.UsuariosEmpresas
-            .Where(ue => ue.IdUsuario == entity.Id)
+            .Where(ue => ue.IdUsuario == idUsuario)
             .ToListAsync(cancellationToken);
 
-        if (entity.IdEmpresa is not int idEmpresa)
+        if (idEmpresa is not int id)
         {
             _db.UsuariosEmpresas.RemoveRange(existentes);
             return;
         }
 
-        var match = existentes.FirstOrDefault(ue => ue.IdEmpresa == idEmpresa);
+        var match = existentes.FirstOrDefault(ue => ue.IdEmpresa == id);
         if (match is null)
         {
             _db.UsuariosEmpresas.Add(new UsuarioEmpresa
             {
-                IdUsuario = entity.Id,
-                IdEmpresa = idEmpresa,
-                Rol = entity.Rol
+                IdUsuario = idUsuario,
+                IdEmpresa = id,
+                Rol = rol
             });
         }
         else
         {
-            match.Rol = entity.Rol;
+            match.Rol = rol;
         }
 
         // Mientras el formulario solo maneja un IdEmpresa, las filas extra se retiran.
-        foreach (var extra in existentes.Where(ue => ue.IdEmpresa != idEmpresa))
+        foreach (var extra in existentes.Where(ue => ue.IdEmpresa != id))
         {
             _db.UsuariosEmpresas.Remove(extra);
         }

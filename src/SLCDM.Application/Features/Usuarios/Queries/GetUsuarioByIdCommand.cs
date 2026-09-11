@@ -1,5 +1,4 @@
 using FluentValidation;
-using Mapster;
 using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
@@ -36,6 +35,7 @@ public sealed class GetUsuarioByIdQueryHandler : IQueryHandler<GetUsuarioByIdQue
             .FirstOrDefaultAsync(u => u.Id == query.Id, cancellationToken)
             ?? throw new NotFoundException("Usuario", query.Id);
 
-        return entity.Adapt<UsuarioDto>();
+        var mapped = await UsuarioDtoMapper.MapAsync(_db, [entity], cancellationToken);
+        return mapped[0];
     }
 }

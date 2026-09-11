@@ -124,7 +124,7 @@ public sealed class CreateUsuarioCommandHandler : ICommandHandler<CreateUsuarioC
         _db.Usuarios.Add(entity);
         await _db.SaveChangesAsync(cancellationToken);
 
-        if (entity.IdEmpresa is int idEmpresa)
+        if (command.IdEmpresa is int idEmpresa)
         {
             _db.UsuariosEmpresas.Add(new UsuarioEmpresa
             {

@@ -66,9 +66,10 @@ public sealed class CreateBitacoraCommandHandler : ICommandHandler<CreateBitacor
     {
         try
         {
-            return await _db.Usuarios.IgnoreQueryFilters().AsNoTracking()
-                .Where(u => u.Id == idUsuario)
-                .Select(u => (int?)u.IdEmpresa)
+            return await _db.UsuariosEmpresas.IgnoreQueryFilters().AsNoTracking()
+                .Where(ue => ue.IdUsuario == idUsuario)
+                .OrderBy(ue => ue.IdEmpresa)
+                .Select(ue => (int?)ue.IdEmpresa)
                 .FirstOrDefaultAsync(cancellationToken);
         }
         catch

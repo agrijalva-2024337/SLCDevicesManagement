@@ -38,11 +38,6 @@ public sealed class JwtTokenGenerator : IJwtTokenGenerator
         };
 
         var empresas = empresasAutorizadas ?? [];
-        if (empresas.Count == 0 && usuario.IdEmpresa is int idLegacy)
-        {
-            empresas = [idLegacy];
-        }
-
         if (empresas.Count == 0)
         {
             // AdministradorGeneral / sin empresa: claim vacío para no romper clientes viejos.

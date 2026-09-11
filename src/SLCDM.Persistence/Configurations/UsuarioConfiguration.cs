@@ -13,8 +13,6 @@ public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
         builder.HasKey(u => u.Id);
         builder.Property(u => u.Id).HasColumnName("id_usuario");
 
-        builder.Property(u => u.IdEmpresa).HasColumnName("id_empresa");
-
         builder.Property(u => u.Habilitado)
             .HasColumnName("habilitado")
             .HasDefaultValue(true);
@@ -56,13 +54,7 @@ public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
             .HasColumnName("fecha_creacion")
             .HasDefaultValueSql("GETDATE()");
 
-        builder.HasOne<Empresa>()
-            .WithMany()
-            .HasForeignKey(u => u.IdEmpresa)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.HasIndex(u => u.Username).IsUnique();
         builder.HasIndex(u => u.Correo).IsUnique();
-        builder.HasIndex(u => u.IdEmpresa);
     }
 }
