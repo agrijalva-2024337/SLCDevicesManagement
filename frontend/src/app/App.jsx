@@ -1,16 +1,16 @@
 import { Suspense } from 'react';
 import { RouterProvider } from 'react-router';
+import { AppProviders } from '@/app/AppProviders';
 import { RouteFallback } from '@/app/RouteFallback';
 import { router } from '@/app/routes';
-import { AuthProvider } from '@/features/auth/useAuth';
 
 function App() {
   return (
-    <AuthProvider>
+    <AppProviders>
       <Suspense fallback={<RouteFallback />}>
         <RouterProvider router={router} />
       </Suspense>
-    </AuthProvider>
+    </AppProviders>
   );
 }
 

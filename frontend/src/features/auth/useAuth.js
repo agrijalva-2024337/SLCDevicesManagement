@@ -1,6 +1,7 @@
 import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { decodeJwt, isJwtExpired } from '@/features/auth/decodeJwt';
 import * as authService from '@/features/auth/authService';
+import { clearEmpresaActivaStorage } from '@/features/organizacion/empresas/empresaActivaStorage';
 import { AuthClaimTypes, RolUsuario, rolFromClaim } from '@/shared/api/contracts';
 import { env } from '@/shared/config/env';
 import { getAccessToken, getSessionUser } from '@/shared/services/tokenStorage';
@@ -73,6 +74,7 @@ function useAuthState() {
 
   const logout = useCallback(() => {
     clearQueryCache();
+    clearEmpresaActivaStorage();
     authService.logout();
     setUsuario(null);
     setError(null);

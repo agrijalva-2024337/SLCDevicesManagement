@@ -1,20 +1,33 @@
-import { createContext, createElement, useCallback, useContext, useMemo, useState } from 'react';
+import {
+  createContext,
+  createElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { useAuth } from '@/features/auth/useAuth';
+import {
+  clearEmpresaActivaStorage,
+  EMPRESA_ACTIVA_STORAGE_KEY,
+} from '@/features/organizacion/empresas/empresaActivaStorage';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import { RolUsuario } from '@/shared/api/contracts';
 import { useResource } from '@/shared/hooks/useResource';
 
-const STORAGE_KEY = 'slcdm_empresa_activa';
 const EmpresaActivaContext = createContext(null);
 
 function readStoredId() {
-  const raw = window.localStorage.getItem(STORAGE_KEY);
+  const raw = window.localStorage.getItem(EMPRESA_ACTIVA_STORAGE_KEY);
   if (raw == null || raw === '') {
     return null;
   }
   const id = Number(raw);
   return Number.isFinite(id) ? id : null;
 }
+
+export { clearEmpresaActivaStorage, EMPRESA_ACTIVA_STORAGE_KEY } from '@/features/organizacion/empresas/empresaActivaStorage';
 
 export function filterRowsByEmpresa(rows, idEmpresa, { idField = 'idEmpresa', sedes } = {}) {
   if (idEmpresa == null || idEmpresa === '') {
@@ -48,7 +61,7 @@ function normalizeEmpresasAutorizadas(raw) {
 }
 
 export function EmpresaActivaProvider({ children }) {
-  const { rol, idEmpresa, empresasAutorizadas, isReady } = useAuth();
+  const { usuario, rol, idEmpresa, empresasAutorizadas, isReady } = useAuth();
   const isAdminGeneral = rol === RolUsuario.AdministradorGeneral;
   const autorizadas = useMemo(
     () => normalizeEmpresasAutorizadas(empresasAutorizadas),
@@ -58,18 +71,26 @@ export function EmpresaActivaProvider({ children }) {
   const canSwitchEmpresa = isAdminGeneral || autorizadas.length > 1;
   const isLocked = !canSwitchEmpresa;
 
-  const empresasResource = useResource(empresaService.getAll, { enabled: isReady });
+  const empresasResource = useResource(empresaService.getAll, {
+    enabled: isReady && Boolean(usuario),
+  });
   const [selectedId, setSelectedId] = useState(readStoredId);
+
+  useEffect(() => {
+    if (!usuario) {
+      setSelectedId(null);
+    }
+  }, [usuario]);
 
   const selectEmpresa = useCallback((id) => {
     const next = id === '' || id == null ? null : Number(id);
     const stored = Number.isFinite(next) ? next : null;
     setSelectedId(stored);
     if (stored == null) {
-      window.localStorage.removeItem(STORAGE_KEY);
+      clearEmpresaActivaStorage();
       return;
     }
-    window.localStorage.setItem(STORAGE_KEY, String(stored));
+    window.localStorage.setItem(EMPRESA_ACTIVA_STORAGE_KEY, String(stored));
   }, []);
 
   const empresasValidas = useMemo(() => {
