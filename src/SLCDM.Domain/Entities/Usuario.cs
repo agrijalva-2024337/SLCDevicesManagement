@@ -33,7 +33,7 @@ public class Usuario : SLCDM.Domain.Common.BaseHabilitadoEntity
     [MaxLength(255, ErrorMessage = "El campo password hash no debe superar los 255 caracteres")]
     public string PasswordHash { get; set; } = string.Empty;
 
-    public RolUsuario Rol { get; set; } = RolUsuario.Consulta;
+    public RolUsuario Rol { get; set; } = RolUsuario.OperadorInventario;
 
     public DateTime FechaCreacion { get; set; }
 }
