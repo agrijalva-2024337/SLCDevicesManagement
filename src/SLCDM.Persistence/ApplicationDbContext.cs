@@ -90,7 +90,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
         modelBuilder.Entity<Usuario>().HasQueryFilter(u =>
             IgnoreEmpresaFilter
-            || (u.IdEmpresa.HasValue && EmpresasAutorizadas.Contains(u.IdEmpresa.Value)));
+            || UsuariosEmpresas.Any(ue => ue.IdUsuario == u.Id && EmpresasAutorizadas.Contains(ue.IdEmpresa)));
 
         modelBuilder.Entity<Proveedor>().HasQueryFilter(p =>
             IgnoreEmpresaFilter || EmpresasAutorizadas.Contains(p.IdEmpresa));

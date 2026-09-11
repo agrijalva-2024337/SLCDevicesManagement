@@ -28,7 +28,7 @@ internal static class BitacoraEmpresaResolver
             Pais pais => pais.IdEmpresa,
             CategoriaActivo categoria => categoria.IdEmpresa,
             Sede sede => sede.IdEmpresa,
-            Usuario usuario => usuario.IdEmpresa,
+            Usuario usuario => EmpresaIdDeUsuario(context, usuario.Id),
             Proveedor proveedor => proveedor.IdEmpresa,
             Area area => EmpresaIdDeSede(context, area.IdSede),
             Ubicacion ubicacion => EmpresaIdDeSede(context, ubicacion.IdSede),
@@ -64,6 +64,13 @@ internal static class BitacoraEmpresaResolver
 
         return null;
     }
+
+    private static int? EmpresaIdDeUsuario(DbContext context, int idUsuario) =>
+        context.Set<UsuarioEmpresa>().IgnoreQueryFilters().AsNoTracking()
+            .Where(ue => ue.IdUsuario == idUsuario)
+            .OrderBy(ue => ue.IdEmpresa)
+            .Select(ue => (int?)ue.IdEmpresa)
+            .FirstOrDefault();
 
     private static int? EmpresaIdDeSede(DbContext context, int idSede) =>
         context.Set<Sede>().IgnoreQueryFilters().AsNoTracking()

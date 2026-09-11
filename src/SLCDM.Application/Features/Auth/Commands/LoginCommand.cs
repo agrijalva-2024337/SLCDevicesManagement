@@ -63,10 +63,10 @@ public sealed class LoginCommandHandler : ICommandHandler<LoginCommand, LoginRes
             throw new UnauthorizedException();
         }
 
-        var empresasAutorizadas = await LoadEmpresasAutorizadasAsync(usuario.Id, usuario.IdEmpresa, cancellationToken);
+        var empresasAutorizadas = await LoadEmpresasAutorizadasAsync(usuario.Id, cancellationToken);
         var jwt = _jwtTokenGenerator.Generate(usuario, empresasAutorizadas);
         var rolClaim = usuario.Rol.ToClaimValue();
-        var idEmpresa = empresasAutorizadas.Count > 0 ? empresasAutorizadas[0] : usuario.IdEmpresa;
+        var idEmpresa = empresasAutorizadas.Count > 0 ? empresasAutorizadas[0] : (int?)null;
 
         return new LoginResponseDto(
             true,
@@ -87,22 +87,13 @@ public sealed class LoginCommandHandler : ICommandHandler<LoginCommand, LoginRes
 
     private async Task<IReadOnlyList<int>> LoadEmpresasAutorizadasAsync(
         int idUsuario,
-        int? idEmpresaLegacy,
         CancellationToken cancellationToken)
     {
-        var fromBridge = await _db.UsuariosEmpresas.AsNoTracking()
+        return await _db.UsuariosEmpresas.AsNoTracking()
             .Where(ue => ue.IdUsuario == idUsuario)
             .Select(ue => ue.IdEmpresa)
             .Distinct()
             .OrderBy(id => id)
             .ToListAsync(cancellationToken);
-
-        if (fromBridge.Count > 0)
-        {
-            return fromBridge;
-        }
-
-        // Fallback mientras hay filas sin migrar a la puente.
-        return idEmpresaLegacy is int id ? [id] : [];
     }
 }

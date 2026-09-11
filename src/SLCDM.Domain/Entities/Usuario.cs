@@ -12,8 +12,6 @@ namespace SLCDM.Domain.Entities;
 /// </summary>
 public class Usuario : SLCDM.Domain.Common.BaseHabilitadoEntity
 {
-    public int? IdEmpresa { get; set; }
-
     [Required(ErrorMessage = "El campo nombres es obligatorio")]
     [MaxLength(100, ErrorMessage = "El campo nombres no debe superar los 100 caracteres")]
     public string Nombres { get; set; } = string.Empty;

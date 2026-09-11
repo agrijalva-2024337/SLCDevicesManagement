@@ -39,17 +39,23 @@ internal static class AsignacionEmpresaRules
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public static async Task<int?> EmpresaIdDeUsuarioAsync(
+    public static async Task<bool> UsuarioPerteneceAEmpresaAsync(
         IApplicationDbContext db,
         int idUsuario,
+        int? idEmpresa,
         CancellationToken cancellationToken)
     {
-        return await db.Usuarios
+        if (!idEmpresa.HasValue)
+        {
+            return false;
+        }
+
+        return await db.UsuariosEmpresas
             .AsNoTracking()
             .IgnoreQueryFilters()
-            .Where(u => u.Id == idUsuario)
-            .Select(u => u.IdEmpresa)
-            .FirstOrDefaultAsync(cancellationToken);
+            .AnyAsync(
+                ue => ue.IdUsuario == idUsuario && ue.IdEmpresa == idEmpresa.Value,
+                cancellationToken);
     }
 
     public static async Task<int?> EmpresaIdDeResponsableAsync(
