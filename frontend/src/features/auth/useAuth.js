@@ -10,7 +10,7 @@ import { clearQueryCache } from '@/shared/data/queryCache';
 const AuthContext = createContext(null);
 
 export function canWriteCatalog(rol, resource) {
-  if (rol == null || rol === RolUsuario.Consulta) {
+  if (rol == null) {
     return false;
   }
 

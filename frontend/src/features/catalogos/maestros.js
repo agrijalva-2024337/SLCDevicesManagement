@@ -752,7 +752,7 @@ export const maestros = {
       correo: '',
       username: '',
       password: '',
-      rol: String(RolUsuario.Consulta),
+      rol: String(RolUsuario.OperadorInventario),
       habilitado: true,
     }),
     toForm: (item) => ({
@@ -762,7 +762,7 @@ export const maestros = {
       correo: item.correo ?? '',
       username: item.username ?? '',
       password: '',
-      rol: String(item.rol ?? RolUsuario.Consulta),
+      rol: String(item.rol ?? RolUsuario.OperadorInventario),
       habilitado: Boolean(item.habilitado),
     }),
     fields: ({ empresas = [], rol, editing } = {}) => {

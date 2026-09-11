@@ -53,7 +53,7 @@ export async function create(data) {
   };
 }
 
-/** GET /api/Usuarios exige EscrituraEmpresa. Consulta y Operador reciben 403. */
+/** GET /api/Usuarios exige EscrituraEmpresa. Operador sin permiso de escritura recibe 403. */
 export const USUARIOS_SIN_LECTURA =
   'Tu perfil no puede listar usuarios. Pedí un administrador de empresa.';
 
