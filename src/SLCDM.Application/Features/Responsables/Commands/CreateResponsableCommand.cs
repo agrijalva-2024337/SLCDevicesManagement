@@ -12,7 +12,8 @@ public sealed record CreateResponsableCommand(
     string NombreCompleto,
     string? Cargo,
     string? Correo,
-    string? Telefono);
+    string? Telefono,
+    string? Dpi);
 
 public sealed class CreateResponsableCommandValidator : AbstractValidator<CreateResponsableCommand>
 {
@@ -39,6 +40,11 @@ public sealed class CreateResponsableCommandValidator : AbstractValidator<Create
         RuleFor(x => x.Telefono)
             .MaximumLength(30).WithMessage("El campo telefono no debe superar los 30 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.Telefono));
+
+        RuleFor(x => x.Dpi)
+            .Must(dpi => DpiNormalizer.IsValid(dpi))
+            .WithMessage("El DPI debe tener 13 digitos.")
+            .When(x => !string.IsNullOrWhiteSpace(x.Dpi));
     }
 }
 
@@ -59,6 +65,7 @@ public sealed class CreateResponsableCommandHandler : ICommandHandler<CreateResp
 
         var entity = command.Adapt<Responsable>();
         entity.Habilitado = true;
+        entity.Dpi = DpiNormalizer.Normalize(command.Dpi);
 
         _db.Responsables.Add(entity);
         await _db.SaveChangesAsync(cancellationToken);
