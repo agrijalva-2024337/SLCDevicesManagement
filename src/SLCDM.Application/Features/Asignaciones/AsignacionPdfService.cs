@@ -219,7 +219,10 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
                     });
 
                     // -- Parrafo de aceptacion --
-                    col.Item().PaddingTop(6).Text($"Yo: {quienRecibe}     DPI: ____________________________");
+                    var dpiTexto = string.IsNullOrWhiteSpace(responsable?.Dpi)
+                        ? "____________________________"
+                        : FormatearDpi(responsable.Dpi);
+                    col.Item().PaddingTop(6).Text($"Yo: {quienRecibe}     DPI: {dpiTexto}");
                     col.Item().Text(esBaja
                         ? "Hago constar la devolución del equipo y accesorios detallados en esta acta, entregándolos en el estado descrito, salvo el desgaste de uso normal. Confirmo que a partir de esta fecha dejo de tener responsabilidad alguna sobre el mismo."
                         : "Acepto seguir las instrucciones detalladas en esta entrega, así como también que el equipo y accesorios de hardware quedan bajo mi estricta responsabilidad. Estoy anuente y acepto hacerme responsable por cualquier tipo de daño o pérdida que se cause al equipo entregado, en caso aún aplique el deducible por garantía y en caso la garantía ya no aplique debo absorber el costo total. Además, estoy consciente de que al retirarme de la empresa debo devolver el equipo con los hardware detallados en esta entrega y en el estado que fueron entregados con desgaste de uso normal."
@@ -286,6 +289,18 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
     }
 
     private static string Texto(string? value) => string.IsNullOrWhiteSpace(value) ? "—" : value.Trim();
+
+    /// <summary>Muestra CUI/DPI como "XXXX XXXXX XXXX"; en BD quedan 13 dígitos limpios.</summary>
+    private static string FormatearDpi(string dpi)
+    {
+        var digits = new string(dpi.Where(char.IsDigit).ToArray());
+        if (digits.Length != 13)
+        {
+            return dpi.Trim();
+        }
+
+        return $"{digits[..4]} {digits[4..9]} {digits[9..]}";
+    }
 
     private static void CeldaControl(TableDescriptor table, string etiqueta, string valor)
     {

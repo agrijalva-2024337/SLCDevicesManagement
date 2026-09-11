@@ -36,11 +36,16 @@ public class ResponsableConfiguration : IEntityTypeConfiguration<Responsable>
             .HasColumnName("telefono")
             .HasColumnType("varchar(30)");
 
+        builder.Property(r => r.Dpi)
+            .HasColumnName("dpi")
+            .HasColumnType("varchar(20)");
+
         builder.HasOne<Area>()
             .WithMany()
             .HasForeignKey(r => r.IdArea)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(r => r.IdArea);
+        builder.HasIndex(r => r.Dpi);
     }
 }

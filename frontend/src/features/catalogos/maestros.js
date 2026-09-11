@@ -47,6 +47,19 @@ function duplicateNombre(records, nombre, currentId) {
   );
 }
 
+/** Quita espacios y guiones del DPI; en BD van solo dígitos. */
+function cleanDpi(value) {
+  return String(value ?? '').replace(/[\s-]/g, '');
+}
+
+/** Formato visual CUI/DPI Guatemala: XXXX XXXXX XXXX. */
+function formatDpiDisplay(value) {
+  const digits = cleanDpi(value);
+  if (!digits) return '—';
+  if (digits.length !== 13) return digits;
+  return `${digits.slice(0, 4)} ${digits.slice(4, 9)} ${digits.slice(9)}`;
+}
+
 function usuarioNombre(item) {
   return [item?.nombres, item?.apellidos].filter(Boolean).join(' ') || item?.username || '—';
 }
@@ -924,6 +937,7 @@ export const maestros = {
       nombreCompleto: '',
       cargo: '',
       correo: '',
+      dpi: '',
       ...phoneFormFields('', paises),
       habilitado: true,
     }),
@@ -935,6 +949,7 @@ export const maestros = {
         nombreCompleto: item.nombreCompleto ?? '',
         cargo: item.cargo ?? '',
         correo: item.correo ?? '',
+        dpi: item.dpi ?? '',
         ...phoneFormFields(item.telefono, paises),
         habilitado: Boolean(item.habilitado),
       };
@@ -952,10 +967,24 @@ export const maestros = {
       { name: 'nombreCompleto', label: 'Nombre completo', required: true, maxLength: 150, wide: true },
       { name: 'cargo', label: 'Cargo', maxLength: 100 },
       { name: 'correo', label: 'Correo', maxLength: 150, type: 'email', autoComplete: 'email' },
+      {
+        name: 'dpi',
+        label: 'DPI',
+        maxLength: 20,
+        hint: 'Opcional. 13 dígitos, con o sin guiones — se guarda limpio y se imprime en el acta de asignación.',
+      },
       phoneField({ paises }),
       { ...switchField(), hiddenWhen: () => !editing },
     ],
     validate(values, _records, _id, ctx = {}) {
+      const dpiRaw = String(values.dpi ?? '').trim();
+      let dpiError;
+      if (dpiRaw) {
+        const cleaned = cleanDpi(dpiRaw);
+        if (!/^\d{13}$/.test(cleaned)) {
+          dpiError = 'El DPI debe tener 13 dígitos.';
+        }
+      }
       return {
         idArea: requireSelect(values.idArea, 'un área'),
         nombreCompleto: validarNombrePersona(values.nombreCompleto, 'nombre completo', 150, {
@@ -963,15 +992,18 @@ export const maestros = {
         }),
         cargo: validarNombrePersona(values.cargo, 'cargo', 100, { required: false }),
         correo: optionalEmail(values.correo),
+        dpi: dpiError,
         telefono: validatePhoneFields(values, { paises: ctx.paises }),
       };
     },
     toPayload(values, { editing } = {}) {
+      const dpiCleaned = cleanDpi(values.dpi);
       const base = {
         idArea: Number(values.idArea),
         nombreCompleto: values.nombreCompleto.trim(),
         cargo: values.cargo.trim() || null,
         correo: values.correo.trim() || null,
+        dpi: dpiCleaned || null,
         telefono: phonePayload(values),
       };
       if (editing) {
@@ -987,6 +1019,7 @@ export const maestros = {
         { label: 'Sede', value: lookups.sedeNombres?.[idSede] ?? '—' },
         { label: 'Cargo', value: item.cargo },
         { label: 'Correo', value: item.correo },
+        { label: 'DPI', value: formatDpiDisplay(item.dpi) },
         { label: 'Teléfono', value: item.telefono },
       ];
     },

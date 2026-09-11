@@ -14,6 +14,7 @@ public sealed record UpdateResponsableCommand(
     string? Cargo,
     string? Correo,
     string? Telefono,
+    string? Dpi,
     bool Habilitado);
 
 public sealed class UpdateResponsableCommandValidator : AbstractValidator<UpdateResponsableCommand>
@@ -43,6 +44,11 @@ public sealed class UpdateResponsableCommandValidator : AbstractValidator<Update
         RuleFor(x => x.Telefono)
             .MaximumLength(30).WithMessage("El campo telefono no debe superar los 30 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.Telefono));
+
+        RuleFor(x => x.Dpi)
+            .Must(dpi => DpiNormalizer.IsValid(dpi))
+            .WithMessage("El DPI debe tener 13 digitos.")
+            .When(x => !string.IsNullOrWhiteSpace(x.Dpi));
     }
 }
 
@@ -65,6 +71,7 @@ public sealed class UpdateResponsableCommandHandler : ICommandHandler<UpdateResp
             ?? throw new NotFoundException("Responsable", command.Id);
 
         command.Adapt(entity);
+        entity.Dpi = DpiNormalizer.Normalize(command.Dpi);
 
         await _db.SaveChangesAsync(cancellationToken);
     }

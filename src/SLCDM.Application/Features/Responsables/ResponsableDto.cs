@@ -7,4 +7,5 @@ public sealed record ResponsableDto(
     string NombreCompleto,
     string? Cargo,
     string? Correo,
-    string? Telefono);
+    string? Telefono,
+    string? Dpi);
