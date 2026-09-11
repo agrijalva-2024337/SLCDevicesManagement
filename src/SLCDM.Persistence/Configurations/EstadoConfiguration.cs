@@ -22,8 +22,17 @@ public class EstadoConfiguration : IEntityTypeConfiguration<Estado>
             .HasColumnName("descripcion")
             .HasColumnType("varchar(150)");
 
-        // Estado NO hereda de BaseAuditableEntity (es catalogo simple, sin
-        // habilitado/fechas) — coincide con el ERD.
-        builder.HasIndex(e => e.Nombre).IsUnique();
+        builder.Property(e => e.IdEmpresa)
+            .HasColumnName("id_empresa")
+            .IsRequired();
+
+        builder.HasOne(e => e.Empresa)
+            .WithMany()
+            .HasForeignKey(e => e.IdEmpresa)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => new { e.IdEmpresa, e.Nombre })
+            .IsUnique()
+            .HasDatabaseName("ix_estado_empresa_nombre");
     }
 }

@@ -13,4 +13,9 @@ public class TipoAsignacion : SLCDM.Domain.Common.BaseEntity
 
     [MaxLength(150, ErrorMessage = "El campo descripcion no debe superar los 150 caracteres")]
     public string? Descripcion { get; set; }
+
+    [Required(ErrorMessage = "El campo empresa es obligatorio")]
+    public int IdEmpresa { get; set; }
+
+    public Empresa? Empresa { get; set; }
 }

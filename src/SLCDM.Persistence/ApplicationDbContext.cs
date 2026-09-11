@@ -74,7 +74,6 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     /// <summary>
     /// Multiempresa: el Administrador general ve todo; el resto solo datos de
     /// sus empresas autorizadas (claims JWT / usuario_empresa).
-    /// Estado y TipoAsignacion son catalogos globales (sin filtro).
     /// </summary>
     private void ApplyEmpresaQueryFilters(ModelBuilder modelBuilder)
     {
@@ -83,6 +82,12 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
         modelBuilder.Entity<Pais>().HasQueryFilter(p =>
             IgnoreEmpresaFilter || EmpresasAutorizadas.Contains(p.IdEmpresa));
+
+        modelBuilder.Entity<Estado>().HasQueryFilter(e =>
+            IgnoreEmpresaFilter || EmpresasAutorizadas.Contains(e.IdEmpresa));
+
+        modelBuilder.Entity<TipoAsignacion>().HasQueryFilter(t =>
+            IgnoreEmpresaFilter || EmpresasAutorizadas.Contains(t.IdEmpresa));
 
         modelBuilder.Entity<CategoriaActivo>().HasQueryFilter(c =>
             IgnoreEmpresaFilter || EmpresasAutorizadas.Contains(c.IdEmpresa));

@@ -10,9 +10,12 @@ public sealed class EstadoMappingConfig : IRegister
         config.NewConfig<Estado, EstadoDto>();
 
         config.NewConfig<Commands.CreateEstadoCommand, Estado>()
-            .Ignore(dest => dest.Id);
+            .Ignore(dest => dest.Id)
+            .Ignore(dest => dest.Empresa!);
 
         config.NewConfig<Commands.UpdateEstadoCommand, Estado>()
-            .Ignore(dest => dest.Id);
+            .Ignore(dest => dest.Id)
+            .Ignore(dest => dest.IdEmpresa)
+            .Ignore(dest => dest.Empresa!);
     }
 }

@@ -22,7 +22,17 @@ public class TipoAsignacionConfiguration : IEntityTypeConfiguration<TipoAsignaci
             .HasColumnName("descripcion")
             .HasColumnType("varchar(150)");
 
-        // Igual que Estado: catalogo simple, sin auditoria, coincide con el ERD.
-        builder.HasIndex(t => t.Nombre).IsUnique();
+        builder.Property(t => t.IdEmpresa)
+            .HasColumnName("id_empresa")
+            .IsRequired();
+
+        builder.HasOne(t => t.Empresa)
+            .WithMany()
+            .HasForeignKey(t => t.IdEmpresa)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(t => new { t.IdEmpresa, t.Nombre })
+            .IsUnique()
+            .HasDatabaseName("ix_tipo_asignacion_empresa_nombre");
     }
 }
