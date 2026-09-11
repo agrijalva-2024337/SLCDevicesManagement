@@ -32,8 +32,10 @@ public sealed class EstadosController : ApiControllerBase
 
     [HttpGet]
     [Authorize(Roles = Roles.Lectura)]
-    public async Task<ActionResult<IReadOnlyList<EstadoDto>>> GetAll(CancellationToken cancellationToken) =>
-        Ok(await _getAll.HandleAsync(new GetEstadosQuery(), cancellationToken));
+    public async Task<ActionResult<IReadOnlyList<EstadoDto>>> GetAll(
+        [FromQuery] int? idEmpresa = null,
+        CancellationToken cancellationToken = default) =>
+        Ok(await _getAll.HandleAsync(new GetEstadosQuery(idEmpresa), cancellationToken));
 
     [HttpGet("{id:int}")]
     [Authorize(Roles = Roles.Lectura)]
@@ -41,7 +43,7 @@ public sealed class EstadosController : ApiControllerBase
         Ok(await _getById.HandleAsync(new GetEstadoByIdQuery(id), cancellationToken));
 
     [HttpPost]
-    [Authorize(Roles = Roles.AdministradorGeneral)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Create([FromBody] CreateEstadoCommand command, CancellationToken cancellationToken)
     {
         var id = await _create.HandleAsync(command, cancellationToken);
@@ -49,7 +51,7 @@ public sealed class EstadosController : ApiControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = Roles.AdministradorGeneral)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateEstadoCommand command, CancellationToken cancellationToken)
     {
         if (id != command.Id) return IdMismatch();
@@ -58,7 +60,7 @@ public sealed class EstadosController : ApiControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = Roles.AdministradorGeneral)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         await _delete.HandleAsync(new DeleteEstadoCommand(id), cancellationToken);

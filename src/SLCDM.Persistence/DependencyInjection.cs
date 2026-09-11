@@ -12,7 +12,7 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? "Server=.\\SQLEXPRESS;Database=DercasInventario;Trusted_Connection=True;TrustServerCertificate=True;";
+            ?? "Server=.\\SQLEXPRESS;Database=SLCDevicesManagement;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False";
 
         services.AddScoped<Interceptors.BitacoraSaveChangesInterceptor>();
         services.AddDbContext<ApplicationDbContext>((sp, options) =>

@@ -32,8 +32,10 @@ public sealed class TiposAsignacionController : ApiControllerBase
 
     [HttpGet]
     [Authorize(Roles = Roles.Lectura)]
-    public async Task<ActionResult<IReadOnlyList<TipoAsignacionDto>>> GetAll(CancellationToken cancellationToken) =>
-        Ok(await _getAll.HandleAsync(new GetTiposAsignacionQuery(), cancellationToken));
+    public async Task<ActionResult<IReadOnlyList<TipoAsignacionDto>>> GetAll(
+        [FromQuery] int? idEmpresa = null,
+        CancellationToken cancellationToken = default) =>
+        Ok(await _getAll.HandleAsync(new GetTiposAsignacionQuery(idEmpresa), cancellationToken));
 
     [HttpGet("{id:int}")]
     [Authorize(Roles = Roles.Lectura)]
@@ -41,7 +43,7 @@ public sealed class TiposAsignacionController : ApiControllerBase
         Ok(await _getById.HandleAsync(new GetTipoAsignacionByIdQuery(id), cancellationToken));
 
     [HttpPost]
-    [Authorize(Roles = Roles.AdministradorGeneral)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Create([FromBody] CreateTipoAsignacionCommand command, CancellationToken cancellationToken)
     {
         var id = await _create.HandleAsync(command, cancellationToken);
@@ -49,7 +51,7 @@ public sealed class TiposAsignacionController : ApiControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = Roles.AdministradorGeneral)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateTipoAsignacionCommand command, CancellationToken cancellationToken)
     {
         if (id != command.Id) return IdMismatch();
@@ -58,7 +60,7 @@ public sealed class TiposAsignacionController : ApiControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = Roles.AdministradorGeneral)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         await _delete.HandleAsync(new DeleteTipoAsignacionCommand(id), cancellationToken);

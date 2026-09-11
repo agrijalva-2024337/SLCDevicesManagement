@@ -22,8 +22,17 @@ public sealed class UpdateTipoAsignacionCommandValidator : AbstractValidator<Upd
             .NotEmpty().WithMessage("El campo nombre es obligatorio.")
             .MaximumLength(50).WithMessage("El campo nombre no debe superar los 50 caracteres.")
             .MustAsync(async (cmd, nombre, ct) =>
-                !await db.TiposAsignacion.AnyAsync(t => t.Nombre == nombre && t.Id != cmd.Id, ct))
-            .WithMessage("Ya existe un tipo de asignacion con el mismo nombre.");
+            {
+                var tipo = await db.TiposAsignacion.AsNoTracking().FirstOrDefaultAsync(t => t.Id == cmd.Id, ct);
+                if (tipo is null)
+                {
+                    return true;
+                }
+
+                return !await db.TiposAsignacion.IgnoreQueryFilters()
+                    .AnyAsync(t => t.IdEmpresa == tipo.IdEmpresa && t.Nombre == nombre && t.Id != cmd.Id, ct);
+            })
+            .WithMessage("Ya existe un tipo de asignacion con el mismo nombre en esta empresa.");
 
         RuleFor(x => x.Descripcion)
             .MaximumLength(150).WithMessage("El campo descripcion no debe superar los 150 caracteres.")

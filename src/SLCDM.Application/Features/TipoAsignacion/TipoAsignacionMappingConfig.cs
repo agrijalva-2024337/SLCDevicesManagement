@@ -10,9 +10,12 @@ public sealed class TipoAsignacionMappingConfig : IRegister
         config.NewConfig<TipoAsignacion, TipoAsignacionDto>();
 
         config.NewConfig<Commands.CreateTipoAsignacionCommand, TipoAsignacion>()
-            .Ignore(dest => dest.Id);
+            .Ignore(dest => dest.Id)
+            .Ignore(dest => dest.Empresa!);
 
         config.NewConfig<Commands.UpdateTipoAsignacionCommand, TipoAsignacion>()
-            .Ignore(dest => dest.Id);
+            .Ignore(dest => dest.Id)
+            .Ignore(dest => dest.IdEmpresa)
+            .Ignore(dest => dest.Empresa!);
     }
 }

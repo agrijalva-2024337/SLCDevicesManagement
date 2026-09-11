@@ -22,8 +22,17 @@ public sealed class UpdateEstadoCommandValidator : AbstractValidator<UpdateEstad
             .NotEmpty().WithMessage("El campo nombre es obligatorio.")
             .MaximumLength(50).WithMessage("El campo nombre no debe superar los 50 caracteres.")
             .MustAsync(async (cmd, nombre, ct) =>
-                !await db.Estados.AnyAsync(e => e.Nombre == nombre && e.Id != cmd.Id, ct))
-            .WithMessage("Ya existe un estado con el mismo nombre.");
+            {
+                var estado = await db.Estados.AsNoTracking().FirstOrDefaultAsync(e => e.Id == cmd.Id, ct);
+                if (estado is null)
+                {
+                    return true;
+                }
+
+                return !await db.Estados.IgnoreQueryFilters()
+                    .AnyAsync(e => e.IdEmpresa == estado.IdEmpresa && e.Nombre == nombre && e.Id != cmd.Id, ct);
+            })
+            .WithMessage("Ya existe un estado con el mismo nombre en esta empresa.");
 
         RuleFor(x => x.Descripcion)
             .MaximumLength(150).WithMessage("El campo descripcion no debe superar los 150 caracteres.")
