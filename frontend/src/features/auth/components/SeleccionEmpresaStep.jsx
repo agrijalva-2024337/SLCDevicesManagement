@@ -41,9 +41,11 @@ export function SeleccionEmpresaStep({
       {!loading && error ? (
         <div className="app-feedback app-feedback--error mt-8" role="alert">
           <p>{error}</p>
-          <button type="button" className="app-btn app-btn--secondary mt-4 w-full" onClick={onRetry}>
-            Reintentar
-          </button>
+          {onRetry ? (
+            <button type="button" className="app-btn app-btn--secondary mt-4 w-full" onClick={onRetry}>
+              Reintentar
+            </button>
+          ) : null}
         </div>
       ) : null}
 
@@ -53,9 +55,9 @@ export function SeleccionEmpresaStep({
         </div>
       ) : null}
 
-      {!loading && !error && empresas.length > 0 ? (
+      {!loading && empresas.length > 0 ? (
         <ul
-          className="mt-8 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2"
+          className={`${error ? 'mt-4' : 'mt-8'} grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2`}
           role="list"
         >
           {empresas.map((empresa, index) => {

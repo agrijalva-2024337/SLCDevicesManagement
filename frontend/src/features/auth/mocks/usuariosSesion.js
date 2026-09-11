@@ -18,7 +18,7 @@ export const usuariosSesion = [
   {
     id: 2,
     idEmpresa: 1,
-    empresasAutorizadas: [1],
+    empresasAutorizadas: [1, 2],
     nombres: 'Carlos Eduardo',
     apellidos: 'Morales Paz',
     correo: 'admin.empresa@slc.com.gt',
