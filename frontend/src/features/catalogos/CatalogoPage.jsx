@@ -12,7 +12,7 @@ import * as empresaService from '@/features/organizacion/empresas/empresaService
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import * as areaService from '@/features/organizacion/areas/areaService';
 import { DataTable } from '@/shared/components/DataTable';
-import { DetailOverlay } from '@/shared/components/DetailOverlay';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { OverlayOutlet } from '@/shared/components/OverlayOutlet';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { RecordActions, RegisterButton } from '@/shared/components/RecordActions';
@@ -155,60 +155,35 @@ export function CatalogoPage() {
             setPendingDelete(item);
           }}
         />
-        <DetailOverlay
+        <ConfirmDialog
           open={Boolean(pendingDelete)}
           title="Eliminar ubicación"
-          kicker="Confirmación"
+          confirming={deleting}
+          error={deleteError}
+          confirmLabel="Eliminar"
+          confirmingLabel="Eliminando…"
           onClose={() => {
-            if (deleting) return;
             setPendingDelete(null);
             setDeleteError(null);
           }}
+          onConfirm={async () => {
+            setDeleting(true);
+            setDeleteError(null);
+            try {
+              await ubicacionService.hardRemove(pendingDelete.id);
+              setPendingDelete(null);
+              setBanner({ message: 'Ubicación eliminada.', variant: 'empty' });
+              await reload();
+            } catch (error) {
+              setDeleteError(getErrorMessage(error));
+            } finally {
+              setDeleting(false);
+            }
+          }}
         >
-          <p className="text-base text-navy">
-            Se eliminará permanentemente la ubicación <strong>{pendingDelete?.nombre}</strong>. Esta acción
-            no se puede revertir.
-          </p>
-          {deleteError ? (
-            <div className="app-feedback app-feedback--error" role="alert">
-              {deleteError}
-            </div>
-          ) : null}
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              className="app-btn app-btn--primary"
-              disabled={deleting}
-              onClick={async () => {
-                setDeleting(true);
-                setDeleteError(null);
-                try {
-                  await ubicacionService.hardRemove(pendingDelete.id);
-                  setPendingDelete(null);
-                  setBanner({ message: 'Ubicación eliminada.', variant: 'empty' });
-                  await reload();
-                } catch (error) {
-                  setDeleteError(getErrorMessage(error));
-                } finally {
-                  setDeleting(false);
-                }
-              }}
-            >
-              {deleting ? 'Eliminando…' : 'Eliminar'}
-            </button>
-            <button
-              type="button"
-              className="app-btn app-btn--ghost"
-              disabled={deleting}
-              onClick={() => {
-                setPendingDelete(null);
-                setDeleteError(null);
-              }}
-            >
-              Cancelar
-            </button>
-          </div>
-        </DetailOverlay>
+          Se eliminará permanentemente la ubicación <strong>{pendingDelete?.nombre}</strong>. Esta acción
+          no se puede revertir.
+        </ConfirmDialog>
         <OverlayOutlet context={outletContext} />
       </>
     );
@@ -246,18 +221,43 @@ export function CatalogoPage() {
             remove:
               allowWrite && maestro.hasHabilitado === false
                 ? {
-                    onClick: async () => {
-                      const ok = window.confirm(
-                        `¿Eliminar ${maestro.singular} ${maestro.titleOf(item)}? Esta acción no se puede deshacer.`,
-                      );
-                      if (!ok) return;
-                      await maestro.service.remove(item.id);
-                      await reload();
+                    onClick: () => {
+                      setDeleteError(null);
+                      setPendingDelete(item);
                     },
                   }
                 : undefined,
           })}
         />
+        <ConfirmDialog
+          open={Boolean(pendingDelete) && maestro.hasHabilitado === false}
+          title={`Eliminar ${maestro.singular}`}
+          confirming={deleting}
+          error={deleteError}
+          confirmLabel="Eliminar"
+          confirmingLabel="Eliminando…"
+          onClose={() => {
+            setPendingDelete(null);
+            setDeleteError(null);
+          }}
+          onConfirm={async () => {
+            setDeleting(true);
+            setDeleteError(null);
+            try {
+              await maestro.service.remove(pendingDelete.id);
+              setPendingDelete(null);
+              setBanner({ message: `${maestro.singular} eliminado.`, variant: 'empty' });
+              await reload();
+            } catch (error) {
+              setDeleteError(getErrorMessage(error));
+            } finally {
+              setDeleting(false);
+            }
+          }}
+        >
+          ¿Eliminar {maestro.singular} <strong>{pendingDelete ? maestro.titleOf(pendingDelete) : ''}</strong>?
+          Esta acción no se puede deshacer.
+        </ConfirmDialog>
         <OverlayOutlet context={outletContext} />
       </section>
     );

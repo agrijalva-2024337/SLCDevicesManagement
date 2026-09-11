@@ -932,6 +932,32 @@ select.app-input {
   animation: save-success-overlay-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.app-overlay--confirm {
+  width: min(28rem, 100%);
+}
+
+.app-btn--danger {
+  background: var(--danger);
+  color: var(--palette-white);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--danger) 32%, transparent);
+}
+
+a.app-btn--danger {
+  color: var(--palette-white);
+}
+
+.app-btn--danger:hover {
+  filter: brightness(0.94);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--danger) 40%, transparent);
+}
+
+.app-btn--danger:disabled:hover {
+  filter: none;
+  transform: none;
+  background: var(--danger);
+}
+
 .app-overlay-success-close {
   position: absolute;
   top: 0.85rem;
