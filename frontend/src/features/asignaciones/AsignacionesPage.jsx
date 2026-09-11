@@ -5,6 +5,7 @@ import * as activoService from '@/features/activos/activoService';
 import { AsignacionFormOverlay } from '@/features/asignaciones/AsignacionFormOverlay';
 import { VerificarDocumentoOverlay } from '@/features/asignaciones/VerificarDocumentoOverlay';
 import * as asignacionService from '@/features/asignaciones/asignacionService';
+import * as categoriaService from '@/features/catalogos/categorias/categoriaService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import { empresaIdDeActivo, nombreUbicacion } from '@/features/inventario/trasladoRuta';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
@@ -70,6 +71,7 @@ export function AsignacionesPage() {
   const activos = useResource(activoService.getAll);
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
+  const categorias = useResource(categoriaService.getAll);
   const estados = useResource(estadoService.getAll);
   const responsables = useResource(responsableService.getAll);
   const tipos = useResource(tipoAsignacionService.getAll);
@@ -296,6 +298,8 @@ export function AsignacionesPage() {
         prefill={crud.record}
         activos={lookups.activos}
         ubicaciones={lookups.ubicaciones}
+        sedes={lookups.sedes}
+        categorias={categorias.data}
         responsables={lookups.responsables}
         asignaciones={asignacionesRows}
         tipos={tipos.data}
