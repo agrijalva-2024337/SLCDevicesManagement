@@ -9,7 +9,8 @@ import * as historicoInventarioService from '@/features/inventario/historicoInve
 import { todayIsoDate } from '@/features/inventario/trasladoRuta';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import { DataTable } from '@/shared/components/DataTable';
-import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
+import { DetailField } from '@/shared/components/DetailOverlay';
 import { FeedbackState } from '@/shared/components/FeedbackState';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { StatCard } from '@/shared/components/StatCard';
@@ -69,8 +70,10 @@ export function JornadaDetallePage() {
   const [banner, setBanner] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [pendingClose, setPendingClose] = useState(false);
   const [closeError, setCloseError] = useState(null);
+  const [closing, setClosing] = useState(false);
 
   const reload = useCallback(async () => {
     try {
@@ -327,112 +330,74 @@ export function JornadaDetallePage() {
         }}
       />
 
-      <DetailOverlay
+      <ConfirmDialog
         open={Boolean(pendingDelete)}
         title="Eliminar hallazgo"
-        kicker="Confirmación"
+        confirming={deleting}
+        error={deleteError}
+        confirmLabel="Eliminar"
+        confirmingLabel="Eliminando…"
         onClose={() => {
           setPendingDelete(null);
           setDeleteError(null);
         }}
+        onConfirm={async () => {
+          setDeleting(true);
+          setDeleteError(null);
+          try {
+            await detalleActivoService.eliminar(pendingDelete.id);
+            setBanner({ message: 'Hallazgo eliminado.', variant: 'empty' });
+            setPendingDelete(null);
+            crud.close();
+            await reload();
+          } catch (error) {
+            setDeleteError(getErrorMessage(error));
+          } finally {
+            setDeleting(false);
+          }
+        }}
       >
-        <p className="text-base text-navy">
-          Se eliminará la verificación de {pendingDelete?.activoNombre ?? 'este activo'}. El movimiento de
-          verificación asociado en el historial del activo también se borra en el servidor.
-        </p>
-        {deleteError ? (
-          <div className="app-feedback app-feedback--error" role="alert">
-            {deleteError}
-          </div>
-        ) : null}
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            className="app-btn app-btn--primary"
-            onClick={async () => {
-              try {
-                await detalleActivoService.eliminar(pendingDelete.id);
-                setBanner({ message: 'Hallazgo eliminado.', variant: 'empty' });
-                setPendingDelete(null);
-                setDeleteError(null);
-                crud.close();
-                await reload();
-              } catch (error) {
-                setDeleteError(getErrorMessage(error));
-              }
-            }}
-          >
-            <i className="pi pi-trash" aria-hidden="true" />
-            Eliminar
-          </button>
-          <button
-            type="button"
-            className="app-btn app-btn--ghost"
-            onClick={() => {
-              setPendingDelete(null);
-              setDeleteError(null);
-            }}
-          >
-            Cancelar
-          </button>
-        </div>
-      </DetailOverlay>
+        Se eliminará la verificación de {pendingDelete?.activoNombre ?? 'este activo'}. El movimiento de
+        verificación asociado en el historial del activo también se borra en el servidor.
+      </ConfirmDialog>
 
-      <DetailOverlay
+      <ConfirmDialog
         open={pendingClose}
         title="Cerrar jornada"
-        kicker="Confirmación"
+        tone="primary"
+        confirmIcon="pi pi-lock"
+        confirming={closing}
+        error={closeError}
+        confirmLabel="Cerrar jornada"
+        confirmingLabel="Cerrando…"
         onClose={() => {
           setPendingClose(false);
           setCloseError(null);
         }}
+        onConfirm={async () => {
+          setClosing(true);
+          setCloseError(null);
+          try {
+            await historicoInventarioService.cerrar(jornada.id, todayIsoDate());
+            setBanner({ message: 'Jornada cerrada.', variant: 'empty' });
+            setPendingClose(false);
+            crud.close();
+            setPendingDelete(null);
+            await reload();
+          } catch (error) {
+            const message = getErrorMessage(error);
+            setCloseError(message);
+            setBanner({ message, variant: 'error' });
+          } finally {
+            setClosing(false);
+          }
+        }}
       >
-        <p className="text-base text-navy">
-          {pendientes > 0
-            ? `Hay ${pendientes} activo${pendientes === 1 ? '' : 's'} pendiente${pendientes === 1 ? '' : 's'} de verificar. `
-            : 'Todos los activos esperados ya tienen hallazgo. '}
-          Al cerrar no se podrán registrar, editar ni eliminar hallazgos. Esta acción no se puede deshacer.
-        </p>
-        {closeError ? (
-          <div className="app-feedback app-feedback--error" role="alert">
-            {closeError}
-          </div>
-        ) : null}
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            className="app-btn app-btn--primary"
-            onClick={async () => {
-              try {
-                await historicoInventarioService.cerrar(jornada.id, todayIsoDate());
-                setBanner({ message: 'Jornada cerrada.', variant: 'empty' });
-                setPendingClose(false);
-                setCloseError(null);
-                crud.close();
-                setPendingDelete(null);
-                await reload();
-              } catch (error) {
-                const message = getErrorMessage(error);
-                setCloseError(message);
-                setBanner({ message, variant: 'error' });
-              }
-            }}
-          >
-            <i className="pi pi-lock" aria-hidden="true" />
-            Cerrar jornada
-          </button>
-          <button
-            type="button"
-            className="app-btn app-btn--ghost"
-            onClick={() => {
-              setPendingClose(false);
-              setCloseError(null);
-            }}
-          >
-            Cancelar
-          </button>
-        </div>
-      </DetailOverlay>
+        {pendientes > 0
+          ? `Hay ${pendientes} activo${pendientes === 1 ? '' : 's'} pendiente${pendientes === 1 ? '' : 's'} de verificar. `
+          : 'Todos los activos esperados ya tienen hallazgo. '}
+        Al cerrar no se podrán registrar, editar ni eliminar hallazgos. Esta acción no se puede deshacer.
+      </ConfirmDialog>
     </section>
   );
 }

@@ -9,6 +9,7 @@ export function DetailOverlay({
   onClose,
   children,
   variant = 'default',
+  size = 'default',
 }) {
   useEffect(() => {
     if (!open) return undefined;
@@ -30,6 +31,13 @@ export function DetailOverlay({
   if (!open) return null;
 
   const isSuccess = variant === 'success';
+  const overlayClass = [
+    'app-overlay',
+    isSuccess ? 'app-overlay--success' : '',
+    size === 'confirm' ? 'app-overlay--confirm' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return createPortal(
     <div className="fixed inset-0 z-[60] flex items-end justify-center p-3 sm:items-center sm:p-6">
@@ -43,7 +51,7 @@ export function DetailOverlay({
         role="dialog"
         aria-modal="true"
         aria-labelledby="detail-overlay-title"
-        className={isSuccess ? 'app-overlay app-overlay--success' : 'app-overlay'}
+        className={overlayClass}
       >
         {isSuccess ? (
           <>

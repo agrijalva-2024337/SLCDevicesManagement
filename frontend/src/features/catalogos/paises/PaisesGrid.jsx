@@ -2,6 +2,7 @@ import { useId, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import * as paisService from '@/features/catalogos/paises/paisService';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { RegisterButton } from '@/shared/components/RecordActions';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 import { matchesSearch } from '@/shared/utils/search';
@@ -15,7 +16,7 @@ function flagClassName(iso2) {
   return iso2Conocido(code) ? `fi fi-${code}` : null;
 }
 
-function PaisCard({ pais, allowWrite, onDelete, deleting }) {
+function PaisCard({ pais, allowWrite, onDeleteRequest, deleting }) {
   const flagClass = flagClassName(pais.codigoIso2);
   const iso2 = String(pais.codigoIso2 ?? '')
     .trim()
@@ -59,7 +60,7 @@ function PaisCard({ pais, allowWrite, onDelete, deleting }) {
               title="Eliminar país"
               aria-label={`Eliminar ${pais.nombre}`}
               disabled={deleting}
-              onClick={() => onDelete?.(pais)}
+              onClick={() => onDeleteRequest?.(pais)}
             >
               <i className="pi pi-trash" aria-hidden="true" />
             </button>
@@ -83,7 +84,8 @@ export function PaisesGrid({ items, loading = false, onReload }) {
   const { canWrite } = useAuth();
   const allowWrite = canWrite('paises');
   const [query, setQuery] = useState('');
-  const [deletingId, setDeletingId] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
 
   const filtered = useMemo(() => {
@@ -100,21 +102,18 @@ export function PaisesGrid({ items, loading = false, onReload }) {
   const showEmpty = !loading && items.length === 0;
   const showNoResults = !loading && items.length > 0 && filtered.length === 0;
 
-  async function handleDelete(pais) {
-    const ok = window.confirm(
-      `¿Eliminar permanentemente el país «${pais.nombre}»? Solo se puede borrar si está deshabilitado.`,
-    );
-    if (!ok) return;
-
-    setDeletingId(pais.id);
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    setDeleting(true);
     setDeleteError(null);
     try {
-      await paisService.hardRemove(pais.id);
+      await paisService.hardRemove(pendingDelete.id);
+      setPendingDelete(null);
       await onReload?.();
     } catch (error) {
       setDeleteError(getErrorMessage(error));
     } finally {
-      setDeletingId(null);
+      setDeleting(false);
     }
   }
 
@@ -127,12 +126,6 @@ export function PaisesGrid({ items, loading = false, onReload }) {
         </div>
         {allowWrite ? <RegisterButton to="nueva" label="Registrar país" /> : null}
       </header>
-
-      {deleteError ? (
-        <div className="app-feedback app-feedback--error" role="alert">
-          {deleteError}
-        </div>
-      ) : null}
 
       <div className="paises-toolbar">
         <div className="paises-search">
@@ -169,8 +162,11 @@ export function PaisesGrid({ items, loading = false, onReload }) {
               key={pais.id}
               pais={pais}
               allowWrite={allowWrite}
-              onDelete={handleDelete}
-              deleting={Number(deletingId) === Number(pais.id)}
+              onDeleteRequest={(item) => {
+                setDeleteError(null);
+                setPendingDelete(item);
+              }}
+              deleting={deleting && Number(pendingDelete?.id) === Number(pais.id)}
             />
           ))}
         </div>
@@ -196,6 +192,23 @@ export function PaisesGrid({ items, loading = false, onReload }) {
           ) : null}
         </div>
       ) : null}
+
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        title="Eliminar país"
+        confirming={deleting}
+        error={deleteError}
+        confirmLabel="Eliminar"
+        confirmingLabel="Eliminando…"
+        onClose={() => {
+          setPendingDelete(null);
+          setDeleteError(null);
+        }}
+        onConfirm={confirmDelete}
+      >
+        ¿Eliminar permanentemente el país <strong>«{pendingDelete?.nombre}»</strong>? Solo se puede borrar
+        si está deshabilitado.
+      </ConfirmDialog>
     </section>
   );
 }

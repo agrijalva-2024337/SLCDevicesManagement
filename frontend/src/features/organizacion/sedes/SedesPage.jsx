@@ -6,7 +6,7 @@ import { filterRowsByEmpresa, useEmpresaActiva } from '@/features/organizacion/e
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import { DataTable } from '@/shared/components/DataTable';
-import { DetailOverlay } from '@/shared/components/DetailOverlay';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { OverlayOutlet } from '@/shared/components/OverlayOutlet';
 import { RegisterButton } from '@/shared/components/RecordActions';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
@@ -111,60 +111,35 @@ export function SedesPage() {
               : undefined,
         })}
       />
-      <DetailOverlay
+      <ConfirmDialog
         open={Boolean(pendingDelete)}
         title="Eliminar sede"
-        kicker="Confirmación"
+        confirming={deleting}
+        error={deleteError}
+        confirmLabel="Eliminar"
+        confirmingLabel="Eliminando…"
         onClose={() => {
-          if (deleting) return;
           setPendingDelete(null);
           setDeleteError(null);
         }}
+        onConfirm={async () => {
+          setDeleting(true);
+          setDeleteError(null);
+          try {
+            await sedeService.hardRemove(pendingDelete.id);
+            setPendingDelete(null);
+            setBanner({ message: 'Sede eliminada.', variant: 'empty' });
+            await reload();
+          } catch (error) {
+            setDeleteError(getErrorMessage(error));
+          } finally {
+            setDeleting(false);
+          }
+        }}
       >
-        <p className="text-base text-navy">
-          Se eliminará permanentemente la sede <strong>{pendingDelete?.nombre}</strong>. Esta acción no se
-          puede revertir.
-        </p>
-        {deleteError ? (
-          <div className="app-feedback app-feedback--error" role="alert">
-            {deleteError}
-          </div>
-        ) : null}
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            className="app-btn app-btn--primary"
-            disabled={deleting}
-            onClick={async () => {
-              setDeleting(true);
-              setDeleteError(null);
-              try {
-                await sedeService.hardRemove(pendingDelete.id);
-                setPendingDelete(null);
-                setBanner({ message: 'Sede eliminada.', variant: 'empty' });
-                await reload();
-              } catch (error) {
-                setDeleteError(getErrorMessage(error));
-              } finally {
-                setDeleting(false);
-              }
-            }}
-          >
-            {deleting ? 'Eliminando…' : 'Eliminar'}
-          </button>
-          <button
-            type="button"
-            className="app-btn app-btn--ghost"
-            disabled={deleting}
-            onClick={() => {
-              setPendingDelete(null);
-              setDeleteError(null);
-            }}
-          >
-            Cancelar
-          </button>
-        </div>
-      </DetailOverlay>
+        Se eliminará permanentemente la sede <strong>{pendingDelete?.nombre}</strong>. Esta acción no se
+        puede revertir.
+      </ConfirmDialog>
       <OverlayOutlet context={outletContext} />
     </section>
   );
