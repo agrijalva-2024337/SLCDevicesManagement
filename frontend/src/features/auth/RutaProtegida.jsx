@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation, useNavigate, useOutletContext } from 'react-router';
-import { useAuth } from '@/features/auth/useAuth';
+import { appResourceFromPathname, useAuth } from '@/features/auth/useAuth';
 import { RolUsuario } from '@/shared/api/contracts';
 import { DetailOverlay } from '@/shared/components/DetailOverlay';
 import { FeedbackState } from '@/shared/components/FeedbackState';
@@ -59,6 +59,23 @@ export function RutaProtegida() {
   return <Outlet />;
 }
 
+/** Bloquea pantallas que el rol no puede ni listar (p. ej. Operador → Proveedores). */
+export function RutaAcceso() {
+  const { isReady, canAccess } = useAuth();
+  const location = useLocation();
+  const resource = appResourceFromPathname(location.pathname);
+
+  if (!isReady) {
+    return <FeedbackState status="loading" loadingMessage="Validando permisos…" />;
+  }
+
+  if (resource && !canAccess(resource)) {
+    return <SinPermiso />;
+  }
+
+  return <Outlet />;
+}
+
 export function RutaEscritura() {
   const { canWrite } = useAuth();
   const location = useLocation();
@@ -72,6 +89,17 @@ export function RutaEscritura() {
   }
 
   return <Outlet context={outlet} />;
+}
+
+/** Administración de empresa o superior (usuarios, bitácora, etc.). */
+export function RutaAdministrador() {
+  const { rol } = useAuth();
+
+  if (rol == null || rol < RolUsuario.AdministradorEmpresa) {
+    return <SinPermiso />;
+  }
+
+  return <Outlet />;
 }
 
 export function RutaAdministradorGeneral() {

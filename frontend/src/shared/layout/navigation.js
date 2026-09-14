@@ -1,10 +1,17 @@
 import { titleForActivosVista } from '@/features/activos/activosVistas';
+import { RolUsuario } from '@/shared/api/contracts';
 
+/** minRol: solo visible desde ese rol hacia arriba (además de adminOnly / adminGeneralOnly). */
 export const catalogos = [
   { slug: 'empresas', label: 'Empresas', icon: 'pi pi-building', adminGeneralOnly: true },
   { slug: 'sedes', label: 'Sedes', icon: 'pi pi-map-marker' },
   { slug: 'areas', label: 'Áreas', icon: 'pi pi-th-large' },
-  { slug: 'proveedores', label: 'Proveedores', icon: 'pi pi-truck' },
+  {
+    slug: 'proveedores',
+    label: 'Proveedores',
+    icon: 'pi pi-truck',
+    minRol: RolUsuario.AdministradorEmpresa,
+  },
   { slug: 'ubicaciones', label: 'Ubicaciones', icon: 'pi pi-map' },
   { slug: 'paises', label: 'Países', icon: 'pi pi-globe' },
 ];
@@ -12,10 +19,30 @@ export const catalogos = [
 export const administracion = [
   { slug: 'usuarios', label: 'Usuarios', icon: 'pi pi-users', adminGeneralOnly: true },
   { slug: 'responsables', label: 'Responsables', icon: 'pi pi-id-card' },
-  { slug: 'categorias', label: 'Categorías', icon: 'pi pi-tags' },
-  { slug: 'estados', label: 'Estados', icon: 'pi pi-flag' },
-  { slug: 'tipos-asignacion', label: 'Tipos de asignación', icon: 'pi pi-list' },
-  { slug: 'redes-conocidas', label: 'Redes Wi-Fi', icon: 'pi pi-wifi' },
+  {
+    slug: 'categorias',
+    label: 'Categorías',
+    icon: 'pi pi-tags',
+    minRol: RolUsuario.AdministradorEmpresa,
+  },
+  {
+    slug: 'estados',
+    label: 'Estados',
+    icon: 'pi pi-flag',
+    minRol: RolUsuario.AdministradorEmpresa,
+  },
+  {
+    slug: 'tipos-asignacion',
+    label: 'Tipos de asignación',
+    icon: 'pi pi-list',
+    minRol: RolUsuario.AdministradorEmpresa,
+  },
+  {
+    slug: 'redes-conocidas',
+    label: 'Redes Wi-Fi',
+    icon: 'pi pi-wifi',
+    minRol: RolUsuario.AdministradorEmpresa,
+  },
 ];
 
 export const modulosApp = [
@@ -37,6 +64,7 @@ export const navigation = [
       disabled: item.disabled,
       adminOnly: item.adminOnly,
       adminGeneralOnly: item.adminGeneralOnly,
+      minRol: item.minRol,
     })),
   },
   ...modulosApp.map((item) => ({ type: 'link', ...item })),
@@ -51,8 +79,14 @@ export const navigation = [
         icon: item.icon,
         adminOnly: item.adminOnly,
         adminGeneralOnly: item.adminGeneralOnly,
+        minRol: item.minRol,
       })),
-      { path: '/app/bitacora', label: 'Bitácora', icon: 'pi pi-history', adminOnly: true },
+      {
+        path: '/app/bitacora',
+        label: 'Bitácora',
+        icon: 'pi pi-history',
+        adminOnly: true,
+      },
     ],
   },
 ];
