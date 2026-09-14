@@ -155,6 +155,18 @@ public sealed class UpdateActivoCommandHandler : ICommandHandler<UpdateActivoCom
         var entity = await _db.Activos.FirstOrDefaultAsync(a => a.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("Activo", command.Id);
 
+        if (entity.IdUbicacion != command.IdUbicacion)
+        {
+            throw new ConflictException(
+                "El cambio de ubicacion de un activo debe hacerse mediante el proceso de Traslado, no editando el activo directamente.");
+        }
+
+        if (entity.IdProveedor != command.IdProveedor)
+        {
+            throw new ConflictException(
+                "El proveedor de un activo no puede cambiarse desde la edicion general (afecta la empresa del activo).");
+        }
+
         command.Adapt(entity);
         await _db.SaveChangesAsync(cancellationToken);
     }
