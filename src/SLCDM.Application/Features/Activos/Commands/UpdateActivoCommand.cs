@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Validation;
+using SLCDM.Application.Features.Asignaciones;
 
 namespace SLCDM.Application.Features.Activos.Commands;
 
@@ -31,7 +32,10 @@ public sealed class UpdateActivoCommandValidator : AbstractValidator<UpdateActiv
 {
     public UpdateActivoCommandValidator(IApplicationDbContext db)
     {
-        RuleFor(x => x.Id).RequiredId("id activo");
+        RuleFor(x => x.Id)
+            .RequiredId("id activo")
+            .MustAsync(async (cmd, id, ct) => !await ActivoBajaRules.EstaDadoDeBajaAsync(db, id, ct))
+            .WithMessage("El activo esta dado de baja y no puede editarse.");
 
         RuleFor(x => x.IdCategoriaActivo)
             .RequiredId("id categoria activo")
