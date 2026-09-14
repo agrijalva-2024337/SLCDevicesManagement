@@ -169,10 +169,14 @@ public sealed class CreateAsignacionCommandHandler : ICommandHandler<CreateAsign
         var activo = await _db.Activos.FirstAsync(a => a.Id == command.IdActivo, cancellationToken);
         activo.IdUbicacion = command.IdUbicacion;
 
+        var idEmpresa = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(_db, command.IdActivo, cancellationToken)
+            ?? throw new ConflictException("No se pudo determinar la empresa del activo.");
+
         var nombreEstado = TipoAsignacionNombres.EsNombre(tipo.Nombre, TipoAsignacionNombres.Mantenimiento)
             ? EstadoActivoNombres.EnMantenimiento
             : EstadoActivoNombres.Asignado;
-        var estadoActivo = await EstadoActivoNombres.ObtenerRequeridoAsync(_db, nombreEstado, cancellationToken);
+        var estadoActivo = await EstadoActivoNombres.ObtenerRequeridoAsync(
+            _db, nombreEstado, idEmpresa, cancellationToken);
         activo.IdEstado = estadoActivo.Id;
 
         await _db.SaveChangesAsync(cancellationToken);
