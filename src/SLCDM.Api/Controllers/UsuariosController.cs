@@ -31,7 +31,7 @@ public sealed class UsuariosController : ApiControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = Roles.EscrituraEmpresa)]
+    [Authorize(Roles = Roles.AdministradorGeneral)]
     public async Task<ActionResult<IReadOnlyList<UsuarioDto>>> GetAll(
         [FromQuery] bool incluirInhabilitados = false,
         [FromQuery] int? idEmpresa = null,
@@ -39,12 +39,12 @@ public sealed class UsuariosController : ApiControllerBase
         Ok(await _getAll.HandleAsync(new GetUsuariosQuery(incluirInhabilitados, idEmpresa), cancellationToken));
 
     [HttpGet("{id:int}")]
-    [Authorize(Roles = Roles.EscrituraEmpresa)]
+    [Authorize(Roles = Roles.AdministradorGeneral)]
     public async Task<ActionResult<UsuarioDto>> GetById(int id, CancellationToken cancellationToken) =>
         Ok(await _getById.HandleAsync(new GetUsuarioByIdQuery(id), cancellationToken));
 
     [HttpPost]
-    [Authorize(Roles = Roles.EscrituraEmpresa)]
+    [Authorize(Roles = Roles.AdministradorGeneral)]
     [ProducesResponseType(typeof(CreateUsuarioResult), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] CreateUsuarioCommand command, CancellationToken cancellationToken)
     {
@@ -53,7 +53,7 @@ public sealed class UsuariosController : ApiControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = Roles.EscrituraEmpresa)]
+    [Authorize(Roles = Roles.AdministradorGeneral)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateUsuarioCommand command, CancellationToken cancellationToken)
     {
         if (id != command.Id) return IdMismatch();
@@ -62,7 +62,7 @@ public sealed class UsuariosController : ApiControllerBase
     }
 
     [HttpPost("{id:int}/disable")]
-    [Authorize(Roles = Roles.EscrituraEmpresa)]
+    [Authorize(Roles = Roles.AdministradorGeneral)]
     public async Task<IActionResult> Disable(int id, CancellationToken cancellationToken)
     {
         await _disable.HandleAsync(new DisableUsuarioCommand(id), cancellationToken);
