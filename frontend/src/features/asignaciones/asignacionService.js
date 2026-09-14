@@ -7,7 +7,7 @@ import httpClient from '@/shared/services/httpClient';
 import { createMockCrudService } from '@/shared/services/createMockCrudService';
 import { invalidateAfterMutation } from '@/shared/data/mutationInvalidation';
 import { signatureToPayload } from '@/shared/utils/signaturePayload';
-import { sha256File } from '@/shared/utils/sha256';
+import { hashesEqual, normalizeSha256Hex, sha256File } from '@/shared/utils/sha256';
 
 function wait(ms) {
   return new Promise((resolve) => {
@@ -197,13 +197,9 @@ export async function verificarDocumento(id, file) {
     await wait(400);
     const row = await getById(id);
     const firmaDocumento = await sha256File(file);
-    const hashRegistro = row.hashDocumento
-      ? String(row.hashDocumento).toLowerCase()
-      : row.documentoPdfHash
-        ? String(row.documentoPdfHash).toLowerCase()
-        : null;
+    const hashRegistro = normalizeSha256Hex(row.hashDocumento ?? row.documentoPdfHash);
     return {
-      coincide: Boolean(hashRegistro) && hashRegistro === firmaDocumento,
+      coincide: hashesEqual(hashRegistro, firmaDocumento),
       hashRegistro,
       firmaDocumento,
       fechaGenerado: row.documentoPdfGeneradoEn ?? row.documentoPdfGenerardoEn ?? null,
@@ -216,8 +212,10 @@ export async function verificarDocumento(id, file) {
   const data = response.data ?? {};
   return {
     coincide: Boolean(data.coincide ?? data.esValido),
-    hashRegistro: data.hashRegistro ?? data.hashDocumento ?? data.documentoPdfHash ?? null,
-    firmaDocumento: data.firmaDocumento ?? null,
+    hashRegistro: normalizeSha256Hex(
+      data.hashRegistro ?? data.hashDocumento ?? data.documentoPdfHash,
+    ),
+    firmaDocumento: normalizeSha256Hex(data.firmaDocumento),
     fechaGenerado: data.fechaGenerado ?? data.fechaGeneracionOriginal ?? null,
   };
 }

@@ -187,7 +187,7 @@
  * @property {string | null} observaciones
  * @property {string | null} documentoPdfUrl
  * @property {string | null} [documentoPdfGeneradoEn]
- * @property {string | null} [documentoPdfHash] HMAC-SHA256 hex del acta canónica
+ * @property {string | null} [documentoPdfHash] HMAC-SHA256 hex del acta (servidor); en UI se normaliza
  * @property {string | null} [hashDocumento] alias de documentoPdfHash en la UI
  *
  * @typedef {object} VerificacionPdfDto
