@@ -4,7 +4,7 @@ import { env } from '@/shared/config/env';
 import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
 import { formatDate } from '@/shared/utils/format';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
-import { formatHash } from '@/shared/utils/sha256';
+import { formatHash, isSha256Hex } from '@/shared/utils/sha256';
 
 function pickPdf(fileList) {
   const file = fileList?.[0];
@@ -22,7 +22,7 @@ export function VerificarDocumentoOverlay({ open, asignacion, onClose }) {
   const [result, setResult] = useState(null);
 
   const hashRegistro = formatHash(asignacion?.hashDocumento);
-  const tieneHash = Boolean(asignacion?.hashDocumento);
+  const tieneHash = isSha256Hex(asignacion?.hashDocumento);
 
   async function handleVerify() {
     if (!asignacion || saving) return;

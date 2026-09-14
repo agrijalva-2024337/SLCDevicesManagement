@@ -23,6 +23,7 @@ import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
 import { useRecordDeepLink } from '@/shared/hooks/useRecordDeepLink';
 import { useResource } from '@/shared/hooks/useResource';
 import { byId, formatDate } from '@/shared/utils/format';
+import { normalizeSha256Hex } from '@/shared/utils/sha256';
 import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
 
 const ESTADOS_VISTA = ['Vigente', 'Devuelta'];
@@ -45,7 +46,7 @@ function hydrate(row, lookups) {
     responsableNombre: responsable?.nombreCompleto ?? '—',
     ubicacionNombre: nombreUbicacion(ubicacion),
     estadoVista: estadoVista(row),
-    hashDocumento: row.hashDocumento ?? row.documentoPdfHash ?? null,
+    hashDocumento: normalizeSha256Hex(row.hashDocumento ?? row.documentoPdfHash),
     documentoPdfGeneradoEn: row.documentoPdfGeneradoEn ?? row.documentoPdfGenerardoEn ?? null,
   };
 }
