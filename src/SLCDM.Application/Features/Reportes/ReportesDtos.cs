@@ -60,3 +60,54 @@ public sealed record GarantiaPorVencerDto(
     int DiasRestantes,
     int IdSede,
     string NombreSede);
+
+public sealed record HistorialMovimientoReporteDto(
+    int Id,
+    int IdActivo,
+    string NombreActivo,
+    string? NumeroSerie,
+    DateTime FechaHora,
+    string? TipoOperacion,
+    string? Descripcion,
+    string? InformacionAnterior,
+    string? InformacionNueva,
+    int IdEmpresa,
+    string NombreEmpresa);
+
+public sealed record HistorialAsignacionReporteDto(
+    int Id,
+    int IdActivo,
+    string NombreActivo,
+    string? NumeroSerie,
+    int IdResponsable,
+    string NombreResponsable,
+    int IdTipoAsignacion,
+    string TipoAsignacion,
+    DateTime FechaAsignacion,
+    DateTime? FechaDevolucion,
+    bool Activa,
+    string? Observaciones,
+    int IdEmpresa,
+    string NombreEmpresa);
+
+public sealed record HistorialMantenimientoReporteDto(
+    int Id,
+    int IdAsignacion,
+    int IdActivo,
+    string NombreActivo,
+    string? NumeroSerie,
+    int IdResponsable,
+    string NombreResponsable,
+    int? IdProveedor,
+    string? NombreProveedor,
+    int IdTipoMantenimiento,
+    string TipoMantenimiento,
+    string DescripcionProblema,
+    string? TrabajoRealizado,
+    decimal? Costo,
+    string? NumeroFactura,
+    DateTime FechaInicio,
+    DateTime? FechaFin,
+    bool ActivoEnCurso,
+    int IdEmpresa,
+    string NombreEmpresa);
