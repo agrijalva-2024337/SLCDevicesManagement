@@ -49,9 +49,18 @@ const CATEGORY_TONE = ['info', 'success', 'warning', 'danger', 'primary'];
 
 export function DashboardPage() {
   const navigate = useNavigate();
-  const { idActiva } = useEmpresaActiva();
+  const { empresas, idActiva } = useEmpresaActiva();
   const [range, setRange] = useState('30');
   const diasGarantia = Number(range);
+  const nombreEmpresa = useMemo(() => {
+    if (idActiva == null) {
+      return 'Todas las empresas';
+    }
+    return (
+      empresas.find((empresa) => Number(empresa.id) === Number(idActiva))?.nombre
+      ?? 'Empresa'
+    );
+  }, [empresas, idActiva]);
 
   const loadInventario = useCallback(
     () => reporteService.inventarioGeneral({ idEmpresa: idActiva || undefined }),
@@ -238,6 +247,10 @@ export function DashboardPage() {
         <div>
           <h2 className="dash-title">Panel de control</h2>
           <p className="dash-lead">Resumen general del sistema</p>
+          <p className="dash-empresa" title={nombreEmpresa}>
+            <i className="pi pi-building" aria-hidden="true" />
+            <span>{nombreEmpresa}</span>
+          </p>
         </div>
         <label className="dash-period">
           <i className="pi pi-calendar" aria-hidden />

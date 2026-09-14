@@ -1,6 +1,7 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
+import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { rolUsuarioLabel } from '@/shared/api/contracts';
 import { getPageTitle } from '@/shared/layout/navigation';
 import { ThemeToggle } from '@/shared/theme/ThemeToggle';
@@ -81,6 +82,16 @@ function UserMenu() {
 export function Topbar({ sidebarOpen, onMenuToggle }) {
   const { pathname, search } = useLocation();
   const title = getPageTitle(pathname, search);
+  const { empresas, idActiva } = useEmpresaActiva();
+  const nombreEmpresa = useMemo(() => {
+    if (idActiva == null) {
+      return 'Todas las empresas';
+    }
+    return (
+      empresas.find((empresa) => Number(empresa.id) === Number(idActiva))?.nombre
+      ?? 'Empresa'
+    );
+  }, [empresas, idActiva]);
 
   return (
     <header className="app-topbar sticky top-0 z-20 flex h-[var(--header-height)] items-center justify-between">
@@ -97,9 +108,15 @@ export function Topbar({ sidebarOpen, onMenuToggle }) {
             <i className="pi pi-bars" aria-hidden="true" />
           </button>
         ) : null}
-        <h1 className="truncate font-display text-base font-bold tracking-tight text-navy sm:text-xl">
-          {title}
-        </h1>
+        <div className="min-w-0">
+          <h1 className="truncate font-display text-base font-bold tracking-tight text-navy sm:text-xl">
+            {title}
+          </h1>
+          <p className="app-empresa-activa truncate" title={nombreEmpresa}>
+            <i className="pi pi-building" aria-hidden="true" />
+            <span>{nombreEmpresa}</span>
+          </p>
+        </div>
       </div>
 
       <div className="flex shrink-0 items-center gap-3">
