@@ -32,8 +32,9 @@ public sealed class CreateEstadoCommandValidator : AbstractValidator<CreateEstad
                     return true;
                 }
 
+                var normalized = nombre.Trim().ToLower();
                 return !await db.Estados.IgnoreQueryFilters()
-                    .AnyAsync(e => e.IdEmpresa == idEmpresa && e.Nombre == nombre, ct);
+                    .AnyAsync(e => e.IdEmpresa == idEmpresa && e.Nombre.ToLower() == normalized, ct);
             })
             .WithMessage("Ya existe un estado con el mismo nombre en esta empresa.");
 
@@ -71,6 +72,7 @@ public sealed class CreateEstadoCommandHandler : ICommandHandler<CreateEstadoCom
 
         var entity = command.Adapt<Estado>();
         entity.IdEmpresa = idEmpresa;
+        entity.Nombre = command.Nombre.Trim();
 
         _db.Estados.Add(entity);
         await _db.SaveChangesAsync(cancellationToken);

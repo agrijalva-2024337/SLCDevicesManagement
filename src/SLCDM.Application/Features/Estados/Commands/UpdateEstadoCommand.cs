@@ -30,7 +30,9 @@ public sealed class UpdateEstadoCommandValidator : AbstractValidator<UpdateEstad
                 }
 
                 return !await db.Estados.IgnoreQueryFilters()
-                    .AnyAsync(e => e.IdEmpresa == estado.IdEmpresa && e.Nombre == nombre && e.Id != cmd.Id, ct);
+                    .AnyAsync(e => e.IdEmpresa == estado.IdEmpresa
+                        && e.Nombre.ToLower() == nombre.Trim().ToLower()
+                        && e.Id != cmd.Id, ct);
             })
             .WithMessage("Ya existe un estado con el mismo nombre en esta empresa.");
 
@@ -59,6 +61,7 @@ public sealed class UpdateEstadoCommandHandler : ICommandHandler<UpdateEstadoCom
             ?? throw new NotFoundException("Estado", command.Id);
 
         command.Adapt(entity);
+        entity.Nombre = command.Nombre.Trim();
 
         await _db.SaveChangesAsync(cancellationToken);
     }

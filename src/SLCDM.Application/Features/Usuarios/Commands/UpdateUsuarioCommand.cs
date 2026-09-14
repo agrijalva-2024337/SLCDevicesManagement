@@ -78,8 +78,11 @@ public sealed class UpdateUsuarioCommandValidator : AbstractValidator<UpdateUsua
             .NotEmpty().WithMessage("El campo username es obligatorio.")
             .MaximumLength(50).WithMessage("El campo username no debe superar los 50 caracteres.")
             .MustAsync(async (cmd, username, ct) =>
-                !await db.Usuarios.IgnoreQueryFilters()
-                    .AnyAsync(u => u.Username == username && u.Id != cmd.Id, ct))
+            {
+                var normalized = username.Trim().ToLower();
+                return !await db.Usuarios.IgnoreQueryFilters()
+                    .AnyAsync(u => u.Username.ToLower() == normalized && u.Id != cmd.Id, ct);
+            })
             .WithMessage("Ya existe un usuario con el mismo username.");
 
         RuleFor(x => x.Password)
@@ -119,6 +122,7 @@ public sealed class UpdateUsuarioCommandHandler : ICommandHandler<UpdateUsuarioC
 
         command.Adapt(entity);
         entity.Correo = command.Correo.Trim().ToLowerInvariant();
+        entity.Username = command.Username.Trim();
         if (!string.IsNullOrWhiteSpace(command.Password))
         {
             entity.PasswordHash = _passwordHashService.HashPassword(command.Password);

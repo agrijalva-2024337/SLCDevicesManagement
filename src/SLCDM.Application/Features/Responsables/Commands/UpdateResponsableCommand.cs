@@ -30,7 +30,16 @@ public sealed class UpdateResponsableCommandValidator : AbstractValidator<Update
 
         RuleFor(x => x.NombreCompleto)
             .NotEmpty().WithMessage("El campo nombre completo es obligatorio.")
-            .MaximumLength(150).WithMessage("El campo nombre completo no debe superar los 150 caracteres.");
+            .MaximumLength(150).WithMessage("El campo nombre completo no debe superar los 150 caracteres.")
+            .MustAsync(async (cmd, nombre, ct) =>
+            {
+                var normalized = nombre.Trim().ToLower();
+                return !await db.Responsables.IgnoreQueryFilters()
+                    .AnyAsync(r => r.Id != cmd.Id
+                        && r.IdArea == cmd.IdArea
+                        && r.NombreCompleto.ToLower() == normalized, ct);
+            })
+            .WithMessage("Ya existe un responsable con el mismo nombre en esta area.");
 
         RuleFor(x => x.Cargo)
             .MaximumLength(100).WithMessage("El campo cargo no debe superar los 100 caracteres.")
@@ -39,6 +48,16 @@ public sealed class UpdateResponsableCommandValidator : AbstractValidator<Update
         RuleFor(x => x.Correo)
             .MaximumLength(150).WithMessage("El campo correo no debe superar los 150 caracteres.")
             .EmailAddress().WithMessage("El formato del correo no es valido.")
+            .MustAsync(async (cmd, correo, ct) =>
+            {
+                var normalized = correo!.Trim().ToLower();
+                return !await db.Responsables.IgnoreQueryFilters()
+                    .AnyAsync(r => r.Id != cmd.Id
+                        && r.IdArea == cmd.IdArea
+                        && r.Correo != null
+                        && r.Correo.ToLower() == normalized, ct);
+            })
+            .WithMessage("Ya existe un responsable con el mismo correo en esta area.")
             .When(x => !string.IsNullOrWhiteSpace(x.Correo));
 
         RuleFor(x => x.Telefono)
@@ -48,6 +67,13 @@ public sealed class UpdateResponsableCommandValidator : AbstractValidator<Update
         RuleFor(x => x.Dpi)
             .Must(dpi => DpiNormalizer.IsValid(dpi))
             .WithMessage("El DPI debe tener 13 digitos.")
+            .MustAsync(async (cmd, dpi, ct) =>
+            {
+                var normalized = DpiNormalizer.Normalize(dpi);
+                return !await db.Responsables.IgnoreQueryFilters()
+                    .AnyAsync(r => r.Id != cmd.Id && r.Dpi == normalized, ct);
+            })
+            .WithMessage("Ya existe un responsable con el mismo DPI.")
             .When(x => !string.IsNullOrWhiteSpace(x.Dpi));
     }
 }
@@ -71,6 +97,8 @@ public sealed class UpdateResponsableCommandHandler : ICommandHandler<UpdateResp
             ?? throw new NotFoundException("Responsable", command.Id);
 
         command.Adapt(entity);
+        entity.NombreCompleto = command.NombreCompleto.Trim();
+        entity.Correo = string.IsNullOrWhiteSpace(command.Correo) ? command.Correo : command.Correo.Trim().ToLowerInvariant();
         entity.Dpi = DpiNormalizer.Normalize(command.Dpi);
 
         await _db.SaveChangesAsync(cancellationToken);

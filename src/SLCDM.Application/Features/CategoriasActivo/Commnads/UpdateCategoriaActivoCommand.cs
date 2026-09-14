@@ -32,7 +32,9 @@ public sealed class UpdateCategoriaActivoCommandValidator : AbstractValidator<Up
                 }
 
                 return !await db.CategoriasActivo.IgnoreQueryFilters()
-                    .AnyAsync(c => c.IdEmpresa == categoria.IdEmpresa && c.Nombre == nombre && c.Id != cmd.Id, ct);
+                    .AnyAsync(c => c.IdEmpresa == categoria.IdEmpresa
+                        && c.Nombre.ToLower() == nombre.Trim().ToLower()
+                        && c.Id != cmd.Id, ct);
             })
             .WithMessage("Ya existe una categoria de activo con el mismo nombre en esta empresa.");
 
@@ -66,6 +68,7 @@ public sealed class UpdateCategoriaActivoCommandHandler : ICommandHandler<Update
             ?? throw new NotFoundException("CategoriaActivo", command.Id);
 
         command.Adapt(entity);
+        entity.Nombre = command.Nombre.Trim();
         await _db.SaveChangesAsync(cancellationToken);
     }
 }

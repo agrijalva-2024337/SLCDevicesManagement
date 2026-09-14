@@ -45,7 +45,18 @@ public class ResponsableConfiguration : IEntityTypeConfiguration<Responsable>
             .HasForeignKey(r => r.IdArea)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(r => r.IdArea);
-        builder.HasIndex(r => r.Dpi);
+        builder.HasIndex(r => r.Dpi)
+            .IsUnique()
+            .HasFilter("[dpi] IS NOT NULL AND [dpi] <> ''")
+            .HasDatabaseName("ix_responsable_dpi");
+
+        builder.HasIndex(r => new { r.IdArea, r.Correo })
+            .IsUnique()
+            .HasFilter("[correo] IS NOT NULL AND [correo] <> ''")
+            .HasDatabaseName("ix_responsable_area_correo");
+
+        builder.HasIndex(r => new { r.IdArea, r.NombreCompleto })
+            .IsUnique()
+            .HasDatabaseName("ix_responsable_area_nombre");
     }
 }

@@ -32,8 +32,9 @@ public sealed class CreateCategoriaActivoCommandValidator : AbstractValidator<Cr
                     return true;
                 }
 
+                var normalized = nombre.Trim().ToLower();
                 return !await db.CategoriasActivo.IgnoreQueryFilters()
-                    .AnyAsync(c => c.IdEmpresa == idEmpresa && c.Nombre == nombre, ct);
+                    .AnyAsync(c => c.IdEmpresa == idEmpresa && c.Nombre.ToLower() == normalized, ct);
             })
             .WithMessage("Ya existe una categoria de activo con el mismo nombre en esta empresa.");
 
@@ -73,6 +74,7 @@ public sealed class CreateCategoriaActivoCommandHandler : ICommandHandler<Create
 
         var entity = command.Adapt<CategoriaActivo>();
         entity.IdEmpresa = idEmpresa;
+        entity.Nombre = command.Nombre.Trim();
         entity.Habilitado = true;
 
         _db.CategoriasActivo.Add(entity);
