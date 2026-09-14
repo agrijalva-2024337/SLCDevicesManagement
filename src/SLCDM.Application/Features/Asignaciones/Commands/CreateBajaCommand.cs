@@ -154,6 +154,14 @@ public sealed class CreateBajaCommandHandler : ICommandHandler<CreateBajaCommand
             _db, EstadoActivoNombres.DadoDeBaja, idEmpresa, cancellationToken);
         activo.IdEstado = estadoDadoDeBaja.Id;
 
+        var tokens = await _db.DispositivosToken
+            .Where(t => t.IdActivo == command.IdActivo && !t.Revocado)
+            .ToListAsync(cancellationToken);
+        foreach (var token in tokens)
+        {
+            token.Revocado = true;
+        }
+
         await _db.SaveChangesAsync(cancellationToken);
 
         _db.HistorialActivos.Add(new HistorialActivo
