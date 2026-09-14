@@ -65,7 +65,7 @@ public sealed class UpdateUsuarioCommandValidator : AbstractValidator<UpdateUsua
         RuleFor(x => x.Correo)
             .NotEmpty().WithMessage("El campo correo es obligatorio.")
             .MaximumLength(150).WithMessage("El campo correo no debe superar los 150 caracteres.")
-            .EmailAddress().WithMessage("El formato del correo no es valido.")
+            .MustBeValidEmail()
             .MustAsync(async (cmd, correo, ct) =>
             {
                 var normalized = correo.Trim().ToLowerInvariant();

@@ -45,5 +45,9 @@ public class SedeConfiguration : IEntityTypeConfiguration<Sede>
 
         builder.HasIndex(s => s.IdEmpresa);
         builder.HasIndex(s => s.IdPais);
+
+        builder.HasIndex(s => new { s.IdEmpresa, s.Nombre })
+            .IsUnique()
+            .HasDatabaseName("ix_sede_empresa_nombre");
     }
 }

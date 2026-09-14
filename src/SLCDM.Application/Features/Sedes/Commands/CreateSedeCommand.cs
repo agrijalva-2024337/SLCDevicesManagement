@@ -36,7 +36,14 @@ public sealed class CreateSedeCommandValidator : AbstractValidator<CreateSedeCom
 
         RuleFor(x => x.Nombre)
             .NotEmpty().WithMessage("El campo nombre es obligatorio.")
-            .MaximumLength(100).WithMessage("El campo nombre no debe superar los 100 caracteres.");
+            .MaximumLength(100).WithMessage("El campo nombre no debe superar los 100 caracteres.")
+            .MustAsync(async (cmd, nombre, ct) =>
+            {
+                var normalized = nombre.Trim().ToLower();
+                return !await db.Sedes.IgnoreQueryFilters()
+                    .AnyAsync(s => s.IdEmpresa == cmd.IdEmpresa && s.Nombre.ToLower() == normalized, ct);
+            })
+            .WithMessage("Ya existe una sede con el mismo nombre en esta empresa.");
 
         RuleFor(x => x.Direccion)
             .MaximumLength(100).WithMessage("El campo direccion no debe superar los 100 caracteres.")

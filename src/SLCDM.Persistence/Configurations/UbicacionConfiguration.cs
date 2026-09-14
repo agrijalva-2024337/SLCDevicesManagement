@@ -44,8 +44,8 @@ public class UbicacionConfiguration : IEntityTypeConfiguration<Ubicacion>
             .HasColumnType("decimal(9,6)")
             .IsRequired();
 
-        builder.HasIndex(u => u.Nombre);
-
-        
+        builder.HasIndex(u => new { u.IdSede, u.Nombre })
+            .IsUnique()
+            .HasDatabaseName("ix_ubicacion_sede_nombre");
     }
 }

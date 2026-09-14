@@ -34,5 +34,9 @@ public class AreaConfiguration : IEntityTypeConfiguration<Area>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(a => a.IdSede);
+
+        builder.HasIndex(a => new { a.IdSede, a.Nombre })
+            .IsUnique()
+            .HasDatabaseName("ix_area_sede_nombre");
     }
 }

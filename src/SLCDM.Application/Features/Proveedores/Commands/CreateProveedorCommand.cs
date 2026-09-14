@@ -26,11 +26,25 @@ public sealed class CreateProveedorCommandValidator : AbstractValidator<CreatePr
 
         RuleFor(x => x.Nombre)
             .NotEmpty().WithMessage("El campo nombre es obligatorio.")
-            .MaximumLength(150).WithMessage("El campo nombre no debe superar los 150 caracteres.");
+            .MaximumLength(150).WithMessage("El campo nombre no debe superar los 150 caracteres.")
+            .MustAsync(async (cmd, nombre, ct) =>
+            {
+                var normalized = nombre.Trim().ToLower();
+                return !await db.Proveedores.IgnoreQueryFilters()
+                    .AnyAsync(p => p.IdEmpresa == cmd.IdEmpresa && p.Nombre.ToLower() == normalized, ct);
+            })
+            .WithMessage("Ya existe un proveedor con el mismo nombre en esta empresa.");
 
         RuleFor(x => x.Nit)
             .NotEmpty().WithMessage("El campo nit es obligatorio.")
-            .MaximumLength(50).WithMessage("El campo nit no debe superar los 50 caracteres.");
+            .MaximumLength(50).WithMessage("El campo nit no debe superar los 50 caracteres.")
+            .MustAsync(async (cmd, nit, ct) =>
+            {
+                var normalized = nit.Trim().ToLower();
+                return !await db.Proveedores.IgnoreQueryFilters()
+                    .AnyAsync(p => p.IdEmpresa == cmd.IdEmpresa && p.Nit.ToLower() == normalized, ct);
+            })
+            .WithMessage("Ya existe un proveedor con el mismo NIT en esta empresa.");
 
         RuleFor(x => x.NombreContacto)
             .MaximumLength(100).WithMessage("El campo nombre contacto no debe superar los 100 caracteres.")
@@ -42,7 +56,7 @@ public sealed class CreateProveedorCommandValidator : AbstractValidator<CreatePr
 
         RuleFor(x => x.Correo)
             .MaximumLength(150).WithMessage("El campo correo no debe superar los 150 caracteres.")
-            .EmailAddress().WithMessage("El campo correo no es un correo valido.")
+            .MustBeValidEmail("El campo correo no es un correo valido.")
             .When(x => !string.IsNullOrWhiteSpace(x.Correo));
     }
 }

@@ -3,6 +3,7 @@ using Mapster;
 using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Security;
+using SLCDM.Application.Common.Validation;
 using SLCDM.Domain.Entities;
 using SLCDM.Domain.Enums;
 
@@ -60,7 +61,7 @@ public sealed class CreateUsuarioCommandValidator : AbstractValidator<CreateUsua
         RuleFor(x => x.Correo)
             .NotEmpty().WithMessage("El campo correo es obligatorio.")
             .MaximumLength(150).WithMessage("El campo correo no debe superar los 150 caracteres.")
-            .EmailAddress().WithMessage("El formato del correo no es valido.")
+            .MustBeValidEmail()
             .MustAsync(async (correo, ct) =>
             {
                 var normalized = correo.Trim().ToLowerInvariant();
