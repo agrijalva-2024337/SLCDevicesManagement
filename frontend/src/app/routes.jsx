@@ -87,9 +87,10 @@ export const router = createBrowserRouter([
                 ...named(loadGuard, 'RutaAdministradorGeneral'),
                 children: [
                   {
+                    index: true,
                     ...named(loadCatalogo, 'CatalogoPage'),
-                    children: writeChildren(loadCatalogo, 'MaestroFormPage', 'MaestroDetallePage'),
                   },
+                  ...writeChildren(loadCatalogo, 'MaestroFormPage', 'MaestroDetallePage'),
                 ],
               },
               {
