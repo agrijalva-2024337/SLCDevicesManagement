@@ -121,7 +121,9 @@ function SedeFormEditor({ id }) {
       }
       initialValues={initialValues}
       submitLabel={editing ? 'Guardar cambios' : 'Registrar sede'}
-      validate={(values) => compactErrors(validateSedeForm(values, paisesList))}
+      validate={(values) =>
+        compactErrors(validateSedeForm(values, paisesList, outlet.rows ?? [], editing ? id : undefined))
+      }
       onSave={async (values) => {
         const payload = sedeToPayload({
           ...values,

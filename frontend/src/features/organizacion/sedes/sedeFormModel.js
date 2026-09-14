@@ -61,7 +61,17 @@ export function paisesDeEmpresa(paises, idEmpresa) {
   return (paises ?? []).filter((pais) => Number(pais.idEmpresa) === wanted);
 }
 
-export function validateSedeForm(values, paises = []) {
+function duplicateNombre(records, nombre, currentId) {
+  const needle = String(nombre ?? '')
+    .trim()
+    .toLowerCase();
+  if (!needle) return false;
+  return (records ?? []).some(
+    (item) => String(item.nombre).trim().toLowerCase() === needle && String(item.id) !== String(currentId),
+  );
+}
+
+export function validateSedeForm(values, paises = [], records = [], currentId) {
   const errors = {
     idEmpresa: requireSelect(values.idEmpresa, 'una empresa'),
     idPais: requireSelect(values.idPais, 'un país'),
@@ -75,6 +85,13 @@ export function validateSedeForm(values, paises = []) {
     if (!pais || Number(pais.idEmpresa) !== Number(values.idEmpresa)) {
       errors.idPais = 'El país debe pertenecer a la misma empresa de la sede.';
     }
+  }
+
+  const mismaEmpresa = (records ?? []).filter(
+    (item) => String(item.idEmpresa ?? '') === String(values.idEmpresa ?? ''),
+  );
+  if (!errors.nombre && duplicateNombre(mismaEmpresa, values.nombre, currentId)) {
+    errors.nombre = 'Ya existe una sede con el mismo nombre en esta empresa.';
   }
 
   return errors;
