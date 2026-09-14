@@ -23,7 +23,14 @@ public sealed class CreateAreaCommandValidator : AbstractValidator<CreateAreaCom
 
         RuleFor(x => x.Nombre)
             .NotEmpty().WithMessage("El campo nombre es obligatorio.")
-            .MaximumLength(100).WithMessage("El campo nombre no debe superar los 100 caracteres.");
+            .MaximumLength(100).WithMessage("El campo nombre no debe superar los 100 caracteres.")
+            .MustAsync(async (cmd, nombre, ct) =>
+            {
+                var normalized = nombre.Trim().ToLower();
+                return !await db.Areas.IgnoreQueryFilters()
+                    .AnyAsync(a => a.IdSede == cmd.IdSede && a.Nombre.ToLower() == normalized, ct);
+            })
+            .WithMessage("Ya existe un area con el mismo nombre en esta sede.");
 
         RuleFor(x => x.Descripcion)
             .MaximumLength(200).WithMessage("El campo descripcion no debe superar los 200 caracteres.")
