@@ -18,29 +18,99 @@ export function canWriteCatalog(rol, resource) {
     return rol === RolUsuario.AdministradorGeneral;
   }
 
+  // Catálogos / administración: Operador solo lista (sin registrar/editar/deshabilitar).
   if (
+    resource === 'sedes' ||
+    resource === 'areas' ||
     resource === 'paises' ||
+    resource === 'ubicaciones' ||
+    resource === 'responsables' ||
+    resource === 'proveedores' ||
     resource === 'categorias' ||
     resource === 'estados' ||
-    resource === 'tipos-asignacion'
+    resource === 'tipos-asignacion' ||
+    resource === 'redes-conocidas' ||
+    resource === 'bitacora'
   ) {
     return rol >= RolUsuario.AdministradorEmpresa;
   }
 
+  // Módulos operativos: el Operador sí puede trabajar.
   if (
-    resource === 'ubicaciones' ||
-    resource === 'redes-conocidas' ||
     resource === 'traslados' ||
     resource === 'mantenimientos' ||
     resource === 'activos' ||
     resource === 'asignaciones' ||
     resource === 'inventario-fisico' ||
-    resource === 'responsables'
+    resource === 'bajas' ||
+    resource === 'rastreo'
   ) {
     return rol >= RolUsuario.OperadorInventario;
   }
 
   return rol >= RolUsuario.AdministradorEmpresa;
+}
+
+/** Recursos que el Operador de inventario puede abrir (listado / operación). */
+const OPERADOR_ACCESO = new Set([
+  'sedes',
+  'areas',
+  'paises',
+  'ubicaciones',
+  'responsables',
+  'activos',
+  'asignaciones',
+  'traslados',
+  'mantenimientos',
+  'bajas',
+  'inventario-fisico',
+  'rastreo',
+  'escanear',
+]);
+
+/**
+ * Visibilidad de pantallas (menú y URL). Más estricto que canWrite:
+ * el Operador ve solo sedes/áreas/países/ubicaciones/responsables + módulos operativos.
+ */
+export function canAccessAppResource(rol, resource) {
+  if (rol == null || resource == null) {
+    return false;
+  }
+
+  if (resource === 'empresas' || resource === 'empresas-create' || resource === 'usuarios') {
+    return rol === RolUsuario.AdministradorGeneral;
+  }
+
+  if (rol >= RolUsuario.AdministradorEmpresa) {
+    return true;
+  }
+
+  if (rol === RolUsuario.OperadorInventario) {
+    return OPERADOR_ACCESO.has(resource);
+  }
+
+  return false;
+}
+
+/** Mapea una ruta /app/... al recurso de permisos. */
+export function appResourceFromPathname(pathname) {
+  if (!pathname || pathname === '/app' || pathname === '/app/') {
+    return null;
+  }
+  if (pathname.startsWith('/app/bitacora')) return 'bitacora';
+  if (pathname.startsWith('/app/activos')) return 'activos';
+  if (pathname.startsWith('/app/inventario-fisico')) return 'inventario-fisico';
+  if (pathname.startsWith('/app/rastreo')) return 'rastreo';
+  if (pathname.startsWith('/app/escanear')) return 'escanear';
+  if (pathname.startsWith('/app/asignaciones')) return 'asignaciones';
+  if (pathname.startsWith('/app/traslados')) return 'traslados';
+  if (pathname.startsWith('/app/mantenimientos')) return 'mantenimientos';
+  if (pathname.startsWith('/app/bajas')) return 'bajas';
+
+  const catalogo = pathname.match(/^\/app\/catalogos\/([^/]+)/);
+  if (catalogo) return catalogo[1];
+
+  return null;
 }
 
 function sessionFromToken(token, stored) {
@@ -172,6 +242,7 @@ function useAuthState() {
       login,
       logout,
       canWrite: (resource) => canWriteCatalog(rol, resource),
+      canAccess: (resource) => canAccessAppResource(rol, resource),
     }),
     [usuario, rol, idEmpresa, empresasAutorizadas, isLoading, isReady, error, login, logout],
   );

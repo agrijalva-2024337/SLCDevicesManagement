@@ -29,8 +29,13 @@ function isVisibleToRol(item, rol) {
   if (item.adminGeneralOnly) {
     return rol === RolUsuario.AdministradorGeneral;
   }
-  if (!item.adminOnly) return true;
-  return rol != null && rol >= RolUsuario.AdministradorEmpresa;
+  if (item.adminOnly) {
+    return rol != null && rol >= RolUsuario.AdministradorEmpresa;
+  }
+  if (item.minRol != null) {
+    return rol != null && rol >= item.minRol;
+  }
+  return true;
 }
 
 export function Sidebar({ open, onClose }) {
