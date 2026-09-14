@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { useParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import { SinPermiso } from '@/features/auth/RutaProtegida';
 import { getMaestro, nameById } from '@/features/catalogos/maestros';
+import { useCatalogoSlug } from '@/features/catalogos/useCatalogoSlug';
 import { filterRowsByEmpresa, useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { PaisesGrid } from '@/features/catalogos/paises/PaisesGrid';
 import * as paisService from '@/features/catalogos/paises/paisService';
@@ -41,7 +41,7 @@ function CatalogBanner({ banner }) {
 }
 
 export function CatalogoPage() {
-  const { slug } = useParams();
+  const slug = useCatalogoSlug();
   const { canWrite } = useAuth();
   const { idActiva } = useEmpresaActiva();
   const allowWrite = canWrite(slug);

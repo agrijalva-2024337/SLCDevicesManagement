@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useOutletContext, useParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import { getMaestro } from '@/features/catalogos/maestros';
+import { useCatalogoSlug } from '@/features/catalogos/useCatalogoSlug';
 import { DetailField, DetailOverlay, SaveFlash } from '@/shared/components/DetailOverlay';
 import { EditRecordButton } from '@/shared/components/RecordActions';
 import { StatusBadge } from '@/shared/components/StatusBadge';
@@ -55,7 +56,8 @@ function GeneratedPasswordNotice({ password }) {
 }
 
 export function MaestroDetallePage() {
-  const { slug, id } = useParams();
+  const slug = useCatalogoSlug();
+  const { id } = useParams();
   const { canWrite } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
