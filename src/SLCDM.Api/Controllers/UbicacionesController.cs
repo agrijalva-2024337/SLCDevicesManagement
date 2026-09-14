@@ -44,7 +44,7 @@ public sealed class UbicacionesController : ApiControllerBase
         Ok(await _getById.HandleAsync(new GetUbicacionByIdQuery(id), cancellationToken));
 
     [HttpPost]
-    [Authorize(Roles = Roles.EscrituraOperativa)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Create([FromBody] CreateUbicacionCommand command, CancellationToken cancellationToken)
     {
         int id = await _create.HandleAsync(command, cancellationToken);
@@ -52,7 +52,7 @@ public sealed class UbicacionesController : ApiControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = Roles.EscrituraOperativa)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateUbicacionCommand command, CancellationToken cancellationToken)
     {
         if (id != command.Id) return IdMismatch();
@@ -61,7 +61,7 @@ public sealed class UbicacionesController : ApiControllerBase
     }
 
     [HttpPost("{id:int}/disable")]
-    [Authorize(Roles = Roles.EscrituraOperativa)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Disable(int id, CancellationToken cancellationToken)
     {
         await _disable.HandleAsync(new DisableUbicacionCommand(id), cancellationToken);

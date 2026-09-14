@@ -44,7 +44,7 @@ public sealed class ResponsablesController : ApiControllerBase
         Ok(await _getById.HandleAsync(new GetResponsableByIdQuery(id), cancellationToken));
 
     [HttpPost]
-    [Authorize(Roles = Roles.EscrituraOperativa)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Create([FromBody] CreateResponsableCommand command, CancellationToken cancellationToken)
     {
         var id = await _create.HandleAsync(command, cancellationToken);
@@ -52,7 +52,7 @@ public sealed class ResponsablesController : ApiControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = Roles.EscrituraOperativa)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateResponsableCommand command, CancellationToken cancellationToken)
     {
         if (id != command.Id) return IdMismatch();
@@ -61,7 +61,7 @@ public sealed class ResponsablesController : ApiControllerBase
     }
 
     [HttpPost("{id:int}/disable")]
-    [Authorize(Roles = Roles.EscrituraOperativa)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<IActionResult> Disable(int id, CancellationToken cancellationToken)
     {
         await _disable.HandleAsync(new DisableResponsableCommand(id), cancellationToken);
