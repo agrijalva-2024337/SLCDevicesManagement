@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Validation;
+using SLCDM.Application.Features.Asignaciones;
 
 namespace SLCDM.Application.Features.Activos.Commands;
 
@@ -31,7 +32,10 @@ public sealed class UpdateActivoCommandValidator : AbstractValidator<UpdateActiv
 {
     public UpdateActivoCommandValidator(IApplicationDbContext db)
     {
-        RuleFor(x => x.Id).RequiredId("id activo");
+        RuleFor(x => x.Id)
+            .RequiredId("id activo")
+            .MustAsync(async (cmd, id, ct) => !await ActivoBajaRules.EstaDadoDeBajaAsync(db, id, ct))
+            .WithMessage("El activo esta dado de baja y no puede editarse.");
 
         RuleFor(x => x.IdCategoriaActivo)
             .RequiredId("id categoria activo")
@@ -150,6 +154,18 @@ public sealed class UpdateActivoCommandHandler : ICommandHandler<UpdateActivoCom
 
         var entity = await _db.Activos.FirstOrDefaultAsync(a => a.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("Activo", command.Id);
+
+        if (entity.IdUbicacion != command.IdUbicacion)
+        {
+            throw new ConflictException(
+                "El cambio de ubicacion de un activo debe hacerse mediante el proceso de Traslado, no editando el activo directamente.");
+        }
+
+        if (entity.IdProveedor != command.IdProveedor)
+        {
+            throw new ConflictException(
+                "El proveedor de un activo no puede cambiarse desde la edicion general (afecta la empresa del activo).");
+        }
 
         command.Adapt(entity);
         await _db.SaveChangesAsync(cancellationToken);
