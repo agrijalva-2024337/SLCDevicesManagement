@@ -59,7 +59,16 @@ public sealed class CreateMantenimientoCommandValidator : AbstractValidator<Crea
             .WithMessage(ActivoBajaRules.MensajeActivoDadoDeBaja);
 
         RuleFor(x => x)
-            .MustAsync(async (cmd, ct) => !await ActivoTieneProcesoOcupandoAsync(db, cmd.IdActivo, ct))
+            .MustAsync(async (cmd, ct) =>
+            {
+                var idEmpresa = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(db, cmd.IdActivo, ct);
+                if (!idEmpresa.HasValue)
+                {
+                    return true;
+                }
+
+                return !await ActivoTieneProcesoOcupandoAsync(db, cmd.IdActivo, idEmpresa.Value, ct);
+            })
             .WithMessage("El activo ya tiene una asignacion o un mantenimiento activo. Un activo solo puede tener un proceso ocupandolo a la vez.");
 
         RuleFor(x => x)
@@ -83,9 +92,12 @@ public sealed class CreateMantenimientoCommandValidator : AbstractValidator<Crea
     internal static async Task<bool> ActivoTieneProcesoOcupandoAsync(
         IApplicationDbContext db,
         int idActivo,
+        int idEmpresa,
         CancellationToken cancellationToken)
     {
-        var tipos = await db.TiposAsignacion.AsNoTracking().ToListAsync(cancellationToken);
+        var tipos = await db.TiposAsignacion.AsNoTracking()
+            .Where(t => t.IdEmpresa == idEmpresa)
+            .ToListAsync(cancellationToken);
         var idsOcupan = tipos
             .Where(t => TipoAsignacionNombres.EsTipoQueOcupaActivo(t.Nombre))
             .Select(t => t.Id)
@@ -117,14 +129,19 @@ public sealed class CreateMantenimientoCommandHandler : ICommandHandler<CreateMa
     {
         await _validator.ValidateAndThrowAsync(command, cancellationToken);
 
-        var tipo = await TipoAsignacionNombres.ObtenerRequeridoAsync(_db, TipoAsignacionNombres.Mantenimiento, cancellationToken);
+        var idEmpresa = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(_db, command.IdActivo, cancellationToken)
+            ?? throw new ConflictException("No se pudo determinar la empresa del activo.");
+
+        var tipo = await TipoAsignacionNombres.ObtenerRequeridoAsync(
+            _db, TipoAsignacionNombres.Mantenimiento, idEmpresa, cancellationToken);
 
         if (await ActivoBajaRules.EstaDadoDeBajaAsync(_db, command.IdActivo, cancellationToken))
         {
             throw new ConflictException(ActivoBajaRules.MensajeActivoDadoDeBaja);
         }
 
-        if (await CreateMantenimientoCommandValidator.ActivoTieneProcesoOcupandoAsync(_db, command.IdActivo, cancellationToken))
+        if (await CreateMantenimientoCommandValidator.ActivoTieneProcesoOcupandoAsync(
+                _db, command.IdActivo, idEmpresa, cancellationToken))
         {
             throw new ConflictException(
                 "El activo ya tiene una asignacion o un mantenimiento activo. Un activo solo puede tener un proceso ocupandolo a la vez.");
@@ -156,7 +173,7 @@ public sealed class CreateMantenimientoCommandHandler : ICommandHandler<CreateMa
 
         var activo = await _db.Activos.FirstAsync(a => a.Id == command.IdActivo, cancellationToken);
         var estadoEnMantenimiento = await EstadoActivoNombres.ObtenerRequeridoAsync(
-            _db, EstadoActivoNombres.EnMantenimiento, cancellationToken);
+            _db, EstadoActivoNombres.EnMantenimiento, idEmpresa, cancellationToken);
         activo.IdEstado = estadoEnMantenimiento.Id;
 
         await _db.SaveChangesAsync(cancellationToken);

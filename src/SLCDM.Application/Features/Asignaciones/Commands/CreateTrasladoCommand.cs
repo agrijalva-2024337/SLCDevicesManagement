@@ -97,7 +97,11 @@ public sealed class CreateTrasladoCommandHandler : ICommandHandler<CreateTraslad
     {
         await _validator.ValidateAndThrowAsync(command, cancellationToken);
 
-        var tipo = await TipoAsignacionNombres.ObtenerRequeridoAsync(_db, TipoAsignacionNombres.Traslado, cancellationToken);
+        var idEmpresa = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(_db, command.IdActivo, cancellationToken)
+            ?? throw new ConflictException("No se pudo determinar la empresa del activo.");
+
+        var tipo = await TipoAsignacionNombres.ObtenerRequeridoAsync(
+            _db, TipoAsignacionNombres.Traslado, idEmpresa, cancellationToken);
 
         var activo = await _db.Activos.FirstOrDefaultAsync(a => a.Id == command.IdActivo, cancellationToken)
         ?? throw new NotFoundException("Activo", command.IdActivo);
@@ -107,7 +111,7 @@ public sealed class CreateTrasladoCommandHandler : ICommandHandler<CreateTraslad
             throw new ConflictException(ActivoBajaRules.MensajeActivoDadoDeBaja);
         }
 
-        if (await ActivoEnMantenimientoAsync(command.IdActivo, cancellationToken))
+        if (await ActivoEnMantenimientoAsync(command.IdActivo, idEmpresa, cancellationToken))
         {
             throw new ConflictException("El activo esta en mantenimiento. Finalice el mantenimiento antes de trasladarlo.");
         }
@@ -171,9 +175,14 @@ public sealed class CreateTrasladoCommandHandler : ICommandHandler<CreateTraslad
         return entity.Id;
     }
     
-    private async Task<bool> ActivoEnMantenimientoAsync(int idActivo, CancellationToken cancellationToken)
+    private async Task<bool> ActivoEnMantenimientoAsync(
+        int idActivo,
+        int idEmpresa,
+        CancellationToken cancellationToken)
     {
-        var tipos = await _db.TiposAsignacion.AsNoTracking().ToListAsync(cancellationToken);
+        var tipos = await _db.TiposAsignacion.AsNoTracking()
+            .Where(t => t.IdEmpresa == idEmpresa)
+            .ToListAsync(cancellationToken);
         var idsMantenimiento = tipos
             .Where(t => TipoAsignacionNombres.EsNombre(t.Nombre, TipoAsignacionNombres.Mantenimiento))
             .Select(t => t.Id)

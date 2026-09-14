@@ -15,6 +15,14 @@ public static class TipoAsignacionNombres
 
     public const string Baja = "Baja";
 
+    public static readonly string[] Estandar =
+    [
+        Asignacion,
+        Traslado,
+        Mantenimiento,
+        Baja
+    ];
+
     public static string Normalizar(string? nombre)
     {
         if (string.IsNullOrWhiteSpace(nombre))
@@ -36,14 +44,17 @@ public static class TipoAsignacionNombres
     public static async Task<TipoAsignacion> ObtenerRequeridoAsync(
         IApplicationDbContext db,
         string nombre,
+        int idEmpresa,
         CancellationToken cancellationToken)
     {
-        var tipos = await db.TiposAsignacion.AsNoTracking().ToListAsync(cancellationToken);
+        var tipos = await db.TiposAsignacion.AsNoTracking()
+            .Where(t => t.IdEmpresa == idEmpresa)
+            .ToListAsync(cancellationToken);
         var tipo = tipos.FirstOrDefault(t => EsNombre(t.Nombre, nombre));
         if (tipo is null)
         {
             throw new ConflictException(
-                $"No existe el tipo de asignacion '{nombre}' en el catalogo. Cree el registro antes de continuar.");
+                $"No existe el tipo de asignacion '{nombre}' en el catalogo de la empresa. Cree el registro antes de continuar.");
         }
 
         return tipo;

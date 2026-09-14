@@ -13,7 +13,15 @@ internal static class ActivoBajaRules
         int idActivo,
         CancellationToken cancellationToken)
     {
-        var tipos = await db.TiposAsignacion.AsNoTracking().ToListAsync(cancellationToken);
+        var idEmpresa = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(db, idActivo, cancellationToken);
+        if (!idEmpresa.HasValue)
+        {
+            return false;
+        }
+
+        var tipos = await db.TiposAsignacion.AsNoTracking()
+            .Where(t => t.IdEmpresa == idEmpresa.Value)
+            .ToListAsync(cancellationToken);
         var idsBaja = tipos
             .Where(t => TipoAsignacionNombres.EsNombre(t.Nombre, TipoAsignacionNombres.Baja))
             .Select(t => t.Id)

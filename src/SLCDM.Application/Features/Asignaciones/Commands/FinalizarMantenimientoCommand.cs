@@ -99,8 +99,10 @@ public sealed class FinalizarMantenimientoCommandHandler : ICommandHandler<Final
         var activo = await _db.Activos.FirstOrDefaultAsync(a => a.Id == entity.IdActivo, cancellationToken);
         if (activo is not null)
         {
+            var idEmpresa = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(_db, entity.IdActivo, cancellationToken)
+                ?? throw new ConflictException("No se pudo determinar la empresa del activo.");
             var estadoDisponible = await EstadoActivoNombres.ObtenerRequeridoAsync(
-                _db, EstadoActivoNombres.Disponible, cancellationToken);
+                _db, EstadoActivoNombres.Disponible, idEmpresa, cancellationToken);
             activo.IdEstado = estadoDisponible.Id;
         }
 
