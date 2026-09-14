@@ -10,7 +10,7 @@ import { todayIsoDate } from '@/features/inventario/trasladoRuta';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import { DataTable } from '@/shared/components/DataTable';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
-import { DetailField } from '@/shared/components/DetailOverlay';
+import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
 import { FeedbackState } from '@/shared/components/FeedbackState';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { StatCard } from '@/shared/components/StatCard';
