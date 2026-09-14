@@ -47,6 +47,14 @@ public class ProveedorConfiguration : IEntityTypeConfiguration<Proveedor>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(p => p.IdEmpresa);
-        builder.HasIndex(p => p.Nit);  
+
+        builder.HasIndex(p => new { p.IdEmpresa, p.Nit })
+            .IsUnique()
+            .HasDatabaseName("ix_proveedor_empresa_nit");
+
+        // También por nombre: evita dos proveedores distintos con el mismo rótulo en el combo de Activos.
+        builder.HasIndex(p => new { p.IdEmpresa, p.Nombre })
+            .IsUnique()
+            .HasDatabaseName("ix_proveedor_empresa_nombre");
     }
 }
