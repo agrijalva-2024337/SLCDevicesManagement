@@ -96,7 +96,7 @@ export const router = createBrowserRouter([
           { path: 'rastreo', ...named(loadRastreo, 'RastreoPage') },
           {
             path: 'bitacora',
-            ...named(loadGuard, 'RutaAdministrador'),
+            ...named(loadGuard, 'RutaAdministradorEmpresa'),
             children: [{ index: true, ...named(loadBitacora, 'BitacoraPage') }],
           },
         ],
