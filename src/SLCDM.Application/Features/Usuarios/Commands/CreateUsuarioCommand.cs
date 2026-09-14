@@ -73,7 +73,11 @@ public sealed class CreateUsuarioCommandValidator : AbstractValidator<CreateUsua
             .NotEmpty().WithMessage("El campo username es obligatorio.")
             .MaximumLength(50).WithMessage("El campo username no debe superar los 50 caracteres.")
             .MustAsync(async (username, ct) =>
-                !await db.Usuarios.IgnoreQueryFilters().AnyAsync(u => u.Username == username, ct))
+            {
+                var normalized = username.Trim().ToLower();
+                return !await db.Usuarios.IgnoreQueryFilters()
+                    .AnyAsync(u => u.Username.ToLower() == normalized, ct);
+            })
             .WithMessage("Ya existe un usuario con el mismo username.");
 
         RuleFor(x => x.Password)
@@ -127,6 +131,7 @@ public sealed class CreateUsuarioCommandHandler : ICommandHandler<CreateUsuarioC
 
         var entity = command.Adapt<Usuario>();
         entity.Correo = command.Correo.Trim().ToLowerInvariant();
+        entity.Username = command.Username.Trim();
         entity.PasswordHash = _passwordHashService.HashPassword(plain!);
         entity.Habilitado = true;
         entity.FechaCreacion = DateTime.UtcNow;

@@ -30,7 +30,9 @@ public sealed class UpdateTipoAsignacionCommandValidator : AbstractValidator<Upd
                 }
 
                 return !await db.TiposAsignacion.IgnoreQueryFilters()
-                    .AnyAsync(t => t.IdEmpresa == tipo.IdEmpresa && t.Nombre == nombre && t.Id != cmd.Id, ct);
+                    .AnyAsync(t => t.IdEmpresa == tipo.IdEmpresa
+                        && t.Nombre.ToLower() == nombre.Trim().ToLower()
+                        && t.Id != cmd.Id, ct);
             })
             .WithMessage("Ya existe un tipo de asignacion con el mismo nombre en esta empresa.");
 
@@ -59,6 +61,7 @@ public sealed class UpdateTipoAsignacionCommandHandler : ICommandHandler<UpdateT
             ?? throw new NotFoundException("TipoAsignacion", command.Id);
 
         command.Adapt(entity);
+        entity.Nombre = command.Nombre.Trim();
 
         await _db.SaveChangesAsync(cancellationToken);
     }

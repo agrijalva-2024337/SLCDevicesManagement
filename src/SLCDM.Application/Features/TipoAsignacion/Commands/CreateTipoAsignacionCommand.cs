@@ -32,8 +32,9 @@ public sealed class CreateTipoAsignacionCommandValidator : AbstractValidator<Cre
                     return true;
                 }
 
+                var normalized = nombre.Trim().ToLower();
                 return !await db.TiposAsignacion.IgnoreQueryFilters()
-                    .AnyAsync(t => t.IdEmpresa == idEmpresa && t.Nombre == nombre, ct);
+                    .AnyAsync(t => t.IdEmpresa == idEmpresa && t.Nombre.ToLower() == normalized, ct);
             })
             .WithMessage("Ya existe un tipo de asignacion con el mismo nombre en esta empresa.");
 
@@ -71,6 +72,7 @@ public sealed class CreateTipoAsignacionCommandHandler : ICommandHandler<CreateT
 
         var entity = command.Adapt<TipoAsignacion>();
         entity.IdEmpresa = idEmpresa;
+        entity.Nombre = command.Nombre.Trim();
 
         _db.TiposAsignacion.Add(entity);
         await _db.SaveChangesAsync(cancellationToken);
