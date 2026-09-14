@@ -205,6 +205,7 @@ export function ActivoFormOverlay({
         label: 'Proveedor',
         type: 'select',
         required: true,
+        readOnly: Boolean(editing),
         options: asOptions(
           (proveedores ?? []).filter((item) => {
             if (item.habilitado === false) return false;
@@ -212,14 +213,20 @@ export function ActivoFormOverlay({
             return Number(item.idEmpresa) === Number(idEmpresaActiva);
           }),
         ),
+        hint: editing
+          ? 'El proveedor no se cambia desde la edición (define la empresa del activo).'
+          : undefined,
       },
       {
         name: 'idUbicacion',
         label: 'Ubicación',
         type: 'select',
         required: true,
+        readOnly: Boolean(editing),
         options: asOptions(destinos),
-        hint: 'Empresa y sede se derivan de la ubicación.',
+        hint: editing
+          ? 'Para cambiar la ubicación de un activo, usa Traslado.'
+          : 'Empresa y sede se derivan de la ubicación.',
       },
       { name: 'marca', label: 'Marca', maxLength: 100 },
       { name: 'modelo', label: 'Modelo', maxLength: 100 },
@@ -264,7 +271,7 @@ export function ActivoFormOverlay({
       },
       { name: 'observaciones', label: 'Observaciones', type: 'textarea', maxLength: 500, wide: true },
     ],
-    [categorias, destinos, idEmpresaActiva, proveedores],
+    [categorias, destinos, editing, idEmpresaActiva, proveedores],
   );
 
   return (
