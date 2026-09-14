@@ -10,7 +10,7 @@ export const catalogos = [
 ];
 
 export const administracion = [
-  { slug: 'usuarios', label: 'Usuarios', icon: 'pi pi-users', adminOnly: true },
+  { slug: 'usuarios', label: 'Usuarios', icon: 'pi pi-users', adminGeneralOnly: true },
   { slug: 'responsables', label: 'Responsables', icon: 'pi pi-id-card' },
   { slug: 'categorias', label: 'Categorías', icon: 'pi pi-tags' },
   { slug: 'estados', label: 'Estados', icon: 'pi pi-flag' },
@@ -50,6 +50,7 @@ export const navigation = [
         label: item.label,
         icon: item.icon,
         adminOnly: item.adminOnly,
+        adminGeneralOnly: item.adminGeneralOnly,
       })),
       { path: '/app/bitacora', label: 'Bitácora', icon: 'pi pi-history', adminOnly: true },
     ],

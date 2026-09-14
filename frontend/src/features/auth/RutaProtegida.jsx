@@ -83,3 +83,13 @@ export function RutaAdministradorGeneral() {
 
   return <Outlet />;
 }
+
+export function RutaAdministradorEmpresa() {
+  const { rol } = useAuth();
+
+  if (rol !== RolUsuario.AdministradorEmpresa && rol !== RolUsuario.AdministradorGeneral) {
+    return <SinPermiso />;
+  }
+
+  return <Outlet />;
+}

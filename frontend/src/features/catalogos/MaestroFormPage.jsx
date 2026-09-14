@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import { getMaestro } from '@/features/catalogos/maestros';
+import { useCatalogoSlug } from '@/features/catalogos/useCatalogoSlug';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { resolveUbicacionCoords } from '@/features/catalogos/ubicaciones/resolveUbicacionCoords';
 import * as paisService from '@/features/catalogos/paises/paisService';
@@ -213,6 +214,7 @@ function MaestroFormEditor({ slug, id }) {
 }
 
 export function MaestroFormPage() {
-  const { slug, id } = useParams();
+  const slug = useCatalogoSlug();
+  const { id } = useParams();
   return <MaestroFormEditor key={`${slug}-${id ?? 'nueva'}`} slug={slug} id={id} />;
 }

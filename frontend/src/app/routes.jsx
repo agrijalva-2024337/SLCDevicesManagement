@@ -80,6 +80,16 @@ export const router = createBrowserRouter([
             children: writeChildren(loadSedes, 'SedeFormPage', 'SedeDetallePage'),
           },
           {
+            path: 'catalogos/usuarios',
+            ...named(loadGuard, 'RutaAdministradorGeneral'),
+            children: [
+              {
+                ...named(loadCatalogo, 'CatalogoPage'),
+                children: writeChildren(loadCatalogo, 'MaestroFormPage', 'MaestroDetallePage'),
+              },
+            ],
+          },
+          {
             path: 'catalogos/:slug',
             ...named(loadCatalogo, 'CatalogoPage'),
             children: writeChildren(loadCatalogo, 'MaestroFormPage', 'MaestroDetallePage'),
@@ -96,7 +106,7 @@ export const router = createBrowserRouter([
           { path: 'rastreo', ...named(loadRastreo, 'RastreoPage') },
           {
             path: 'bitacora',
-            ...named(loadGuard, 'RutaAdministrador'),
+            ...named(loadGuard, 'RutaAdministradorEmpresa'),
             children: [{ index: true, ...named(loadBitacora, 'BitacoraPage') }],
           },
         ],
