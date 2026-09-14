@@ -64,7 +64,7 @@ public sealed class UpdateProveedorCommandValidator : AbstractValidator<UpdatePr
 
         RuleFor(x => x.Correo)
             .MaximumLength(150).WithMessage("El campo correo no debe superar los 150 caracteres.")
-            .EmailAddress().WithMessage("El campo correo no es un correo valido.")
+            .MustBeValidEmail("El campo correo no es un correo valido.")
             .When(x => !string.IsNullOrWhiteSpace(x.Correo));
     }
 }

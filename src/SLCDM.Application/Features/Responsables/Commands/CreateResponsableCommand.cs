@@ -41,7 +41,7 @@ public sealed class CreateResponsableCommandValidator : AbstractValidator<Create
 
         RuleFor(x => x.Correo)
             .MaximumLength(150).WithMessage("El campo correo no debe superar los 150 caracteres.")
-            .EmailAddress().WithMessage("El formato del correo no es valido.")
+            .MustBeValidEmail()
             .MustAsync(async (cmd, correo, ct) =>
             {
                 var normalized = correo!.Trim().ToLower();
