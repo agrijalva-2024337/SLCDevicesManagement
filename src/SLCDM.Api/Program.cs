@@ -34,6 +34,12 @@ builder.Services.PostConfigure<SLCDM.Application.Common.Options.BrandingOptions>
     }
 });
 
+builder.Services.AddHsts(options =>
+{
+    options.Preload = true;
+    options.IncludeSubDomains = true;
+    options.MaxAge = TimeSpan.FromDays(365);
+});
 
 var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
     ?? ["http://localhost:5173", "https://localhost:5173"];
@@ -59,7 +65,9 @@ if (app.Environment.IsDevelopment())
 
 if (!app.Environment.IsDevelopment())
 {
+    app.UseHsts();
     app.UseHttpsRedirection();
+    app.UseMiddleware<SecurityHeadersMiddleware>();
 }
 
 app.UseCors("ReactClient");
