@@ -216,12 +216,19 @@ export const maestros = {
       { name: 'descripcion', label: 'Descripción', type: 'textarea', maxLength: 200 },
       switchField(),
     ],
-    validate(values) {
-      return {
+    validate(values, records = [], currentId) {
+      const errors = {
         idSede: requireSelect(values.idSede, 'una sede'),
         nombre: validarNombreEntidad(values.nombre, 'nombre', 100, { required: true }),
         descripcion: validarTextoLibre(values.descripcion, 'descripción', 200, { required: false }),
       };
+      const mismaSede = records.filter(
+        (item) => String(item.idSede ?? '') === String(values.idSede ?? ''),
+      );
+      if (!errors.nombre && duplicateNombre(mismaSede, values.nombre, currentId)) {
+        errors.nombre = 'Ya existe un área con el mismo nombre en esta sede.';
+      }
+      return errors;
     },
     toPayload(values) {
       return {
@@ -395,17 +402,23 @@ export const maestros = {
         telefono: validatePhoneFields(values, { paises: ctx.paises }),
         correo: optionalEmail(values.correo),
       };
+      const mismaEmpresa = records.filter(
+        (item) => String(item.idEmpresa ?? '') === String(values.idEmpresa ?? ''),
+      );
+      if (!errors.nombre && duplicateNombre(mismaEmpresa, values.nombre, currentId)) {
+        errors.nombre = 'Ya existe un proveedor con el mismo nombre en esta empresa.';
+      }
       const nit = String(values.nit ?? '')
         .trim()
         .toUpperCase();
       if (
         nit &&
         !errors.nit &&
-        records.some(
+        mismaEmpresa.some(
           (item) => String(item.nit).trim().toUpperCase() === nit && String(item.id) !== String(currentId),
         )
       ) {
-        errors.nit = 'Ya existe un proveedor registrado con esta identificación tributaria.';
+        errors.nit = 'Ya existe un proveedor con el mismo NIT en esta empresa.';
       }
       return errors;
     },
@@ -497,12 +510,18 @@ export const maestros = {
         switchField(),
       ];
     },
-    validate(values) {
+    validate(values, records = [], currentId) {
       const errors = {
         idSede: requireSelect(values.idSede, 'una sede'),
         nombre: validarNombreEntidad(values.nombre, 'nombre', 100, { required: true }),
         descripcion: validarTextoLibre(values.descripcion, 'descripción', 200, { required: false }),
       };
+      const mismaSede = records.filter(
+        (item) => String(item.idSede ?? '') === String(values.idSede ?? ''),
+      );
+      if (!errors.nombre && duplicateNombre(mismaSede, values.nombre, currentId)) {
+        errors.nombre = 'Ya existe una ubicación con el mismo nombre en esta sede.';
+      }
       const latEmpty = String(values.latitud ?? '').trim() === '';
       const lngEmpty = String(values.longitud ?? '').trim() === '';
       if (!latEmpty || !lngEmpty) {
