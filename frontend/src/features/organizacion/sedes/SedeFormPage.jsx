@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import * as paisService from '@/features/catalogos/paises/paisService';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
+import { withEmpresaMismatchHint } from '@/features/organizacion/empresas/empresaFormWarnings';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import {
   emptySedeForm,
@@ -44,6 +45,8 @@ function SedeFormEditor({ id }) {
   const [item, setItem] = useState(null);
   const [loadError, setLoadError] = useState(null);
   const [ready, setReady] = useState(!editing);
+  // Empresa activa al abrir el formulario (referencia para el aviso de desajuste).
+  const idEmpresaAlAbrir = useRef(idActiva);
 
   useEffect(() => {
     let cancelled = false;
@@ -110,11 +113,19 @@ function SedeFormEditor({ id }) {
       badge={editing ? <StatusBadge active={Boolean(initialValues.habilitado)} /> : null}
       hint="La sede pertenece a una empresa y a un país de esa misma empresa. El nombre es obligatorio."
       fields={(values) =>
-        sedeFields({
-          empresas: enabledRecords(empresasList),
-          paises: paisesDeEmpresa(paisesList, values.idEmpresa),
-          lockEmpresa,
-        })
+        withEmpresaMismatchHint(
+          sedeFields({
+            empresas: enabledRecords(empresasList),
+            paises: paisesDeEmpresa(paisesList, values.idEmpresa),
+            lockEmpresa,
+          }),
+          values,
+          {
+            idEmpresaReferencia: idEmpresaAlAbrir.current,
+            empresas: empresasList,
+            entityLabel: 'sede',
+          },
+        )
       }
       deriveValues={(next, prev) =>
         lockEmpresa || next.idEmpresa === prev.idEmpresa ? next : { ...next, idPais: '' }

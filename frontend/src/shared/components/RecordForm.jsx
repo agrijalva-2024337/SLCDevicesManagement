@@ -4,7 +4,7 @@ import { PhoneInput } from '@/shared/components/PhoneInput';
 import { SignaturePad } from '@/shared/components/SignaturePad';
 import { generateTemporaryPassword } from '@/shared/utils/generateTemporaryPassword';
 
-export function FormField({ id, label, required, error, hint, children, wide = false }) {
+export function FormField({ id, label, required, error, hint, hintTone, children, wide = false }) {
   return (
     <div className={wide ? 'min-w-0 sm:col-span-2' : 'min-w-0'}>
       {label ? (
@@ -15,7 +15,18 @@ export function FormField({ id, label, required, error, hint, children, wide = f
       ) : null}
       {children}
       {error ? <p className="app-field-error">{error}</p> : null}
-      {!error && hint ? <p className="mt-0.5 text-sm text-text-muted">{hint}</p> : null}
+      {!error && hint ? (
+        <p
+          className={
+            hintTone === 'warning'
+              ? 'mt-0.5 rounded-md bg-warning-soft px-2 py-1.5 text-sm text-warning'
+              : 'mt-0.5 text-sm text-text-muted'
+          }
+          role={hintTone === 'warning' ? 'status' : undefined}
+        >
+          {hint}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -110,7 +121,7 @@ export function SchemaForm({
 
         if (field.type === 'select') {
           return (
-            <FormField key={field.name} id={id} label={field.label} required={field.required} error={errors[field.name]} hint={field.hint} wide={wide}>
+            <FormField key={field.name} id={id} label={field.label} required={field.required} error={errors[field.name]} hint={field.hint} hintTone={field.hintTone} wide={wide}>
               <select
                 id={id}
                 className={controlClass(errors[field.name])}
