@@ -64,6 +64,10 @@ public sealed class CreateEmpresaCommandHandler : ICommandHandler<CreateEmpresaC
 
         _db.Empresas.Add(entity);
         await _db.SaveChangesAsync(cancellationToken);
+
+        CatalogoEmpresaSeed.AgregarEstandar(_db, entity.Id);
+        await _db.SaveChangesAsync(cancellationToken);
+
         return entity.Id;
     }
 }
