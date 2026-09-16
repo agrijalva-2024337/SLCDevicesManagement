@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import { getMaestro } from '@/features/catalogos/maestros';
 import { useCatalogoSlug } from '@/features/catalogos/useCatalogoSlug';
+import { withEmpresaMismatchHint } from '@/features/organizacion/empresas/empresaFormWarnings';
 import { filterRowsByEmpresa, useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { resolveUbicacionCoords } from '@/features/catalogos/ubicaciones/resolveUbicacionCoords';
 import * as paisService from '@/features/catalogos/paises/paisService';
@@ -54,6 +55,8 @@ function MaestroFormEditor({ slug, id }) {
   });
   const editing = Boolean(id);
   const close = () => navigate(`/app/catalogos/${slug}`);
+  // Empresa activa al abrir el formulario (referencia para el aviso de desajuste).
+  const idEmpresaAlAbrir = useRef(idActiva);
 
   const [item, setItem] = useState(null);
   const [records, setRecords] = useState(outlet.rows ?? []);
@@ -154,8 +157,7 @@ function MaestroFormEditor({ slug, id }) {
     recordId: id,
   };
   const initialValues = item ? maestro.toForm(item, lookups) : maestro.empty(lookups);
-  const fields =
-    typeof maestro.fields === 'function' ? maestro.fields(lookups) : maestro.fields;
+  const baseFields = typeof maestro.fields === 'function' ? maestro.fields(lookups) : maestro.fields;
 
   return (
     <RecordFormOverlay
@@ -168,7 +170,13 @@ function MaestroFormEditor({ slug, id }) {
         ) : null
       }
       hint={maestro.hint}
-      fields={fields}
+      fields={(values) =>
+        withEmpresaMismatchHint(baseFields, values, {
+          idEmpresaReferencia: idEmpresaAlAbrir.current,
+          empresas: empresasList,
+          entityLabel: maestro.singular,
+        })
+      }
       initialValues={initialValues}
       submitLabel={editing ? 'Guardar cambios' : maestro.registerLabel}
       deriveValues={
