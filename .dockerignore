@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+frontend/
+agent/
+docs/
+.git/
+.github/
+**/*.md

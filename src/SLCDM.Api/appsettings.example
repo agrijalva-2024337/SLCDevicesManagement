@@ -1,0 +1,50 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=TU_SERVIDOR_SQL_ACCESIBLE_DESDE_INTERNET;Database=SLCDevicesManagement;User Id=usuario;Password=clave;TrustServerCertificate=True;Encrypt=True"
+  },
+  "JwtSettings": {
+    "Issuer": "SLCDevicesManagement",
+    "Audience": "SLCDevicesManagement",
+    "SecretKey": "CAMBIAR_POR_UN_VALOR_ALEATORIO_DE_AL_MENOS_32_CARACTERES",
+    "ExpiryInMinutes": 480
+  },
+  "Cors": {
+    "Origins": [
+      "http://localhost:5173",
+      "https://TU-FRONTEND-EN-VERCEL.vercel.app"
+    ]
+  },
+  "DocumentIntegrity": {
+    "Pepper": "CAMBIAR_POR_UN_VALOR_ALEATORIO_DE_AL_MENOS_32_CARACTERES"
+  },
+  "DeviceTracking": {
+    "Pepper": "CAMBIAR_POR_UN_VALOR_ALEATORIO_DE_AL_MENOS_32_CARACTERES",
+    "InstallKey": "CAMBIAR_ESTO_ES_LA_LLAVE_DEL_LOTE_DE_INSTALACION",
+    "TokenExpiryDays": 365,
+    "GeofenceRadiusMeters": 250
+  },
+  "Frontend": {
+    "PublicUrl": "https://TU-FRONTEND-EN-VERCEL.vercel.app"
+  },
+  "Smtp": {
+    "Enabled": true,
+    "Host": "smtp.gmail.com",
+    "Port": 587,
+    "User": "tu-cuenta@gmail.com",
+    "Password": "CONTRASENA_DE_APLICACION_NUEVA_NO_LA_QUE_SE_FILTRO",
+    "From": "tu-cuenta@gmail.com",
+    "FromName": "SLC Devices Management",
+    "UseStartTls": true,
+    "PublicAppUrl": "https://TU-FRONTEND-EN-VERCEL.vercel.app"
+  },
+  "Branding": {
+    "LetterheadPath": ""
+  }
+}
