@@ -25,20 +25,15 @@ function PaisCard({ pais, allowWrite, onDeleteRequest, deleting }) {
     .trim()
     .toUpperCase();
   const phone = String(pais.codigoTelefonico ?? '').trim();
-  const activo = pais.habilitado !== false;
-  const canHardDelete = allowWrite && !activo;
 
   return (
-    <article className={`paises-card${activo ? '' : ' is-inactive'}`}>
+    <article className="paises-card">
       {flagClass ? (
         <span className={`${flagClass} paises-card-flag`} aria-hidden="true" />
       ) : (
         <span className="paises-card-flag paises-card-flag--neutral" aria-hidden="true" />
       )}
       <span className="paises-card-veil" aria-hidden="true" />
-      <span className={`paises-card-badge ${activo ? 'is-on' : 'is-off'}`}>
-        {activo ? 'Habilitado' : 'Deshabilitado'}
-      </span>
       <Link to={`${pais.id}`} className="paises-card-link" aria-label={pais.nombre}>
         <span className="paises-card-name">{pais.nombre}</span>
         <span className="paises-card-meta">
@@ -53,18 +48,16 @@ function PaisCard({ pais, allowWrite, onDeleteRequest, deleting }) {
       </Link>
       {allowWrite ? (
         <div className="paises-card-actions">
-          {canHardDelete ? (
-            <button
-              type="button"
-              className="paises-card-delete"
-              title="Eliminar país"
-              aria-label={`Eliminar ${pais.nombre}`}
-              disabled={deleting}
-              onClick={() => onDeleteRequest?.(pais)}
-            >
-              <i className="pi pi-trash" aria-hidden="true" />
-            </button>
-          ) : null}
+          <button
+            type="button"
+            className="paises-card-delete"
+            title="Eliminar país"
+            aria-label={`Eliminar ${pais.nombre}`}
+            disabled={deleting}
+            onClick={() => onDeleteRequest?.(pais)}
+          >
+            <i className="pi pi-trash" aria-hidden="true" />
+          </button>
           <Link
             to={`${pais.id}/editar`}
             className="paises-card-edit"
@@ -122,7 +115,7 @@ export function PaisesGrid({ items, loading = false, onReload }) {
       <header className="paises-head">
         <div>
           <h2 className="paises-title">Países</h2>
-          <p className="paises-lead">Catálogo de la empresa activa. Cada empresa administra los suyos.</p>
+          <p className="paises-lead">Catálogo global. Disponible para sedes de cualquier empresa.</p>
         </div>
         {allowWrite ? <RegisterButton to="nueva" label="Registrar país" /> : null}
       </header>
@@ -175,7 +168,7 @@ export function PaisesGrid({ items, loading = false, onReload }) {
       {showEmpty ? (
         <div className="paises-message">
           <h3>No hay países</h3>
-          <p>Registre el primero para usarlo en las sedes de esta empresa.</p>
+          <p>Registre el primero para usarlo en las sedes del sistema.</p>
         </div>
       ) : null}
 
@@ -206,8 +199,8 @@ export function PaisesGrid({ items, loading = false, onReload }) {
         }}
         onConfirm={confirmDelete}
       >
-        ¿Eliminar permanentemente el país <strong>«{pendingDelete?.nombre}»</strong>? Solo se puede borrar
-        si está deshabilitado.
+        ¿Eliminar permanentemente el país <strong>«{pendingDelete?.nombre}»</strong>? No se puede borrar
+        si hay sedes que lo usan.
       </ConfirmDialog>
     </section>
   );

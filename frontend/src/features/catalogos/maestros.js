@@ -565,36 +565,30 @@ export const maestros = {
   },
   paises: {
     service: paisService,
-    hasHabilitado: true,
+    // [API] PaisDto no tiene habilitado; catálogo global sin soft-delete.
+    hasHabilitado: false,
+    scope: 'global',
     title: 'Países',
     singular: 'país',
     kicker: 'País',
     registerLabel: 'Registrar país',
     hint: 'Escriba el país (ej. Chile): se completa ISO y código. También puede elegir de la lista o registrar uno nuevo a mano.',
-    description: 'Catálogo geográfico de cada empresa. Solo el administrador de empresa puede registrarlos.',
-    lookups: ['empresas'],
+    description: 'Catálogo geográfico global. Disponible para todas las empresas (una Sede elige el país).',
     titleOf: (item) => item.nombre,
     facts: (item) => [`${item.codigoIso2} · ${item.codigoIso3}`, item.codigoTelefonico].filter(Boolean),
-    empty: ({ idEmpresa, idEmpresaActiva } = {}) => ({
-      idEmpresa: idEmpresaActiva == null || idEmpresaActiva === '' ? String(idEmpresa ?? '') : String(idEmpresaActiva),
+    empty: () => ({
       nombre: '',
       codigoIso2: '',
       codigoIso3: '',
       codigoTelefonico: '',
-      habilitado: true,
     }),
     toForm: (item) => ({
-      idEmpresa: item.idEmpresa == null ? '' : String(item.idEmpresa),
       nombre: item.nombre ?? '',
       codigoIso2: String(item.codigoIso2 ?? '').toLowerCase(),
       codigoIso3: String(item.codigoIso3 ?? '').toLowerCase(),
       codigoTelefonico: item.codigoTelefonico ?? '',
-      habilitado: item.habilitado !== false,
     }),
-    fields: ({ empresas = [], rol, editing } = {}) => [
-      ...(rol === RolUsuario.AdministradorGeneral && !editing
-        ? [{ name: 'idEmpresa', label: 'Empresa', type: 'select', required: true, options: asOptions(empresas) }]
-        : []),
+    fields: () => [
       {
         name: 'nombre',
         label: 'Nombre',
@@ -607,12 +601,9 @@ export const maestros = {
       { name: 'codigoIso2', label: 'ISO 2', required: true, maxLength: 2, hint: 'Dos letras en minúsculas (ej. cl)' },
       { name: 'codigoIso3', label: 'ISO 3', required: true, maxLength: 3 },
       { name: 'codigoTelefonico', label: 'Código telefónico', maxLength: 5, hint: 'Con o sin + (ej. +56)' },
-      switchField(),
     ],
-    validate(values, _records, _id, { rol } = {}) {
+    validate(values) {
       const errors = {
-        idEmpresa:
-          rol === RolUsuario.AdministradorGeneral ? requireSelect(values.idEmpresa, 'una empresa') : null,
         nombre: validarNombreEntidad(values.nombre, 'nombre', 100, { required: true }),
         codigoIso2: validarIso2(values.codigoIso2, 'ISO-2', { required: true }),
         codigoIso3: validarIso3(values.codigoIso3, 'ISO-3', { required: true }),
@@ -621,8 +612,6 @@ export const maestros = {
         }),
       };
 
-      // La tabla local solo ayuda: si coinciden entradas conocidas, deben ser consistentes.
-      // Un país nuevo (fuera de paisesIso) se admite con formato válido.
       const byIso2 = buscarPorIso2(values.codigoIso2);
       const byIso3 = buscarPorIso3(values.codigoIso3);
       if (!errors.codigoIso2 && !errors.codigoIso3 && byIso2 && byIso3 && byIso2.codigoIso2 !== byIso3.codigoIso2) {
@@ -641,24 +630,15 @@ export const maestros = {
 
       return errors;
     },
-    toPayload(values, { idEmpresaActiva } = {}) {
-      const idEmpresa =
-        values.idEmpresa === '' || values.idEmpresa == null
-          ? idEmpresaActiva == null || idEmpresaActiva === ''
-            ? null
-            : Number(idEmpresaActiva)
-          : Number(values.idEmpresa);
+    toPayload(values) {
       return {
-        idEmpresa,
         nombre: values.nombre.trim(),
         codigoIso2: values.codigoIso2.trim().toLowerCase(),
         codigoIso3: values.codigoIso3.trim().toLowerCase(),
         codigoTelefonico: values.codigoTelefonico.trim() || null,
-        habilitado: Boolean(values.habilitado),
       };
     },
-    detail: (item, lookups = {}) => [
-      { label: 'Empresa', value: lookups.empresaNombres?.[item.idEmpresa] ?? '—' },
+    detail: (item) => [
       { label: 'ISO 2', value: item.codigoIso2 },
       { label: 'ISO 3', value: item.codigoIso3 },
       { label: 'Código telefónico', value: item.codigoTelefonico },
