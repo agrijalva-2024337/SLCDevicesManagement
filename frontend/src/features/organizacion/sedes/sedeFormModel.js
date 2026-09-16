@@ -52,13 +52,9 @@ export function sedeFields({ empresas = [], paises = [], lockEmpresa = false } =
   ];
 }
 
-export function paisesDeEmpresa(paises, idEmpresa) {
-  if (idEmpresa == null || idEmpresa === '') {
-    return [];
-  }
-
-  const wanted = Number(idEmpresa);
-  return (paises ?? []).filter((pais) => Number(pais.idEmpresa) === wanted);
+export function paisesDeEmpresa(paises, _idEmpresa) {
+  // Pais es catálogo global: todas las sedes ven el mismo listado.
+  return paises ?? [];
 }
 
 function duplicateNombre(records, nombre, currentId) {
@@ -80,10 +76,10 @@ export function validateSedeForm(values, paises = [], records = [], currentId) {
     ciudad: validarNombreEntidad(values.ciudad, 'ciudad', 100, { required: false }),
   };
 
-  if (!errors.idPais && values.idEmpresa) {
+  if (!errors.idPais) {
     const pais = (paises ?? []).find((item) => Number(item.id) === Number(values.idPais));
-    if (!pais || Number(pais.idEmpresa) !== Number(values.idEmpresa)) {
-      errors.idPais = 'El país debe pertenecer a la misma empresa de la sede.';
+    if (!pais) {
+      errors.idPais = 'El campo id pais no corresponde a un registro existente.';
     }
   }
 
