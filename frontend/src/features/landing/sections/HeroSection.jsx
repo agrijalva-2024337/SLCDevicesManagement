@@ -23,9 +23,6 @@ export function HeroSection() {
           <Link to="/login" className="landing-hero-cta--primary">
             {heroContent.ctaPrimario}
           </Link>
-          <Link to="/app" className="landing-hero-cta--ghost">
-            {heroContent.ctaSecundario}
-          </Link>
         </div>
       </div>
     </section>
