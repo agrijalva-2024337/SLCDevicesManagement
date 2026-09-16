@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MultiSelectDropdown } from '@/shared/components/MultiSelectDropdown';
 import { PhoneInput } from '@/shared/components/PhoneInput';
 import { SignaturePad } from '@/shared/components/SignaturePad';
 import { generateTemporaryPassword } from '@/shared/utils/generateTemporaryPassword';
@@ -130,8 +131,6 @@ export function SchemaForm({
         }
 
         if (field.type === 'multiselect') {
-          const selected = Array.isArray(values[field.name]) ? values[field.name].map(String) : [];
-          const disabled = Boolean(field.readOnly);
           return (
             <FormField
               key={field.name}
@@ -142,51 +141,17 @@ export function SchemaForm({
               hint={field.hint}
               wide
             >
-              <div
+              <MultiSelectDropdown
                 id={id}
-                role="group"
-                aria-labelledby={`${id}-legend`}
-                className={`max-h-48 space-y-2 overflow-y-auto rounded-md border px-3 py-2 ${
-                  errors[field.name]
-                    ? 'border-[var(--color-error)]'
-                    : 'border-[var(--color-border)]'
-                } ${disabled ? 'opacity-70' : 'bg-[var(--color-surface-card)]'}`}
+                options={field.options ?? []}
+                value={values[field.name]}
+                disabled={Boolean(field.readOnly)}
+                error={Boolean(errors[field.name])}
+                placeholder={field.placeholder ?? 'Seleccione…'}
+                emptyLabel={field.emptyLabel ?? 'No hay opciones disponibles.'}
+                onChange={(next) => setField(field.name, next)}
                 onBlur={() => blurField(field.name)}
-              >
-                <span id={`${id}-legend`} className="sr-only">
-                  {field.label}
-                </span>
-                {(field.options ?? []).length === 0 ? (
-                  <p className="text-sm text-text-muted">No hay empresas disponibles.</p>
-                ) : (
-                  (field.options ?? []).map((option) => {
-                    const value = String(option.value);
-                    const checked = selected.includes(value);
-                    return (
-                      <label
-                        key={value}
-                        className={`flex items-center gap-2 text-sm text-navy ${
-                          disabled || option.disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          className="size-4 accent-[var(--color-accent)]"
-                          checked={checked}
-                          disabled={disabled || Boolean(option.disabled)}
-                          onChange={(event) => {
-                            const next = event.target.checked
-                              ? [...selected, value]
-                              : selected.filter((idValue) => idValue !== value);
-                            setField(field.name, next);
-                          }}
-                        />
-                        <span>{option.label}</span>
-                      </label>
-                    );
-                  })
-                )}
-              </div>
+              />
             </FormField>
           );
         }
