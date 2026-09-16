@@ -49,14 +49,9 @@ export function CatalogoPage() {
   const canList = !maestro?.requiresWriteToList || allowWrite;
   const neededLookups = maestro?.lookups ?? [];
   const needsSedes = maestro?.scope !== 'global' || neededLookups.includes('sedes');
-  const listParams =
-    slug === 'usuarios' && idActiva != null ? { idEmpresa: idActiva } : {};
-  const catalogKey = catalogListQueryKey(slug, listParams);
+  const catalogKey = catalogListQueryKey(slug);
   const loadAll = async () => {
     if (!maestro?.service?.getAll || !canList) return [];
-    if (slug === 'usuarios' && idActiva != null) {
-      return maestro.service.getAll({ idEmpresa: idActiva });
-    }
     return maestro.service.getAll();
   };
   const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(loadAll, {

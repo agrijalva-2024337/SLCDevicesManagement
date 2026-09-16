@@ -733,13 +733,14 @@ export const maestros = {
   usuarios: {
     service: usuarioService,
     requiresWriteToList: true,
+    scope: 'global',
     title: 'Usuarios',
     singular: 'usuario',
     newTitle: 'Nuevo usuario',
     kicker: 'Usuario',
     registerLabel: 'Registrar usuario',
     hint: 'Nombres, apellidos, correo, usuario y rol son obligatorios. Al menos una empresa es obligatoria salvo para el administrador general.',
-    description: 'Cuentas con acceso al sistema. El listado exige perfil de administrador de empresa.',
+    description: 'Cuentas con acceso al sistema. Este listado es exclusivo del Administrador general.',
     lookups: ['empresas'],
     titleOf: usuarioNombre,
     facts: (item, lookups = {}) =>
