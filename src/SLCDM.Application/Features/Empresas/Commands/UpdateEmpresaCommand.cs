@@ -23,7 +23,14 @@ public sealed class UpdateEmpresaCommandValidator : AbstractValidator<UpdateEmpr
 
         RuleFor(x => x.Nombre)
             .NotEmpty().WithMessage("El campo nombre es obligatorio.")
-            .MaximumLength(150).WithMessage("El campo nombre no debe superar los 150 caracteres.");
+            .MaximumLength(150).WithMessage("El campo nombre no debe superar los 150 caracteres.")
+            .MustAsync(async (cmd, nombre, ct) =>
+            {
+                var normalized = nombre.Trim().ToLower();
+                return !await db.Empresas.IgnoreQueryFilters()
+                    .AnyAsync(e => e.Nombre.ToLower() == normalized && e.Id != cmd.Id, ct);
+            })
+            .WithMessage("Ya existe una empresa con el mismo nombre.");
 
         RuleFor(x => x.NitCodigo)
             .NotEmpty().WithMessage("El campo nit codigo es obligatorio.")
