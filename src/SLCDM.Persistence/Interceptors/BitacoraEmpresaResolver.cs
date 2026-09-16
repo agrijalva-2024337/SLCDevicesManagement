@@ -25,7 +25,7 @@ internal static class BitacoraEmpresaResolver
         entity switch
         {
             Empresa empresa => empresa.Id,
-            Pais pais => pais.IdEmpresa,
+            Pais => null,
             CategoriaActivo categoria => categoria.IdEmpresa,
             Sede sede => sede.IdEmpresa,
             Usuario usuario => EmpresaIdDeUsuario(context, usuario.Id),

@@ -80,8 +80,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         modelBuilder.Entity<Empresa>().HasQueryFilter(e =>
             IgnoreEmpresaFilter || EmpresasAutorizadas.Contains(e.Id));
 
-        modelBuilder.Entity<Pais>().HasQueryFilter(p =>
-            IgnoreEmpresaFilter || EmpresasAutorizadas.Contains(p.IdEmpresa));
+        // Pais es catalogo global (sin filtro de empresa), igual que TipoMantenimiento/MotivoBaja.
 
         modelBuilder.Entity<Estado>().HasQueryFilter(e =>
             IgnoreEmpresaFilter || EmpresasAutorizadas.Contains(e.IdEmpresa));
