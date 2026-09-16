@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using SLCDM.Api.Authentication;
 using SLCDM.Api.Extensions;
 using SLCDM.Api.Middleware;
@@ -55,6 +56,16 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
+
+    var passwordHasher = scope.ServiceProvider.GetRequiredService<SLCDM.Application.Common.Interfaces.IPasswordHashService>();
+    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+    await DataSeeder.SeedAsync(db, passwordHasher, configuration);
+}
 
 app.UseExceptionHandler();
 
