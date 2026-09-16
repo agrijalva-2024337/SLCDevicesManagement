@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using SLCDM.Api.Authentication;
 using SLCDM.Api.Extensions;
 using SLCDM.Api.Middleware;
@@ -55,6 +56,12 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
+}
 
 app.UseExceptionHandler();
 
