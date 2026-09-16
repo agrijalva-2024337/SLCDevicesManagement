@@ -9,6 +9,16 @@ import { phoneFormFields, phonePayload, validatePhoneFields } from '@/shared/uti
 
 const IDENTIFICACION_HINT = 'NIT, RUC, RFC o equivalente según el país (5 a 20 caracteres)';
 
+function duplicateNombre(records, nombre, currentId) {
+  const needle = String(nombre ?? '')
+    .trim()
+    .toLowerCase();
+  if (!needle) return false;
+  return (records ?? []).some(
+    (item) => String(item.nombre).trim().toLowerCase() === needle && String(item.id) !== String(currentId),
+  );
+}
+
 export function emptyEmpresaForm(paises = []) {
   return {
     nombre: '',
@@ -59,6 +69,11 @@ export function validateEmpresaForm(values, empresas = [], currentId, { paises }
     direccion: validarTextoLibre(values.direccion, 'dirección', 150, { required: false }),
     telefono: validatePhoneFields(values, { paises }),
   };
+
+  if (!errors.nombre && duplicateNombre(empresas, values.nombre, currentId)) {
+    errors.nombre = 'Ya existe una empresa con el mismo nombre.';
+  }
+
   const nit = String(values.nitCodigo ?? '')
     .trim()
     .toUpperCase();
