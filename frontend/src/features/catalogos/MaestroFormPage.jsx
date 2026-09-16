@@ -3,7 +3,7 @@ import { useNavigate, useOutletContext, useParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import { getMaestro } from '@/features/catalogos/maestros';
 import { useCatalogoSlug } from '@/features/catalogos/useCatalogoSlug';
-import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
+import { filterRowsByEmpresa, useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { resolveUbicacionCoords } from '@/features/catalogos/ubicaciones/resolveUbicacionCoords';
 import * as paisService from '@/features/catalogos/paises/paisService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
@@ -130,8 +130,12 @@ function MaestroFormEditor({ slug, id }) {
   }
 
   const empresasList = hasOutletList(outlet, 'empresas') ? outlet.lookups.empresas : empresas.data;
-  const sedesList = hasOutletList(outlet, 'sedes') ? outlet.lookups.sedes : sedes.data;
-  const areasList = hasOutletList(outlet, 'areas') ? outlet.lookups.areas : areas.data;
+  const sedesAll = hasOutletList(outlet, 'sedes') ? outlet.lookups.sedes : sedes.data;
+  const areasAll = hasOutletList(outlet, 'areas') ? outlet.lookups.areas : areas.data;
+  // Admin general con empresa activa: solo sedes/áreas de esa empresa en los selects.
+  // Con "Todas las empresas" (idActiva null), filterRowsByEmpresa no filtra.
+  const sedesList = filterRowsByEmpresa(sedesAll, idActiva);
+  const areasList = filterRowsByEmpresa(areasAll, idActiva, { sedes: sedesAll });
   const paisesList = hasOutletList(outlet, 'paises') ? outlet.lookups.paises : paises.data;
   const ubicacionesList = hasOutletList(outlet, 'ubicaciones')
     ? outlet.lookups.ubicaciones
@@ -187,7 +191,7 @@ function MaestroFormEditor({ slug, id }) {
       onSave={async (values) => {
         let payload = maestro.toPayload(values, { editing, idEmpresaActiva: idActiva });
         if (slug === 'ubicaciones') {
-          const sede = (sedesList ?? []).find((row) => Number(row.id) === Number(payload.idSede));
+          const sede = (sedesAll ?? []).find((row) => Number(row.id) === Number(payload.idSede));
           const pais = (paisesList ?? []).find((row) => Number(row.id) === Number(sede?.idPais));
           payload = await resolveUbicacionCoords(payload, sede, pais?.nombre);
         }
