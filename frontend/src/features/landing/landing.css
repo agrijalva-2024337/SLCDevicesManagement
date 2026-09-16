@@ -309,20 +309,6 @@
   box-shadow: 0 18px 36px rgb(38 166 33 / 0.38);
 }
 
-.landing-hero-cta--ghost {
-  background: transparent;
-  border: 1.5px solid rgb(253 253 255 / 0.88);
-  color: var(--palette-white);
-}
-
-.landing-hero-cta--ghost:hover,
-.landing-hero-cta--ghost:focus-visible {
-  background: rgb(253 253 255 / 0.12);
-  color: var(--palette-white);
-  transform: translateY(-2px);
-  box-shadow: 0 14px 32px rgb(12 20 64 / 0.28);
-}
-
 @keyframes landing-plate-sheen {
   0%,
   55% {
@@ -388,6 +374,13 @@
   backdrop-filter: blur(10px);
 }
 
+.landing-pill-nav .pill-logo:hover,
+.landing-pill-nav .pill-logo:focus-visible {
+  background: rgb(253 253 255 / 0.22);
+  box-shadow: inset 0 0 0 1px rgb(253 253 255 / 0.45);
+  transform: scale(1.06);
+}
+
 .landing-pill-nav .hamburger-line {
   background: var(--palette-white);
 }
@@ -421,8 +414,9 @@
 
 .landing-pill-nav .pill:hover,
 .landing-pill-nav .pill:focus-visible {
-  background: transparent;
-  box-shadow: none;
+  background: rgb(253 253 255 / 0.14);
+  box-shadow: inset 0 0 0 1px rgb(253 253 255 / 0.38);
+  color: var(--palette-white);
 }
 
 .landing-pill-nav .mobile-menu-popover .mobile-menu-link {
@@ -826,7 +820,6 @@
   .landing-hero-brand-plate,
   .landing-hero-actions,
   .landing-hero-cta--primary:hover,
-  .landing-hero-cta--ghost:hover,
   .landing-auth-submit:hover,
   .landing-modulos-copy-title {
     opacity: 1;

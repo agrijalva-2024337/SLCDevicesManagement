@@ -5,7 +5,6 @@ export const headerNav = [
 export const heroContent = {
   marca: 'SLC Devices Management',
   ctaPrimario: 'Comenzar ahora',
-  ctaSecundario: 'Ver demo de la plataforma',
 };
 
 export const footerContent = {
