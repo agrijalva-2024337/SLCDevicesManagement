@@ -36,6 +36,12 @@ public class EmpresaConfiguration : IEntityTypeConfiguration<Empresa>
             .HasColumnType("varchar(30)");
 
         builder.HasIndex(e => e.NitCodigo).IsUnique();
+
+        // Collation Modern_Spanish_CI_AS: unicidad case-insensitive sin COLLATE extra.
+        builder.HasIndex(e => e.Nombre)
+            .IsUnique()
+            .HasFilter("[nombre] IS NOT NULL AND [nombre] <> ''")
+            .HasDatabaseName("ix_empresa_nombre_unico");
     }
 }
     
