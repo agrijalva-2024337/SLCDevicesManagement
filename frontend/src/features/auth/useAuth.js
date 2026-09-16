@@ -14,7 +14,7 @@ export function canWriteCatalog(rol, resource) {
     return false;
   }
 
-  if (resource === 'empresas-create' || resource === 'empresas' || resource === 'usuarios') {
+  if (resource === 'empresas-create' || resource === 'empresas' || resource === 'usuarios' || resource === 'paises') {
     return rol === RolUsuario.AdministradorGeneral;
   }
 
@@ -22,7 +22,6 @@ export function canWriteCatalog(rol, resource) {
   if (
     resource === 'sedes' ||
     resource === 'areas' ||
-    resource === 'paises' ||
     resource === 'ubicaciones' ||
     resource === 'responsables' ||
     resource === 'proveedores' ||
