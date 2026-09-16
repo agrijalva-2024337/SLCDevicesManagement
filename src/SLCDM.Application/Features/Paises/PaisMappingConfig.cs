@@ -10,12 +10,9 @@ public sealed class PaisMappingConfig : IRegister
         config.NewConfig<Pais, PaisDto>();
 
         config.NewConfig<Commands.CreatePaisCommand, Pais>()
-            .Ignore(dest => dest.Id)
-            .Ignore(dest => dest.Empresa!);
+            .Ignore(dest => dest.Id);
 
         config.NewConfig<Commands.UpdatePaisCommand, Pais>()
-            .Ignore(dest => dest.Id)
-            .Ignore(dest => dest.IdEmpresa)
-            .Ignore(dest => dest.Empresa!);
+            .Ignore(dest => dest.Id);
     }
 }

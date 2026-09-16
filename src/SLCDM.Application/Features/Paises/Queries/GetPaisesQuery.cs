@@ -9,30 +9,21 @@ public sealed record GetPaisesQuery;
 public sealed class GetPaisesQueryHandler : IQueryHandler<GetPaisesQuery, IReadOnlyList<PaisDto>>
 {
     private readonly IApplicationDbContext _db;
-    private readonly ICurrentUserService _currentUser;
 
-    public GetPaisesQueryHandler(IApplicationDbContext db, ICurrentUserService currentUser)
+    public GetPaisesQueryHandler(IApplicationDbContext db)
     {
         _db = db;
-        _currentUser = currentUser;
     }
 
     public async Task<IReadOnlyList<PaisDto>> HandleAsync(
         GetPaisesQuery query,
         CancellationToken cancellationToken = default)
     {
-        var items = _db.Paises.AsNoTracking();
-
-        if (!_currentUser.IsAdministradorGeneral)
-        {
-            var autorizadas = _currentUser.EmpresasAutorizadas;
-            items = items.Where(p => autorizadas.Contains(p.IdEmpresa));
-        }
-
-        var list = await items
+        var items = await _db.Paises
+            .AsNoTracking()
             .OrderBy(p => p.Nombre)
             .ToListAsync(cancellationToken);
 
-        return list.Adapt<List<PaisDto>>();
+        return items.Adapt<List<PaisDto>>();
     }
 }
