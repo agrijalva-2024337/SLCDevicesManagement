@@ -774,9 +774,10 @@ export const maestros = {
           type: 'multiselect',
           options: asOptions(empresas),
           readOnly: lockEmpresa,
+          emptyLabel: 'No hay empresas disponibles.',
           hint: lockEmpresa
             ? 'El usuario queda en su empresa.'
-            : 'Obligatorias salvo que el rol sea administrador general. Puede marcar varias.',
+            : 'Obligatorias salvo que el rol sea administrador general. Puede elegir varias en el menú.',
         },
         { name: 'nombres', label: 'Nombres', required: true, maxLength: 100 },
         { name: 'apellidos', label: 'Apellidos', required: true, maxLength: 100 },

@@ -566,6 +566,142 @@ select.app-input {
   box-shadow: 0 0 0 1.5px var(--color-error);
 }
 
+.app-multiselect {
+  position: relative;
+  width: 100%;
+}
+
+.app-multiselect-trigger {
+  width: 100%;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 0;
+  border-radius: 12px;
+  padding: 0.65rem 0.9rem;
+  font-size: 1rem;
+  text-align: left;
+  color: var(--text);
+  background: var(--surface-muted);
+  box-shadow: 0 0 0 1px var(--border);
+  cursor: pointer;
+}
+
+.app-multiselect-trigger.is-placeholder {
+  color: var(--text-muted);
+}
+
+.app-multiselect-trigger:focus-visible {
+  box-shadow:
+    0 0 0 1.5px var(--color-navy-mid),
+    0 0 0 5px rgb(20 50 89 / 0.16);
+}
+
+.app-multiselect-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.app-multiselect-summary {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-multiselect-caret {
+  flex-shrink: 0;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+  opacity: 0.7;
+}
+
+.app-multiselect-menu {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  max-height: 14rem;
+  overflow-y: auto;
+  border-radius: 12px;
+  background: var(--color-surface-card, var(--surface));
+  box-shadow:
+    0 0 0 1px var(--border),
+    0 14px 28px rgb(12 20 64 / 0.14);
+}
+
+.app-multiselect-empty {
+  padding: 0.7rem 0.75rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.app-multiselect-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: 0;
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  background: transparent;
+  color: var(--color-navy, var(--text));
+  font-size: 0.95rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.app-multiselect-option:hover,
+.app-multiselect-option:focus-visible {
+  background: rgb(20 50 89 / 0.08);
+  outline: none;
+}
+
+.app-multiselect-option.is-selected {
+  background: rgb(38 166 33 / 0.12);
+  font-weight: 600;
+}
+
+.app-multiselect-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.app-multiselect-check {
+  width: 1rem;
+  flex-shrink: 0;
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+[data-theme='dark'] .app-multiselect-trigger {
+  background: var(--surface-muted);
+  color: var(--text);
+}
+
+[data-theme='dark'] .app-multiselect-menu {
+  background: var(--surface);
+}
+
+[data-theme='dark'] .app-multiselect-option:hover,
+[data-theme='dark'] .app-multiselect-option:focus-visible {
+  background: rgb(253 253 255 / 0.08);
+}
+
+[data-theme='dark'] .app-multiselect-option.is-selected {
+  background: rgb(38 166 33 / 0.2);
+}
+
 .app-input-password {
   position: relative;
 }
