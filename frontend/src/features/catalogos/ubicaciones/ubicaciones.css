@@ -288,6 +288,32 @@
   background: var(--color-lavender);
 }
 
+.ubicaciones-map-placeholder--message {
+  display: grid;
+  place-content: center;
+  gap: 0.35rem;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.ubicaciones-map-placeholder-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-navy);
+}
+
+.ubicaciones-map-placeholder--message p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.ubicaciones-map-placeholder--message code {
+  font-size: 0.85em;
+}
+
 .ubic-marker {
   background: transparent;
   border: 0;

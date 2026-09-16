@@ -96,9 +96,19 @@ function LocationMarkers({ points, selectedId, hoveredId, onMarkerClick, markerR
 
 function LocationsMap({ points, selectedId, hoveredId, onMarkerClick, markerRefs, loading }) {
   const selected = points.find((item) => item.id === selectedId) ?? null;
+  const mapTilerKey = String(import.meta.env.VITE_MAPTILER_KEY ?? '').trim();
 
   if (loading) {
     return <div className="ubicaciones-map-placeholder" aria-hidden="true" />;
+  }
+
+  if (!mapTilerKey) {
+    return (
+      <div className="ubicaciones-map-placeholder ubicaciones-map-placeholder--message" role="status">
+        <p className="ubicaciones-map-placeholder-title">Mapa no configurado</p>
+        <p>Configura <code>VITE_MAPTILER_KEY</code> para ver el mapa.</p>
+      </div>
+    );
   }
 
   return (
@@ -110,8 +120,8 @@ function LocationsMap({ points, selectedId, hoveredId, onMarkerClick, markerRefs
       scrollWheelZoom
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${mapTilerKey}`}
       />
       <MapResize />
       <MapCamera points={points} selected={selected} />
