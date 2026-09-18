@@ -45,8 +45,6 @@ export function ConsultaActivoPage() {
 
           <div className="consulta-card">
             <div className="app-fields-plain consulta-grid">
-              <DetailField label="Código interno" value={ficha.codigoInterno} />
-              <DetailField label="Serie" value={ficha.numeroSerie} />
               <DetailField
                 label="Estado"
                 value={ficha.estado ? <ToneBadge tone={estadoTone(ficha.estado)}>{ficha.estado}</ToneBadge> : null}

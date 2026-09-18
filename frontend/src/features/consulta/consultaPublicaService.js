@@ -46,10 +46,8 @@ function fichaPublicaDe(raw) {
   if (!raw) return raw;
   return {
     nombre: raw.nombre,
-    codigoInterno: raw.codigoInterno ?? raw.numeroSerie ?? (raw.id != null ? String(raw.id) : null),
     marca: raw.marca ?? null,
     modelo: raw.modelo ?? null,
-    numeroSerie: raw.numeroSerie ?? null,
     categoria: raw.categoria ?? raw.nombreCategoria ?? null,
     empresa: raw.empresa ?? raw.nombreEmpresa ?? null,
     sede: raw.sede ?? raw.nombreSede ?? null,
@@ -100,10 +98,8 @@ export async function getFichaPublica(codigo) {
 
   return fichaPublicaDe({
     nombre: activo.nombre,
-    codigoInterno: activo.codigoInterno ?? activo.numeroSerie ?? String(activo.id),
     marca: activo.marca ?? null,
     modelo: activo.modelo ?? null,
-    numeroSerie: activo.numeroSerie ?? null,
     categoria: categoria?.nombre ?? null,
     empresa: empresa?.nombre ?? null,
     sede: sede?.nombre ?? null,

@@ -11,7 +11,6 @@ public sealed record ConsultaActivoDto(
     string? Descripcion,
     string? Marca,
     string? Modelo,
-    string? NumeroSerie,
     string? NombreCategoria,
     string? NombreEmpresa,
     string? NombreSede,

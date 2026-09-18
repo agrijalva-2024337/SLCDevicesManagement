@@ -102,7 +102,6 @@ public sealed class GetConsultaActivoQueryHandler : IQueryHandler<GetConsultaAct
             activo.Descripcion,
             activo.Marca,
             activo.Modelo,
-            activo.NumeroSerie,
             activo.CategoriaActivo?.Nombre,
             empresa?.Nombre,
             sede?.Nombre,
