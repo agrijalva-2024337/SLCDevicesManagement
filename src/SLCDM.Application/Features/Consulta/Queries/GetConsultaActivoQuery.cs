@@ -50,7 +50,7 @@ public sealed class GetConsultaActivoQueryHandler : IQueryHandler<GetConsultaAct
                 .FirstOrDefaultAsync(s => s.Id == activo.Ubicacion.IdSede, cancellationToken);
         }
 
-        var estados = await _db.Estados.AsNoTracking().ToListAsync(cancellationToken);
+        var estados = await _db.Estados.IgnoreQueryFilters().AsNoTracking().ToListAsync(cancellationToken);
         var nombreEstado = activo.IdEstado.HasValue
             ? estados.FirstOrDefault(e => e.Id == activo.IdEstado.Value)?.Nombre
             : null;
