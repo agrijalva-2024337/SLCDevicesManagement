@@ -71,6 +71,7 @@ public sealed class DispositivosController : ApiControllerBase
 
     [HttpPost("auto-registro")]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingExtensions.DeviceAutoRegistroPolicy)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     public async Task<IActionResult> AutoRegistrar(
         [FromBody] AutoRegistrarDispositivoCommand command,
