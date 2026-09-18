@@ -146,6 +146,7 @@ public sealed class CreateActivoCommandHandler : ICommandHandler<CreateActivoCom
 
         var entity = command.Adapt<Activo>();
         entity.TokenPublico = Guid.NewGuid().ToString("N")[..24];
+        entity.Habilitado = true;
         _db.Activos.Add(entity);
         await _db.SaveChangesAsync(cancellationToken);
         return entity.Id;

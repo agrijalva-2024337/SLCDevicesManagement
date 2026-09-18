@@ -2,6 +2,7 @@ namespace SLCDM.Application.Features.Activos;
 
 public sealed record ActivoDto(
     int Id,
+    bool Habilitado,
     int IdCategoriaActivo,
     int IdProveedor,
     int IdUbicacion,
