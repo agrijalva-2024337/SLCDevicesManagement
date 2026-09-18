@@ -241,6 +241,10 @@
  *
  * estadoOperativo en Reportes: "disponible" | "asignado" | "mantenimiento" | "baja"
  *
+ * @typedef {object} CostoPorMonedaDto
+ * @property {string} moneda
+ * @property {number} total
+ *
  * @typedef {object} InventarioEmpresaResumenDto
  * @property {number} idEmpresa
  * @property {string} nombreEmpresa
@@ -249,7 +253,7 @@
  * @property {number} asignados
  * @property {number} enMantenimiento
  * @property {number} dadosDeBaja
- * @property {number} costoAdquisicionTotal
+ * @property {CostoPorMonedaDto[]} costosPorMoneda
  *
  * @typedef {object} ActivosPorSedeDto
  * @property {number} idSede

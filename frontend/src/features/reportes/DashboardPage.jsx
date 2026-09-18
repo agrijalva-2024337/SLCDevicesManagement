@@ -13,7 +13,7 @@ import { FeedbackState } from '@/shared/components/FeedbackState';
 import { ToneBadge } from '@/shared/components/StatusBadge';
 import { listQueryKey, reportQueryKey } from '@/shared/data/queryKeys';
 import { useResource } from '@/shared/hooks/useResource';
-import { formatDate } from '@/shared/utils/format';
+import { formatDate, formatMoney } from '@/shared/utils/format';
 
 function vacio() {
   return {
@@ -22,22 +22,36 @@ function vacio() {
     asignados: 0,
     enMantenimiento: 0,
     dadosDeBaja: 0,
-    costoAdquisicionTotal: 0,
+    costosPorMoneda: {},
   };
 }
 
 function consolidar(rows) {
-  return (rows ?? []).reduce(
-    (acc, row) => ({
+  return (rows ?? []).reduce((acc, row) => {
+    const next = {
       totalActivos: acc.totalActivos + Number(row.totalActivos ?? 0),
       disponibles: acc.disponibles + Number(row.disponibles ?? 0),
       asignados: acc.asignados + Number(row.asignados ?? 0),
       enMantenimiento: acc.enMantenimiento + Number(row.enMantenimiento ?? 0),
       dadosDeBaja: acc.dadosDeBaja + Number(row.dadosDeBaja ?? 0),
-      costoAdquisicionTotal: acc.costoAdquisicionTotal + Number(row.costoAdquisicionTotal ?? 0),
-    }),
-    vacio(),
-  );
+      costosPorMoneda: { ...acc.costosPorMoneda },
+    };
+
+    for (const item of row.costosPorMoneda ?? []) {
+      const moneda = String(item.moneda ?? 'GTQ').toUpperCase();
+      next.costosPorMoneda[moneda] = Number(next.costosPorMoneda[moneda] ?? 0) + Number(item.total ?? 0);
+    }
+
+    return next;
+  }, vacio());
+}
+
+function formatCostosPorMoneda(costosPorMoneda) {
+  const entries = Object.entries(costosPorMoneda ?? {}).sort(([a], [b]) => a.localeCompare(b));
+  if (entries.length === 0) {
+    return formatMoney(0, 'GTQ');
+  }
+  return entries.map(([moneda, total]) => formatMoney(total, moneda)).join(' · ');
 }
 
 function percentOf(part, total) {
@@ -151,6 +165,15 @@ export function DashboardPage() {
       icon: 'pi-wrench',
       tone: 'danger',
       to: activosVistaPath('mantenimientos', { abiertos: '1' }),
+    },
+    {
+      key: 'costo',
+      label: 'Costo de adquisición',
+      value: formatCostosPorMoneda(resumen.costosPorMoneda),
+      icon: 'pi-wallet',
+      tone: 'info',
+      to: '/app/activos',
+      isText: true,
     },
   ];
 
@@ -268,7 +291,7 @@ export function DashboardPage() {
         {widgets.map((widget) => (
           <Link key={widget.key} to={widget.to} className={`dash-widget dash-widget--${widget.tone}`}>
             <i className={`pi ${widget.icon} dash-widget-icon`} aria-hidden />
-            <p className="dash-widget-value tabular-nums">{widget.value}</p>
+            <p className={`dash-widget-value${widget.isText ? '' : ' tabular-nums'}`}>{widget.value}</p>
             <p className="dash-widget-title">{widget.label}</p>
             <Sparkline values={spark} fill />
           </Link>

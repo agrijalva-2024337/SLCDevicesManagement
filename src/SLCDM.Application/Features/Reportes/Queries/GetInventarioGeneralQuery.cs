@@ -36,6 +36,12 @@ public sealed class GetInventarioGeneralQueryHandler
         IEnumerable<ActivoInventarioRow> filas)
     {
         var list = filas.ToList();
+        var costosPorMoneda = list
+            .GroupBy(f => string.IsNullOrWhiteSpace(f.Activo.Moneda) ? "GTQ" : f.Activo.Moneda!.ToUpperInvariant())
+            .Select(g => new CostoPorMonedaDto(g.Key, g.Sum(f => f.Activo.CostoAdquisicion)))
+            .OrderBy(c => c.Moneda)
+            .ToList();
+
         return new InventarioEmpresaResumenDto(
             idEmpresa,
             nombre,
@@ -44,6 +50,6 @@ public sealed class GetInventarioGeneralQueryHandler
             list.Count(f => f.EstadoOperativo == ActivoEstadoOperativo.Asignado),
             list.Count(f => f.EstadoOperativo == ActivoEstadoOperativo.Mantenimiento),
             list.Count(f => f.EstadoOperativo == ActivoEstadoOperativo.Baja),
-            list.Sum(f => f.Activo.CostoAdquisicion));
+            costosPorMoneda);
     }
 }

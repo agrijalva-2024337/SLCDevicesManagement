@@ -9,7 +9,9 @@ public sealed record InventarioEmpresaResumenDto(
     int Asignados,
     int EnMantenimiento,
     int DadosDeBaja,
-    decimal CostoAdquisicionTotal);
+    IReadOnlyList<CostoPorMonedaDto> CostosPorMoneda);
+
+public sealed record CostoPorMonedaDto(string Moneda, decimal Total);
 
 public sealed record ActivosPorSedeDto(
     int IdSede,

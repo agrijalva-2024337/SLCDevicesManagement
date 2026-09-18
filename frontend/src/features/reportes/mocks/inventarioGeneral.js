@@ -7,7 +7,9 @@ export const inventarioGeneral = [
     asignados: 1,
     enMantenimiento: 0,
     dadosDeBaja: 1,
-    costoAdquisicionTotal: 14300,
+    costosPorMoneda: [
+      { moneda: 'GTQ', total: 14300 },
+    ],
   },
   {
     idEmpresa: 5,
@@ -17,6 +19,9 @@ export const inventarioGeneral = [
     asignados: 0,
     enMantenimiento: 1,
     dadosDeBaja: 0,
-    costoAdquisicionTotal: 186800,
+    costosPorMoneda: [
+      { moneda: 'GTQ', total: 180000 },
+      { moneda: 'USD', total: 6800 },
+    ],
   },
 ];
