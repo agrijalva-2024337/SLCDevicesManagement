@@ -1,9 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router';
-import { useAuth } from '@/features/auth/useAuth';
 import * as paisService from '@/features/catalogos/paises/paisService';
-import * as empresaService from '@/features/organizacion/empresas/empresaService';
-import { withEmpresaMismatchHint } from '@/features/organizacion/empresas/empresaFormWarnings';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import {
   emptySedeForm,
@@ -19,25 +16,15 @@ import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import { compactErrors } from '@/shared/components/recordFormUtils';
 import { StatusBadge } from '@/shared/components/StatusBadge';
 import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
-import { RolUsuario } from '@/shared/api/contracts';
 import { useResource } from '@/shared/hooks/useResource';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 
-function enabledRecords(list) {
-  return (list ?? []).filter((item) => item.habilitado !== false);
-}
-
 function SedeFormEditor({ id }) {
   const navigate = useNavigate();
   const outlet = useOutletContext() ?? {};
-  const { rol } = useAuth();
   const { idActiva } = useEmpresaActiva();
-  const isAdminGeneral = rol === RolUsuario.AdministradorGeneral;
-  const lockEmpresa = !isAdminGeneral;
-  const hasOutletEmpresas = Array.isArray(outlet.lookups?.empresas);
   const hasOutletPaises = Array.isArray(outlet.lookups?.paises);
-  const empresas = useResource(empresaService.getAll, { enabled: !hasOutletEmpresas });
   const paises = useResource(paisService.getAll, { enabled: !hasOutletPaises });
   const editing = Boolean(id);
   const close = () => navigate('/app/catalogos/sedes');
@@ -45,8 +32,6 @@ function SedeFormEditor({ id }) {
   const [item, setItem] = useState(null);
   const [loadError, setLoadError] = useState(null);
   const [ready, setReady] = useState(!editing);
-  // Empresa activa al abrir el formulario (referencia para el aviso de desajuste).
-  const idEmpresaAlAbrir = useRef(idActiva);
 
   useEffect(() => {
     let cancelled = false;
@@ -89,7 +74,19 @@ function SedeFormEditor({ id }) {
     );
   }
 
-  if (!ready || (!hasOutletEmpresas && empresas.isLoading) || (!hasOutletPaises && paises.isLoading)) {
+  if (!editing && (idActiva == null || idActiva === '')) {
+    return (
+      <DetailOverlay open title="Selecciona una empresa" kicker="Registrar sede" onClose={close}>
+        <p className="text-base text-navy">
+          Selecciona una empresa específica en la barra superior antes de registrar una sede. Con
+          &apos;Todas las empresas&apos; seleccionada no se puede saber a cuál pertenece el registro
+          nuevo.
+        </p>
+      </DetailOverlay>
+    );
+  }
+
+  if (!ready || (!hasOutletPaises && paises.isLoading)) {
     return (
       <DetailOverlay open title="Sedes" kicker={editing ? 'Editar registro' : 'Registrar sede'} onClose={close}>
         <div className="app-feedback app-feedback--loading" role="status">
@@ -99,11 +96,8 @@ function SedeFormEditor({ id }) {
     );
   }
 
-  const empresasList = hasOutletEmpresas ? outlet.lookups.empresas : empresas.data;
   const paisesList = hasOutletPaises ? outlet.lookups.paises : paises.data;
-  const initialValues = item
-    ? sedeToForm(item)
-    : emptySedeForm(lockEmpresa ? idActiva : idActiva ?? '');
+  const initialValues = item ? sedeToForm(item) : emptySedeForm(idActiva ?? '');
 
   return (
     <RecordFormOverlay
@@ -111,34 +105,33 @@ function SedeFormEditor({ id }) {
       title={editing ? item.nombre : 'Nueva sede'}
       kicker={editing ? 'Editar registro' : 'Registrar sede'}
       badge={editing ? <StatusBadge active={Boolean(initialValues.habilitado)} /> : null}
-      hint="La sede pertenece a una empresa y a un país de esa misma empresa. El nombre es obligatorio."
-      fields={(values) =>
-        withEmpresaMismatchHint(
-          sedeFields({
-            empresas: enabledRecords(empresasList),
-            paises: paisesDeEmpresa(paisesList, values.idEmpresa),
-            lockEmpresa,
-          }),
-          values,
-          {
-            idEmpresaReferencia: idEmpresaAlAbrir.current,
-            empresas: empresasList,
-            entityLabel: 'sede',
-          },
-        )
-      }
-      deriveValues={(next, prev) =>
-        lockEmpresa || next.idEmpresa === prev.idEmpresa ? next : { ...next, idPais: '' }
-      }
+      hint="La sede pertenece a la empresa activa y a un país. El nombre es obligatorio."
+      fields={sedeFields({
+        paises: paisesDeEmpresa(paisesList, idActiva),
+      })}
       initialValues={initialValues}
       submitLabel={editing ? 'Guardar cambios' : 'Registrar sede'}
       validate={(values) =>
-        compactErrors(validateSedeForm(values, paisesList, outlet.rows ?? [], editing ? id : undefined))
+        compactErrors(
+          validateSedeForm(
+            {
+              ...values,
+              idEmpresa: editing
+                ? String(item?.idEmpresa ?? values.idEmpresa ?? '')
+                : String(idActiva ?? ''),
+            },
+            paisesList,
+            outlet.rows ?? [],
+            editing ? id : undefined,
+          ),
+        )
       }
       onSave={async (values) => {
         const payload = sedeToPayload({
           ...values,
-          idEmpresa: lockEmpresa ? String(idActiva ?? values.idEmpresa) : values.idEmpresa,
+          idEmpresa: editing
+            ? String(item?.idEmpresa ?? values.idEmpresa ?? '')
+            : String(idActiva ?? ''),
         });
         try {
           if (editing) {

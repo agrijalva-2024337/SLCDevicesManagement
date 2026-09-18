@@ -28,17 +28,8 @@ export function sedeToForm(sede) {
   };
 }
 
-export function sedeFields({ empresas = [], paises = [], lockEmpresa = false } = {}) {
+export function sedeFields({ paises = [] } = {}) {
   return [
-    {
-      name: 'idEmpresa',
-      label: 'Empresa',
-      type: 'select',
-      required: true,
-      options: asOptions(empresas),
-      readOnly: lockEmpresa,
-      hint: lockEmpresa ? 'Se toma de la empresa de su sesión.' : undefined,
-    },
     { name: 'idPais', label: 'País', type: 'select', required: true, options: asOptions(paises) },
     { name: 'nombre', label: 'Nombre', required: true, maxLength: 100, wide: true },
     { name: 'ciudad', label: 'Ciudad', maxLength: 100 },
