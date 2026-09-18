@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import { getMaestro } from '@/features/catalogos/maestros';
 import { useCatalogoSlug } from '@/features/catalogos/useCatalogoSlug';
-import { withEmpresaMismatchHint } from '@/features/organizacion/empresas/empresaFormWarnings';
 import { filterRowsByEmpresa, useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import { resolveUbicacionCoords } from '@/features/catalogos/ubicaciones/resolveUbicacionCoords';
 import * as paisService from '@/features/catalogos/paises/paisService';
@@ -22,6 +21,9 @@ import { derivePaisValues } from '@/features/catalogos/paises/paisForm';
 import { applyApiFieldErrors } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
+
+/** Catálogos que siempre pertenecen a una sola empresa (no se registran con "Todas"). */
+const REQUIERE_EMPRESA_ACTIVA = new Set(['proveedores', 'estados', 'tipos-asignacion']);
 
 function enabledRecords(list) {
   return (list ?? []).filter((item) => item.habilitado !== false);
@@ -55,8 +57,6 @@ function MaestroFormEditor({ slug, id }) {
   });
   const editing = Boolean(id);
   const close = () => navigate(`/app/catalogos/${slug}`);
-  // Empresa activa al abrir el formulario (referencia para el aviso de desajuste).
-  const idEmpresaAlAbrir = useRef(idActiva);
 
   const [item, setItem] = useState(null);
   const [records, setRecords] = useState(outlet.rows ?? []);
@@ -110,6 +110,23 @@ function MaestroFormEditor({ slug, id }) {
       <DetailOverlay open title="Registro no encontrado" kicker="Registro" onClose={close}>
         <p className="text-base text-navy">
           {loadError ?? 'El registro no existe o fue retirado del catálogo.'}
+        </p>
+      </DetailOverlay>
+    );
+  }
+
+  if (!editing && REQUIERE_EMPRESA_ACTIVA.has(slug) && (idActiva == null || idActiva === '')) {
+    return (
+      <DetailOverlay
+        open
+        title="Selecciona una empresa"
+        kicker={maestro.registerLabel}
+        onClose={close}
+      >
+        <p className="text-base text-navy">
+          Selecciona una empresa específica en la barra superior antes de registrar un(a){' '}
+          {maestro.singular}. Con &apos;Todas las empresas&apos; seleccionada no se puede saber a
+          cuál pertenece el registro nuevo.
         </p>
       </DetailOverlay>
     );
@@ -170,13 +187,7 @@ function MaestroFormEditor({ slug, id }) {
         ) : null
       }
       hint={maestro.hint}
-      fields={(values) =>
-        withEmpresaMismatchHint(baseFields, values, {
-          idEmpresaReferencia: idEmpresaAlAbrir.current,
-          empresas: empresasList,
-          entityLabel: maestro.singular,
-        })
-      }
+      fields={baseFields}
       initialValues={initialValues}
       submitLabel={editing ? 'Guardar cambios' : maestro.registerLabel}
       deriveValues={

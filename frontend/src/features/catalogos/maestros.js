@@ -134,17 +134,12 @@ function nombreDescripcionMaestro({
       nombre: item.nombre ?? '',
       descripcion: item.descripcion ?? '',
     }),
-    fields: ({ empresas = [], rol, editing } = {}) => [
-      ...(rol === RolUsuario.AdministradorGeneral && !editing
-        ? [{ name: 'idEmpresa', label: 'Empresa', type: 'select', required: true, options: asOptions(empresas) }]
-        : []),
+    fields: () => [
       { name: 'nombre', label: 'Nombre', required: true, maxLength: 50, wide: true },
       { name: 'descripcion', label: 'Descripción', type: 'textarea', maxLength: 150 },
     ],
-    validate(values, records = [], currentId, { rol } = {}) {
+    validate(values, records = [], currentId) {
       const errors = {
-        idEmpresa:
-          rol === RolUsuario.AdministradorGeneral ? requireSelect(values.idEmpresa, 'una empresa') : null,
         nombre: validarNombreEntidad(values.nombre, 'nombre', 50, { required: true }),
         descripcion: validarTextoLibre(values.descripcion, 'descripción', 150, { required: false }),
       };
@@ -365,35 +360,22 @@ export const maestros = {
       correo: item.correo ?? '',
       habilitado: Boolean(item.habilitado),
     }),
-    fields: ({ empresas, paises, rol } = {}) => {
-      const lockEmpresa = rol !== RolUsuario.AdministradorGeneral;
-      return [
-        {
-          name: 'idEmpresa',
-          label: 'Empresa',
-          type: 'select',
-          required: true,
-          options: asOptions(empresas ?? []),
-          readOnly: lockEmpresa,
-          hint: lockEmpresa ? 'Se toma de la empresa de su sesión.' : undefined,
-        },
-        { name: 'nombre', label: 'Nombre (marca)', required: true, maxLength: 100 },
-        {
-          name: 'nit',
-          label: 'Identificación tributaria',
-          required: true,
-          maxLength: 20,
-          hint: IDENTIFICACION_HINT,
-        },
-        { name: 'nombreContacto', label: 'Contacto', maxLength: 100 },
-        phoneField({ paises }),
-        { name: 'correo', label: 'Correo', type: 'email', maxLength: 150, autoComplete: 'email' },
-        switchField(),
-      ];
-    },
+    fields: ({ paises } = {}) => [
+      { name: 'nombre', label: 'Nombre (marca)', required: true, maxLength: 100 },
+      {
+        name: 'nit',
+        label: 'Identificación tributaria',
+        required: true,
+        maxLength: 20,
+        hint: IDENTIFICACION_HINT,
+      },
+      { name: 'nombreContacto', label: 'Contacto', maxLength: 100 },
+      phoneField({ paises }),
+      { name: 'correo', label: 'Correo', type: 'email', maxLength: 150, autoComplete: 'email' },
+      switchField(),
+    ],
     validate(values, records = [], currentId, ctx = {}) {
       const errors = {
-        idEmpresa: requireSelect(values.idEmpresa, 'una empresa'),
         nombre: validarNombreEntidad(values.nombre, 'nombre (marca)', 100, { required: true }),
         nit: validarIdentificacionTributaria(values.nit, 'identificación tributaria', 20, {
           required: true,
@@ -423,12 +405,10 @@ export const maestros = {
       return errors;
     },
     toPayload(values, { idEmpresaActiva } = {}) {
-      const idEmpresa =
-        values.idEmpresa === '' || values.idEmpresa == null
-          ? idEmpresaActiva == null || idEmpresaActiva === ''
-            ? null
-            : Number(idEmpresaActiva)
-          : Number(values.idEmpresa);
+      // Alta: empresa activa. Edición con "Todas": conserva la del registro (values.idEmpresa vía toForm).
+      const raw =
+        idEmpresaActiva != null && idEmpresaActiva !== '' ? idEmpresaActiva : values.idEmpresa;
+      const idEmpresa = raw == null || raw === '' ? null : Number(raw);
       return {
         idEmpresa,
         nombre: values.nombre.trim().replace(/\s+/g, ' '),
