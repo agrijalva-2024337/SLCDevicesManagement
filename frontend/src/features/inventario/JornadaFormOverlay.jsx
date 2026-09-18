@@ -5,11 +5,18 @@ import {
   asOptions,
   compactErrors,
   requireSelect,
-  validarNombrePersona,
   validarTextoLibre,
 } from '@/shared/components/recordFormUtils';
 
-export function JornadaFormOverlay({ open, sedes, jornadasAbiertas = [], onSave, onClose }) {
+export function JornadaFormOverlay({
+  open,
+  sedes,
+  responsables = [],
+  puedeElegirResponsable = false,
+  jornadasAbiertas = [],
+  onSave,
+  onClose,
+}) {
   const ocupadas = useMemo(
     () => new Set((jornadasAbiertas ?? []).map((row) => Number(row.idSede))),
     [jornadasAbiertas],
@@ -19,8 +26,8 @@ export function JornadaFormOverlay({ open, sedes, jornadasAbiertas = [], onSave,
     [ocupadas, sedes],
   );
 
-  const fields = useMemo(
-    () => [
+  const fields = useMemo(() => {
+    const base = [
       {
         name: 'idSede',
         label: 'Sede',
@@ -29,12 +36,20 @@ export function JornadaFormOverlay({ open, sedes, jornadasAbiertas = [], onSave,
         options: asOptions(sedesDisponibles),
         hint: 'Una sola jornada abierta por sede. Las que ya tienen conteo en curso no aparecen.',
       },
-      {
-        name: 'responsable',
+    ];
+
+    if (puedeElegirResponsable) {
+      base.push({
+        name: 'idUsuario',
         label: 'Responsable',
-        maxLength: 150,
-        hint: 'Texto libre. No es el catálogo de responsables.',
-      },
+        type: 'select',
+        required: true,
+        options: asOptions(responsables),
+        hint: 'Solo usuarios con rol operador de inventario.',
+      });
+    }
+
+    base.push(
       { name: 'fechaInicio', label: 'Fecha de inicio', type: 'date', required: true },
       {
         name: 'observaciones',
@@ -43,9 +58,10 @@ export function JornadaFormOverlay({ open, sedes, jornadasAbiertas = [], onSave,
         maxLength: 300,
         wide: true,
       },
-    ],
-    [sedesDisponibles],
-  );
+    );
+
+    return base;
+  }, [puedeElegirResponsable, responsables, sedesDisponibles]);
 
   return (
     <RecordFormOverlay
@@ -53,20 +69,24 @@ export function JornadaFormOverlay({ open, sedes, jornadasAbiertas = [], onSave,
       open={open}
       title="Abrir jornada"
       kicker="Inventario"
-      hint="La jornada se delimita por sede. La ubicación se usa después, al contar."
+      hint={
+        puedeElegirResponsable
+          ? 'Seleccione el operador de inventario que quedará como responsable.'
+          : 'La jornada quedará registrada a su nombre.'
+      }
       fields={fields}
       initialValues={{
         idSede: '',
-        responsable: '',
+        idUsuario: '',
         fechaInicio: todayIsoDate(),
         observaciones: '',
       }}
       validate={(values) =>
         compactErrors({
           idSede: requireSelect(values.idSede, 'una sede'),
-          responsable: validarNombrePersona(values.responsable, 'responsable', 150, {
-            required: false,
-          }),
+          idUsuario: puedeElegirResponsable
+            ? requireSelect(values.idUsuario, 'un responsable')
+            : null,
           fechaInicio: requireSelect(values.fechaInicio, 'una fecha de inicio'),
           observaciones: validarTextoLibre(values.observaciones, 'observaciones', 300, {
             required: false,

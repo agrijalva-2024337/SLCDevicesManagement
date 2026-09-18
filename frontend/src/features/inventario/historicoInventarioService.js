@@ -48,15 +48,67 @@ export async function getById(id) {
   return crud.getById(id);
 }
 
+export async function listarResponsables({ idEmpresa } = {}) {
+  if (env.useApiMock) {
+    const { usuarios } = await import('@/features/organizacion/mocks/usuarios');
+    const { RolUsuario } = await import('@/shared/api/contracts');
+    return (usuarios ?? [])
+      .filter(
+        (usuario) =>
+          usuario.habilitado !== false && Number(usuario.rol) === RolUsuario.OperadorInventario,
+      )
+      .filter((usuario) => {
+        if (idEmpresa == null || idEmpresa === '') return true;
+        const ids = usuario.idsEmpresas ?? usuario.empresasAutorizadas ?? [];
+        return ids.map(Number).includes(Number(idEmpresa));
+      })
+      .map((usuario) => ({
+        id: usuario.id,
+        nombre: [usuario.nombres, usuario.apellidos].filter(Boolean).join(' ').trim(),
+      }));
+  }
+
+  const params = {};
+  if (idEmpresa != null && idEmpresa !== '') params.idEmpresa = Number(idEmpresa);
+  const response = await httpClient.get(apiPaths.historicosInventarioResponsables, { params });
+  return response.data;
+}
+
+function nombreSesion(usuario) {
+  return [usuario?.nombres, usuario?.apellidos].filter(Boolean).join(' ').trim() || usuario?.nombres || '';
+}
+
 export async function crear(payload) {
   const command = {
     idSede: Number(payload.idSede),
-    responsable: String(payload.responsable ?? '').trim() || null,
     fechaInicio: payload.fechaInicio,
     observaciones: String(payload.observaciones ?? '').trim() || null,
   };
+  if (payload.idUsuario != null && payload.idUsuario !== '') {
+    command.idUsuario = Number(payload.idUsuario);
+  }
 
   if (env.useApiMock) {
+    const { getSessionUser } = await import('@/shared/services/tokenStorage');
+    const { RolUsuario } = await import('@/shared/api/contracts');
+    const sesion = getSessionUser();
+    const esOperador = Number(sesion?.rol) === RolUsuario.OperadorInventario;
+
+    let responsableNombre = '';
+    if (esOperador) {
+      responsableNombre = nombreSesion(sesion);
+    } else {
+      const responsables = await listarResponsables();
+      const elegido = responsables.find((row) => Number(row.id) === command.idUsuario);
+      if (!elegido) {
+        const error = new Error('Seleccione un usuario operador de inventario.');
+        error.status = 400;
+        error.fieldErrors = { idUsuario: error.message };
+        throw error;
+      }
+      responsableNombre = elegido.nombre;
+    }
+
     const abiertas = await crud.getAll({ idSede: command.idSede });
     if (abiertas.some((row) => !row.cerrado)) {
       const error = new Error('Ya existe una jornada de inventario abierta para esta sede.');
@@ -65,7 +117,10 @@ export async function crear(payload) {
       throw error;
     }
     return crud.create({
-      ...command,
+      idSede: command.idSede,
+      responsable: responsableNombre,
+      fechaInicio: command.fechaInicio,
+      observaciones: command.observaciones,
       cerrado: false,
       fechaCierre: null,
     });

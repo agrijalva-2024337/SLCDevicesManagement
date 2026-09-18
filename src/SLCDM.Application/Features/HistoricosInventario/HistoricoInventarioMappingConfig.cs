@@ -11,6 +11,9 @@ public sealed class HistoricoInventarioMappingConfig : IRegister
 
         config.NewConfig<Commands.CreateHistoricoInventarioCommand, HistoricoInventario>()
             .Ignore(dest => dest.Id)
-            .Ignore(dest => dest.Sede!);
+            .Ignore(dest => dest.Sede!)
+            .Ignore(dest => dest.Responsable)
+            .Ignore(dest => dest.Cerrado)
+            .Ignore(dest => dest.FechaCierre);
     }
 }

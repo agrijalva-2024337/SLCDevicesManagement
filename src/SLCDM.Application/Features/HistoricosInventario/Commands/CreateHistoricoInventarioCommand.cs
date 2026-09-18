@@ -6,6 +6,7 @@ using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Security;
 using SLCDM.Application.Common.Validation;
 using SLCDM.Domain.Entities;
+using SLCDM.Domain.Enums;
 
 namespace SLCDM.Application.Features.HistoricosInventario.Commands;
 
@@ -15,16 +16,20 @@ namespace SLCDM.Application.Features.HistoricosInventario.Commands;
 /// El universo teorico al cierre son los activos cuya <c>Ubicacion.IdSede</c>
 /// coincide con la jornada y que no estan dados de baja
 /// (<see cref="Asignaciones.ActivoBajaRules.EstaDadoDeBajaAsync"/>).
+/// <para>
+/// El operador de inventario no elige responsable: la jornada queda a su nombre.
+/// Administrador de empresa y administrador general asignan un operador habilitado.
+/// </para>
 /// </summary>
 public sealed record CreateHistoricoInventarioCommand(
     int IdSede,
-    string? Responsable,
+    int? IdUsuario,
     DateTime FechaInicio,
     string? Observaciones);
 
 public sealed class CreateHistoricoInventarioCommandValidator : AbstractValidator<CreateHistoricoInventarioCommand>
 {
-    public CreateHistoricoInventarioCommandValidator(IApplicationDbContext db)
+    public CreateHistoricoInventarioCommandValidator(IApplicationDbContext db, ICurrentUserService currentUser)
     {
         RuleFor(x => x.IdSede)
             .RequiredId("id sede")
@@ -34,14 +39,51 @@ public sealed class CreateHistoricoInventarioCommandValidator : AbstractValidato
                 !await db.HistoricosInventario.AnyAsync(h => h.IdSede == id && !h.Cerrado, ct))
             .WithMessage("Ya existe una jornada de inventario abierta para esta sede.");
 
-        RuleFor(x => x.Responsable)
-            .MaximumLength(150).WithMessage("El campo responsable no debe superar los 150 caracteres.")
-            .When(x => !string.IsNullOrWhiteSpace(x.Responsable));
+        When(_ => !EsOperadorInventario(currentUser), () =>
+        {
+            RuleFor(x => x.IdUsuario)
+                .NotNull()
+                .WithMessage("Seleccione un usuario operador de inventario.")
+                .Must(id => id is > 0)
+                .WithMessage("Seleccione un usuario operador de inventario.")
+                .MustAsync(async (id, ct) =>
+                {
+                    if (id is not > 0)
+                    {
+                        return false;
+                    }
+
+                    var usuario = await db.Usuarios.AsNoTracking()
+                        .FirstOrDefaultAsync(u => u.Id == id.Value, ct);
+                    return usuario is { Habilitado: true, Rol: RolUsuario.OperadorInventario };
+                })
+                .WithMessage("Seleccione un usuario operador de inventario.");
+
+            RuleFor(x => x)
+                .MustAsync(async (cmd, ct) =>
+                {
+                    var sede = await db.Sedes.AsNoTracking()
+                        .FirstOrDefaultAsync(s => s.Id == cmd.IdSede, ct);
+                    if (sede is null)
+                    {
+                        return true;
+                    }
+
+                    return await db.UsuariosEmpresas.AnyAsync(
+                        ue => ue.IdUsuario == cmd.IdUsuario && ue.IdEmpresa == sede.IdEmpresa,
+                        ct);
+                })
+                .WithMessage("El usuario no pertenece a la empresa de la sede.")
+                .When(cmd => cmd.IdSede > 0 && cmd.IdUsuario is > 0);
+        });
 
         RuleFor(x => x.Observaciones)
             .MaximumLength(300).WithMessage("El campo observaciones no debe superar los 300 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.Observaciones));
     }
+
+    internal static bool EsOperadorInventario(ICurrentUserService currentUser) =>
+        string.Equals(currentUser.Role, Roles.OperadorInventario, StringComparison.OrdinalIgnoreCase);
 }
 
 public sealed class CreateHistoricoInventarioCommandHandler : ICommandHandler<CreateHistoricoInventarioCommand, int>
@@ -81,7 +123,19 @@ public sealed class CreateHistoricoInventarioCommandHandler : ICommandHandler<Cr
             throw new ConflictException("Ya existe una jornada de inventario abierta para esta sede.");
         }
 
+        var esOperador = CreateHistoricoInventarioCommandValidator.EsOperadorInventario(_currentUser);
+        var idUsuario = esOperador ? _currentUser.UserId : command.IdUsuario;
+        if (idUsuario is not > 0)
+        {
+            throw new ConflictException("No se pudo determinar el usuario responsable de la jornada.");
+        }
+
+        var usuario = await _db.Usuarios.AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == idUsuario.Value, cancellationToken)
+            ?? throw new NotFoundException("Usuario", idUsuario.Value);
+
         var entity = command.Adapt<HistoricoInventario>();
+        entity.Responsable = $"{usuario.Nombres} {usuario.Apellidos}".Trim();
         entity.Cerrado = false;
         if (entity.FechaInicio == default)
         {
