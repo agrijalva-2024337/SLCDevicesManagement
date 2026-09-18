@@ -55,6 +55,9 @@ builder.Services.AddCors(options =>
             .WithExposedHeaders("Content-Disposition"));
 });
 
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ApplicationDbContext>("database");
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -86,5 +89,6 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();
