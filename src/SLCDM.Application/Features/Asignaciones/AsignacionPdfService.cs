@@ -8,6 +8,7 @@ using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Options;
 using SLCDM.Application.Features.Activos;
+using SLCDM.Domain.Entities;
 
 namespace SLCDM.Application.Features.Asignaciones;
 
@@ -68,6 +69,17 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
             .FirstOrDefaultAsync(a => a.Id == idAsignacion, cancellationToken)
             ?? throw new NotFoundException("Asignacion", idAsignacion);
 
+        var tipo = asignacion.TipoAsignacion?.Nombre ?? "Movimiento";
+        var esBaja = TipoAsignacionNombres.EsNombre(tipo, TipoAsignacionNombres.Baja);
+        var fileName = esBaja ? $"acta-baja-{asignacion.Id}.pdf" : $"acta-entrega-{asignacion.Id}.pdf";
+
+        var actaGuardada = await _db.AsignacionDocumentosPdf.AsNoTracking()
+            .FirstOrDefaultAsync(d => d.IdAsignacion == idAsignacion, cancellationToken);
+        if (actaGuardada is { Contenido.Length: > 0 })
+        {
+            return new AsignacionPdfFileDto(actaGuardada.Contenido, fileName);
+        }
+
         // Se congela la primera vez que se genera el PDF (DocumentoPdfGenerardoEn)
         // y se reutiliza en cada descarga posterior -- si no, cada descarga
         // metería una hora distinta en el pie de pagina, el PDF nunca volvería
@@ -96,14 +108,11 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
                 .FirstOrDefaultAsync(e => e.Id == activo.Proveedor.IdEmpresa, cancellationToken)
             : null;
 
-        var tipo = asignacion.TipoAsignacion?.Nombre ?? "Movimiento";
-        var esBaja = TipoAsignacionNombres.EsNombre(tipo, TipoAsignacionNombres.Baja);
         var titulo = esBaja ? "Acta de baja de activo" : "Acta de entrega de equipo";
         var quienEntrega = usuarioEntrega is null
             ? $"Usuario #{asignacion.IdUsuario}"
             : $"{usuarioEntrega.Nombres} {usuarioEntrega.Apellidos}".Trim();
         var quienRecibe = responsable?.NombreCompleto ?? $"Responsable #{asignacion.IdResponsable}";
-        var fileName = esBaja ? $"acta-baja-{asignacion.Id}.pdf" : $"acta-entrega-{asignacion.Id}.pdf";
         var empresaNombre = string.IsNullOrWhiteSpace(empresa?.Nombre) ? "SLC Trade" : empresa!.Nombre;
 
         // QR embebido -> ficha de consulta publica (BE-31, ya existe). No estaba
@@ -256,13 +265,27 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
         })
         .GeneratePdf();
 
-        if (string.IsNullOrEmpty(asignacion.DocumentoPdfHash))
+        var hash = _pdfHash.CalcularHash(pdf);
+        asignacion.DocumentoPdfUrl ??= $"/api/Asignaciones/{asignacion.Id}/pdf";
+        asignacion.DocumentoPdfHash = hash;
+        asignacion.DocumentoPdfGenerardoEn = fechaDocumento;
+
+        var existente = await _db.AsignacionDocumentosPdf
+            .FirstOrDefaultAsync(d => d.IdAsignacion == idAsignacion, cancellationToken);
+        if (existente is null)
         {
-            asignacion.DocumentoPdfUrl ??= $"/api/Asignaciones/{asignacion.Id}/pdf";
-            asignacion.DocumentoPdfHash = _pdfHash.CalcularHash(pdf);
-            asignacion.DocumentoPdfGenerardoEn = fechaDocumento;
-            await _db.SaveChangesAsync(cancellationToken);
+            _db.AsignacionDocumentosPdf.Add(new AsignacionDocumentoPdf
+            {
+                IdAsignacion = idAsignacion,
+                Contenido = pdf,
+            });
         }
+        else
+        {
+            existente.Contenido = pdf;
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
 
         return new AsignacionPdfFileDto(pdf, fileName);
     }

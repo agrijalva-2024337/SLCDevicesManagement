@@ -34,6 +34,7 @@ public interface IApplicationDbContext
     DbSet<Ubicacion> Ubicaciones { get; }
     DbSet<Activo> Activos { get; }
     DbSet<Asignacion> Asignaciones { get; }
+    DbSet<AsignacionDocumentoPdf> AsignacionDocumentosPdf { get; }
     DbSet<HistoricoInventario> HistoricosInventario { get; }
     DbSet<DetalleActivo> DetallesActivos { get; }
     DbSet<HistorialActivo> HistorialActivos { get; }

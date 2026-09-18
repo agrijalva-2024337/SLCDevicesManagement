@@ -33,8 +33,7 @@ public sealed class VerificarDocumentoPdfQueryHandler
 
         var firmaDocumento = _pdfHash.CalcularHash(query.ContenidoPdf);
         var hashRegistro = asignacion.DocumentoPdfHash;
-        var coincide = hashRegistro is not null
-            && string.Equals(firmaDocumento, hashRegistro, StringComparison.OrdinalIgnoreCase);
+        var coincide = _pdfHash.SonIguales(firmaDocumento, hashRegistro);
 
         return new VerificacionPdfDto(
             coincide,

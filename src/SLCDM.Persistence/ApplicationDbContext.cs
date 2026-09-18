@@ -53,6 +53,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Ubicacion> Ubicaciones => Set<Ubicacion>();
     public DbSet<Activo> Activos => Set<Activo>();
     public DbSet<Asignacion> Asignaciones => Set<Asignacion>();
+    public DbSet<AsignacionDocumentoPdf> AsignacionDocumentosPdf => Set<AsignacionDocumentoPdf>();
     public DbSet<HistoricoInventario> HistoricosInventario => Set<HistoricoInventario>();
     public DbSet<DetalleActivo> DetallesActivos => Set<DetalleActivo>();
     public DbSet<HistorialActivo> HistorialActivos => Set<HistorialActivo>();
@@ -118,6 +119,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
         modelBuilder.Entity<Asignacion>().HasQueryFilter(a =>
             IgnoreEmpresaFilter || Activos.Any(x => x.Id == a.IdActivo));
+
+        modelBuilder.Entity<AsignacionDocumentoPdf>().HasQueryFilter(d =>
+            IgnoreEmpresaFilter || Asignaciones.Any(a => a.Id == d.IdAsignacion));
 
         modelBuilder.Entity<DetalleActivo>().HasQueryFilter(d =>
             IgnoreEmpresaFilter || Activos.Any(a => a.Id == d.IdActivo));
