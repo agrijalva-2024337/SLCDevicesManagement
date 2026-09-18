@@ -11,6 +11,7 @@ import * as activoService from '@/features/activos/activoService';
 import { activosVistaPath } from '@/features/activos/activosVistas';
 import * as asignacionService from '@/features/asignaciones/asignacionService';
 import * as categoriaService from '@/features/catalogos/categorias/categoriaService';
+import * as paisService from '@/features/catalogos/paises/paisService';
 import * as proveedorService from '@/features/catalogos/proveedores/proveedorService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import { BajaFormOverlay } from '@/features/bajas/BajaFormOverlay';
@@ -65,6 +66,7 @@ export function ActivosPage() {
   const [movimiento, setMovimiento] = useState(null);
   const categorias = useResource(categoriaService.getAll);
   const proveedores = useResource(proveedorService.getAll);
+  const paises = useResource(paisService.getAll);
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
   const areas = useResource(areaService.getAll);
@@ -232,6 +234,7 @@ export function ActivosPage() {
           records={rows}
           categorias={categorias.data}
           proveedores={proveedores.data}
+          paises={paises.data}
           ubicaciones={ubicaciones.data}
           sedes={sedes.data}
           idEmpresaActiva={idActiva}

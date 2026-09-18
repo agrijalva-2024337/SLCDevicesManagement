@@ -16,4 +16,6 @@ public class Pais : BaseEntity
     public string CodigoIso3 {get; set;} = string.Empty;
     [MaxLength(5, ErrorMessage = "El campo codigo telefonico no debe superar los 5 caracteres")]
     public string? CodigoTelefonico {get; set;}
+    [MaxLength(3, ErrorMessage = "El campo codigo de moneda no debe superar los 3 caracteres")]
+    public string? CodigoMoneda { get; set; }
 }
