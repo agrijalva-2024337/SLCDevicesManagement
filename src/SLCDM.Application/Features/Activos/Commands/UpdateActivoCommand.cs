@@ -163,8 +163,16 @@ public sealed class UpdateActivoCommandHandler : ICommandHandler<UpdateActivoCom
 
         if (entity.IdProveedor != command.IdProveedor)
         {
-            throw new ConflictException(
-                "El proveedor de un activo no puede cambiarse desde la edicion general (afecta la empresa del activo).");
+            var idEmpresaActual = await AsignacionEmpresaRules.EmpresaIdDeProveedorAsync(
+                _db, entity.IdProveedor, cancellationToken);
+            var idEmpresaNuevo = await AsignacionEmpresaRules.EmpresaIdDeProveedorAsync(
+                _db, command.IdProveedor, cancellationToken);
+
+            if (idEmpresaActual is null || idEmpresaNuevo is null || idEmpresaActual != idEmpresaNuevo)
+            {
+                throw new ConflictException(
+                    "El nuevo proveedor debe pertenecer a la misma empresa del activo. Si necesita mover el activo a otra empresa, contacte a un Administrador general.");
+            }
         }
 
         command.Adapt(entity);

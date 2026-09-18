@@ -190,7 +190,8 @@ export function ActivosPage() {
         }
         columns={[
           { key: 'codigo', header: 'Código', primary: true },
-          { key: 'nombre', header: 'Descripción' },
+          { key: 'nombre', header: 'Nombre del Activo' },
+          { key: 'numeroSerie', header: 'Número de serie' },
           { key: 'empresaNombre', header: 'Empresa' },
           { key: 'categoriaNombre', header: 'Categoría' },
           { key: 'ubicacionNombre', header: 'Ubicación' },
@@ -204,7 +205,7 @@ export function ActivosPage() {
         ]}
         rows={tableRows}
         loading={isLoading}
-        searchPlaceholder="Buscar por código, descripción, empresa, categoría o responsable"
+        searchPlaceholder="Buscar por código, nombre, número de serie, empresa, categoría o responsable"
         statusFilter={{
           key: 'estadoNombre',
           label: 'Estado',

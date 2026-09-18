@@ -39,6 +39,19 @@ internal static class AsignacionEmpresaRules
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public static async Task<int?> EmpresaIdDeProveedorAsync(
+        IApplicationDbContext db,
+        int idProveedor,
+        CancellationToken cancellationToken)
+    {
+        return await db.Proveedores
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .Where(p => p.Id == idProveedor)
+            .Select(p => (int?)p.IdEmpresa)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public static async Task<bool> UsuarioPerteneceAEmpresaAsync(
         IApplicationDbContext db,
         int idUsuario,
