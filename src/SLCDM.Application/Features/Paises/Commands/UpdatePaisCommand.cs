@@ -12,7 +12,8 @@ public sealed record UpdatePaisCommand(
     string Nombre,
     string CodigoIso2,
     string CodigoIso3,
-    string? CodigoTelefonico);
+    string? CodigoTelefonico,
+    string? CodigoMoneda);
 
 public sealed class UpdatePaisCommandValidator : AbstractValidator<UpdatePaisCommand>
 {
@@ -41,6 +42,11 @@ public sealed class UpdatePaisCommandValidator : AbstractValidator<UpdatePaisCom
         RuleFor(x => x.CodigoTelefonico)
             .MaximumLength(5).WithMessage("El campo codigo telefonico no debe superar los 5 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.CodigoTelefonico));
+
+        RuleFor(x => x.CodigoMoneda)
+            .Length(3).WithMessage("El codigo de moneda debe tener 3 letras.")
+            .Matches("^[A-Za-z]{3}$").WithMessage("El codigo de moneda debe tener 3 letras.")
+            .When(x => !string.IsNullOrWhiteSpace(x.CodigoMoneda));
     }
 }
 
@@ -65,6 +71,9 @@ public sealed class UpdatePaisCommandHandler : ICommandHandler<UpdatePaisCommand
         command.Adapt(entity);
         entity.CodigoIso2 = command.CodigoIso2.ToUpperInvariant();
         entity.CodigoIso3 = command.CodigoIso3.ToUpperInvariant();
+        entity.CodigoMoneda = string.IsNullOrWhiteSpace(command.CodigoMoneda)
+            ? null
+            : command.CodigoMoneda.ToUpperInvariant();
 
         await _db.SaveChangesAsync(cancellationToken);
     }

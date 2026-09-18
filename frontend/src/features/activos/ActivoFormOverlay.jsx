@@ -138,6 +138,24 @@ function validateActivoForm(values, records = [], currentId) {
   return compactErrors(errors);
 }
 
+function monedasDesdePaises(paises, monedaExtra) {
+  const codigos = new Set(
+    (paises ?? [])
+      .map((p) => String(p.codigoMoneda ?? '').trim().toUpperCase())
+      .filter(Boolean),
+  );
+  const extra = String(monedaExtra ?? '')
+    .trim()
+    .toUpperCase();
+  if (extra) codigos.add(extra);
+  if (codigos.size === 0) {
+    codigos.add('GTQ');
+  }
+  return Array.from(codigos)
+    .sort()
+    .map((codigo) => ({ id: codigo, nombre: codigo }));
+}
+
 export function ActivoFormOverlay({
   open,
   editing,
@@ -147,6 +165,7 @@ export function ActivoFormOverlay({
   proveedores,
   ubicaciones,
   sedes,
+  paises = [],
   idEmpresaActiva,
   onSave,
   onClose,
@@ -162,84 +181,6 @@ export function ActivoFormOverlay({
   );
   const idEmpresaDelActivo = proveedorActual?.idEmpresa;
 
-  const fields = useMemo(
-    () => [
-      { name: 'nombre', label: 'Nombre', required: true, maxLength: 150, wide: true },
-      {
-        name: 'idCategoriaActivo',
-        label: 'Categoría',
-        type: 'select',
-        required: true,
-        options: asOptions((categorias ?? []).filter((item) => item.habilitado !== false)),
-      },
-      {
-        name: 'idProveedor',
-        label: 'Proveedor',
-        type: 'select',
-        required: true,
-        options: asOptions(
-          (proveedores ?? []).filter((item) => {
-            if (item.habilitado === false) return false;
-            const idEmpresaFiltro = editing ? idEmpresaDelActivo : idEmpresaActiva;
-            if (idEmpresaFiltro == null || idEmpresaFiltro === '') return true;
-            return Number(item.idEmpresa) === Number(idEmpresaFiltro);
-          }),
-        ),
-        hint: editing
-          ? 'Solo se puede corregir por un proveedor de la misma empresa. Para mover el activo a otra empresa, contacta a un Administrador general.'
-          : undefined,
-      },
-      {
-        name: 'idUbicacion',
-        label: 'Ubicación',
-        type: 'select',
-        required: true,
-        readOnly: Boolean(editing),
-        options: asOptions(destinos),
-        hint: editing
-          ? 'Para cambiar la ubicación de un activo, usa Traslado.'
-          : 'Empresa y sede se derivan de la ubicación.',
-      },
-      { name: 'marca', label: 'Marca', maxLength: 100 },
-      { name: 'modelo', label: 'Modelo', maxLength: 100 },
-      {
-        name: 'numeroSerie',
-        label: 'Número de serie',
-        maxLength: 100,
-        hint: 'Serie del fabricante (placa de fábrica).',
-      },
-      { name: 'fechaCompra', label: 'Fecha de compra', type: 'date', required: true },
-      {
-        name: 'costoAdquisicion',
-        label: 'Costo de adquisición',
-        type: 'number',
-        min: 0,
-        step: '0.01',
-        hint: 'Hasta dos decimales, con punto. Ejemplo: 1250.50. Máximo 9999999999.99',
-      },
-      { name: 'moneda', label: 'Moneda', maxLength: 10, hint: 'Código ISO de 3 letras (ej. GTQ)' },
-      { name: 'numeroFactura', label: 'Número de factura', maxLength: 50 },
-      { name: 'fechaVencimientoGarantia', label: 'Vencimiento de garantía', type: 'date', required: true },
-      { name: 'descripcion', label: 'Descripción', type: 'textarea', maxLength: 300, wide: true },
-      {
-        name: 'especificacionesHardware',
-        label: 'Especificaciones de hardware',
-        type: 'textarea',
-        maxLength: 500,
-        wide: true,
-      },
-      {
-        name: 'perifericosAdicionales',
-        label: 'Periféricos adicionales',
-        type: 'textarea',
-        maxLength: 500,
-        wide: true,
-      },
-      { name: 'observaciones', label: 'Observaciones', type: 'textarea', maxLength: 500, wide: true },
-    ],
-    [categorias, destinos, editing, idEmpresaActiva, idEmpresaDelActivo, proveedores],
-  );
-
   return (
     <RecordFormOverlay
       key={record?.id ?? 'nuevo-activo'}
@@ -247,7 +188,97 @@ export function ActivoFormOverlay({
       title={editing ? record?.nombre : 'Nuevo activo'}
       kicker={editing ? 'Editar registro' : 'Registrar activo'}
       hint="Nombre, categoría, proveedor, ubicación, compra y garantía son obligatorios."
-      fields={fields}
+      fields={(values) => {
+        const monedasDisponibles = monedasDesdePaises(
+          paises,
+          values?.moneda || record?.moneda,
+        );
+        return [
+          { name: 'nombre', label: 'Nombre', required: true, maxLength: 150, wide: true },
+          {
+            name: 'idCategoriaActivo',
+            label: 'Categoría',
+            type: 'select',
+            required: true,
+            options: asOptions((categorias ?? []).filter((item) => item.habilitado !== false)),
+          },
+          {
+            name: 'idProveedor',
+            label: 'Proveedor',
+            type: 'select',
+            required: true,
+            options: asOptions(
+              (proveedores ?? []).filter((item) => {
+                if (item.habilitado === false) return false;
+                const idEmpresaFiltro = editing ? idEmpresaDelActivo : idEmpresaActiva;
+                if (idEmpresaFiltro == null || idEmpresaFiltro === '') return true;
+                return Number(item.idEmpresa) === Number(idEmpresaFiltro);
+              }),
+            ),
+            hint: editing
+              ? 'Solo se puede corregir por un proveedor de la misma empresa. Para mover el activo a otra empresa, contacta a un Administrador general.'
+              : undefined,
+          },
+          {
+            name: 'idUbicacion',
+            label: 'Ubicación',
+            type: 'select',
+            required: true,
+            readOnly: Boolean(editing),
+            options: asOptions(destinos),
+            hint: editing
+              ? 'Para cambiar la ubicación de un activo, usa Traslado.'
+              : 'Empresa y sede se derivan de la ubicación.',
+          },
+          { name: 'marca', label: 'Marca', maxLength: 100 },
+          { name: 'modelo', label: 'Modelo', maxLength: 100 },
+          {
+            name: 'numeroSerie',
+            label: 'Número de serie',
+            maxLength: 100,
+            hint: 'Serie del fabricante (placa de fábrica).',
+          },
+          { name: 'fechaCompra', label: 'Fecha de compra', type: 'date', required: true },
+          {
+            name: 'costoAdquisicion',
+            label: 'Costo de adquisición',
+            type: 'number',
+            min: 0,
+            step: '0.01',
+            hint: 'Hasta dos decimales, con punto. Ejemplo: 1250.50. Máximo 9999999999.99',
+          },
+          {
+            name: 'moneda',
+            label: 'Moneda',
+            type: 'select',
+            options: asOptions(monedasDisponibles),
+            hint: 'Se arma con las monedas de los países ya registrados en el catálogo de Países.',
+          },
+          { name: 'numeroFactura', label: 'Número de factura', maxLength: 50 },
+          {
+            name: 'fechaVencimientoGarantia',
+            label: 'Vencimiento de garantía',
+            type: 'date',
+            required: true,
+          },
+          { name: 'descripcion', label: 'Descripción', type: 'textarea', maxLength: 300, wide: true },
+          {
+            name: 'especificacionesHardware',
+            label: 'Especificaciones de hardware',
+            type: 'textarea',
+            maxLength: 500,
+            wide: true,
+          },
+          {
+            name: 'perifericosAdicionales',
+            label: 'Periféricos adicionales',
+            type: 'textarea',
+            maxLength: 500,
+            wide: true,
+          },
+          { name: 'observaciones', label: 'Observaciones', type: 'textarea', maxLength: 500, wide: true },
+        ];
+      }}
       initialValues={editing && record ? activoToForm(record) : emptyActivo()}
       submitLabel={editing ? 'Guardar cambios' : 'Registrar activo'}
       validate={(values) => validateActivoForm(values, records, editing ? record?.id : undefined)}

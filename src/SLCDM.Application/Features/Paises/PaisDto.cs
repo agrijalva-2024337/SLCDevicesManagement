@@ -5,4 +5,5 @@ public sealed record PaisDto(
     string Nombre,
     string CodigoIso2,
     string CodigoIso3,
-    string? CodigoTelefonico);
+    string? CodigoTelefonico,
+    string? CodigoMoneda);

@@ -1,11 +1,19 @@
 import { foldSearch } from '@/shared/utils/search';
 import { PAISES_ISO_ROWS } from '@/shared/validation/paisesIso.data';
+import { monedaDeIso2 } from '@/shared/validation/monedaPorPais';
 
 /**
  * Catálogo ISO 3166 mundial (español) + rangos de dígitos nacionales.
  * Sin libphonenumber-js. Fuente: paisesIso.data.js (~230 países).
  */
-export const PAISES_ISO = Object.freeze(PAISES_ISO_ROWS.map((row) => Object.freeze({ ...row })));
+export const PAISES_ISO = Object.freeze(
+  PAISES_ISO_ROWS.map((row) =>
+    Object.freeze({
+      ...row,
+      codigoMoneda: monedaDeIso2(row.codigoIso2),
+    }),
+  ),
+);
 
 const ALIASES = Object.freeze({
   chile: 'cl',

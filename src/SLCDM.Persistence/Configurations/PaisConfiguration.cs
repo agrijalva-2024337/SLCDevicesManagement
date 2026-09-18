@@ -32,6 +32,10 @@ public class PaisConfiguration : IEntityTypeConfiguration<Pais>
             .HasColumnName("codigo_telefonico")
             .HasColumnType("varchar(5)");
 
+        builder.Property(p => p.CodigoMoneda)
+            .HasColumnName("codigo_moneda")
+            .HasColumnType("varchar(3)");
+
         // Sin Habilitado/FechaCreacion/FechaModificacion: Pais hereda de BaseEntity.
         // Catalogo global (ERD): indices unicos globales, sin IdEmpresa.
 

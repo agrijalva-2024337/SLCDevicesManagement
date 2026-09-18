@@ -41,5 +41,6 @@ export function derivePaisValues(next, prev) {
     codigoIso2: match.codigoIso2,
     codigoIso3: match.codigoIso3,
     codigoTelefonico: match.codigoTelefonico,
+    codigoMoneda: match.codigoMoneda ?? '',
   };
 }

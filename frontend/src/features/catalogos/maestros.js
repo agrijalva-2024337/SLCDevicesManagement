@@ -10,7 +10,7 @@ import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import { RolUsuario, rolUsuarioLabel } from '@/shared/api/contracts';
-import { asOptions, phoneField, requireSelect, validarCodigoTelefonico, validarCorreo, validarIdentificacionTributaria, validarIso2, validarIso3, validarNombreEntidad, validarNombrePersona, validarPassword, validarTextoLibre, validarUsername } from '@/shared/components/recordFormUtils';
+import { asOptions, phoneField, requireSelect, validarCodigoTelefonico, validarCorreo, validarIdentificacionTributaria, validarIso2, validarIso3, validarMoneda, validarNombreEntidad, validarNombrePersona, validarPassword, validarTextoLibre, validarUsername } from '@/shared/components/recordFormUtils';
 import { phoneFormFields, phonePayload, validatePhoneFields } from '@/shared/utils/phoneNumber';
 import { buscarPorCodigoTelefonico, buscarPorIso2, buscarPorIso3, nombresPaisesIso } from '@/shared/validation/paisesIso';
 
@@ -561,12 +561,14 @@ export const maestros = {
       codigoIso2: '',
       codigoIso3: '',
       codigoTelefonico: '',
+      codigoMoneda: '',
     }),
     toForm: (item) => ({
       nombre: item.nombre ?? '',
       codigoIso2: String(item.codigoIso2 ?? '').toLowerCase(),
       codigoIso3: String(item.codigoIso3 ?? '').toLowerCase(),
       codigoTelefonico: item.codigoTelefonico ?? '',
+      codigoMoneda: String(item.codigoMoneda ?? '').toUpperCase(),
     }),
     fields: () => [
       {
@@ -581,6 +583,12 @@ export const maestros = {
       { name: 'codigoIso2', label: 'ISO 2', required: true, maxLength: 2, hint: 'Dos letras en minúsculas (ej. cl)' },
       { name: 'codigoIso3', label: 'ISO 3', required: true, maxLength: 3 },
       { name: 'codigoTelefonico', label: 'Código telefónico', maxLength: 5, hint: 'Con o sin + (ej. +56)' },
+      {
+        name: 'codigoMoneda',
+        label: 'Moneda',
+        maxLength: 3,
+        hint: 'Código ISO 4217 de 3 letras (ej. GTQ). Se autocompleta según el país, pero se puede corregir.',
+      },
     ],
     validate(values) {
       const errors = {
@@ -590,6 +598,7 @@ export const maestros = {
         codigoTelefonico: validarCodigoTelefonico(values.codigoTelefonico, 'código telefónico', {
           required: false,
         }),
+        codigoMoneda: validarMoneda(values.codigoMoneda, 'moneda', { required: false }),
       };
 
       const byIso2 = buscarPorIso2(values.codigoIso2);
@@ -616,12 +625,14 @@ export const maestros = {
         codigoIso2: values.codigoIso2.trim().toLowerCase(),
         codigoIso3: values.codigoIso3.trim().toLowerCase(),
         codigoTelefonico: values.codigoTelefonico.trim() || null,
+        codigoMoneda: values.codigoMoneda.trim().toUpperCase() || null,
       };
     },
     detail: (item) => [
       { label: 'ISO 2', value: item.codigoIso2 },
       { label: 'ISO 3', value: item.codigoIso3 },
       { label: 'Código telefónico', value: item.codigoTelefonico },
+      { label: 'Moneda', value: item.codigoMoneda },
     ],
   },
   'redes-conocidas': {

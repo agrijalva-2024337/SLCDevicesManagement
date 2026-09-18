@@ -10,7 +10,8 @@ public sealed record CreatePaisCommand(
     string Nombre,
     string CodigoIso2,
     string CodigoIso3,
-    string? CodigoTelefonico);
+    string? CodigoTelefonico,
+    string? CodigoMoneda);
 
 public sealed class CreatePaisCommandValidator : AbstractValidator<CreatePaisCommand>
 {
@@ -37,6 +38,11 @@ public sealed class CreatePaisCommandValidator : AbstractValidator<CreatePaisCom
         RuleFor(x => x.CodigoTelefonico)
             .MaximumLength(5).WithMessage("El campo codigo telefonico no debe superar los 5 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.CodigoTelefonico));
+
+        RuleFor(x => x.CodigoMoneda)
+            .Length(3).WithMessage("El codigo de moneda debe tener 3 letras.")
+            .Matches("^[A-Za-z]{3}$").WithMessage("El codigo de moneda debe tener 3 letras.")
+            .When(x => !string.IsNullOrWhiteSpace(x.CodigoMoneda));
     }
 }
 
@@ -58,6 +64,9 @@ public sealed class CreatePaisCommandHandler : ICommandHandler<CreatePaisCommand
         var entity = command.Adapt<Pais>();
         entity.CodigoIso2 = command.CodigoIso2.ToUpperInvariant();
         entity.CodigoIso3 = command.CodigoIso3.ToUpperInvariant();
+        entity.CodigoMoneda = string.IsNullOrWhiteSpace(command.CodigoMoneda)
+            ? null
+            : command.CodigoMoneda.ToUpperInvariant();
 
         _db.Paises.Add(entity);
         await _db.SaveChangesAsync(cancellationToken);
