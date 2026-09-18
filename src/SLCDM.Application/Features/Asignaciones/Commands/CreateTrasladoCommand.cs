@@ -159,6 +159,9 @@ public sealed class CreateTrasladoCommandHandler : ICommandHandler<CreateTraslad
         });
 
         activo.IdUbicacion = command.IdUbicacionDestino;
+
+        entity.DocumentoPdfUrl = $"/api/Asignaciones/{entity.Id}/pdf";
+
         await _db.SaveChangesAsync(cancellationToken);
 
         _db.HistorialActivos.Add(new HistorialActivo

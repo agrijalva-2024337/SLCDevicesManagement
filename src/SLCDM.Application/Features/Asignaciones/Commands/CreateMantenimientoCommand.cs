@@ -176,6 +176,8 @@ public sealed class CreateMantenimientoCommandHandler : ICommandHandler<CreateMa
             _db, EstadoActivoNombres.EnMantenimiento, idEmpresa, cancellationToken);
         activo.IdEstado = estadoEnMantenimiento.Id;
 
+        entity.DocumentoPdfUrl = $"/api/Asignaciones/{entity.Id}/pdf";
+
         await _db.SaveChangesAsync(cancellationToken);
 
         _db.HistorialActivos.Add(new HistorialActivo
