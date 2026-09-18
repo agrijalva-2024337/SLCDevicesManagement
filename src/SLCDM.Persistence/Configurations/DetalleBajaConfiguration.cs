@@ -15,10 +15,6 @@ public class DetalleBajaConfiguration : IEntityTypeConfiguration<DetalleBaja>
         builder.Property(d => d.IdMotivoBaja).HasColumnName("id_motivo_baja").IsRequired();
         builder.Property(d => d.IdAutorizadoPor).HasColumnName("id_autorizado_por").IsRequired();
 
-        builder.Property(d => d.DocumentoReferencia)
-            .HasColumnName("documento_referencia")
-            .HasColumnType("varchar(300)");
-
         builder.HasOne(d => d.Asignacion)
             .WithMany()
             .HasForeignKey(d => d.IdAsignacion)

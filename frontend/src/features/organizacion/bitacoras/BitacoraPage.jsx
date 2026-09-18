@@ -3,7 +3,7 @@ import { useAuth } from '@/features/auth/useAuth';
 import * as bitacoraService from '@/features/organizacion/bitacoras/bitacoraService';
 import { filterRowsByEmpresa, useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
-import { TipoOperacionBitacora } from '@/shared/api/contracts';
+import { TipoOperacionBitacora, RolUsuario } from '@/shared/api/contracts';
 import { snapshotEntries } from '@/features/organizacion/bitacoras/bitacoraSnapshot';
 import { DataTable } from '@/shared/components/DataTable';
 import { DetailField } from '@/shared/components/DetailOverlay';
@@ -56,8 +56,8 @@ function BitacoraSnapshot({ label, value }) {
 }
 
 export function BitacoraPage() {
-  const { canWrite } = useAuth();
-  const canReadUsuarios = canWrite('usuarios');
+  const { rol } = useAuth();
+  const canReadUsuarios = rol >= RolUsuario.AdministradorEmpresa;
   const { idActiva } = useEmpresaActiva();
   const [idUsuario, setIdUsuario] = useState('all');
   const [entidadAfectada, setEntidadAfectada] = useState('all');
@@ -75,9 +75,12 @@ export function BitacoraPage() {
   const { rows, isLoading, errorMessage } = useCatalogCollection(load, {
     key: listQueryKey('bitacoras', bitacoraParams),
   });
-  const loadUsuarios = useCallback(() => usuarioService.getAllIfAllowed(canReadUsuarios), [canReadUsuarios]);
+  const loadUsuarios = useCallback(
+    () => usuarioService.getAllIfAllowed(canReadUsuarios, { idEmpresa: idActiva || undefined }),
+    [canReadUsuarios, idActiva],
+  );
   const usuarios = useResource(loadUsuarios, {
-    key: listQueryKey('usuarios'),
+    key: listQueryKey('usuarios', { idEmpresa: idActiva || undefined }),
     enabled: canReadUsuarios,
   });
 

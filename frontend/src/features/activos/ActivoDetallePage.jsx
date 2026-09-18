@@ -30,6 +30,7 @@ import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import { formatHaceCuanto, listarRastreo, mapsUrlDe } from '@/features/rastreo/rastreoService';
+import { RolUsuario } from '@/shared/api/contracts';
 import { DataTable } from '@/shared/components/DataTable';
 import { DetailField } from '@/shared/components/DetailOverlay';
 import { PageHeader } from '@/shared/components/PageHeader';
@@ -60,10 +61,10 @@ function estadoTone(nombre) {
 export function ActivoDetallePage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { canWrite, usuario } = useAuth();
+  const { canWrite, rol, usuario } = useAuth();
   const allowWrite = canWrite('activos');
   const canRetire = canWrite('bajas');
-  const canReadUsuarios = canWrite('usuarios');
+  const canReadUsuarios = rol >= RolUsuario.AdministradorEmpresa;
   const { idActiva, empresas } = useEmpresaActiva();
 
   const [movimiento, setMovimiento] = useState(null);
@@ -71,7 +72,10 @@ export function ActivoDetallePage() {
 
   const loadActivo = useCallback(() => activoService.getById(id), [id]);
   const loadQr = useCallback(() => consultaPublicaService.getQrDeActivo(id), [id]);
-  const loadUsuarios = useCallback(() => usuarioService.getAllIfAllowed(canReadUsuarios), [canReadUsuarios]);
+  const loadUsuarios = useCallback(
+    () => usuarioService.getAllIfAllowed(canReadUsuarios, { idEmpresa: idActiva || undefined }),
+    [canReadUsuarios, idActiva],
+  );
 
   const activoRes = useResource(loadActivo, { key: detailQueryKey('activos', id), initialData: null });
   const qrRes = useResource(loadQr, { key: detailQueryKey('consultaQr', id), initialData: null });
@@ -88,7 +92,7 @@ export function ActivoDetallePage() {
   const motivos = useResource(motivoBajaService.getAll);
   const tiposMantenimiento = useResource(tipoMantenimientoService.getAll);
   const usuarios = useResource(loadUsuarios, {
-    key: listQueryKey('usuarios'),
+    key: listQueryKey('usuarios', { idEmpresa: idActiva || undefined }),
     enabled: canReadUsuarios,
   });
   const rastreo = useResource(listarRastreo, { key: listQueryKey('rastreo') });
@@ -462,6 +466,10 @@ export function ActivoDetallePage() {
         responsables={responsables.data}
         asignaciones={asignaciones.data}
         tipos={tipos.data}
+        idEmpresaActiva={idActiva}
+        ubicaciones={ubicaciones.data}
+        sedes={sedes.data}
+        areas={areas.data}
         onClose={() => setMovimiento(null)}
         onSave={async (values) => {
           await bajaService.registrar({
@@ -470,8 +478,6 @@ export function ActivoDetallePage() {
             idResponsable: Number(values.idResponsable),
             idMotivoBaja: Number(values.idMotivoBaja),
             idAutorizadoPor: Number(values.idAutorizadoPor),
-            documentoReferencia: values.documentoReferencia,
-            documentoPdfUrl: values.documentoPdfUrl,
             fecha: values.fecha,
             observaciones: values.observaciones,
             firmaEntrega: values.firmaEntrega,

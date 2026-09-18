@@ -22,6 +22,7 @@ import * as trasladoService from '@/features/inventario/trasladoService';
 import { MantenimientoFormOverlay } from '@/features/mantenimientos/MantenimientoFormOverlay';
 import * as mantenimientoService from '@/features/mantenimientos/mantenimientoService';
 import * as tipoMantenimientoService from '@/features/mantenimientos/tipoMantenimientoService';
+import * as areaService from '@/features/organizacion/areas/areaService';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import * as estadoService from '@/features/organizacion/estados/estadoService';
@@ -29,6 +30,7 @@ import * as responsableService from '@/features/organizacion/responsables/respon
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
+import { RolUsuario } from '@/shared/api/contracts';
 import { DataTable } from '@/shared/components/DataTable';
 import { EscanearQrButton, RegisterButton } from '@/shared/components/RecordActions';
 import { RowIconActions } from '@/shared/components/RowIconActions';
@@ -51,10 +53,10 @@ function estadoTone(nombre) {
 export function ActivosPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const { canWrite, usuario } = useAuth();
+  const { canWrite, rol, usuario } = useAuth();
   const allowWrite = canWrite('activos');
   const canRetire = canWrite('bajas');
-  const canReadUsuarios = canWrite('usuarios');
+  const canReadUsuarios = rol >= RolUsuario.AdministradorEmpresa;
   const { idActiva } = useEmpresaActiva();
   const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(
     activoService.getAll,
@@ -65,14 +67,18 @@ export function ActivosPage() {
   const proveedores = useResource(proveedorService.getAll);
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
+  const areas = useResource(areaService.getAll);
   const empresas = useResource(empresaService.getAll);
   const estados = useResource(estadoService.getAll);
   const responsables = useResource(responsableService.getAll);
   const tipos = useResource(tipoAsignacionService.getAll);
   const asignaciones = useResource(asignacionService.getAll);
-  const loadUsuarios = useCallback(() => usuarioService.getAllIfAllowed(canReadUsuarios), [canReadUsuarios]);
+  const loadUsuarios = useCallback(
+    () => usuarioService.getAllIfAllowed(canReadUsuarios, { idEmpresa: idActiva || undefined }),
+    [canReadUsuarios, idActiva],
+  );
   const usuarios = useResource(loadUsuarios, {
-    key: listQueryKey('usuarios'),
+    key: listQueryKey('usuarios', { idEmpresa: idActiva || undefined }),
     enabled: canReadUsuarios,
   });
   const motivos = useResource(motivoBajaService.getAll);
@@ -304,6 +310,10 @@ export function ActivosPage() {
         responsables={responsables.data}
         asignaciones={asignaciones.data}
         tipos={tipos.data}
+        idEmpresaActiva={idActiva}
+        ubicaciones={ubicaciones.data}
+        sedes={sedes.data}
+        areas={areas.data}
         onClose={() => setMovimiento(null)}
         onSave={async (values) => {
           try {
@@ -313,8 +323,6 @@ export function ActivosPage() {
               idResponsable: Number(values.idResponsable),
               idMotivoBaja: Number(values.idMotivoBaja),
               idAutorizadoPor: Number(values.idAutorizadoPor),
-              documentoReferencia: values.documentoReferencia,
-              documentoPdfUrl: values.documentoPdfUrl,
               fecha: values.fecha,
               observaciones: values.observaciones,
               firmaEntrega: values.firmaEntrega,

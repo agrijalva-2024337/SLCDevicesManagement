@@ -30,8 +30,6 @@ function toCommand({
   idEstado,
   idMotivoBaja,
   idAutorizadoPor,
-  documentoReferencia,
-  documentoPdfUrl,
   fecha,
   observaciones,
   firmaEntrega,
@@ -46,8 +44,6 @@ function toCommand({
     idEstado: Number(idEstado),
     idMotivoBaja: Number(idMotivoBaja),
     idAutorizadoPor: Number(idAutorizadoPor),
-    documentoReferencia: String(documentoReferencia ?? '').trim() || null,
-    documentoPdfUrl: String(documentoPdfUrl ?? '').trim(),
     fechaAsignacion: fecha,
     observaciones: String(observaciones ?? '').trim() || null,
     firmaEntrega: entrega,
@@ -89,7 +85,7 @@ async function aplicarEfectosMock({ activo, command, idAsignacion }) {
     tipoOperacion: 'Baja',
     descripcion: 'Baja de activo',
     informacionAnterior: `id_activo=${command.idActivo}`,
-    informacionNueva: `id_motivo_baja=${command.idMotivoBaja}; documento_pdf_url=${command.documentoPdfUrl}; id_autorizado_por=${command.idAutorizadoPor}; id_responsable=${command.idResponsable}`,
+    informacionNueva: `id_motivo_baja=${command.idMotivoBaja}; id_autorizado_por=${command.idAutorizadoPor}; id_responsable=${command.idResponsable}`,
   });
 }
 

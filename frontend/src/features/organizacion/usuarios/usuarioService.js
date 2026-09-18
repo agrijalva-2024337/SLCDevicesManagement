@@ -9,7 +9,30 @@ const crud = createMockCrudService({
   seed: usuarios,
 });
 
-export const { getAll, getById, update, remove } = crud;
+export const { getById, update, remove } = crud;
+
+export async function getAll(params) {
+  const idEmpresa = params?.idEmpresa;
+  const rest = { ...params };
+  delete rest.idEmpresa;
+
+  if (env.useApiMock) {
+    const rows = await crud.getAll(Object.keys(rest).length > 0 ? rest : undefined);
+    if (idEmpresa == null || idEmpresa === '') return rows;
+    const wanted = Number(idEmpresa);
+    return (rows ?? []).filter((usuario) => {
+      const ids = usuario.idsEmpresas ?? usuario.empresasAutorizadas ?? [];
+      if (ids.length > 0) return ids.map(Number).includes(wanted);
+      return usuario.idEmpresa != null && Number(usuario.idEmpresa) === wanted;
+    });
+  }
+
+  const query = { ...rest };
+  if (idEmpresa != null && idEmpresa !== '') {
+    query.idEmpresa = Number(idEmpresa);
+  }
+  return crud.getAll(Object.keys(query).length > 0 ? query : undefined);
+}
 
 /**
  * POST /api/Usuarios responde CreateUsuarioResult ({ id, passwordGenerada }),
@@ -53,15 +76,15 @@ export async function create(data) {
   };
 }
 
-/** GET /api/Usuarios exige EscrituraEmpresa. Operador sin permiso de escritura recibe 403. */
+/** GET /api/Usuarios exige EscrituraEmpresa (admin empresa o admin general). */
 export const USUARIOS_SIN_LECTURA =
   'Tu perfil no puede listar usuarios. Pedí un administrador de empresa.';
 
 const SIN_USUARIOS = Object.freeze([]);
 
-export function getAllIfAllowed(canRead) {
+export function getAllIfAllowed(canRead, params) {
   if (!canRead) {
     return Promise.resolve(SIN_USUARIOS);
   }
-  return getAll();
+  return getAll(params);
 }

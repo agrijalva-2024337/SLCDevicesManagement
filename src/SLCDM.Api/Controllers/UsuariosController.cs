@@ -31,7 +31,7 @@ public sealed class UsuariosController : ApiControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = Roles.AdministradorGeneral)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<ActionResult<IReadOnlyList<UsuarioDto>>> GetAll(
         [FromQuery] bool incluirInhabilitados = false,
         [FromQuery] int? idEmpresa = null,
@@ -39,7 +39,7 @@ public sealed class UsuariosController : ApiControllerBase
         Ok(await _getAll.HandleAsync(new GetUsuariosQuery(incluirInhabilitados, idEmpresa), cancellationToken));
 
     [HttpGet("{id:int}")]
-    [Authorize(Roles = Roles.AdministradorGeneral)]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
     public async Task<ActionResult<UsuarioDto>> GetById(int id, CancellationToken cancellationToken) =>
         Ok(await _getById.HandleAsync(new GetUsuarioByIdQuery(id), cancellationToken));
 

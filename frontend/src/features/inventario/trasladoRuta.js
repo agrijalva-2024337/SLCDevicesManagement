@@ -58,6 +58,38 @@ export function filtrarPorEmpresaDeUbicacion(rows, idEmpresa, ubicaciones, sedes
   });
 }
 
+export function empresaIdDeResponsable(responsable, areas, sedes) {
+  if (!responsable?.idArea) return null;
+  const area = (areas ?? []).find((item) => Number(item.id) === Number(responsable.idArea));
+  if (!area) return null;
+  const sede = (sedes ?? []).find((item) => Number(item.id) === Number(area.idSede));
+  return sede ? Number(sede.idEmpresa) : null;
+}
+
+export function activosDeEmpresa(activos, ubicaciones, sedes, idEmpresa) {
+  if (idEmpresa == null || idEmpresa === '') return activos ?? [];
+  const wanted = Number(idEmpresa);
+  return (activos ?? []).filter((activo) => empresaIdDeActivo(activo, ubicaciones, sedes) === wanted);
+}
+
+export function responsablesDeEmpresa(responsables, areas, sedes, idEmpresa) {
+  const habilitados = (responsables ?? []).filter((item) => item.habilitado !== false);
+  if (idEmpresa == null || idEmpresa === '') return habilitados;
+  const wanted = Number(idEmpresa);
+  return habilitados.filter((item) => empresaIdDeResponsable(item, areas, sedes) === wanted);
+}
+
+export function usuariosDeEmpresa(usuarios, idEmpresa) {
+  const habilitados = (usuarios ?? []).filter((item) => item.habilitado !== false);
+  if (idEmpresa == null || idEmpresa === '') return habilitados;
+  const wanted = Number(idEmpresa);
+  return habilitados.filter((usuario) => {
+    const ids = usuario.idsEmpresas ?? usuario.empresasAutorizadas ?? [];
+    if (ids.length > 0) return ids.map(Number).includes(wanted);
+    return usuario.idEmpresa != null && Number(usuario.idEmpresa) === wanted;
+  });
+}
+
 export function todayIsoDate() {
   return new Date().toISOString().slice(0, 10);
 }

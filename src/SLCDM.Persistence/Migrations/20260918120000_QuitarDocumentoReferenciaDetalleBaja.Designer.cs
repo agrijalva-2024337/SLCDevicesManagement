@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SLCDM.Persistence;
 
@@ -11,9 +12,11 @@ using SLCDM.Persistence;
 namespace SLCDM.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260918120000_QuitarDocumentoReferenciaDetalleBaja")]
+    partial class QuitarDocumentoReferenciaDetalleBaja
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -846,6 +849,10 @@ namespace SLCDM.Persistence.Migrations
                         .HasColumnType("varchar(5)")
                         .HasColumnName("codigo_telefonico");
 
+                    b.Property<int>("IdEmpresa")
+                        .HasColumnType("int")
+                        .HasColumnName("id_empresa");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -854,11 +861,13 @@ namespace SLCDM.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CodigoIso2")
-                        .IsUnique();
+                    b.HasIndex("IdEmpresa", "CodigoIso2")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pais_empresa_iso2");
 
-                    b.HasIndex("CodigoIso3")
-                        .IsUnique();
+                    b.HasIndex("IdEmpresa", "CodigoIso3")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pais_empresa_iso3");
 
                     b.ToTable("pais", (string)null);
                 });
@@ -1537,6 +1546,17 @@ namespace SLCDM.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Sede");
+                });
+
+            modelBuilder.Entity("SLCDM.Domain.Entities.Pais", b =>
+                {
+                    b.HasOne("SLCDM.Domain.Entities.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("IdEmpresa")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Empresa");
                 });
 
             modelBuilder.Entity("SLCDM.Domain.Entities.Proveedor", b =>
