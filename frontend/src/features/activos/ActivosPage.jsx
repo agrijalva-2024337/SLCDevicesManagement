@@ -103,7 +103,6 @@ export function ActivosPage() {
         const idEmpresa = empresaIdDeActivo(row, ubicaciones.data, sedes.data);
         return {
           ...row,
-          codigo: row.codigoInterno || row.numeroSerie || String(row.id),
           categoriaNombre: byId(categorias.data, row.idCategoriaActivo)?.nombre ?? '—',
           empresaNombre: byId(empresas.data, idEmpresa)?.nombre ?? '—',
           ubicacionNombre: nombreUbicacion(byId(ubicaciones.data, row.idUbicacion)),
@@ -189,8 +188,7 @@ export function ActivosPage() {
           </>
         }
         columns={[
-          { key: 'codigo', header: 'Código', primary: true },
-          { key: 'nombre', header: 'Nombre del Activo' },
+          { key: 'nombre', header: 'Nombre del Activo', primary: true },
           { key: 'numeroSerie', header: 'Número de serie' },
           { key: 'empresaNombre', header: 'Empresa' },
           { key: 'categoriaNombre', header: 'Categoría' },
@@ -205,7 +203,7 @@ export function ActivosPage() {
         ]}
         rows={tableRows}
         loading={isLoading}
-        searchPlaceholder="Buscar por código, nombre, número de serie, empresa, categoría o responsable"
+        searchPlaceholder="Buscar por nombre, número de serie, empresa, categoría o responsable"
         statusFilter={{
           key: 'estadoNombre',
           label: 'Estado',
