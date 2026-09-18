@@ -5,6 +5,7 @@ import { JornadaFormOverlay } from '@/features/inventario/JornadaFormOverlay';
 import * as historicoInventarioService from '@/features/inventario/historicoInventarioService';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
+import { RolUsuario } from '@/shared/api/contracts';
 import { DataTable } from '@/shared/components/DataTable';
 import { RegisterButton } from '@/shared/components/RecordActions';
 import { Tooltip } from '@/shared/components/Tooltip';
@@ -26,8 +27,9 @@ function hydrate(row, sedes) {
 
 export function JornadasPage() {
   const navigate = useNavigate();
-  const { canWrite } = useAuth();
+  const { canWrite, rol } = useAuth();
   const allowWrite = canWrite('inventario-fisico');
+  const puedeElegirResponsable = rol >= RolUsuario.AdministradorEmpresa;
   const { idActiva } = useEmpresaActiva();
   const load = useCallback(
     () => historicoInventarioService.listar({ idEmpresa: idActiva || undefined }),
@@ -38,6 +40,14 @@ export function JornadasPage() {
   });
   const crud = useCrudOverlay();
   const sedes = useResource(sedeService.getAll);
+  const loadResponsables = useCallback(
+    () => historicoInventarioService.listarResponsables({ idEmpresa: idActiva || undefined }),
+    [idActiva],
+  );
+  const responsables = useResource(loadResponsables, {
+    key: listQueryKey('historicosInventarioResponsables', { idEmpresa: idActiva || undefined }),
+    enabled: puedeElegirResponsable,
+  });
 
   const tableRows = useMemo(() => rows.map((row) => hydrate(row, sedes.data)), [rows, sedes.data]);
   const sedesDeEmpresa = useMemo(() => {
@@ -132,12 +142,14 @@ export function JornadasPage() {
       <JornadaFormOverlay
         open={crud.isCreate}
         sedes={sedesDeEmpresa}
+        responsables={responsables.data}
+        puedeElegirResponsable={puedeElegirResponsable}
         jornadasAbiertas={jornadasAbiertas}
         onClose={crud.close}
         onSave={async (values) => {
           await historicoInventarioService.crear({
             idSede: Number(values.idSede),
-            responsable: values.responsable,
+            idUsuario: puedeElegirResponsable ? Number(values.idUsuario) : undefined,
             fechaInicio: values.fechaInicio,
             observaciones: values.observaciones,
           });

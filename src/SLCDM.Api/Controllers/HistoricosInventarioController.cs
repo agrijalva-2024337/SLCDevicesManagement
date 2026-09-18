@@ -13,6 +13,7 @@ public sealed class HistoricosInventarioController : ApiControllerBase
     private readonly IQueryHandler<GetHistoricosInventarioQuery, IReadOnlyList<HistoricoInventarioDto>> _getAll;
     private readonly IQueryHandler<GetHistoricoInventarioByIdQuery, HistoricoInventarioDto> _getById;
     private readonly IQueryHandler<GetDiferenciasInventarioQuery, IReadOnlyList<DiferenciaInventarioDto>> _getDiferencias;
+    private readonly IQueryHandler<GetUsuariosJornadaInventarioQuery, IReadOnlyList<UsuarioJornadaInventarioDto>> _getUsuarios;
     private readonly ICommandHandler<CreateHistoricoInventarioCommand, int> _create;
     private readonly ICommandHandler<CerrarHistoricoInventarioCommand> _cerrar;
 
@@ -20,12 +21,14 @@ public sealed class HistoricosInventarioController : ApiControllerBase
         IQueryHandler<GetHistoricosInventarioQuery, IReadOnlyList<HistoricoInventarioDto>> getAll,
         IQueryHandler<GetHistoricoInventarioByIdQuery, HistoricoInventarioDto> getById,
         IQueryHandler<GetDiferenciasInventarioQuery, IReadOnlyList<DiferenciaInventarioDto>> getDiferencias,
+        IQueryHandler<GetUsuariosJornadaInventarioQuery, IReadOnlyList<UsuarioJornadaInventarioDto>> getUsuarios,
         ICommandHandler<CreateHistoricoInventarioCommand, int> create,
         ICommandHandler<CerrarHistoricoInventarioCommand> cerrar)
     {
         _getAll = getAll;
         _getById = getById;
         _getDiferencias = getDiferencias;
+        _getUsuarios = getUsuarios;
         _create = create;
         _cerrar = cerrar;
     }
@@ -40,6 +43,13 @@ public sealed class HistoricosInventarioController : ApiControllerBase
         Ok(await _getAll.HandleAsync(
             new GetHistoricosInventarioQuery(idSede, idEmpresa, soloAbiertos),
             cancellationToken));
+
+    [HttpGet("responsables")]
+    [Authorize(Roles = Roles.EscrituraEmpresa)]
+    public async Task<ActionResult<IReadOnlyList<UsuarioJornadaInventarioDto>>> GetResponsables(
+        [FromQuery] int? idEmpresa = null,
+        CancellationToken cancellationToken = default) =>
+        Ok(await _getUsuarios.HandleAsync(new GetUsuariosJornadaInventarioQuery(idEmpresa), cancellationToken));
 
     [HttpGet("{id:int}")]
     [Authorize(Roles = Roles.Lectura)]

@@ -377,7 +377,7 @@ export const maestros = {
           readOnly: lockEmpresa,
           hint: lockEmpresa ? 'Se toma de la empresa de su sesión.' : undefined,
         },
-        { name: 'nombre', label: 'Nombre', required: true, maxLength: 100 },
+        { name: 'nombre', label: 'Nombre (marca)', required: true, maxLength: 100 },
         {
           name: 'nit',
           label: 'Identificación tributaria',
@@ -394,7 +394,7 @@ export const maestros = {
     validate(values, records = [], currentId, ctx = {}) {
       const errors = {
         idEmpresa: requireSelect(values.idEmpresa, 'una empresa'),
-        nombre: validarNombreEntidad(values.nombre, 'nombre', 100, { required: true }),
+        nombre: validarNombreEntidad(values.nombre, 'nombre (marca)', 100, { required: true }),
         nit: validarIdentificacionTributaria(values.nit, 'identificación tributaria', 20, {
           required: true,
         }),

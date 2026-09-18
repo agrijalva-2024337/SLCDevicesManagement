@@ -37,6 +37,7 @@ export const apiPaths = {
   // [API] multipart archivo PDF; confirmar cuando exista el controller
   asignacionVerificarPdf: (id) => `/api/Asignaciones/${id}/pdf/verificar`,
   historicosInventario: '/api/HistoricosInventario',
+  historicosInventarioResponsables: '/api/HistoricosInventario/responsables',
   detallesActivo: '/api/DetallesActivos',
   historialActivos: '/api/HistorialActivos',
   motivosBaja: '/api/MotivosBaja',
