@@ -2,7 +2,7 @@
 // escribe HistorialActivo.informacionNueva con este formato. Cuando exista GET de
 // DetalleBaja (o el DTO crezca), borrar este archivo y sus llamadas.
 
-const KEYS = ['id_motivo_baja', 'documento_pdf_url', 'id_autorizado_por', 'id_responsable'];
+const KEYS = ['id_motivo_baja', 'id_autorizado_por', 'id_responsable'];
 
 function asId(value) {
   if (value == null || value === '') return null;
@@ -31,7 +31,6 @@ export function parseDetalleBaja(informacionNueva) {
 
   return {
     idMotivoBaja: asId(bag.id_motivo_baja),
-    documentoPdfUrl: bag.documento_pdf_url || null,
     idAutorizadoPor: asId(bag.id_autorizado_por),
     idResponsable: asId(bag.id_responsable),
   };

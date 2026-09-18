@@ -14,8 +14,6 @@ public sealed record CreateBajaCommand(
     int IdEstado,
     int IdMotivoBaja,
     int IdAutorizadoPor,
-    string? DocumentoReferencia,
-    string DocumentoPdfUrl,
     DateTime FechaAsignacion,
     string? Observaciones);
 
@@ -53,14 +51,6 @@ public sealed class CreateBajaCommandValidator : AbstractValidator<CreateBajaCom
             .MustAsync(async (id, ct) => await db.Usuarios.AnyAsync(u => u.Id == id, ct))
             .WithMessage("No se encontro un usuario autorizador con el id informado.");
 
-        RuleFor(x => x.DocumentoReferencia)
-            .MaximumLength(300).WithMessage("El campo documento de referencia no debe superar los 300 caracteres.")
-            .When(x => !string.IsNullOrWhiteSpace(x.DocumentoReferencia));
-
-        RuleFor(x => x.DocumentoPdfUrl)
-            .NotEmpty().WithMessage("El campo documento pdf url es obligatorio.")
-            .MaximumLength(300).WithMessage("El campo documento pdf url no debe superar los 300 caracteres.");
-
         RuleFor(x => x.Observaciones)
             .MaximumLength(300).WithMessage("El campo observaciones no debe superar los 300 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.Observaciones));
@@ -81,6 +71,15 @@ public sealed class CreateBajaCommandValidator : AbstractValidator<CreateBajaCom
                 return AsignacionEmpresaRules.EmpresasCoinciden(empresaActivo, empresaResponsable);
             })
             .WithMessage("El responsable debe pertenecer a la misma empresa del activo.");
+
+        RuleFor(x => x)
+            .MustAsync(async (cmd, ct) =>
+            {
+                var empresaActivo = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(db, cmd.IdActivo, ct);
+                return await AsignacionEmpresaRules.UsuarioPerteneceAEmpresaAsync(
+                    db, cmd.IdAutorizadoPor, empresaActivo, ct);
+            })
+            .WithMessage("Quien autoriza debe pertenecer a la misma empresa del activo.");
     }
 }
 
@@ -135,8 +134,7 @@ public sealed class CreateBajaCommandHandler : ICommandHandler<CreateBajaCommand
             IdTipoAsignacion = tipo.Id,
             FechaAsignacion = fecha,
             Activa = true,
-            Observaciones = command.Observaciones,
-            DocumentoPdfUrl = command.DocumentoPdfUrl
+            Observaciones = command.Observaciones
         };
 
         _db.Asignaciones.Add(entity);
@@ -146,7 +144,6 @@ public sealed class CreateBajaCommandHandler : ICommandHandler<CreateBajaCommand
         {
             IdAsignacion = entity.Id,
             IdMotivoBaja = command.IdMotivoBaja,
-            DocumentoReferencia = command.DocumentoReferencia,
             IdAutorizadoPor = command.IdAutorizadoPor
         });
 
@@ -172,7 +169,7 @@ public sealed class CreateBajaCommandHandler : ICommandHandler<CreateBajaCommand
             Descripcion = "Baja de activo",
             InformacionAnterior = $"id_activo={command.IdActivo}",
             InformacionNueva =
-                $"id_motivo_baja={command.IdMotivoBaja}; documento_pdf_url={command.DocumentoPdfUrl}; id_autorizado_por={command.IdAutorizadoPor}; id_responsable={command.IdResponsable}"
+                $"id_motivo_baja={command.IdMotivoBaja}; id_autorizado_por={command.IdAutorizadoPor}; id_responsable={command.IdResponsable}"
         });
         await _db.SaveChangesAsync(cancellationToken);
 

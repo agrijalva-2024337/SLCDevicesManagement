@@ -4,14 +4,18 @@ import {
   isActivoDeBaja,
   isActivoEnMantenimiento,
 } from '@/features/activos/activoAcciones';
-import { todayIsoDate } from '@/features/inventario/trasladoRuta';
+import {
+  activosDeEmpresa,
+  responsablesDeEmpresa,
+  todayIsoDate,
+  usuariosDeEmpresa,
+} from '@/features/inventario/trasladoRuta';
 import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import {
   asOptions,
   compactErrors,
   optionalText,
   requireSelect,
-  requireText,
 } from '@/shared/components/recordFormUtils';
 import { byId } from '@/shared/utils/format';
 
@@ -30,6 +34,10 @@ export function BajaFormOverlay({
   responsables,
   asignaciones = [],
   tipos = [],
+  idEmpresaActiva,
+  ubicaciones = [],
+  sedes = [],
+  areas = [],
   onSave,
   onClose,
 }) {
@@ -37,20 +45,33 @@ export function BajaFormOverlay({
   const ctx = { asignaciones, tipos };
   const activosElegibles = useMemo(
     () =>
-      (activos ?? []).filter((item) => {
-        const lookup = { asignaciones, tipos };
-        return (
-          !isActivoDeBaja(item, lookup) &&
-          !isActivoEnMantenimiento(item, lookup) &&
-          !isActivoAsignado(item, lookup)
-        );
-      }),
-    [activos, asignaciones, tipos],
+      activosDeEmpresa(
+        (activos ?? []).filter((item) => {
+          const lookup = { asignaciones, tipos };
+          return (
+            !isActivoDeBaja(item, lookup) &&
+            !isActivoEnMantenimiento(item, lookup) &&
+            !isActivoAsignado(item, lookup)
+          );
+        }),
+        ubicaciones,
+        sedes,
+        idEmpresaActiva,
+      ),
+    [activos, asignaciones, idEmpresaActiva, sedes, tipos, ubicaciones],
+  );
+  const responsablesFiltrados = useMemo(
+    () => responsablesDeEmpresa(responsables, areas, sedes, idEmpresaActiva),
+    [areas, idEmpresaActiva, responsables, sedes],
+  );
+  const usuariosFiltrados = useMemo(
+    () => usuariosDeEmpresa(usuarios, idEmpresaActiva),
+    [idEmpresaActiva, usuarios],
   );
 
   const usuarioOptions = useMemo(
-    () => asOptions((usuarios ?? []).filter((item) => item.habilitado !== false).map((item) => ({ id: item.id, nombre: usuarioNombre(item) }))),
-    [usuarios],
+    () => asOptions(usuariosFiltrados.map((item) => ({ id: item.id, nombre: usuarioNombre(item) }))),
+    [usuariosFiltrados],
   );
 
   const fields = useMemo(
@@ -62,7 +83,7 @@ export function BajaFormOverlay({
         required: true,
         readOnly: lockActivo,
         options: asOptions(lockActivo ? (activos ?? []) : activosElegibles, 'nombre'),
-        hint: 'Solo activos libres.',
+        hint: 'Solo activos libres de la empresa activa.',
       },
       {
         name: 'idMotivoBaja',
@@ -78,32 +99,17 @@ export function BajaFormOverlay({
         required: !usuariosUnavailableReason,
         readOnly: Boolean(usuariosUnavailableReason),
         options: usuarioOptions,
-        hint: usuariosUnavailableReason || undefined,
+        hint: usuariosUnavailableReason || 'Solo usuarios de la empresa activa.',
       },
       {
         name: 'idResponsable',
         label: 'Responsable',
         type: 'select',
         required: true,
-        options: asOptions(
-          (responsables ?? []).filter((item) => item.habilitado !== false),
-          'nombreCompleto',
-        ),
+        options: asOptions(responsablesFiltrados, 'nombreCompleto'),
+        hint: 'Solo responsables de la empresa activa.',
       },
       { name: 'fecha', label: 'Fecha', type: 'date', required: true },
-      {
-        name: 'documentoReferencia',
-        label: 'Documento de referencia',
-        maxLength: 300,
-      },
-      {
-        name: 'documentoPdfUrl',
-        label: 'URL del documento PDF',
-        required: true,
-        maxLength: 300,
-        wide: true,
-        hint: 'Dirección del documento PDF que respalda la baja.',
-      },
       {
         name: 'observaciones',
         label: 'Observaciones',
@@ -124,7 +130,15 @@ export function BajaFormOverlay({
         hint: 'Opcional. Se puede guardar sin firmar.',
       },
     ],
-    [activos, activosElegibles, lockActivo, motivos, responsables, usuarioOptions, usuariosUnavailableReason],
+    [
+      activos,
+      activosElegibles,
+      lockActivo,
+      motivos,
+      responsablesFiltrados,
+      usuarioOptions,
+      usuariosUnavailableReason,
+    ],
   );
 
   return (
@@ -133,7 +147,7 @@ export function BajaFormOverlay({
       open={open}
       title="Registrar baja"
       kicker="Operaciones"
-      hint="Indique el motivo y la dirección del documento."
+      hint="Indique el motivo y quien autoriza la baja."
       fields={fields}
       initialValues={{
         idActivo: prefill?.idActivo ? String(prefill.idActivo) : '',
@@ -141,8 +155,6 @@ export function BajaFormOverlay({
         idAutorizadoPor: prefill?.idAutorizadoPor ? String(prefill.idAutorizadoPor) : '',
         idResponsable: prefill?.idResponsable ? String(prefill.idResponsable) : '',
         fecha: todayIsoDate(),
-        documentoReferencia: '',
-        documentoPdfUrl: '',
         observaciones: '',
         firmaEntrega: '',
         firmaRecibe: '',
@@ -155,8 +167,6 @@ export function BajaFormOverlay({
           idAutorizadoPor: usuariosUnavailableReason || requireSelect(values.idAutorizadoPor, 'quien autoriza'),
           idResponsable: requireSelect(values.idResponsable, 'un responsable'),
           fecha: requireSelect(values.fecha, 'una fecha'),
-          documentoReferencia: optionalText(values.documentoReferencia, 'documento de referencia', 300),
-          documentoPdfUrl: requireText(values.documentoPdfUrl, 'documento pdf url', 300),
           observaciones: optionalText(values.observaciones, 'observaciones', 300),
         };
         if (activo && isActivoDeBaja(activo, ctx)) {

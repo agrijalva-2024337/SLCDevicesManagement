@@ -10,11 +10,13 @@ import * as historialActivoService from '@/features/activos/historialActivoServi
 import * as asignacionService from '@/features/asignaciones/asignacionService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import { filtrarPorEmpresaDeActivo } from '@/features/inventario/trasladoRuta';
+import * as areaService from '@/features/organizacion/areas/areaService';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
+import { RolUsuario } from '@/shared/api/contracts';
 import { DataTable } from '@/shared/components/DataTable';
 import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
-import { DescargarActaButton, EscanearQrButton, RegisterButton } from '@/shared/components/RecordActions';
+import { EscanearQrButton, RegisterButton } from '@/shared/components/RecordActions';
 import { ToneBadge } from '@/shared/components/StatusBadge';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useCrudOverlay } from '@/shared/hooks/useCrudOverlay';
@@ -47,15 +49,13 @@ function hydrate(row, lookups) {
     motivoNombre: motivo?.nombre ?? '—',
     autorizadoNombre: usuarioNombre(autorizador),
     estadoNombre: estado?.nombre ?? '—',
-    documentoPdfUrl: detalle?.documentoPdfUrl ?? row.documentoPdfUrl,
-    documentoReferencia: null,
   };
 }
 
 export function BajasPage() {
-  const { canWrite, usuario } = useAuth();
+  const { canWrite, rol, usuario } = useAuth();
   const allowWrite = canWrite('bajas');
-  const canReadUsuarios = canWrite('usuarios');
+  const canReadUsuarios = rol >= RolUsuario.AdministradorEmpresa;
   const { idActiva } = useEmpresaActiva();
   const location = useLocation();
   const navigate = useNavigate();
@@ -72,10 +72,14 @@ export function BajasPage() {
   const activos = useResource(activoService.getAll);
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
+  const areas = useResource(areaService.getAll);
   const motivos = useResource(motivoBajaService.getAll);
-  const loadUsuarios = useCallback(() => usuarioService.getAllIfAllowed(canReadUsuarios), [canReadUsuarios]);
+  const loadUsuarios = useCallback(
+    () => usuarioService.getAllIfAllowed(canReadUsuarios, { idEmpresa: idActiva || undefined }),
+    [canReadUsuarios, idActiva],
+  );
   const usuarios = useResource(loadUsuarios, {
-    key: listQueryKey('usuarios'),
+    key: listQueryKey('usuarios', { idEmpresa: idActiva || undefined }),
     enabled: canReadUsuarios,
   });
   const responsables = useResource(responsableService.getAll);
@@ -182,7 +186,7 @@ export function BajasPage() {
         loading={isLoading}
         searchPlaceholder="Buscar por activo, motivo o autorizante"
         emptyTitle="No hay bajas"
-        emptyDescription="Registre la primera baja con motivo, autorizante y URL del documento."
+        emptyDescription="Registre la primera baja con motivo y autorizante."
         getRowActions={(row) => ({
           view: { onClick: () => crud.openView(row) },
         })}
@@ -203,13 +207,7 @@ export function BajasPage() {
             <DetailField label="Fecha" value={formatDate(crud.record.fechaAsignacion)} />
             <DetailField label="Estado" value={crud.record.estadoNombre} />
             <div className="sm:col-span-2">
-              <DetailField label="URL del documento" value={crud.record.documentoPdfUrl} />
-            </div>
-            <div className="sm:col-span-2">
               <DetailField label="Observaciones" value={crud.record.observaciones} />
-            </div>
-            <div className="sm:col-span-2">
-              <DescargarActaButton url={crud.record.documentoPdfUrl} />
             </div>
           </div>
         ) : null}
@@ -225,6 +223,10 @@ export function BajasPage() {
         responsables={responsables.data}
         asignaciones={asignacionesRows}
         tipos={tipos.data}
+        idEmpresaActiva={idActiva}
+        ubicaciones={ubicaciones.data}
+        sedes={sedes.data}
+        areas={areas.data}
         onClose={crud.close}
         onSave={async (values) => {
           try {
@@ -234,8 +236,6 @@ export function BajasPage() {
               idResponsable: Number(values.idResponsable),
               idMotivoBaja: Number(values.idMotivoBaja),
               idAutorizadoPor: Number(values.idAutorizadoPor),
-              documentoReferencia: values.documentoReferencia,
-              documentoPdfUrl: values.documentoPdfUrl,
               fecha: values.fecha,
               observaciones: values.observaciones,
               firmaEntrega: values.firmaEntrega,

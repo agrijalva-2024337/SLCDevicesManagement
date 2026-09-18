@@ -48,6 +48,6 @@ export const historialActivos = [
     descripcion: 'Baja de activo',
     informacionAnterior: null,
     informacionNueva:
-      'id_motivo_baja=2; documento_pdf_url=https://files.slc.local/bajas/HP-E24.pdf; id_autorizado_por=2; id_responsable=2',
+      'id_motivo_baja=2; id_autorizado_por=2; id_responsable=2',
   },
 ];

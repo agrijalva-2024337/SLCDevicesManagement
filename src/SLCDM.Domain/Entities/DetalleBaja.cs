@@ -17,9 +17,6 @@ public class DetalleBaja : SLCDM.Domain.Common.BaseEntity
     [ForeignKey("IdMotivoBaja")]
     public MotivoBaja? MotivoBaja { get; set; }
 
-    [MaxLength(300, ErrorMessage = "El campo documento de referencia no debe superar los 300 caracteres")]
-    public string? DocumentoReferencia { get; set; }
-
     [Required(ErrorMessage = "El campo autorizado por es obligatorio")]
     public int IdAutorizadoPor { get; set; }
 
