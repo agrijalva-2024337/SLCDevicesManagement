@@ -31,6 +31,8 @@ export function BajaFormOverlay({
   motivos,
   usuarios,
   usuariosUnavailableReason,
+  permiteElegirAutorizador = true,
+  usuarioActual,
   responsables,
   asignaciones = [],
   tipos = [],
@@ -74,8 +76,11 @@ export function BajaFormOverlay({
     [usuariosFiltrados],
   );
 
-  const fields = useMemo(
-    () => [
+  const idAutorizadoPorFijo =
+    !permiteElegirAutorizador && usuarioActual?.id != null ? String(usuarioActual.id) : '';
+
+  const fields = useMemo(() => {
+    const base = [
       {
         name: 'idActivo',
         label: 'Activo',
@@ -92,7 +97,10 @@ export function BajaFormOverlay({
         required: true,
         options: asOptions(motivos ?? []),
       },
-      {
+    ];
+
+    if (permiteElegirAutorizador) {
+      base.push({
         name: 'idAutorizadoPor',
         label: 'Autorizado por',
         type: 'select',
@@ -100,7 +108,10 @@ export function BajaFormOverlay({
         readOnly: Boolean(usuariosUnavailableReason),
         options: usuarioOptions,
         hint: usuariosUnavailableReason || 'Solo usuarios de la empresa activa.',
-      },
+      });
+    }
+
+    base.push(
       {
         name: 'idResponsable',
         label: 'Responsable',
@@ -129,17 +140,19 @@ export function BajaFormOverlay({
         type: 'signature',
         hint: 'Opcional. Se puede guardar sin firmar.',
       },
-    ],
-    [
-      activos,
-      activosElegibles,
-      lockActivo,
-      motivos,
-      responsablesFiltrados,
-      usuarioOptions,
-      usuariosUnavailableReason,
-    ],
-  );
+    );
+
+    return base;
+  }, [
+    activos,
+    activosElegibles,
+    lockActivo,
+    motivos,
+    permiteElegirAutorizador,
+    responsablesFiltrados,
+    usuarioOptions,
+    usuariosUnavailableReason,
+  ]);
 
   return (
     <RecordFormOverlay
@@ -147,12 +160,20 @@ export function BajaFormOverlay({
       open={open}
       title="Registrar baja"
       kicker="Operaciones"
-      hint="Indique el motivo y quien autoriza la baja."
+      hint={
+        permiteElegirAutorizador
+          ? 'Indique el motivo y quien autoriza la baja.'
+          : 'Indique el motivo de la baja. Quien autoriza queda registrado como usted.'
+      }
       fields={fields}
       initialValues={{
         idActivo: prefill?.idActivo ? String(prefill.idActivo) : '',
         idMotivoBaja: '',
-        idAutorizadoPor: prefill?.idAutorizadoPor ? String(prefill.idAutorizadoPor) : '',
+        idAutorizadoPor: permiteElegirAutorizador
+          ? prefill?.idAutorizadoPor
+            ? String(prefill.idAutorizadoPor)
+            : ''
+          : idAutorizadoPorFijo,
         idResponsable: prefill?.idResponsable ? String(prefill.idResponsable) : '',
         fecha: todayIsoDate(),
         observaciones: '',
@@ -164,7 +185,11 @@ export function BajaFormOverlay({
         const errors = {
           idActivo: requireSelect(values.idActivo, 'un activo'),
           idMotivoBaja: requireSelect(values.idMotivoBaja, 'un motivo de baja'),
-          idAutorizadoPor: usuariosUnavailableReason || requireSelect(values.idAutorizadoPor, 'quien autoriza'),
+          idAutorizadoPor: permiteElegirAutorizador
+            ? usuariosUnavailableReason || requireSelect(values.idAutorizadoPor, 'quien autoriza')
+            : idAutorizadoPorFijo
+              ? null
+              : 'No se pudo determinar el usuario actual.',
           idResponsable: requireSelect(values.idResponsable, 'un responsable'),
           fecha: requireSelect(values.fecha, 'una fecha'),
           observaciones: optionalText(values.observaciones, 'observaciones', 300),
@@ -176,7 +201,12 @@ export function BajaFormOverlay({
         }
         return compactErrors(errors);
       }}
-      onSave={onSave}
+      onSave={async (values) => {
+        const payload = permiteElegirAutorizador
+          ? values
+          : { ...values, idAutorizadoPor: idAutorizadoPorFijo };
+        return onSave?.(payload);
+      }}
       onClose={onClose}
       submitLabel="Registrar baja"
     />

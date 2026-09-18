@@ -181,6 +181,8 @@ public sealed class CreateAsignacionCommandHandler : ICommandHandler<CreateAsign
 
         await _db.SaveChangesAsync(cancellationToken);
 
+        entity.DocumentoPdfUrl = $"/api/Asignaciones/{entity.Id}/pdf";
+
         _db.HistorialActivos.Add(new HistorialActivo
         {
             IdAsignacion = entity.Id,

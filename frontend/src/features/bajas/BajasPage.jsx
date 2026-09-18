@@ -56,6 +56,7 @@ export function BajasPage() {
   const { canWrite, rol, usuario } = useAuth();
   const allowWrite = canWrite('bajas');
   const canReadUsuarios = rol >= RolUsuario.AdministradorEmpresa;
+  const permiteElegirAutorizador = canReadUsuarios;
   const { idActiva } = useEmpresaActiva();
   const location = useLocation();
   const navigate = useNavigate();
@@ -75,12 +76,12 @@ export function BajasPage() {
   const areas = useResource(areaService.getAll);
   const motivos = useResource(motivoBajaService.getAll);
   const loadUsuarios = useCallback(
-    () => usuarioService.getAllIfAllowed(canReadUsuarios, { idEmpresa: idActiva || undefined }),
-    [canReadUsuarios, idActiva],
+    () => usuarioService.getAllIfAllowed(permiteElegirAutorizador, { idEmpresa: idActiva || undefined }),
+    [permiteElegirAutorizador, idActiva],
   );
   const usuarios = useResource(loadUsuarios, {
     key: listQueryKey('usuarios', { idEmpresa: idActiva || undefined }),
-    enabled: canReadUsuarios,
+    enabled: permiteElegirAutorizador,
   });
   const responsables = useResource(responsableService.getAll);
   const estados = useResource(estadoService.getAll);
@@ -219,7 +220,9 @@ export function BajasPage() {
         activos={activos.data}
         motivos={motivos.data}
         usuarios={usuarios.data}
-        usuariosUnavailableReason={canReadUsuarios ? null : usuarioService.USUARIOS_SIN_LECTURA}
+        usuariosUnavailableReason={permiteElegirAutorizador ? null : usuarioService.USUARIOS_SIN_LECTURA}
+        permiteElegirAutorizador={permiteElegirAutorizador}
+        usuarioActual={usuario}
         responsables={responsables.data}
         asignaciones={asignacionesRows}
         tipos={tipos.data}
@@ -230,12 +233,15 @@ export function BajasPage() {
         onClose={crud.close}
         onSave={async (values) => {
           try {
+            const idAutorizadoPor = permiteElegirAutorizador
+              ? Number(values.idAutorizadoPor)
+              : Number(usuario?.id);
             await bajaService.registrar({
               idActivo: Number(values.idActivo),
               idUsuario: usuario?.id,
               idResponsable: Number(values.idResponsable),
               idMotivoBaja: Number(values.idMotivoBaja),
-              idAutorizadoPor: Number(values.idAutorizadoPor),
+              idAutorizadoPor,
               fecha: values.fecha,
               observaciones: values.observaciones,
               firmaEntrega: values.firmaEntrega,
