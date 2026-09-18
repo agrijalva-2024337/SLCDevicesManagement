@@ -17,7 +17,8 @@ public sealed class ActivosController : ApiControllerBase
     private readonly IQueryHandler<GetActivoByIdQuery, ActivoDto> _getById;
     private readonly ICommandHandler<CreateActivoCommand, int> _create;
     private readonly ICommandHandler<UpdateActivoCommand> _update;
-    private readonly ICommandHandler<DeleteActivoCommand> _delete;
+    private readonly ICommandHandler<DisableActivoCommand> _disable;
+    private readonly ICommandHandler<EnableActivoCommand> _enable;
     private readonly IQueryHandler<GetActivoQrQuery, ActivoQrFileDto> _qr;
 
     public ActivosController(
@@ -25,14 +26,16 @@ public sealed class ActivosController : ApiControllerBase
         IQueryHandler<GetActivoByIdQuery, ActivoDto> getById,
         ICommandHandler<CreateActivoCommand, int> create,
         ICommandHandler<UpdateActivoCommand> update,
-        ICommandHandler<DeleteActivoCommand> delete,
+        ICommandHandler<DisableActivoCommand> disable,
+        ICommandHandler<EnableActivoCommand> enable,
         IQueryHandler<GetActivoQrQuery, ActivoQrFileDto> qr)
     {
         _getAll = getAll;
         _getById = getById;
         _create = create;
         _update = update;
-        _delete = delete;
+        _disable = disable;
+        _enable = enable;
         _qr = qr;
     }
 
@@ -42,9 +45,10 @@ public sealed class ActivosController : ApiControllerBase
         [FromQuery] int? idCategoriaActivo = null,
         [FromQuery] int? idProveedor = null,
         [FromQuery] int? idUbicacion = null,
+        [FromQuery] bool incluirInhabilitados = false,
         CancellationToken cancellationToken = default) =>
         Ok(await _getAll.HandleAsync(
-            new GetActivosQuery(idCategoriaActivo, idProveedor, idUbicacion),
+            new GetActivosQuery(idCategoriaActivo, idProveedor, idUbicacion, incluirInhabilitados),
             cancellationToken));
 
     [HttpGet("{id:int}")]
@@ -87,11 +91,19 @@ public sealed class ActivosController : ApiControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{id:int}")]
+    [HttpPost("{id:int}/disable")]
     [Authorize(Roles = Roles.EscrituraOperativa)]
-    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Disable(int id, CancellationToken cancellationToken)
     {
-        await _delete.HandleAsync(new DeleteActivoCommand(id), cancellationToken);
+        await _disable.HandleAsync(new DisableActivoCommand(id), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPost("{id:int}/enable")]
+    [Authorize(Roles = Roles.EscrituraOperativa)]
+    public async Task<IActionResult> Enable(int id, CancellationToken cancellationToken)
+    {
+        await _enable.HandleAsync(new EnableActivoCommand(id), cancellationToken);
         return NoContent();
     }
 }

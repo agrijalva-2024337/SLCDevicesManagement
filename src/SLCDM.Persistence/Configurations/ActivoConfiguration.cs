@@ -13,6 +13,10 @@
             builder.HasKey(a => a.Id);
             builder.Property(a => a.Id).HasColumnName("id_activo");
 
+            builder.Property(a => a.Habilitado)
+                .HasColumnName("habilitado")
+                .HasDefaultValue(true);
+
             builder.Property(a => a.IdCategoriaActivo).HasColumnName("id_categoria_activo").IsRequired();
 
             builder.Property(a => a.IdProveedor).HasColumnName("id_proveedor").IsRequired();

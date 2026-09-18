@@ -7,7 +7,8 @@ namespace SLCDM.Application.Features.Activos.Queries;
 public sealed record GetActivosQuery(
     int? IdCategoriaActivo = null,
     int? IdProveedor = null,
-    int? IdUbicacion = null);
+    int? IdUbicacion = null,
+    bool IncluirInhabilitados = false);
 
 public sealed class GetActivosQueryHandler : IQueryHandler<GetActivosQuery, IReadOnlyList<ActivoDto>>
 {
@@ -23,6 +24,11 @@ public sealed class GetActivosQueryHandler : IQueryHandler<GetActivosQuery, IRea
         CancellationToken cancellationToken = default)
     {
         var itemsQuery = _db.Activos.AsNoTracking();
+
+        if (!query.IncluirInhabilitados)
+        {
+            itemsQuery = itemsQuery.Where(a => a.Habilitado);
+        }
 
         if (query.IdCategoriaActivo.HasValue)
         {
