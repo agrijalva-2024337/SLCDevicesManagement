@@ -40,6 +40,16 @@ export function empresaIdDeActivo(activo, ubicaciones, sedes) {
   return empresaIdDeUbicacion(ubicacion, sedes);
 }
 
+export function sedeIdDeActivo(activo, ubicaciones, sedes) {
+  if (!activo?.idUbicacion) return null;
+  const ubicacion = (ubicaciones ?? []).find(
+    (item) => Number(item.id) === Number(activo.idUbicacion),
+  );
+  if (!ubicacion) return null;
+  const sede = (sedes ?? []).find((item) => Number(item.id) === Number(ubicacion.idSede));
+  return sede ? Number(sede.id) : null;
+}
+
 export function filtrarPorEmpresaDeActivo(rows, idEmpresa, activos, ubicaciones, sedes) {
   if (idEmpresa == null || idEmpresa === '') return rows ?? [];
   const wanted = Number(idEmpresa);

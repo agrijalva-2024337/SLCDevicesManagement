@@ -18,7 +18,7 @@ import { BajaFormOverlay } from '@/features/bajas/BajaFormOverlay';
 import * as bajaService from '@/features/bajas/bajaService';
 import * as motivoBajaService from '@/features/bajas/motivoBajaService';
 import { TrasladoFormOverlay } from '@/features/inventario/TrasladoFormOverlay';
-import { empresaIdDeActivo, nombreUbicacion } from '@/features/inventario/trasladoRuta';
+import { empresaIdDeActivo, nombreUbicacion, sedeIdDeActivo } from '@/features/inventario/trasladoRuta';
 import * as trasladoService from '@/features/inventario/trasladoService';
 import { MantenimientoFormOverlay } from '@/features/mantenimientos/MantenimientoFormOverlay';
 import * as mantenimientoService from '@/features/mantenimientos/mantenimientoService';
@@ -103,8 +103,11 @@ export function ActivosPage() {
       scopedRows.map((row) => {
         const vigente = asignacionActivaDe(row, asignaciones.data);
         const idEmpresa = empresaIdDeActivo(row, ubicaciones.data, sedes.data);
+        const idSede = sedeIdDeActivo(row, ubicaciones.data, sedes.data);
         return {
           ...row,
+          idSede,
+          sedeNombre: byId(sedes.data, idSede)?.nombre ?? '—',
           categoriaNombre: byId(categorias.data, row.idCategoriaActivo)?.nombre ?? '—',
           empresaNombre: byId(empresas.data, idEmpresa)?.nombre ?? '—',
           ubicacionNombre: nombreUbicacion(byId(ubicaciones.data, row.idUbicacion)),
@@ -130,6 +133,20 @@ export function ActivosPage() {
   const estadoOptions = useMemo(() => {
     const names = [...new Set(tableRows.map((row) => row.estadoNombre).filter(Boolean))];
     return [{ value: 'all', label: 'Todos' }, ...names.map((name) => ({ value: name, label: name }))];
+  }, [tableRows]);
+
+  const categoriaOptions = useMemo(() => {
+    const names = [
+      ...new Set(tableRows.map((row) => row.categoriaNombre).filter((name) => name && name !== '—')),
+    ];
+    return [{ value: 'all', label: 'Todas' }, ...names.map((name) => ({ value: name, label: name }))];
+  }, [tableRows]);
+
+  const sedeOptions = useMemo(() => {
+    const names = [
+      ...new Set(tableRows.map((row) => row.sedeNombre).filter((name) => name && name !== '—')),
+    ];
+    return [{ value: 'all', label: 'Todas' }, ...names.map((name) => ({ value: name, label: name }))];
   }, [tableRows]);
 
   async function refreshAll() {
@@ -190,11 +207,28 @@ export function ActivosPage() {
           </>
         }
         columns={[
-          { key: 'nombre', header: 'Nombre del Activo', primary: true },
+          {
+            key: 'nombre',
+            header: 'Nombre del Activo',
+            primary: true,
+            getValue: (row) =>
+              [row.nombre, row.marca, row.modelo].filter(Boolean).join(' '),
+            render: (row) => (
+              <div>
+                <div>{row.nombre}</div>
+                {row.marca || row.modelo ? (
+                  <div className="text-xs text-text-muted">
+                    {[row.marca, row.modelo].filter(Boolean).join(' ')}
+                  </div>
+                ) : null}
+              </div>
+            ),
+          },
           { key: 'numeroSerie', header: 'Número de serie' },
           { key: 'empresaNombre', header: 'Empresa' },
           { key: 'categoriaNombre', header: 'Categoría' },
           { key: 'ubicacionNombre', header: 'Ubicación' },
+          { key: 'sedeNombre', header: 'Sede' },
           { key: 'responsableNombre', header: 'Responsable' },
           {
             key: 'estadoNombre',
@@ -205,12 +239,16 @@ export function ActivosPage() {
         ]}
         rows={tableRows}
         loading={isLoading}
-        searchPlaceholder="Buscar por nombre, número de serie, empresa, categoría o responsable"
+        searchPlaceholder="Buscar por nombre, marca, modelo, número de serie, empresa, categoría, sede o responsable"
         statusFilter={{
           key: 'estadoNombre',
           label: 'Estado',
           options: estadoOptions,
         }}
+        filters={[
+          { key: 'categoriaNombre', label: 'Categoría', options: categoriaOptions },
+          { key: 'sedeNombre', label: 'Sede', options: sedeOptions },
+        ]}
         initialFilters={estadoInicial ? { estadoNombre: estadoInicial } : undefined}
         emptyTitle="No hay activos"
         emptyDescription="Registre el primer activo para armar el parque."
