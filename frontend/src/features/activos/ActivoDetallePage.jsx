@@ -88,7 +88,7 @@ export function ActivoDetallePage() {
   const paises = useResource(paisService.getAll);
   const estados = useResource(estadoService.getAll);
   const responsables = useResource(responsableService.getAll);
-  const areas = useResource(areaService.getAll, { enabled: movimiento === 'baja' });
+  const areas = useResource(areaService.getAll);
   const tipos = useResource(tipoAsignacionService.getAll);
   const asignaciones = useResource(asignacionService.getAll);
   const motivos = useResource(motivoBajaService.getAll, { enabled: movimiento === 'baja' });
@@ -401,6 +401,7 @@ export function ActivoDetallePage() {
           records={activos.data}
           categorias={categorias.data}
           proveedores={proveedores.data}
+          paises={paises.data}
           ubicaciones={ubicaciones.data}
           sedes={sedes.data}
           idEmpresaActiva={idActiva}
@@ -420,6 +421,7 @@ export function ActivoDetallePage() {
         ubicaciones={ubicaciones.data}
         sedes={sedes.data}
         responsables={responsables.data}
+        areas={areas.data}
         asignaciones={asignaciones.data}
         tipos={tipos.data}
         idEmpresaActiva={idActiva}
@@ -445,9 +447,11 @@ export function ActivoDetallePage() {
         ubicaciones={ubicaciones.data}
         sedes={sedes.data}
         responsables={responsables.data}
+        areas={areas.data}
         tiposMantenimiento={tiposMantenimiento.data}
         asignaciones={asignaciones.data}
         tipos={tipos.data}
+        idEmpresaActiva={idActiva}
         onClose={() => setMovimiento(null)}
         onSave={async (values) => {
           await mantenimientoService.registrar({

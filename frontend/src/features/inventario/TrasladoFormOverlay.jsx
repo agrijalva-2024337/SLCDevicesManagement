@@ -2,7 +2,13 @@ import { useMemo } from 'react';
 import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import { asOptions, compactErrors, optionalText, requireSelect } from '@/shared/components/recordFormUtils';
 import { isActivoDeBaja, isActivoEnMantenimiento } from '@/features/activos/activoAcciones';
-import { initialTrasladoValues, nombreUbicacion, ubicacionesDeEmpresa } from '@/features/inventario/trasladoRuta';
+import {
+  activosDeEmpresa,
+  initialTrasladoValues,
+  nombreUbicacion,
+  responsablesDeEmpresa,
+  ubicacionesDeEmpresa,
+} from '@/features/inventario/trasladoRuta';
 import { byId } from '@/shared/utils/format';
 
 export function TrasladoFormOverlay({
@@ -12,6 +18,7 @@ export function TrasladoFormOverlay({
   ubicaciones,
   sedes,
   responsables,
+  areas = [],
   asignaciones = [],
   tipos = [],
   idEmpresaActiva,
@@ -22,10 +29,21 @@ export function TrasladoFormOverlay({
   const ctx = { asignaciones, tipos };
   const activosElegibles = useMemo(
     () =>
-      (activos ?? []).filter(
-        (item) => !isActivoDeBaja(item, { asignaciones, tipos }) && !isActivoEnMantenimiento(item, { asignaciones, tipos }),
+      activosDeEmpresa(
+        (activos ?? []).filter(
+          (item) =>
+            !isActivoDeBaja(item, { asignaciones, tipos }) &&
+            !isActivoEnMantenimiento(item, { asignaciones, tipos }),
+        ),
+        ubicaciones,
+        sedes,
+        idEmpresaActiva,
       ),
-    [activos, asignaciones, tipos],
+    [activos, asignaciones, idEmpresaActiva, sedes, tipos, ubicaciones],
+  );
+  const responsablesFiltrados = useMemo(
+    () => responsablesDeEmpresa(responsables, areas, sedes, idEmpresaActiva),
+    [areas, idEmpresaActiva, responsables, sedes],
   );
   const initialValues = useMemo(
     () => initialTrasladoValues(prefill, { activos, ubicaciones }),
@@ -46,7 +64,7 @@ export function TrasladoFormOverlay({
         required: true,
         readOnly: lockActivo,
         options: asOptions(lockActivo ? (activos ?? []) : activosElegibles, 'nombre'),
-        hint: 'El origen es la ubicación actual del activo. No se edita.',
+        hint: 'Solo activos de la empresa activa. El origen es la ubicación actual.',
       },
       {
         name: 'origen',
@@ -68,10 +86,7 @@ export function TrasladoFormOverlay({
         label: 'Responsable',
         type: 'select',
         required: true,
-        options: asOptions(
-          (responsables ?? []).filter((item) => item.habilitado !== false),
-          'nombreCompleto',
-        ),
+        options: asOptions(responsablesFiltrados, 'nombreCompleto'),
       },
       { name: 'fecha', label: 'Fecha', type: 'date', required: true },
       {
@@ -83,7 +98,7 @@ export function TrasladoFormOverlay({
         hint: 'Por qué se mueve el activo.',
       },
     ],
-    [activos, activosElegibles, destinos, lockActivo, responsables],
+    [activos, activosElegibles, destinos, lockActivo, responsablesFiltrados],
   );
 
   return (
