@@ -34,11 +34,16 @@ public sealed class DeleteEstadoCommandHandler : ICommandHandler<DeleteEstadoCom
         var entity = await _db.Estados.FirstOrDefaultAsync(e => e.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("Estado", command.Id);
 
-        var enAsignaciones = await _db.Asignaciones.AnyAsync(a => a.IdEstado == command.Id, cancellationToken);
-        var enActivos = await _db.Activos.AnyAsync(a => a.IdEstado == command.Id, cancellationToken);
+        var enAsignaciones = await _db.Asignaciones
+            .IgnoreQueryFilters()
+            .AnyAsync(a => a.IdEstado == command.Id, cancellationToken);
+        var enActivos = await _db.Activos
+            .IgnoreQueryFilters()
+            .AnyAsync(a => a.IdEstado == command.Id, cancellationToken);
         if (enAsignaciones || enActivos)
         {
-            throw new ConflictException("No se puede eliminar el estado porque tiene registros asociados.");
+            throw new ConflictException(
+                "No se puede eliminar el estado porque ya esta registrado en activos o asignaciones.");
         }
 
         _db.Estados.Remove(entity);

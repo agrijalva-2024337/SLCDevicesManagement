@@ -39,7 +39,8 @@ public sealed class DeletePaisCommandHandler : ICommandHandler<DeletePaisCommand
             .AnyAsync(s => s.IdPais == command.Id, cancellationToken);
         if (enUso)
         {
-            throw new ConflictException("No se puede eliminar el pais porque tiene sedes asociadas.");
+            throw new ConflictException(
+                "No se puede eliminar el pais porque ya esta registrado en sedes.");
         }
 
         _db.Paises.Remove(entity);

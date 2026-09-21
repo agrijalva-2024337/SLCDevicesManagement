@@ -34,6 +34,18 @@ public sealed class DisableUbicacionCommandHandler : ICommandHandler<DisableUbic
         var entity = await _db.Ubicaciones.FirstOrDefaultAsync(u => u.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("Ubicacion", command.Id);
 
+        var tieneActivos = await _db.Activos
+            .IgnoreQueryFilters()
+            .AnyAsync(a => a.IdUbicacion == command.Id, cancellationToken);
+        var tieneRedes = await _db.RedesConocidas
+            .IgnoreQueryFilters()
+            .AnyAsync(r => r.IdUbicacion == command.Id, cancellationToken);
+        if (tieneActivos || tieneRedes)
+        {
+            throw new ConflictException(
+                "No se puede deshabilitar la ubicacion porque tiene activos o redes conocidas asociadas.");
+        }
+
         entity.Habilitado = false;
         await _db.SaveChangesAsync(cancellationToken);
     }
