@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
+import { RouteFallback } from '@/app/RouteFallback';
 import { useAuth } from '@/features/auth/useAuth';
 import { SinPermiso } from '@/features/auth/RutaProtegida';
 import { getMaestro, nameById } from '@/features/catalogos/maestros';
@@ -7,7 +8,12 @@ import { filterRowsByEmpresa, useEmpresaActiva } from '@/features/organizacion/e
 import { PaisesGrid } from '@/features/catalogos/paises/PaisesGrid';
 import * as paisService from '@/features/catalogos/paises/paisService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
-import { UbicacionesMapPage } from '@/features/catalogos/ubicaciones/UbicacionesMapPage';
+
+const UbicacionesMapPage = lazy(() =>
+  import('@/features/catalogos/ubicaciones/UbicacionesMapPage').then((m) => ({
+    default: m.UbicacionesMapPage,
+  })),
+);
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import * as areaService from '@/features/organizacion/areas/areaService';
@@ -104,6 +110,21 @@ export function CatalogoPage() {
     [reload, rows, lookups],
   );
 
+  const ubicacionesMapItems = useMemo(() => {
+    if (slug !== 'ubicaciones') return items;
+    return items.map((item) => {
+      const sede = (sedes.data ?? []).find((row) => Number(row.id) === Number(item.idSede));
+      const pais = (paises.data ?? []).find((row) => Number(row.id) === Number(sede?.idPais));
+      return {
+        ...item,
+        direccion: sede?.direccion,
+        ciudad: sede?.ciudad,
+        sedeNombre: sede?.nombre,
+        paisNombre: pais?.nombre,
+      };
+    });
+  }, [items, paises.data, sedes.data, slug]);
+
   if (!maestro) {
     return (
       <section>
@@ -132,24 +153,16 @@ export function CatalogoPage() {
     return (
       <>
         <CatalogBanner banner={banner} />
-        <UbicacionesMapPage
-          items={items.map((item) => {
-            const sede = (sedes.data ?? []).find((row) => Number(row.id) === Number(item.idSede));
-            const pais = (paises.data ?? []).find((row) => Number(row.id) === Number(sede?.idPais));
-            return {
-              ...item,
-              direccion: sede?.direccion,
-              ciudad: sede?.ciudad,
-              sedeNombre: sede?.nombre,
-              paisNombre: pais?.nombre,
-            };
-          })}
-          loading={isLoading}
-          onDelete={(item) => {
-            setDeleteError(null);
-            setPendingDelete(item);
-          }}
-        />
+        <Suspense fallback={<RouteFallback />}>
+          <UbicacionesMapPage
+            items={ubicacionesMapItems}
+            loading={isLoading}
+            onDelete={(item) => {
+              setDeleteError(null);
+              setPendingDelete(item);
+            }}
+          />
+        </Suspense>
         <ConfirmDialog
           open={Boolean(pendingDelete)}
           title="Eliminar ubicación"

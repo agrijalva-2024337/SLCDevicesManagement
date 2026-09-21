@@ -134,6 +134,11 @@ export async function fetchQuery(key, fn, { ttlMs = 30_000, signal } = {}) {
     inflight.set(keyStr, flight);
   }
 
+  // Datos viejos se muestran al toque; el refresh sigue en segundo plano.
+  if (cached?.value !== undefined && ttlMs !== 0) {
+    return cached.value;
+  }
+
   flight.refCount += 1;
 
   let released = false;

@@ -19,6 +19,24 @@ const TIPO_LABEL = {
   [TipoOperacionBitacora.Eliminacion]: 'Eliminación',
 };
 
+const BITACORA_COLUMNS = [
+  {
+    key: 'fechaHora',
+    header: 'Fecha',
+    numeric: true,
+    getValue: (row) => formatDateTime(row.fechaHora),
+    sortValue: (row) => row.fechaHora,
+  },
+  { key: 'usuarioNombre', header: 'Usuario' },
+  {
+    key: 'tipoLabel',
+    header: 'Tipo',
+    type: 'badge',
+    tone: (row) => tipoTone(row.tipoOperacion),
+  },
+  { key: 'entidadAfectada', header: 'Entidad' },
+];
+
 function tipoTone(tipo) {
   if (Number(tipo) === TipoOperacionBitacora.Eliminacion) return 'danger';
   if (Number(tipo) === TipoOperacionBitacora.Modificacion) return 'warning';
@@ -208,23 +226,7 @@ export function BitacoraPage() {
       <DataTable
         title="Bitácora"
         description="Registro de auditoría. Filtre por usuario, entidad, fecha y tipo."
-        columns={[
-          {
-            key: 'fechaHora',
-            header: 'Fecha',
-            numeric: true,
-            getValue: (row) => formatDateTime(row.fechaHora),
-            sortValue: (row) => row.fechaHora,
-          },
-          { key: 'usuarioNombre', header: 'Usuario' },
-          {
-            key: 'tipoLabel',
-            header: 'Tipo',
-            type: 'badge',
-            tone: (row) => tipoTone(row.tipoOperacion),
-          },
-          { key: 'entidadAfectada', header: 'Entidad' },
-        ]}
+        columns={BITACORA_COLUMNS}
         rows={tableRows}
         loading={isLoading}
         searchPlaceholder="Buscar por usuario, entidad o tipo"

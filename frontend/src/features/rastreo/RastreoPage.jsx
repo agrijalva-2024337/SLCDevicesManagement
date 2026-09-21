@@ -15,6 +15,24 @@ function resolveVista(value) {
   return value === 'fuera-de-rango' ? 'fuera-de-rango' : 'todos';
 }
 
+const RASTREO_COLUMNS = [
+  { key: 'nombreActivo', header: 'Activo', primary: true },
+  { key: 'ubicacionAsignadaNombre', header: 'Ubicación asignada' },
+  { key: 'ubicacionDetectadaNombre', header: 'Última detectada' },
+  {
+    key: 'alerta',
+    header: 'Rango',
+    type: 'badge',
+    tone: (row) => (row.fueraDeRango ? 'danger' : 'success'),
+  },
+  {
+    key: 'haceCuanto',
+    header: 'Última señal',
+    sortValue: (row) => row.ultimoUsoEn,
+  },
+  { key: 'fuente', header: 'Origen' },
+];
+
 export function RastreoPage() {
   const [params] = useSearchParams();
   const vista = resolveVista(params.get('vista'));
@@ -50,7 +68,10 @@ export function RastreoPage() {
     [idActiva, rows, sedes.data, ubicaciones.data],
   );
 
-  const visibleRows = vista === 'fuera-de-rango' ? tableRows.filter((row) => row.fueraDeRango) : tableRows;
+  const visibleRows = useMemo(
+    () => (vista === 'fuera-de-rango' ? tableRows.filter((row) => row.fueraDeRango) : tableRows),
+    [tableRows, vista],
+  );
 
   if (errorMessage) {
     return (
@@ -86,23 +107,7 @@ export function RastreoPage() {
       <DataTable
         title={vista === 'fuera-de-rango' ? 'Equipos fuera de rango' : 'Rastreo de equipos'}
         description="Última ubicación detectada por el agente. Las coordenadas salen de la ubicación; el mapa abre Google Maps."
-        columns={[
-          { key: 'nombreActivo', header: 'Activo', primary: true },
-          { key: 'ubicacionAsignadaNombre', header: 'Ubicación asignada' },
-          { key: 'ubicacionDetectadaNombre', header: 'Última detectada' },
-          {
-            key: 'alerta',
-            header: 'Rango',
-            type: 'badge',
-            tone: (row) => (row.fueraDeRango ? 'danger' : 'success'),
-          },
-          {
-            key: 'haceCuanto',
-            header: 'Última señal',
-            sortValue: (row) => row.ultimoUsoEn,
-          },
-          { key: 'fuente', header: 'Origen' },
-        ]}
+        columns={RASTREO_COLUMNS}
         rows={visibleRows}
         loading={isLoading}
         searchPlaceholder="Buscar por activo o ubicación"

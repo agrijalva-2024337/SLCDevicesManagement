@@ -1,18 +1,21 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, useLocation, useSearchParams } from 'react-router';
-import { ActivosPage } from '@/features/activos/ActivosPage';
+import { RouteFallback } from '@/app/RouteFallback';
 import { ActivosVistaNav } from '@/features/activos/ActivosVistaNav';
 import { resolveActivosVista, vistaFromLegacyPath } from '@/features/activos/activosVistas';
-import { AsignacionesPage } from '@/features/asignaciones/AsignacionesPage';
-import { BajasPage } from '@/features/bajas/BajasPage';
-import { TrasladosPage } from '@/features/inventario/TrasladosPage';
-import { MantenimientosPage } from '@/features/mantenimientos/MantenimientosPage';
 
 const VISTAS = {
-  activos: ActivosPage,
-  asignaciones: AsignacionesPage,
-  traslados: TrasladosPage,
-  mantenimientos: MantenimientosPage,
-  bajas: BajasPage,
+  activos: lazy(() => import('@/features/activos/ActivosPage').then((m) => ({ default: m.ActivosPage }))),
+  asignaciones: lazy(() =>
+    import('@/features/asignaciones/AsignacionesPage').then((m) => ({ default: m.AsignacionesPage })),
+  ),
+  traslados: lazy(() =>
+    import('@/features/inventario/TrasladosPage').then((m) => ({ default: m.TrasladosPage })),
+  ),
+  mantenimientos: lazy(() =>
+    import('@/features/mantenimientos/MantenimientosPage').then((m) => ({ default: m.MantenimientosPage })),
+  ),
+  bajas: lazy(() => import('@/features/bajas/BajasPage').then((m) => ({ default: m.BajasPage }))),
 };
 
 export function ActivosHubPage() {
@@ -23,7 +26,9 @@ export function ActivosHubPage() {
   return (
     <>
       <ActivosVistaNav />
-      <Vista />
+      <Suspense fallback={<RouteFallback />}>
+        <Vista />
+      </Suspense>
     </>
   );
 }

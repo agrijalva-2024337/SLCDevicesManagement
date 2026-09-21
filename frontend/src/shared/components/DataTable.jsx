@@ -320,7 +320,7 @@ export function DataTable({
   getRowActions,
   hideHeader = false,
   hideToolbar = false,
-  pageSize,
+  pageSize = 25,
   page,
   onPageChange,
   sortKey,

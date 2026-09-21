@@ -1,5 +1,11 @@
 import { useMemo } from 'react';
-import { isActivoAsignado, isActivoDeBaja, isActivoEnMantenimiento } from '@/features/activos/activoAcciones';
+import {
+  indexAsignacionesActivas,
+  indexTipos,
+  isActivoAsignado,
+  isActivoDeBaja,
+  isActivoEnMantenimiento,
+} from '@/features/activos/activoAcciones';
 import { nombreUbicacion } from '@/features/inventario/trasladoRuta';
 import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import { asOptions, compactErrors, optionalText, requireSelect, requireText } from '@/shared/components/recordFormUtils';
@@ -34,7 +40,12 @@ export function MantenimientoFormOverlay({
   const activosElegibles = useMemo(
     () =>
       (activos ?? []).filter((item) => {
-        const lookup = { asignaciones, tipos };
+        const lookup = {
+          asignaciones,
+          tipos,
+          tipoIds: indexTipos(tipos),
+          asignacionesPorActivo: indexAsignacionesActivas(asignaciones),
+        };
         return (
           !isActivoDeBaja(item, lookup) &&
           !isActivoEnMantenimiento(item, lookup) &&

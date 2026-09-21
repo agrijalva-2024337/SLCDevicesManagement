@@ -30,6 +30,17 @@ function resultadoDe(hallazgo) {
   return { label: 'Encontrado', tone: 'success' };
 }
 
+const JORNADA_COLUMNS = [
+  { key: 'activoNombre', header: 'Activo', primary: true },
+  { key: 'numeroSerie', header: 'Serie', mono: true },
+  {
+    key: 'resultado',
+    header: 'Resultado',
+    type: 'badge',
+    tone: (row) => row.resultadoTone,
+  },
+];
+
 function motivoBloqueoEscritura(allowWrite, cerrado) {
   if (!allowWrite) return 'Su perfil es de consulta. No puede modificar el inventario físico.';
   if (cerrado) return 'La jornada ya está cerrada.';
@@ -128,6 +139,16 @@ export function JornadaDetallePage() {
   }, [hallazgos]);
 
   const filas = useMemo(() => flattenFilas(grupos, hallazgoPorActivo), [grupos, hallazgoPorActivo]);
+  const filasPorUbicacion = useMemo(() => {
+    const map = new Map();
+    for (const row of filas) {
+      const key = row.ubicacionNombre;
+      const list = map.get(key);
+      if (list) list.push(row);
+      else map.set(key, [row]);
+    }
+    return map;
+  }, [filas]);
   const esperados = filas.length;
   const verificados = filas.filter((row) => row.verificado).length;
   const pendientes = esperados - verificados;
@@ -218,22 +239,13 @@ export function JornadaDetallePage() {
         </div>
       ) : (
         grupos.map((grupo) => {
-          const rows = filas.filter((row) => row.ubicacionNombre === grupo.nombreUbicacion);
+          const rows = filasPorUbicacion.get(grupo.nombreUbicacion) ?? [];
           return (
             <div key={grupo.ubicacion.id} className="app-panel mb-4">
               <DataTable
                 title={grupo.nombreUbicacion}
                 description={`${rows.filter((row) => row.verificado).length} de ${rows.length} verificados`}
-                columns={[
-                  { key: 'activoNombre', header: 'Activo', primary: true },
-                  { key: 'numeroSerie', header: 'Serie', mono: true },
-                  {
-                    key: 'resultado',
-                    header: 'Resultado',
-                    type: 'badge',
-                    tone: (row) => row.resultadoTone,
-                  },
-                ]}
+                columns={JORNADA_COLUMNS}
                 rows={rows}
                 hideToolbar
                 emptyTitle="Sin activos"

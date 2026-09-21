@@ -9,6 +9,7 @@ import { formatCoordinates } from '@/shared/geo/parseCoordinates';
 import { useResolvedPositions } from '@/shared/geo/useResolvedPositions';
 import { matchesSearch } from '@/shared/utils/search';
 import '@/features/catalogos/ubicaciones/ubicaciones.css';
+import 'leaflet/dist/leaflet.css';
 
 const DEFAULT_CENTER = [14.6349, -90.5069];
 const DEFAULT_ZOOM = 8;
@@ -160,12 +161,18 @@ export function UbicacionesMapPage({ items, loading = false, onDelete }) {
   const searchId = useId();
   const { canWrite } = useAuth();
   const allowWrite = canWrite('ubicaciones');
+  const [liveQuery, setLiveQuery] = useState('');
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
   const markerRefs = useRef({});
   const rowRefs = useRef({});
   const resolved = useResolvedPositions(items);
+
+  useEffect(() => {
+    const handle = window.setTimeout(() => setQuery(liveQuery), 280);
+    return () => window.clearTimeout(handle);
+  }, [liveQuery]);
 
   const filtered = useMemo(() => {
     const needle = query.trim();
@@ -175,7 +182,7 @@ export function UbicacionesMapPage({ items, loading = false, onDelete }) {
 
   const mapped = useMemo(() => filtered.filter((item) => item.position), [filtered]);
   const activeSelectedId = filtered.some((item) => item.id === selectedId) ? selectedId : null;
-  const hasQuery = query.trim() !== '';
+  const hasQuery = liveQuery.trim() !== '';
   const showEmpty = !loading && items.length === 0;
   const showNoResults = !loading && items.length > 0 && filtered.length === 0;
 
@@ -211,8 +218,8 @@ export function UbicacionesMapPage({ items, loading = false, onDelete }) {
                 type="search"
                 className="app-input"
                 placeholder="Buscar por nombre o descripción"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                value={liveQuery}
+                onChange={(event) => setLiveQuery(event.target.value)}
                 autoComplete="off"
               />
             </div>

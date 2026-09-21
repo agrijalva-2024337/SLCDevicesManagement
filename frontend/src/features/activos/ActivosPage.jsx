@@ -6,6 +6,8 @@ import {
   asignacionActivaDe,
   estadoNombreDeActivo,
   getAccionesDisponibles,
+  indexAsignacionesActivas,
+  indexTipos,
 } from '@/features/activos/activoAcciones';
 import * as activoService from '@/features/activos/activoService';
 import { activosVistaPath } from '@/features/activos/activosVistas';
@@ -51,6 +53,35 @@ function estadoTone(nombre) {
   return 'muted';
 }
 
+const ACTIVO_COLUMNS = [
+  {
+    key: 'nombre',
+    header: 'Nombre del Activo',
+    primary: true,
+    getValue: (row) => [row.nombre, row.marca, row.modelo].filter(Boolean).join(' '),
+    render: (row) => (
+      <div>
+        <div>{row.nombre}</div>
+        {row.marca || row.modelo ? (
+          <div className="text-xs text-text-muted">{[row.marca, row.modelo].filter(Boolean).join(' ')}</div>
+        ) : null}
+      </div>
+    ),
+  },
+  { key: 'numeroSerie', header: 'Número de serie' },
+  { key: 'empresaNombre', header: 'Empresa' },
+  { key: 'categoriaNombre', header: 'Categoría' },
+  { key: 'ubicacionNombre', header: 'Ubicación' },
+  { key: 'sedeNombre', header: 'Sede' },
+  { key: 'responsableNombre', header: 'Responsable' },
+  {
+    key: 'estadoNombre',
+    header: 'Estado',
+    type: 'badge',
+    tone: (row) => estadoTone(row.estadoNombre),
+  },
+];
+
 export function ActivosPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -64,12 +95,15 @@ export function ActivosPage() {
   );
   const crud = useCrudOverlay();
   const [movimiento, setMovimiento] = useState(null);
+  const overlayForm = crud.isForm;
+  const overlayBaja = movimiento?.tipo === 'baja';
+  const overlayMant = movimiento?.tipo === 'mantenimiento';
   const categorias = useResource(categoriaService.getAll);
-  const proveedores = useResource(proveedorService.getAll);
-  const paises = useResource(paisService.getAll);
+  const proveedores = useResource(proveedorService.getAll, { enabled: overlayForm });
+  const paises = useResource(paisService.getAll, { enabled: overlayForm });
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
-  const areas = useResource(areaService.getAll);
+  const areas = useResource(areaService.getAll, { enabled: overlayBaja });
   const empresas = useResource(empresaService.getAll);
   const estados = useResource(estadoService.getAll);
   const responsables = useResource(responsableService.getAll);
@@ -81,14 +115,26 @@ export function ActivosPage() {
   );
   const usuarios = useResource(loadUsuarios, {
     key: listQueryKey('usuarios', { idEmpresa: idActiva || undefined }),
-    enabled: canReadUsuarios,
+    enabled: canReadUsuarios && overlayBaja,
   });
-  const motivos = useResource(motivoBajaService.getAll);
-  const tiposMantenimiento = useResource(tipoMantenimientoService.getAll);
+  const motivos = useResource(motivoBajaService.getAll, { enabled: overlayBaja });
+  const tiposMantenimiento = useResource(tipoMantenimientoService.getAll, { enabled: overlayMant });
 
+  const tipoIds = useMemo(() => indexTipos(tipos.data), [tipos.data]);
+  const asignacionesPorActivo = useMemo(
+    () => indexAsignacionesActivas(asignaciones.data),
+    [asignaciones.data],
+  );
   const ctx = useMemo(
-    () => ({ asignaciones: asignaciones.data, tipos: tipos.data, estados: estados.data, canRetire }),
-    [asignaciones.data, canRetire, estados.data, tipos.data],
+    () => ({
+      asignaciones: asignaciones.data,
+      tipos: tipos.data,
+      estados: estados.data,
+      canRetire,
+      tipoIds,
+      asignacionesPorActivo,
+    }),
+    [asignaciones.data, asignacionesPorActivo, canRetire, estados.data, tipoIds, tipos.data],
   );
 
   const scopedRows = useMemo(() => {
@@ -101,7 +147,7 @@ export function ActivosPage() {
   const tableRows = useMemo(
     () =>
       scopedRows.map((row) => {
-        const vigente = asignacionActivaDe(row, asignaciones.data);
+        const vigente = asignacionActivaDe(row, asignacionesPorActivo);
         const idEmpresa = empresaIdDeActivo(row, ubicaciones.data, sedes.data);
         const idSede = sedeIdDeActivo(row, ubicaciones.data, sedes.data);
         return {
@@ -118,7 +164,7 @@ export function ActivosPage() {
         };
       }),
     [
-      asignaciones.data,
+      asignacionesPorActivo,
       categorias.data,
       ctx,
       empresas.data,
@@ -206,37 +252,7 @@ export function ActivosPage() {
             {allowWrite ? <RegisterButton label="Registrar activo" onClick={() => crud.openCreate()} /> : null}
           </>
         }
-        columns={[
-          {
-            key: 'nombre',
-            header: 'Nombre del Activo',
-            primary: true,
-            getValue: (row) =>
-              [row.nombre, row.marca, row.modelo].filter(Boolean).join(' '),
-            render: (row) => (
-              <div>
-                <div>{row.nombre}</div>
-                {row.marca || row.modelo ? (
-                  <div className="text-xs text-text-muted">
-                    {[row.marca, row.modelo].filter(Boolean).join(' ')}
-                  </div>
-                ) : null}
-              </div>
-            ),
-          },
-          { key: 'numeroSerie', header: 'Número de serie' },
-          { key: 'empresaNombre', header: 'Empresa' },
-          { key: 'categoriaNombre', header: 'Categoría' },
-          { key: 'ubicacionNombre', header: 'Ubicación' },
-          { key: 'sedeNombre', header: 'Sede' },
-          { key: 'responsableNombre', header: 'Responsable' },
-          {
-            key: 'estadoNombre',
-            header: 'Estado',
-            type: 'badge',
-            tone: (row) => estadoTone(row.estadoNombre),
-          },
-        ]}
+        columns={ACTIVO_COLUMNS}
         rows={tableRows}
         loading={isLoading}
         searchPlaceholder="Buscar por nombre, marca, modelo, número de serie, empresa, categoría, sede o responsable"

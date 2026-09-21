@@ -122,18 +122,27 @@ export function DashboardPage() {
   });
 
   const resumen = useMemo(() => consolidar(inventario.data), [inventario.data]);
-  const spark = [
-    resumen.disponibles,
-    resumen.asignados,
-    resumen.enMantenimiento,
-    resumen.dadosDeBaja,
-    resumen.totalActivos,
-  ];
-  const jornadasAbiertas = (jornadas.data ?? []).filter((row) => !row.cerrado).length;
-  const jornadasCerradas = (jornadas.data ?? []).filter((row) => row.cerrado).length;
+  const spark = useMemo(
+    () => [
+      resumen.disponibles,
+      resumen.asignados,
+      resumen.enMantenimiento,
+      resumen.dadosDeBaja,
+      resumen.totalActivos,
+    ],
+    [resumen],
+  );
+  const jornadasAbiertas = useMemo(
+    () => (jornadas.data ?? []).filter((row) => !row.cerrado).length,
+    [jornadas.data],
+  );
+  const jornadasCerradas = useMemo(
+    () => (jornadas.data ?? []).filter((row) => !row.cerrado).length,
+    [jornadas.data],
+  );
   const totalEstados = resumen.disponibles + resumen.asignados + resumen.enMantenimiento + resumen.dadosDeBaja;
 
-  const widgets = [
+  const widgets = useMemo(() => [
     {
       key: 'activos',
       label: 'Activos',
@@ -175,9 +184,9 @@ export function DashboardPage() {
       to: '/app/activos',
       isText: true,
     },
-  ];
+  ], [resumen]);
 
-  const brands = [
+  const brands = useMemo(() => [
     {
       key: 'activos',
       title: 'Activos',
@@ -222,15 +231,18 @@ export function DashboardPage() {
         { label: 'En mantenimiento', value: resumen.enMantenimiento },
       ],
     },
-  ];
+  ], [jornadasAbiertas, jornadasCerradas, resumen]);
 
-  const estadoItems = [
-    { key: 'resg', label: 'En resguardo', value: resumen.disponibles, icon: 'pi-inbox', tone: 'warning' },
-    { key: 'asig', label: 'Asignado', value: resumen.asignados, icon: 'pi-user', tone: 'info' },
-    { key: 'mant', label: 'En mantenimiento', value: resumen.enMantenimiento, icon: 'pi-wrench', tone: 'danger' },
-  ];
+  const estadoItems = useMemo(
+    () => [
+      { key: 'resg', label: 'En resguardo', value: resumen.disponibles, icon: 'pi-inbox', tone: 'warning' },
+      { key: 'asig', label: 'Asignado', value: resumen.asignados, icon: 'pi-user', tone: 'info' },
+      { key: 'mant', label: 'En mantenimiento', value: resumen.enMantenimiento, icon: 'pi-wrench', tone: 'danger' },
+    ],
+    [resumen],
+  );
 
-  const atencion = [
+  const atencion = useMemo(() => [
     ...(garantias.data ?? []).map((row) => {
       const dias = Number(row.diasRestantes);
       return {
@@ -248,7 +260,7 @@ export function DashboardPage() {
       detail: `${TIPO_DIFERENCIA_LABEL[row.tipoDiferencia] ?? row.tipoDiferencia} · ${row.nombreSede ?? ''}`,
       to: `/app/inventario-fisico/${row.idHistoricoInventario}`,
     })),
-  ].slice(0, 8);
+  ].slice(0, 8), [diferencias.data, garantias.data]);
 
   if (inventario.isLoading && !inventario.data?.length) {
     return <FeedbackState status="loading" loadingMessage="Cargando el inventario general…" />;

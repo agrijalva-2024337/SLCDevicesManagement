@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 import {
+  indexAsignacionesActivas,
+  indexTipos,
   isActivoAsignado,
   isActivoDeBaja,
   isActivoEnMantenimiento,
@@ -49,7 +51,12 @@ export function BajaFormOverlay({
     () =>
       activosDeEmpresa(
         (activos ?? []).filter((item) => {
-          const lookup = { asignaciones, tipos };
+          const lookup = {
+            asignaciones,
+            tipos,
+            tipoIds: indexTipos(tipos),
+            asignacionesPorActivo: indexAsignacionesActivas(asignaciones),
+          };
           return (
             !isActivoDeBaja(item, lookup) &&
             !isActivoEnMantenimiento(item, lookup) &&

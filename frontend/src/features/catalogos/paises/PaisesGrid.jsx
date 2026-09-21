@@ -8,6 +8,7 @@ import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 import { matchesSearch } from '@/shared/utils/search';
 import { iso2Conocido } from '@/shared/validation/paisesIso';
 import '@/features/catalogos/paises/paises.css';
+import 'flag-icons/css/flag-icons.min.css';
 
 function flagClassName(iso2) {
   const code = String(iso2 ?? '')
