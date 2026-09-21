@@ -1,4 +1,4 @@
-import { cloneElement, Fragment, isValidElement, useId, useMemo, useState } from 'react';
+import { cloneElement, Fragment, isValidElement, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { RowIconActions } from '@/shared/components/RowIconActions';
 import { matchesSearch } from '@/shared/utils/search';
 import '@/shared/styles/data-table.css';
@@ -337,6 +337,7 @@ export function DataTable({
 }) {
   const searchId = useId();
   const filterIdBase = useId();
+  const [liveQuery, setLiveQuery] = useState('');
   const [query, setQuery] = useState('');
   const [filterValues, setFilterValues] = useState(() => initialFilters ?? {});
   const [internalPage, setInternalPage] = useState(1);
@@ -349,6 +350,7 @@ export function DataTable({
   const canExpand = Boolean(expandable) || typeof renderExpandedContent === 'function';
   const withInlineActions =
     typeof getRowActions === 'function' || typeof renderRowActions === 'function';
+  const prevDebouncedQueryRef = useRef(query);
 
   const displayColumns = useMemo(() => withStickyOffsets(expandColumns(columns)), [columns]);
   const toolbarFilters = useMemo(
@@ -358,6 +360,20 @@ export function DataTable({
   const activeSortKey = onSortChange ? sortKey : internalSort.key;
   const activeSortDirection = onSortChange ? sortDirection : internalSort.direction;
   const currentPage = onPageChange ? (page ?? 1) : internalPage;
+
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      setQuery(liveQuery);
+    }, 280);
+    return () => window.clearTimeout(handle);
+  }, [liveQuery]);
+
+  useEffect(() => {
+    if (prevDebouncedQueryRef.current === query) return;
+    prevDebouncedQueryRef.current = query;
+    if (onPageChange) onPageChange(1);
+    else setInternalPage(1);
+  }, [onPageChange, query]);
 
   const filtered = useMemo(() => {
     let next = rows;
@@ -398,7 +414,8 @@ export function DataTable({
   const to = pageSize ? Math.min(safePage * pageSize, total) : total;
 
   const hasFilters =
-    query.trim() !== '' || toolbarFilters.some((filter) => (filterValues[filter.key] ?? 'all') !== 'all');
+    liveQuery.trim() !== '' ||
+    toolbarFilters.some((filter) => (filterValues[filter.key] ?? 'all') !== 'all');
   const showTable = loading || paged.length > 0;
   const showEmpty = !loading && rows.length === 0;
   const showNoResults = !loading && rows.length > 0 && filtered.length === 0;
@@ -414,15 +431,16 @@ export function DataTable({
     setExpandedId(null);
   }
 
-  function clearFilters() {
-    setQuery('');
-    setFilterValues({});
-    setPage(1);
-  }
-
   function setPage(next) {
     if (onPageChange) onPageChange(next);
     else setInternalPage(next);
+  }
+
+  function clearFilters() {
+    setLiveQuery('');
+    setQuery('');
+    setFilterValues({});
+    setPage(1);
   }
 
   function toggleSort(column) {
@@ -500,10 +518,9 @@ export function DataTable({
               type="search"
               className="app-input"
               placeholder={searchPlaceholder}
-              value={query}
+              value={liveQuery}
               onChange={(event) => {
-                setQuery(event.target.value);
-                setPage(1);
+                setLiveQuery(event.target.value);
               }}
               autoComplete="off"
             />
