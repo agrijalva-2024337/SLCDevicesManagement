@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { downloadActaPdf } from '@/shared/utils/downloadFile';
-import { excelFilename, exportStyledExcel } from '@/shared/utils/exportStyledExcel';
+import { excelFilename, exportStyledExcel, withXlsxExtension } from '@/shared/utils/exportStyledExcel';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 
 const viewClass = 'app-btn app-btn--ghost app-btn--sm';
@@ -105,7 +105,7 @@ export function ExportExcelButton({ title, sheetName, filename, columns, rows })
     exportStyledExcel({
       title,
       sheetName,
-      filename: filename || excelFilename(title),
+      filename: withXlsxExtension(filename || excelFilename(title)),
       columns,
       rows,
     });
