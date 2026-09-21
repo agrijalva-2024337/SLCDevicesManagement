@@ -175,22 +175,30 @@ export function ActivoFormOverlay({
     [proveedores, record?.idProveedor],
   );
   const idEmpresaDelActivo = proveedorActual?.idEmpresa;
+  const idEmpresaFiltro = editing ? idEmpresaDelActivo : idEmpresaActiva;
 
-  const categoriaOptions = useMemo(
-    () => asOptions((categorias ?? []).filter((item) => item.habilitado !== false)),
-    [categorias],
+  const categoriasDeEmpresa = useMemo(
+    () =>
+      (categorias ?? []).filter((item) => {
+        if (item.habilitado === false) return false;
+        if (idEmpresaFiltro == null || idEmpresaFiltro === '') return true;
+        return Number(item.idEmpresa) === Number(idEmpresaFiltro);
+      }),
+    [categorias, idEmpresaFiltro],
   );
 
-  const proveedorOptions = useMemo(() => {
-    const idEmpresaFiltro = editing ? idEmpresaDelActivo : idEmpresaActiva;
-    return asOptions(
+  const proveedoresDeEmpresa = useMemo(
+    () =>
       (proveedores ?? []).filter((item) => {
         if (item.habilitado === false) return false;
         if (idEmpresaFiltro == null || idEmpresaFiltro === '') return true;
         return Number(item.idEmpresa) === Number(idEmpresaFiltro);
       }),
-    );
-  }, [editing, idEmpresaActiva, idEmpresaDelActivo, proveedores]);
+    [idEmpresaFiltro, proveedores],
+  );
+
+  const categoriaOptions = useMemo(() => asOptions(categoriasDeEmpresa), [categoriasDeEmpresa]);
+  const proveedorOptions = useMemo(() => asOptions(proveedoresDeEmpresa), [proveedoresDeEmpresa]);
 
   const ubicacionOptions = useMemo(() => asOptions(destinos), [destinos]);
 
@@ -221,6 +229,7 @@ export function ActivoFormOverlay({
         type: 'select',
         required: true,
         options: categoriaOptions,
+        hint: 'Solo categorías de la empresa activa.',
       },
       {
         name: 'idProveedor',
@@ -230,7 +239,7 @@ export function ActivoFormOverlay({
         options: proveedorOptions,
         hint: editing
           ? 'Solo se puede corregir por un proveedor de la misma empresa. Para mover el activo a otra empresa, contacta a un Administrador general.'
-          : undefined,
+          : 'Solo proveedores de la empresa activa.',
       },
       {
         name: 'idUbicacion',

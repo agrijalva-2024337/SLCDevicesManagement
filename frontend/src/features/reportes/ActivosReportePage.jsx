@@ -129,7 +129,14 @@ export function ActivosReportePage() {
           Categoría
           <select className="app-input" value={idCategoriaActivo} onChange={cambiarFiltro(setIdCategoriaActivo)}>
             <option value="">Todas</option>
-            {(categorias.data ?? []).map((categoria) => (
+            {(categorias.data ?? [])
+              .filter(
+                (categoria) =>
+                  idActiva == null ||
+                  idActiva === '' ||
+                  Number(categoria.idEmpresa) === Number(idActiva),
+              )
+              .map((categoria) => (
               <option key={categoria.id} value={categoria.id}>
                 {categoria.nombre}
               </option>
