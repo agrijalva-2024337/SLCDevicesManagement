@@ -180,6 +180,27 @@ export function ActivoFormOverlay({
     [proveedores, record?.idProveedor],
   );
   const idEmpresaDelActivo = proveedorActual?.idEmpresa;
+  const idEmpresaFiltro = editing ? idEmpresaDelActivo : idEmpresaActiva;
+
+  const categoriasDeEmpresa = useMemo(
+    () =>
+      (categorias ?? []).filter((item) => {
+        if (item.habilitado === false) return false;
+        if (idEmpresaFiltro == null || idEmpresaFiltro === '') return true;
+        return Number(item.idEmpresa) === Number(idEmpresaFiltro);
+      }),
+    [categorias, idEmpresaFiltro],
+  );
+
+  const proveedoresDeEmpresa = useMemo(
+    () =>
+      (proveedores ?? []).filter((item) => {
+        if (item.habilitado === false) return false;
+        if (idEmpresaFiltro == null || idEmpresaFiltro === '') return true;
+        return Number(item.idEmpresa) === Number(idEmpresaFiltro);
+      }),
+    [idEmpresaFiltro, proveedores],
+  );
 
   return (
     <RecordFormOverlay
@@ -200,24 +221,18 @@ export function ActivoFormOverlay({
             label: 'Categoría',
             type: 'select',
             required: true,
-            options: asOptions((categorias ?? []).filter((item) => item.habilitado !== false)),
+            options: asOptions(categoriasDeEmpresa),
+            hint: 'Solo categorías de la empresa activa.',
           },
           {
             name: 'idProveedor',
             label: 'Proveedor',
             type: 'select',
             required: true,
-            options: asOptions(
-              (proveedores ?? []).filter((item) => {
-                if (item.habilitado === false) return false;
-                const idEmpresaFiltro = editing ? idEmpresaDelActivo : idEmpresaActiva;
-                if (idEmpresaFiltro == null || idEmpresaFiltro === '') return true;
-                return Number(item.idEmpresa) === Number(idEmpresaFiltro);
-              }),
-            ),
+            options: asOptions(proveedoresDeEmpresa),
             hint: editing
               ? 'Solo se puede corregir por un proveedor de la misma empresa. Para mover el activo a otra empresa, contacta a un Administrador general.'
-              : undefined,
+              : 'Solo proveedores de la empresa activa.',
           },
           {
             name: 'idUbicacion',
