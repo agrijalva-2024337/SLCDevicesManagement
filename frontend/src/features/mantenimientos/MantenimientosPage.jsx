@@ -9,6 +9,7 @@ import { MantenimientoFormOverlay } from '@/features/mantenimientos/Mantenimient
 import * as mantenimientoService from '@/features/mantenimientos/mantenimientoService';
 import * as tipoMantenimientoService from '@/features/mantenimientos/tipoMantenimientoService';
 import * as estadoService from '@/features/organizacion/estados/estadoService';
+import * as areaService from '@/features/organizacion/areas/areaService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
@@ -65,6 +66,7 @@ export function MantenimientosPage() {
   const tiposMantenimiento = useResource(tipoMantenimientoService.getAll);
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
+  const areas = useResource(areaService.getAll);
   const estados = useResource(estadoService.getAll);
   const responsables = useResource(responsableService.getAll);
   const tipos = useResource(tipoAsignacionService.getAll);
@@ -250,9 +252,11 @@ export function MantenimientosPage() {
         ubicaciones={lookups.ubicaciones}
         sedes={lookups.sedes}
         responsables={lookups.responsables}
+        areas={areas.data}
         tiposMantenimiento={tiposMantenimiento.data}
         asignaciones={asignacionesRows}
         tipos={tipos.data}
+        idEmpresaActiva={idActiva}
         onClose={crud.close}
         onSave={async (values) => {
           await mantenimientoService.registrar({

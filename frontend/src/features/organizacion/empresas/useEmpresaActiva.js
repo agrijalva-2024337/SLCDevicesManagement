@@ -42,6 +42,10 @@ export function filterRowsByEmpresa(rows, idEmpresa, { idField = 'idEmpresa', se
     if (row[idField] != null && row[idField] !== '') {
       return Number(row[idField]) === wanted;
     }
+    const idsEmpresas = row.idsEmpresas ?? row.empresasAutorizadas;
+    if (Array.isArray(idsEmpresas) && idsEmpresas.length > 0) {
+      return idsEmpresas.map(Number).includes(wanted);
+    }
     if (row.idSede != null && Array.isArray(sedes)) {
       const sede = sedes.find((item) => Number(item.id) === Number(row.idSede));
       return sede ? Number(sede.idEmpresa) === wanted : false;

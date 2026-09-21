@@ -5,6 +5,7 @@ import * as asignacionService from '@/features/asignaciones/asignacionService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import * as estadoService from '@/features/organizacion/estados/estadoService';
+import * as areaService from '@/features/organizacion/areas/areaService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
@@ -61,6 +62,7 @@ export function TrasladosPage() {
   const activos = useResource(activoService.getAll);
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
+  const areas = useResource(areaService.getAll);
   const estados = useResource(estadoService.getAll);
   const responsables = useResource(responsableService.getAll);
   const tipos = useResource(tipoAsignacionService.getAll);
@@ -200,6 +202,7 @@ export function TrasladosPage() {
         ubicaciones={lookups.ubicaciones}
         sedes={lookups.sedes}
         responsables={lookups.responsables}
+        areas={areas.data}
         asignaciones={asignacionesRows}
         tipos={tipos.data}
         idEmpresaActiva={idActiva}

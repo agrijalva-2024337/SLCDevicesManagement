@@ -6,7 +6,12 @@ import {
   isActivoDeBaja,
   isActivoEnMantenimiento,
 } from '@/features/activos/activoAcciones';
-import { nombreUbicacion, todayIsoDate } from '@/features/inventario/trasladoRuta';
+import {
+  activosDeEmpresa,
+  nombreUbicacion,
+  responsablesDeEmpresa,
+  todayIsoDate,
+} from '@/features/inventario/trasladoRuta';
 import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import { asOptions, compactErrors, optionalText, requireSelect } from '@/shared/components/recordFormUtils';
 import { byId } from '@/shared/utils/format';
@@ -28,14 +33,15 @@ function initialValues(prefill, { activos, ubicaciones } = {}) {
   };
 }
 
-function activosDisponibles({ activos, ubicaciones, asignaciones, tipos }) {
+function activosDisponibles({ activos, ubicaciones, sedes, asignaciones, tipos, idEmpresaActiva }) {
   const lookup = {
     asignaciones,
     tipos,
     tipoIds: indexTipos(tipos),
     asignacionesPorActivo: indexAsignacionesActivas(asignaciones),
   };
-  return (activos ?? []).filter((item) => {
+  const deEmpresa = activosDeEmpresa(activos, ubicaciones, sedes, idEmpresaActiva);
+  return deEmpresa.filter((item) => {
     if (isActivoDeBaja(item, lookup) || isActivoEnMantenimiento(item, lookup) || isActivoAsignado(item, lookup)) {
       return false;
     }
@@ -77,23 +83,48 @@ export function AsignacionFormOverlay({
   sedes = [],
   categorias = [],
   responsables,
+  areas = [],
   asignaciones = [],
   tipos = [],
+  idEmpresaActiva,
   onSave,
   onClose,
 }) {
   const lockActivo = Boolean(prefill?.idActivo);
   const ctx = { asignaciones, tipos };
 
-  const sedeOptions = useMemo(() => asOptions(sedes, 'nombre'), [sedes]);
-  const categoriaOptions = useMemo(() => asOptions(categorias, 'nombre'), [categorias]);
+  const sedesDeEmpresa = useMemo(
+    () =>
+      (sedes ?? []).filter((item) => {
+        if (item.habilitado === false) return false;
+        if (idEmpresaActiva == null || idEmpresaActiva === '') return true;
+        return Number(item.idEmpresa) === Number(idEmpresaActiva);
+      }),
+    [idEmpresaActiva, sedes],
+  );
+  const categoriasDeEmpresa = useMemo(
+    () =>
+      (categorias ?? []).filter((item) => {
+        if (item.habilitado === false) return false;
+        if (idEmpresaActiva == null || idEmpresaActiva === '') return true;
+        return Number(item.idEmpresa) === Number(idEmpresaActiva);
+      }),
+    [categorias, idEmpresaActiva],
+  );
+
+  const sedeOptions = useMemo(() => asOptions(sedesDeEmpresa, 'nombre'), [sedesDeEmpresa]);
+  const categoriaOptions = useMemo(() => asOptions(categoriasDeEmpresa, 'nombre'), [categoriasDeEmpresa]);
+  const responsablesFiltrados = useMemo(
+    () => responsablesDeEmpresa(responsables, areas, sedes, idEmpresaActiva),
+    [areas, idEmpresaActiva, responsables, sedes],
+  );
   const responsableOptions = useMemo(
-    () => asOptions((responsables ?? []).filter((item) => item.habilitado !== false), 'nombreCompleto'),
-    [responsables],
+    () => asOptions(responsablesFiltrados, 'nombreCompleto'),
+    [responsablesFiltrados],
   );
   const activosElegibles = useMemo(
-    () => activosDisponibles({ activos, ubicaciones, asignaciones, tipos }),
-    [activos, asignaciones, tipos, ubicaciones],
+    () => activosDisponibles({ activos, ubicaciones, sedes, asignaciones, tipos, idEmpresaActiva }),
+    [activos, asignaciones, idEmpresaActiva, sedes, tipos, ubicaciones],
   );
   const activoOptionsLocked = useMemo(() => asOptions(activos ?? [], 'nombre'), [activos]);
 
@@ -117,7 +148,7 @@ export function AsignacionFormOverlay({
         const activoHint =
           !lockActivo && filtrosActivos && elegibles.length === 0
             ? 'No hay unidades disponibles de esta categoría en la sede seleccionada.'
-            : 'Solo activos libres.';
+            : 'Solo activos libres de la empresa activa.';
 
         return [
           ...(lockActivo
