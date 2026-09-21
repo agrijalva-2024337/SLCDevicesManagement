@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import * as paisService from '@/features/catalogos/paises/paisService';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
-import { RegisterButton } from '@/shared/components/RecordActions';
+import { ExportExcelButton, RegisterButton } from '@/shared/components/RecordActions';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 import { matchesSearch } from '@/shared/utils/search';
 import { iso2Conocido } from '@/shared/validation/paisesIso';
@@ -118,7 +118,19 @@ export function PaisesGrid({ items, loading = false, onReload }) {
           <h2 className="paises-title">Países</h2>
           <p className="paises-lead">Catálogo global. Disponible para sedes de cualquier empresa.</p>
         </div>
-        {allowWrite ? <RegisterButton to="nueva" label="Registrar país" /> : null}
+        <div className="paises-head-actions">
+          <ExportExcelButton
+            title="Países"
+            columns={[
+              { header: 'Nombre', getValue: (pais) => pais.nombre },
+              { header: 'ISO-2', getValue: (pais) => pais.codigoIso2 },
+              { header: 'ISO-3', getValue: (pais) => pais.codigoIso3 },
+              { header: 'Teléfono', getValue: (pais) => pais.codigoTelefonico },
+            ]}
+            rows={filtered}
+          />
+          {allowWrite ? <RegisterButton to="nueva" label="Registrar país" /> : null}
+        </div>
       </header>
 
       <div className="paises-toolbar">

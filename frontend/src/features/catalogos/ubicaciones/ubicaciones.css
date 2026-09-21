@@ -54,6 +54,18 @@
   padding: 1rem 1.1rem 0.75rem;
 }
 
+.ubicaciones-head-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ubicaciones-head-actions .app-btn--excel {
+  width: 2.4rem;
+  min-height: 2.4rem;
+}
+
 .ubicaciones-title {
   margin: 0;
   color: var(--color-navy);

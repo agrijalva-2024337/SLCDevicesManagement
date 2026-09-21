@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 import { downloadActaPdf } from '@/shared/utils/downloadFile';
+import { excelFilename, exportStyledExcel } from '@/shared/utils/exportStyledExcel';
+import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 
 const viewClass = 'app-btn app-btn--ghost app-btn--sm';
 const editClass = 'app-btn app-btn--primary app-btn--sm';
@@ -93,6 +94,34 @@ export function EscanearQrButton({ label = 'Escanear QR' }) {
       <i className="pi pi-qrcode" aria-hidden="true" />
       {label}
     </Link>
+  );
+}
+
+export function ExportExcelButton({ title, sheetName, filename, columns, rows }) {
+  const count = rows?.length ?? 0;
+  const disabled = count === 0 || !columns?.length;
+
+  function onClick() {
+    exportStyledExcel({
+      title,
+      sheetName,
+      filename: filename || excelFilename(title),
+      columns,
+      rows,
+    });
+  }
+
+  return (
+    <button
+      type="button"
+      className="app-btn app-btn--excel"
+      onClick={onClick}
+      disabled={disabled}
+      title={disabled ? 'No hay registros para exportar' : `Exportar ${count} ${count === 1 ? 'registro' : 'registros'} a Excel`}
+      aria-label={disabled ? 'Exportar a Excel, sin registros' : `Exportar ${title || 'registros'} a Excel`}
+    >
+      <i className="pi pi-file-excel" aria-hidden="true" />
+    </button>
   );
 }
 

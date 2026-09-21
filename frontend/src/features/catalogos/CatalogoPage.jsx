@@ -21,7 +21,7 @@ import { DataTable } from '@/shared/components/DataTable';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { OverlayOutlet } from '@/shared/components/OverlayOutlet';
 import { PageHeader } from '@/shared/components/PageHeader';
-import { RecordActions, RegisterButton } from '@/shared/components/RecordActions';
+import { ExportExcelButton, RecordActions, RegisterButton } from '@/shared/components/RecordActions';
 import { RecordCard } from '@/shared/components/RecordCard';
 import { catalogListQueryKey } from '@/shared/data/queryKeys';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
@@ -277,7 +277,28 @@ export function CatalogoPage() {
       <PageHeader
         title={maestro.title}
         description={maestro.description}
-        actions={allowWrite ? <RegisterButton to="nueva" label={maestro.registerLabel} /> : null}
+        actions={
+          <>
+            <ExportExcelButton
+              title={maestro.title}
+              columns={[
+                { header: maestro.singular ?? 'Registro', getValue: (item) => maestro.titleOf(item) },
+                {
+                  header: 'Detalle',
+                  getValue: (item) => (maestro.facts?.(item, lookups) ?? []).join(' · '),
+                },
+                maestro.hasHabilitado === false
+                  ? null
+                  : {
+                      header: 'Estado',
+                      getValue: (item) => (item.habilitado === false ? 'Deshabilitado' : 'Habilitado'),
+                    },
+              ].filter(Boolean)}
+              rows={items}
+            />
+            {allowWrite ? <RegisterButton to="nueva" label={maestro.registerLabel} /> : null}
+          </>
+        }
       />
       {isLoading ? (
         <div className="app-feedback app-feedback--loading" role="status">

@@ -1,4 +1,5 @@
 import { cloneElement, Fragment, isValidElement, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { ExportExcelButton } from '@/shared/components/RecordActions';
 import { RowIconActions } from '@/shared/components/RowIconActions';
 import { matchesSearch } from '@/shared/utils/search';
 import '@/shared/styles/data-table.css';
@@ -320,6 +321,7 @@ export function DataTable({
   getRowActions,
   hideHeader = false,
   hideToolbar = false,
+  exportExcel = true,
   pageSize = 25,
   page,
   onPageChange,
@@ -420,7 +422,21 @@ export function DataTable({
   const showEmpty = !loading && rows.length === 0;
   const showNoResults = !loading && rows.length > 0 && filtered.length === 0;
   const showPager = Boolean(pageSize) && !loading && total > 0;
-  const showHead = !hideHeader && (title || description || primaryAction);
+  const excelColumns = useMemo(
+    () =>
+      displayColumns
+        .filter((column) => column.export !== false)
+        .map((column) => ({
+          header: column.header,
+          numeric: column.numeric,
+          getValue: (row) => cellText(column, row),
+        })),
+    [displayColumns],
+  );
+  const excelButton = exportExcel ? (
+    <ExportExcelButton title={title || 'Registros'} columns={excelColumns} rows={filtered} />
+  ) : null;
+  const showHead = !hideHeader && (title || description || primaryAction || excelButton);
   const showToolbar = !hideToolbar;
   const columnCount =
     displayColumns.length + (canExpand ? 1 : 0) + (withInlineActions ? 1 : 0);
@@ -503,7 +519,12 @@ export function DataTable({
             {title ? <h2 className="data-table-title">{title}</h2> : null}
             {description ? <p className="data-table-lead">{description}</p> : null}
           </div>
-          {primaryAction ? <div className="data-table-head-actions">{primaryAction}</div> : null}
+          {primaryAction || excelButton ? (
+            <div className="data-table-head-actions">
+              {excelButton}
+              {primaryAction}
+            </div>
+          ) : null}
         </header>
       ) : null}
 
