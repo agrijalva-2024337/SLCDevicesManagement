@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   isActivoAsignado,
   isActivoDeBaja,
@@ -25,14 +26,7 @@ function initialValues(prefill, { activos, ubicaciones } = {}) {
   };
 }
 
-function activosDisponibles({
-  activos,
-  ubicaciones,
-  asignaciones,
-  tipos,
-  idSedeFiltro,
-  idCategoriaFiltro,
-}) {
+function activosDisponibles({ activos, ubicaciones, asignaciones, tipos }) {
   const lookup = { asignaciones, tipos };
   return (activos ?? []).filter((item) => {
     if (isActivoDeBaja(item, lookup) || isActivoEnMantenimiento(item, lookup) || isActivoAsignado(item, lookup)) {
@@ -45,8 +39,17 @@ function activosDisponibles({
     if (!ubicacion || ubicacion.habilitado === false) {
       return false;
     }
-    if (idSedeFiltro != null && idSedeFiltro !== '' && Number(ubicacion.idSede) !== Number(idSedeFiltro)) {
-      return false;
+    return true;
+  });
+}
+
+function filtrarActivosPorSedeCategoria(activos, ubicaciones, idSedeFiltro, idCategoriaFiltro) {
+  return (activos ?? []).filter((item) => {
+    if (idSedeFiltro != null && idSedeFiltro !== '') {
+      const ubicacion = byId(ubicaciones, item.idUbicacion);
+      if (!ubicacion || Number(ubicacion.idSede) !== Number(idSedeFiltro)) {
+        return false;
+      }
     }
     if (
       idCategoriaFiltro != null &&
@@ -75,6 +78,18 @@ export function AsignacionFormOverlay({
   const lockActivo = Boolean(prefill?.idActivo);
   const ctx = { asignaciones, tipos };
 
+  const sedeOptions = useMemo(() => asOptions(sedes, 'nombre'), [sedes]);
+  const categoriaOptions = useMemo(() => asOptions(categorias, 'nombre'), [categorias]);
+  const responsableOptions = useMemo(
+    () => asOptions((responsables ?? []).filter((item) => item.habilitado !== false), 'nombreCompleto'),
+    [responsables],
+  );
+  const activosElegibles = useMemo(
+    () => activosDisponibles({ activos, ubicaciones, asignaciones, tipos }),
+    [activos, asignaciones, tipos, ubicaciones],
+  );
+  const activoOptionsLocked = useMemo(() => asOptions(activos ?? [], 'nombre'), [activos]);
+
   return (
     <RecordFormOverlay
       key={`entrega-${prefill?.idActivo ?? 'nueva'}`}
@@ -83,14 +98,12 @@ export function AsignacionFormOverlay({
       kicker="Entrega"
       hint="Entrega el activo a un responsable."
       fields={(values) => {
-        const elegibles = activosDisponibles({
-          activos,
+        const elegibles = filtrarActivosPorSedeCategoria(
+          activosElegibles,
           ubicaciones,
-          asignaciones,
-          tipos,
-          idSedeFiltro: values.idSedeFiltro,
-          idCategoriaFiltro: values.idCategoriaFiltro,
-        });
+          values.idSedeFiltro,
+          values.idCategoriaFiltro,
+        );
         const filtrosActivos =
           (values.idSedeFiltro != null && values.idSedeFiltro !== '') ||
           (values.idCategoriaFiltro != null && values.idCategoriaFiltro !== '');
@@ -107,14 +120,14 @@ export function AsignacionFormOverlay({
                   name: 'idSedeFiltro',
                   label: 'Sede',
                   type: 'select',
-                  options: asOptions(sedes, 'nombre'),
+                  options: sedeOptions,
                   hint: 'Filtra las unidades disponibles por sede.',
                 },
                 {
                   name: 'idCategoriaFiltro',
                   label: 'Categoría',
                   type: 'select',
-                  options: asOptions(categorias, 'nombre'),
+                  options: categoriaOptions,
                   hint: 'Filtra las unidades disponibles por categoría.',
                 },
               ]),
@@ -124,7 +137,7 @@ export function AsignacionFormOverlay({
             type: 'select',
             required: true,
             readOnly: lockActivo,
-            options: asOptions(lockActivo ? (activos ?? []) : elegibles, 'nombre'),
+            options: lockActivo ? activoOptionsLocked : asOptions(elegibles, 'nombre'),
             hint: activoHint,
           },
           {
@@ -139,10 +152,7 @@ export function AsignacionFormOverlay({
             label: 'Responsable que recibe',
             type: 'select',
             required: true,
-            options: asOptions(
-              (responsables ?? []).filter((item) => item.habilitado !== false),
-              'nombreCompleto',
-            ),
+            options: responsableOptions,
           },
           { name: 'fecha', label: 'Fecha de entrega', type: 'date', required: true },
           {
@@ -168,14 +178,12 @@ export function AsignacionFormOverlay({
       }}
       initialValues={initialValues(prefill, { activos, ubicaciones })}
       deriveValues={(next, prev) => {
-        const elegibles = activosDisponibles({
-          activos,
+        const elegibles = filtrarActivosPorSedeCategoria(
+          activosElegibles,
           ubicaciones,
-          asignaciones,
-          tipos,
-          idSedeFiltro: next.idSedeFiltro,
-          idCategoriaFiltro: next.idCategoriaFiltro,
-        });
+          next.idSedeFiltro,
+          next.idCategoriaFiltro,
+        );
         let idActivo = next.idActivo;
         if (
           !lockActivo &&
