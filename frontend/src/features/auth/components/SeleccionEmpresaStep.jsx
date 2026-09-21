@@ -26,7 +26,7 @@ export function SeleccionEmpresaStep({
     <div className="mt-6" aria-busy={busy || undefined}>
       <h2 className="landing-auth-title text-[1.35rem]">¿Con qué empresa quieres trabajar?</h2>
       <p className="landing-auth-lead">
-        Si necesitas cambiar de empresa mas adelante, cierra sesion y vuelve a entrar.
+        Puedes cambiar de empresa después desde el selector de la barra superior.
       </p>
 
       {loading ? (
@@ -35,7 +35,7 @@ export function SeleccionEmpresaStep({
           role="status"
           aria-live="polite"
         >
-          <i className="pi pi-spin pi-spinner text-2xl text-navy" aria-hidden="true" />
+          <i className="pi pi-spin pi-spinner text-2xl text-[var(--text)]" aria-hidden="true" />
           <span className="text-sm text-[var(--color-text-muted)]">Cargando empresas…</span>
         </div>
       ) : null}
@@ -75,23 +75,20 @@ export function SeleccionEmpresaStep({
                   disabled={disabled}
                   onClick={() => onSelect?.(id)}
                   className={[
+                    'landing-empresa-card',
                     'flex h-full min-h-[4.5rem] w-full items-center justify-between gap-3 rounded-2xl',
-                    'border border-[color-mix(in_srgb,var(--color-navy)_12%,transparent)]',
-                    'bg-[color-mix(in_srgb,var(--color-navy)_3%,white)] px-4 py-3 text-left',
+                    'px-4 py-3 text-left',
                     'transition-[background,border-color,transform,box-shadow] duration-200',
-                    'hover:border-[color-mix(in_srgb,var(--color-accent)_55%,transparent)]',
-                    'hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,white)]',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]',
-                    'focus-visible:ring-offset-2 active:scale-[0.99]',
+                    'focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-elevated)]',
+                    'active:scale-[0.99]',
                     'disabled:cursor-wait disabled:opacity-70',
-                    isChoosing
-                      ? 'border-[color-mix(in_srgb,var(--color-accent)_70%,transparent)] shadow-sm'
-                      : '',
+                    isChoosing ? 'is-choosing' : '',
                   ]
                     .filter(Boolean)
                     .join(' ')}
                 >
-                  <span className="min-w-0 truncate font-semibold text-navy">{empresa.nombre}</span>
+                  <span className="min-w-0 truncate font-semibold text-[var(--text)]">{empresa.nombre}</span>
                   {isChoosing ? (
                     <i
                       className="pi pi-spin pi-spinner shrink-0 text-[var(--color-accent-text)]"
@@ -113,7 +110,7 @@ export function SeleccionEmpresaStep({
       <p className="landing-auth-back">
         <button
           type="button"
-          className="border-0 bg-transparent p-0 font-bold text-[var(--color-accent-text)] hover:text-navy"
+          className="landing-auth-back-btn"
           onClick={onCancel}
           disabled={seleccionandoId != null}
         >

@@ -633,6 +633,11 @@
     width: 100%;
   }
 
+  .data-table-head-actions .app-btn--excel {
+    width: 2.75rem;
+    flex: 0 0 auto;
+  }
+
   .data-table-filter {
     min-width: 0;
     flex: 1 1 calc(50% - 0.45rem);

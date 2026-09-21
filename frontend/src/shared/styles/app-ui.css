@@ -48,8 +48,10 @@
 
 .app-empresa-select .app-input {
   max-width: 11rem;
-  padding-block: 0.35rem;
-  font-size: 0.875rem;
+  min-height: 2.15rem;
+  padding-block: 0.25rem;
+  padding-inline: 0.65rem;
+  font-size: 0.8125rem;
 }
 
 @media (min-width: 640px) {
@@ -359,7 +361,7 @@
 }
 
 .app-link-quiet:hover {
-  color: var(--color-navy);
+  color: var(--text);
 }
 
 .app-user-menu {
@@ -462,16 +464,52 @@ a.app-btn--primary {
 
 .app-btn--ghost {
   background: transparent;
-  color: var(--color-navy);
-  box-shadow: 0 0 0 1.5px var(--color-navy);
+  color: var(--text);
+  box-shadow: 0 0 0 1.5px var(--border-strong);
 }
 
 a.app-btn--ghost {
-  color: var(--color-navy);
+  color: var(--text);
 }
 
 .app-btn--ghost:hover {
   background: var(--surface-muted);
+  box-shadow: 0 0 0 1.5px var(--text-secondary);
+}
+
+.app-btn--secondary {
+  background: var(--surface-muted);
+  color: var(--text);
+  box-shadow: 0 0 0 1.5px var(--border);
+}
+
+a.app-btn--secondary {
+  color: var(--text);
+}
+
+.app-btn--secondary:hover {
+  background: var(--border);
+}
+
+.app-btn--excel {
+  width: 2.75rem;
+  padding: 0;
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface-elevated));
+  color: var(--accent-text);
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--accent) 42%, transparent);
+}
+
+a.app-btn--excel {
+  color: var(--accent-text);
+}
+
+.app-btn--excel:hover {
+  background: color-mix(in srgb, var(--accent) 26%, var(--surface-elevated));
+  transform: translateY(-1px);
+}
+
+.app-btn--excel .pi {
+  font-size: 1.15rem;
 }
 
 .app-btn--sm {
@@ -509,6 +547,20 @@ a.app-btn--on-dark {
   background: rgb(253 253 255 / 0.22);
 }
 
+.app-hero .app-btn--excel,
+.dash-hero .app-btn--excel,
+.app-hero a.app-btn--excel,
+.dash-hero a.app-btn--excel {
+  background: rgb(38 166 33 / 0.22);
+  color: #d8f5d4;
+  box-shadow: 0 0 0 1.5px rgb(38 166 33 / 0.45);
+}
+
+.app-hero .app-btn--excel:hover,
+.dash-hero .app-btn--excel:hover {
+  background: rgb(38 166 33 / 0.34);
+}
+
 /* Deshabilitado conserva el title con el motivo, así que no se apagan los eventos. */
 .app-btn:disabled {
   cursor: not-allowed;
@@ -521,6 +573,16 @@ a.app-btn--on-dark {
 
 .app-btn--ghost:disabled:hover {
   background: transparent;
+  box-shadow: 0 0 0 1.5px var(--border-strong);
+}
+
+.app-btn--secondary:disabled:hover {
+  background: var(--surface-muted);
+}
+
+.app-btn--excel:disabled:hover {
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface-elevated));
+  transform: none;
 }
 
 .app-label {
@@ -528,7 +590,7 @@ a.app-btn--on-dark {
   margin-bottom: 0.4rem;
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-navy);
+  color: var(--text);
 }
 
 .app-input {
@@ -1687,4 +1749,53 @@ a.app-btn--danger {
 [data-theme='dark'] .app-vista-nav__tab.is-active {
   color: var(--text);
   background: var(--surface-muted);
+}
+
+[data-theme='dark'] .app-btn--ghost,
+[data-theme='dark'] a.app-btn--ghost {
+  color: var(--text);
+  background: transparent;
+  box-shadow: 0 0 0 1.5px var(--border-strong);
+}
+
+[data-theme='dark'] .app-btn--ghost:hover {
+  background: var(--surface-muted);
+  box-shadow: 0 0 0 1.5px var(--text-secondary);
+}
+
+[data-theme='dark'] .app-btn--secondary,
+[data-theme='dark'] a.app-btn--secondary {
+  color: var(--text);
+  background: var(--surface-muted);
+  box-shadow: 0 0 0 1.5px var(--border);
+}
+
+[data-theme='dark'] .app-btn--secondary:hover {
+  background: rgb(232 234 244 / 0.14);
+}
+
+[data-theme='dark'] .app-btn--excel,
+[data-theme='dark'] a.app-btn--excel {
+  background: color-mix(in srgb, var(--accent) 20%, var(--surface-elevated));
+  color: var(--accent-text);
+}
+
+[data-theme='dark'] .app-label,
+[data-theme='dark'] .app-field-value,
+[data-theme='dark'] .app-save-success-title,
+[data-theme='dark'] .app-file-drop.is-active {
+  color: var(--text);
+}
+
+[data-theme='dark'] .app-icon-btn {
+  color: var(--text);
+  background: var(--surface-muted);
+}
+
+[data-theme='dark'] .app-icon-btn:hover {
+  background: rgb(232 234 244 / 0.14);
+}
+
+[data-theme='dark'] .app-multiselect-option {
+  color: var(--text);
 }

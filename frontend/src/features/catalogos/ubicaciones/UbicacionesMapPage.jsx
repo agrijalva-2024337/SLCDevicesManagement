@@ -4,7 +4,7 @@ import L from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import { useAuth } from '@/features/auth/useAuth';
 import { iconForLocation } from '@/features/catalogos/ubicaciones/locationIcons';
-import { RegisterButton } from '@/shared/components/RecordActions';
+import { ExportExcelButton, RegisterButton } from '@/shared/components/RecordActions';
 import { formatCoordinates } from '@/shared/geo/parseCoordinates';
 import { useResolvedPositions } from '@/shared/geo/useResolvedPositions';
 import { matchesSearch } from '@/shared/utils/search';
@@ -205,7 +205,26 @@ export function UbicacionesMapPage({ items, loading = false, onDelete }) {
         <div className="ubicaciones-panel">
           <header className="ubicaciones-head">
             <h2 className="ubicaciones-title">Ubicaciones</h2>
-            {allowWrite ? <RegisterButton to="nueva" label="Registrar ubicación" /> : null}
+            <div className="ubicaciones-head-actions">
+              <ExportExcelButton
+                title="Ubicaciones"
+                columns={[
+                  { header: 'Nombre', getValue: (item) => item.nombre },
+                  { header: 'Descripción', getValue: (item) => item.descripcion },
+                  {
+                    header: 'Coordenadas',
+                    getValue: (item) =>
+                      item.position ? formatCoordinates(item.position) : 'Sin ubicación',
+                  },
+                  {
+                    header: 'Estado',
+                    getValue: (item) => (item.habilitado ? 'Habilitado' : 'Deshabilitado'),
+                  },
+                ]}
+                rows={filtered}
+              />
+              {allowWrite ? <RegisterButton to="nueva" label="Registrar ubicación" /> : null}
+            </div>
           </header>
 
           <div className="ubicaciones-toolbar">
