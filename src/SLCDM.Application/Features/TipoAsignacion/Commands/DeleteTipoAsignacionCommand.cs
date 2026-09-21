@@ -34,10 +34,13 @@ public sealed class DeleteTipoAsignacionCommandHandler : ICommandHandler<DeleteT
         var entity = await _db.TiposAsignacion.FirstOrDefaultAsync(t => t.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("TipoAsignacion", command.Id);
 
-        var enUso = await _db.Asignaciones.AnyAsync(a => a.IdTipoAsignacion == command.Id, cancellationToken);
+        var enUso = await _db.Asignaciones
+            .IgnoreQueryFilters()
+            .AnyAsync(a => a.IdTipoAsignacion == command.Id, cancellationToken);
         if (enUso)
         {
-            throw new ConflictException("No se puede eliminar el tipo de asignacion porque tiene asignaciones asociadas.");
+            throw new ConflictException(
+                "No se puede eliminar el tipo de asignacion porque ya esta registrado en asignaciones.");
         }
 
         _db.TiposAsignacion.Remove(entity);

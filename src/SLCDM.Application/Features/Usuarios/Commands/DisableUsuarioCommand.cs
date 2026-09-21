@@ -34,6 +34,18 @@ public sealed class DisableUsuarioCommandHandler : ICommandHandler<DisableUsuari
         var entity = await _db.Usuarios.FirstOrDefaultAsync(u => u.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("Usuario", command.Id);
 
+        var enAsignaciones = await _db.Asignaciones
+            .IgnoreQueryFilters()
+            .AnyAsync(a => a.IdUsuario == command.Id, cancellationToken);
+        var enBajas = await _db.DetallesBaja
+            .IgnoreQueryFilters()
+            .AnyAsync(d => d.IdAutorizadoPor == command.Id, cancellationToken);
+        if (enAsignaciones || enBajas)
+        {
+            throw new ConflictException(
+                "No se puede deshabilitar el usuario porque tiene asignaciones o bajas asociadas.");
+        }
+
         entity.Habilitado = false;
         await _db.SaveChangesAsync(cancellationToken);
     }

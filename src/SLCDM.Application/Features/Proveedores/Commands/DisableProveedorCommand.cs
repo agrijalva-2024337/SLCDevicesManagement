@@ -34,6 +34,15 @@ public sealed class DisableProveedorCommandHandler : ICommandHandler<DisableProv
         var entity = await _db.Proveedores.FirstOrDefaultAsync(p => p.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("Proveedor", command.Id);
 
+        var enUso = await _db.Activos
+            .IgnoreQueryFilters()
+            .AnyAsync(a => a.IdProveedor == command.Id, cancellationToken);
+        if (enUso)
+        {
+            throw new ConflictException(
+                "No se puede deshabilitar el proveedor porque tiene activos asociados.");
+        }
+
         entity.Habilitado = false;
         await _db.SaveChangesAsync(cancellationToken);
     }

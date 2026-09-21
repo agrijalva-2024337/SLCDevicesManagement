@@ -34,6 +34,15 @@ public sealed class DisableAreaCommandHandler : ICommandHandler<DisableAreaComma
         var entity = await _db.Areas.FirstOrDefaultAsync(a => a.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("Area", command.Id);
 
+        var enUso = await _db.Responsables
+            .IgnoreQueryFilters()
+            .AnyAsync(r => r.IdArea == command.Id, cancellationToken);
+        if (enUso)
+        {
+            throw new ConflictException(
+                "No se puede deshabilitar el area porque tiene responsables asociados.");
+        }
+
         entity.Habilitado = false;
         await _db.SaveChangesAsync(cancellationToken);
     }

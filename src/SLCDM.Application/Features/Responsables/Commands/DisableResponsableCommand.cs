@@ -34,6 +34,15 @@ public sealed class DisableResponsableCommandHandler : ICommandHandler<DisableRe
         var entity = await _db.Responsables.FirstOrDefaultAsync(r => r.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("Responsable", command.Id);
 
+        var enUso = await _db.Asignaciones
+            .IgnoreQueryFilters()
+            .AnyAsync(a => a.IdResponsable == command.Id, cancellationToken);
+        if (enUso)
+        {
+            throw new ConflictException(
+                "No se puede deshabilitar el responsable porque tiene asignaciones asociadas.");
+        }
+
         entity.Habilitado = false;
         await _db.SaveChangesAsync(cancellationToken);
     }

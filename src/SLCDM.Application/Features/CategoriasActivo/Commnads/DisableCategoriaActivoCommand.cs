@@ -39,6 +39,15 @@ public sealed class DisableCategoriaActivoCommandHandler : ICommandHandler<Disab
             .FirstOrDefaultAsync(c => c.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("CategoriaActivo", command.Id);
 
+        var enUso = await _db.Activos
+            .IgnoreQueryFilters()
+            .AnyAsync(a => a.IdCategoriaActivo == command.Id, cancellationToken);
+        if (enUso)
+        {
+            throw new ConflictException(
+                "No se puede deshabilitar la categoria porque tiene activos asociados.");
+        }
+
         entity.Habilitado = false;
         await _db.SaveChangesAsync(cancellationToken);
     }

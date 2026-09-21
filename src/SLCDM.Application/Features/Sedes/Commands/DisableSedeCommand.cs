@@ -34,6 +34,21 @@ public sealed class DisableSedeCommandHandler : ICommandHandler<DisableSedeComma
         var entity = await _db.Sedes.FirstOrDefaultAsync(s => s.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("Sede", command.Id);
 
+        var tieneAreas = await _db.Areas
+            .IgnoreQueryFilters()
+            .AnyAsync(a => a.IdSede == command.Id, cancellationToken);
+        var tieneUbicaciones = await _db.Ubicaciones
+            .IgnoreQueryFilters()
+            .AnyAsync(u => u.IdSede == command.Id, cancellationToken);
+        var tieneJornadas = await _db.HistoricosInventario
+            .IgnoreQueryFilters()
+            .AnyAsync(h => h.IdSede == command.Id, cancellationToken);
+        if (tieneAreas || tieneUbicaciones || tieneJornadas)
+        {
+            throw new ConflictException(
+                "No se puede deshabilitar la sede porque tiene areas, ubicaciones o jornadas de inventario asociadas.");
+        }
+
         entity.Habilitado = false;
         await _db.SaveChangesAsync(cancellationToken);
     }

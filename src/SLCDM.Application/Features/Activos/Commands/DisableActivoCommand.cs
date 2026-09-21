@@ -34,6 +34,15 @@ public sealed class DisableActivoCommandHandler : ICommandHandler<DisableActivoC
         var entity = await _db.Activos.FirstOrDefaultAsync(a => a.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("Activo", command.Id);
 
+        var tieneAsignacionActiva = await _db.Asignaciones
+            .IgnoreQueryFilters()
+            .AnyAsync(a => a.IdActivo == command.Id && a.Activa, cancellationToken);
+        if (tieneAsignacionActiva)
+        {
+            throw new ConflictException(
+                "No se puede deshabilitar el activo porque tiene una asignacion, mantenimiento o traslado activo.");
+        }
+
         entity.Habilitado = false;
         await _db.SaveChangesAsync(cancellationToken);
     }
