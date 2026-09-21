@@ -4,52 +4,78 @@ function idDeTipo(tipos, nombre) {
   return (tipos ?? []).find((item) => nombresCatalogoIguales(item.nombre, nombre))?.id ?? null;
 }
 
+export function indexTipos(tipos) {
+  return {
+    asignacion: idDeTipo(tipos, TIPO_ASIGNACION.Asignacion),
+    mantenimiento: idDeTipo(tipos, TIPO_ASIGNACION.Mantenimiento),
+    baja: idDeTipo(tipos, TIPO_ASIGNACION.Baja),
+  };
+}
+
+export function indexAsignacionesActivas(asignaciones) {
+  const byActivo = new Map();
+  for (const row of asignaciones ?? []) {
+    if (!row.activa) continue;
+    byActivo.set(Number(row.idActivo), row);
+  }
+  return byActivo;
+}
+
+function tipoIdDe(ctx, kind) {
+  if (ctx?.tipoIds?.[kind] != null) return ctx.tipoIds[kind];
+  const nombre =
+    kind === 'mantenimiento'
+      ? TIPO_ASIGNACION.Mantenimiento
+      : kind === 'baja'
+        ? TIPO_ASIGNACION.Baja
+        : TIPO_ASIGNACION.Asignacion;
+  return idDeTipo(ctx?.tipos, nombre);
+}
+
+function activaDe(activo, ctx = {}) {
+  if (ctx.asignacionesPorActivo) {
+    return ctx.asignacionesPorActivo.get(Number(activo?.id)) ?? null;
+  }
+  return asignacionActivaDe(activo, ctx.asignaciones);
+}
+
 export function asignacionActivaDe(activo, asignaciones) {
+  if (asignaciones instanceof Map) {
+    return asignaciones.get(Number(activo?.id)) ?? null;
+  }
   return (
     (asignaciones ?? []).find((row) => Number(row.idActivo) === Number(activo?.id) && row.activa) ?? null
   );
 }
 
-export function isActivoAsignado(activo, { asignaciones = [], tipos = [] } = {}) {
-  const idTipo = idDeTipo(tipos, TIPO_ASIGNACION.Asignacion);
+export function isActivoAsignado(activo, ctx = {}) {
+  const idTipo = tipoIdDe(ctx, 'asignacion');
   if (idTipo == null) return false;
-  return (asignaciones ?? []).some(
-    (row) =>
-      Number(row.idActivo) === Number(activo.id) &&
-      row.activa &&
-      Number(row.idTipoAsignacion) === Number(idTipo),
-  );
+  const row = activaDe(activo, ctx);
+  return Boolean(row && Number(row.idTipoAsignacion) === Number(idTipo));
 }
 
-export function isActivoEnMantenimiento(activo, { asignaciones = [], tipos = [] } = {}) {
-  const idTipo = idDeTipo(tipos, TIPO_ASIGNACION.Mantenimiento);
+export function isActivoEnMantenimiento(activo, ctx = {}) {
+  const idTipo = tipoIdDe(ctx, 'mantenimiento');
   if (idTipo == null) return false;
-  return (asignaciones ?? []).some(
-    (row) =>
-      Number(row.idActivo) === Number(activo.id) &&
-      row.activa &&
-      Number(row.idTipoAsignacion) === Number(idTipo),
-  );
+  const row = activaDe(activo, ctx);
+  return Boolean(row && Number(row.idTipoAsignacion) === Number(idTipo));
 }
 
-export function isActivoDeBaja(activo, { asignaciones = [], tipos = [] } = {}) {
-  const idTipo = idDeTipo(tipos, TIPO_ASIGNACION.Baja);
+export function isActivoDeBaja(activo, ctx = {}) {
+  const idTipo = tipoIdDe(ctx, 'baja');
   if (idTipo == null) return false;
-  return (asignaciones ?? []).some(
-    (row) =>
-      Number(row.idActivo) === Number(activo.id) &&
-      row.activa &&
-      Number(row.idTipoAsignacion) === Number(idTipo),
-  );
+  const row = activaDe(activo, ctx);
+  return Boolean(row && Number(row.idTipoAsignacion) === Number(idTipo));
 }
 
-export function estadoNombreDeActivo(activo, { asignaciones = [], estados = [] } = {}) {
+export function estadoNombreDeActivo(activo, { asignaciones = [], estados = [], asignacionesPorActivo } = {}) {
   if (activo?.idEstado != null && activo.idEstado !== '') {
     return (estados ?? []).find((item) => Number(item.id) === Number(activo.idEstado))?.nombre ?? null;
   }
-  const activa = (asignaciones ?? []).find(
-    (row) => Number(row.idActivo) === Number(activo?.id) && row.activa,
-  );
+  const activa = asignacionesPorActivo
+    ? (asignacionesPorActivo.get(Number(activo?.id)) ?? null)
+    : (asignaciones ?? []).find((row) => Number(row.idActivo) === Number(activo?.id) && row.activa);
   if (!activa) return 'Disponible';
   return (estados ?? []).find((item) => Number(item.id) === Number(activa.idEstado))?.nombre ?? '—';
 }

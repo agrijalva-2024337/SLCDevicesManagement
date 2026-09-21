@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { defaultDialCode, paisesConPrefijo, sanitizeLocalNumber } from '@/shared/utils/phoneNumber';
+import 'flag-icons/css/flag-icons.min.css';
 
 function flagClassName(iso2) {
   const code = String(iso2 ?? '')

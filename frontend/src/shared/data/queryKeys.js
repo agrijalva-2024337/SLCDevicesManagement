@@ -1,6 +1,6 @@
 export const CATALOG_TTL_MS = 10 * 60 * 1000;
-export const TRANSACTION_TTL_MS = 30 * 1000;
-export const REPORT_TTL_MS = 60 * 1000;
+export const TRANSACTION_TTL_MS = 2 * 60 * 1000;
+export const REPORT_TTL_MS = 5 * 60 * 1000;
 
 const TRANSACTION_RESOURCES = new Set([
   'activos',

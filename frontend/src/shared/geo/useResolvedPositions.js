@@ -19,9 +19,10 @@ function geocodeQuery(item) {
 export function useResolvedPositions(items) {
   const [geocoded, setGeocoded] = useState({});
 
-  const fingerprint = items
-    .map((item) => `${item.id}:${item.latitud}:${item.longitud}:${geocodeQuery(item)}`)
-    .join('|');
+  const fingerprint = useMemo(
+    () => items.map((item) => `${item.id}:${item.latitud}:${item.longitud}:${geocodeQuery(item)}`).join('|'),
+    [items],
+  );
 
   useEffect(() => {
     let cancelled = false;

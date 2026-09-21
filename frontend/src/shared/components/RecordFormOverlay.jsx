@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SchemaForm } from '@/shared/components/RecordForm';
 import { DetailOverlay } from '@/shared/components/DetailOverlay';
 import { SaveSuccessPanel } from '@/shared/components/SaveSuccessPanel';
@@ -53,6 +53,7 @@ export function RecordFormOverlay({
   const [formError, setFormError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(null);
+  const validationTimer = useRef(null);
 
   useEffect(() => {
     if (!open) {
@@ -75,6 +76,13 @@ export function RecordFormOverlay({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reset on open edge
   }, [open]);
 
+  useEffect(
+    () => () => {
+      window.clearTimeout(validationTimer.current);
+    },
+    [],
+  );
+
   function applyValidation(nextValues, nextTouched = touched, nextAttempted = attempted) {
     const all = validate(nextValues) ?? {};
     setErrors(liveErrors(all, nextValues, nextTouched, nextAttempted));
@@ -88,6 +96,7 @@ export function RecordFormOverlay({
 
     const nextAttempted = true;
     setAttempted(nextAttempted);
+    window.clearTimeout(validationTimer.current);
     const nextErrors = validate(values) ?? {};
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
@@ -152,11 +161,15 @@ export function RecordFormOverlay({
               setTouched(nextTouched);
               setValues(patched);
               setFormError(null);
-              applyValidation(patched, nextTouched, attempted);
+              window.clearTimeout(validationTimer.current);
+              validationTimer.current = window.setTimeout(() => {
+                applyValidation(patched, nextTouched, attempted);
+              }, 160);
             }}
             onBlurField={(name) => {
               const nextTouched = { ...touched, [name]: true };
               setTouched(nextTouched);
+              window.clearTimeout(validationTimer.current);
               applyValidation(values, nextTouched, attempted);
             }}
             onSubmit={handleSubmit}

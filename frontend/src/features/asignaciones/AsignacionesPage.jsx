@@ -36,6 +36,30 @@ function estadoTone(estado) {
   return estado === 'Vigente' ? 'success' : 'muted';
 }
 
+const ASIGNACION_COLUMNS = [
+  { key: 'activoNombre', header: 'Activo', primary: true },
+  { key: 'responsableNombre', header: 'Responsable' },
+  { key: 'ubicacionNombre', header: 'Ubicación' },
+  {
+    key: 'estadoVista',
+    header: 'Estado',
+    type: 'badge',
+    tone: (row) => estadoTone(row.estadoVista),
+  },
+  {
+    key: 'fechaAsignacion',
+    header: 'Entrega',
+    getValue: (row) => formatDate(row.fechaAsignacion),
+    sortValue: (row) => row.fechaAsignacion,
+  },
+  {
+    key: 'fechaDevolucion',
+    header: 'Devolución',
+    getValue: (row) => formatDate(row.fechaDevolucion),
+    sortValue: (row) => row.fechaDevolucion,
+  },
+];
+
 function hydrate(row, lookups) {
   const activo = byId(lookups.activos, row.idActivo);
   const responsable = byId(lookups.responsables, row.idResponsable);
@@ -174,29 +198,7 @@ export function AsignacionesPage() {
             ) : null}
           </>
         }
-        columns={[
-          { key: 'activoNombre', header: 'Activo', primary: true },
-          { key: 'responsableNombre', header: 'Responsable' },
-          { key: 'ubicacionNombre', header: 'Ubicación' },
-          {
-            key: 'estadoVista',
-            header: 'Estado',
-            type: 'badge',
-            tone: (row) => estadoTone(row.estadoVista),
-          },
-          {
-            key: 'fechaAsignacion',
-            header: 'Entrega',
-            getValue: (row) => formatDate(row.fechaAsignacion),
-            sortValue: (row) => row.fechaAsignacion,
-          },
-          {
-            key: 'fechaDevolucion',
-            header: 'Devolución',
-            getValue: (row) => formatDate(row.fechaDevolucion),
-            sortValue: (row) => row.fechaDevolucion,
-          },
-        ]}
+        columns={ASIGNACION_COLUMNS}
         rows={tableRows}
         loading={isLoading}
         searchPlaceholder="Buscar por activo, responsable o ubicación"

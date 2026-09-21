@@ -79,21 +79,23 @@ export function ActivoDetallePage() {
 
   const activoRes = useResource(loadActivo, { key: detailQueryKey('activos', id), initialData: null });
   const qrRes = useResource(loadQr, { key: detailQueryKey('consultaQr', id), initialData: null });
-  const activos = useResource(activoService.getAll);
+  const activos = useResource(activoService.getAll, { enabled: editando });
   const categorias = useResource(categoriaService.getAll);
-  const proveedores = useResource(proveedorService.getAll);
+  const proveedores = useResource(proveedorService.getAll, { enabled: editando });
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
   const estados = useResource(estadoService.getAll);
   const responsables = useResource(responsableService.getAll);
-  const areas = useResource(areaService.getAll);
+  const areas = useResource(areaService.getAll, { enabled: movimiento === 'baja' });
   const tipos = useResource(tipoAsignacionService.getAll);
   const asignaciones = useResource(asignacionService.getAll);
-  const motivos = useResource(motivoBajaService.getAll);
-  const tiposMantenimiento = useResource(tipoMantenimientoService.getAll);
+  const motivos = useResource(motivoBajaService.getAll, { enabled: movimiento === 'baja' });
+  const tiposMantenimiento = useResource(tipoMantenimientoService.getAll, {
+    enabled: movimiento === 'mantenimiento',
+  });
   const usuarios = useResource(loadUsuarios, {
     key: listQueryKey('usuarios', { idEmpresa: idActiva || undefined }),
-    enabled: canReadUsuarios,
+    enabled: canReadUsuarios && movimiento === 'baja',
   });
   const rastreo = useResource(listarRastreo, { key: listQueryKey('rastreo') });
 
@@ -158,9 +160,11 @@ export function ActivoDetallePage() {
     [asignaciones.data, id, responsables.data, tipos.data, usuarios.data],
   );
 
+  const activoActual = useMemo(() => (activo ? [activo] : []), [activo]);
+
   const refrescar = useCallback(async () => {
-    await Promise.all([activoRes.reload(), asignaciones.reload(), ubicaciones.reload(), activos.reload()]);
-  }, [activoRes, activos, asignaciones, ubicaciones]);
+    await Promise.all([activoRes.reload(), asignaciones.reload(), ubicaciones.reload()]);
+  }, [activoRes, asignaciones, ubicaciones]);
 
   function ejecutarAccion(key) {
     if (key === 'edit') {
@@ -408,7 +412,7 @@ export function ActivoDetallePage() {
       <TrasladoFormOverlay
         open={movimiento === 'traslado'}
         prefill={movimiento === 'traslado' ? { idActivo: activo.id } : null}
-        activos={activos.data}
+        activos={activoActual}
         ubicaciones={ubicaciones.data}
         sedes={sedes.data}
         responsables={responsables.data}
@@ -433,7 +437,7 @@ export function ActivoDetallePage() {
       <MantenimientoFormOverlay
         open={movimiento === 'mantenimiento'}
         prefill={movimiento === 'mantenimiento' ? { idActivo: activo.id } : null}
-        activos={activos.data}
+        activos={activoActual}
         ubicaciones={ubicaciones.data}
         sedes={sedes.data}
         responsables={responsables.data}
@@ -459,7 +463,7 @@ export function ActivoDetallePage() {
       <BajaFormOverlay
         open={movimiento === 'baja'}
         prefill={movimiento === 'baja' ? { idActivo: activo.id } : null}
-        activos={activos.data}
+        activos={activoActual}
         motivos={motivos.data}
         usuarios={usuarios.data}
         usuariosUnavailableReason={canReadUsuarios ? null : usuarioService.USUARIOS_SIN_LECTURA}

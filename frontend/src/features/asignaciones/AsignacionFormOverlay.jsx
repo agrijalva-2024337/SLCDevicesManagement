@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 import {
+  indexAsignacionesActivas,
+  indexTipos,
   isActivoAsignado,
   isActivoDeBaja,
   isActivoEnMantenimiento,
@@ -27,7 +29,12 @@ function initialValues(prefill, { activos, ubicaciones } = {}) {
 }
 
 function activosDisponibles({ activos, ubicaciones, asignaciones, tipos }) {
-  const lookup = { asignaciones, tipos };
+  const lookup = {
+    asignaciones,
+    tipos,
+    tipoIds: indexTipos(tipos),
+    asignacionesPorActivo: indexAsignacionesActivas(asignaciones),
+  };
   return (activos ?? []).filter((item) => {
     if (isActivoDeBaja(item, lookup) || isActivoEnMantenimiento(item, lookup) || isActivoAsignado(item, lookup)) {
       return false;

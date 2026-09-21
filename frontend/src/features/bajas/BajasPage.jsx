@@ -35,6 +35,25 @@ function usuarioNombre(usuario) {
   return [usuario.nombres, usuario.apellidos].filter(Boolean).join(' ') || usuario.correo || '—';
 }
 
+const BAJA_COLUMNS = [
+  { key: 'activoNombre', header: 'Activo', primary: true },
+  { key: 'motivoNombre', header: 'Motivo' },
+  {
+    key: 'fechaAsignacion',
+    header: 'Fecha',
+    numeric: true,
+    getValue: (row) => formatDate(row.fechaAsignacion),
+    sortValue: (row) => row.fechaAsignacion,
+  },
+  { key: 'autorizadoNombre', header: 'Autorizado por' },
+  {
+    key: 'estadoNombre',
+    header: 'Estado',
+    type: 'badge',
+    tone: () => 'danger',
+  },
+];
+
 function hydrate(row, lookups) {
   const activo = byId(lookups.activos, row.idActivo);
   const estado = byId(lookups.estados, row.idEstado);
@@ -165,24 +184,7 @@ export function BajasPage() {
             {allowWrite ? <RegisterButton label="Registrar baja" onClick={() => crud.openCreate()} /> : null}
           </>
         }
-        columns={[
-          { key: 'activoNombre', header: 'Activo', primary: true },
-          { key: 'motivoNombre', header: 'Motivo' },
-          {
-            key: 'fechaAsignacion',
-            header: 'Fecha',
-            numeric: true,
-            getValue: (row) => formatDate(row.fechaAsignacion),
-            sortValue: (row) => row.fechaAsignacion,
-          },
-          { key: 'autorizadoNombre', header: 'Autorizado por' },
-          {
-            key: 'estadoNombre',
-            header: 'Estado',
-            type: 'badge',
-            tone: () => 'danger',
-          },
-        ]}
+        columns={BAJA_COLUMNS}
         rows={tableRows}
         loading={isLoading}
         searchPlaceholder="Buscar por activo, motivo o autorizante"
