@@ -6,9 +6,7 @@
 }
 
 .app-main {
-  padding:
-    var(--content-gutter-y)
-    var(--content-gutter)
+  padding: var(--content-gutter-y) var(--content-gutter)
     max(var(--content-gutter-y), env(safe-area-inset-bottom));
 }
 
@@ -20,8 +18,7 @@
 }
 
 .app-topbar {
-  background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
-  backdrop-filter: blur(12px);
+  background: var(--surface-elevated);
   border-bottom: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
   padding-inline: var(--content-gutter);
