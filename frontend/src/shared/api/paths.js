@@ -26,6 +26,8 @@ export const apiPaths = {
     rastreo: '/api/Dispositivos/rastreo',
     rastreoByActivo: (idActivo) => `/api/Dispositivos/rastreo/${idActivo}`,
     fueraDeRango: '/api/Dispositivos/fuera-de-rango',
+    generarLinkInstalador: '/api/Dispositivos/instalador/generar-link',
+    descargarInstalador: (token) => `/api/Dispositivos/instalador/${encodeURIComponent(token)}`,
   },
   activos: '/api/Activos',
   // [API] imagen QR del activo; confirmar en Swagger (blob o { imageUrl, consultaUrl })

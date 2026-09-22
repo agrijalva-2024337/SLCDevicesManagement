@@ -33,6 +33,52 @@ builder.Services.AddControllers();
 builder.Services.AddSwaggerWithBearer();
 builder.Services.Configure<SLCDM.Application.Common.Options.DeviceTrackingOptions>(
     builder.Configuration.GetSection(SLCDM.Application.Common.Options.DeviceTrackingOptions.SectionName));
+builder.Services.Configure<SLCDM.Application.Common.Options.AgentOptions>(
+    builder.Configuration.GetSection(SLCDM.Application.Common.Options.AgentOptions.SectionName));
+builder.Services.PostConfigure<SLCDM.Application.Common.Options.AgentOptions>(options =>
+{
+    // Docker/Railway: /app/agent/SLCDMAgente.exe (COPY en Dockerfile).
+    // Local: ../../agent/publish/SLCDMAgente.exe relativo al content root.
+    // Override: Agent__PublishedExePath
+    // Publicar el agente a mano antes de buildear/desplegar:
+    //   dotnet publish agent/SLCDM.Agent.csproj -c Release -r win-x64 --self-contained true -o agent/publish
+    const string containerPath = "/app/agent/SLCDMAgente.exe";
+    var localPath = Path.GetFullPath(Path.Combine(
+        builder.Environment.ContentRootPath, "..", "..", "agent", "publish", "SLCDMAgente.exe"));
+
+    var configured = options.PublishedExePath?.Trim();
+    string? configuredResolved = null;
+    if (!string.IsNullOrWhiteSpace(configured))
+    {
+        // En Windows, "/app/..." es el default de contenedor — no tratarlo como path relativo local.
+        if (OperatingSystem.IsWindows() && configured.StartsWith('/'))
+        {
+            configuredResolved = configured;
+        }
+        else if (Path.IsPathRooted(configured))
+        {
+            configuredResolved = configured;
+        }
+        else
+        {
+            configuredResolved = Path.GetFullPath(
+                Path.Combine(builder.Environment.ContentRootPath, configured));
+        }
+    }
+
+    var candidates = new List<string>();
+    if (configuredResolved is not null)
+    {
+        candidates.Add(configuredResolved);
+    }
+
+    candidates.Add(containerPath);
+    candidates.Add(localPath);
+
+    options.PublishedExePath = candidates.FirstOrDefault(File.Exists)
+        ?? configuredResolved
+        ?? containerPath;
+});
 builder.Services.Configure<SLCDM.Application.Common.Options.SmtpOptions>(
     builder.Configuration.GetSection(SLCDM.Application.Common.Options.SmtpOptions.SectionName));
 builder.Services.AddSingleton<SLCDM.Application.Common.Interfaces.IEmailSender, SLCDM.Api.Email.SmtpEmailSender>();

@@ -21,6 +21,11 @@ RUN apt-get update \
 
 COPY --from=build /app .
 
+# El .exe del agente no se compila en esta imagen. Hay que publicarlo ANTES del docker build/deploy:
+#   dotnet publish agent/SLCDM.Agent.csproj -c Release -r win-x64 --self-contained true -o agent/publish
+# Si falta agent/publish/SLCDMAgente.exe, este COPY falla a propósito.
+COPY agent/publish/SLCDMAgente.exe /app/agent/SLCDMAgente.exe
+
 ENV ASPNETCORE_ENVIRONMENT=Production
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
