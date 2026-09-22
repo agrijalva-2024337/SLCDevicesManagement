@@ -11,7 +11,7 @@ import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
 import { TrasladoFormOverlay } from '@/features/inventario/TrasladoFormOverlay';
 import * as trasladoService from '@/features/inventario/trasladoService';
-import { parseTrasladoRuta, filtrarPorEmpresaDeActivo } from '@/features/inventario/trasladoRuta';
+import { parseTrasladoRuta, filtrarPorEmpresaDeActivo, nombreUbicacion } from '@/features/inventario/trasladoRuta';
 import { DataTable } from '@/shared/components/DataTable';
 import { DetailField, DetailOverlay } from '@/shared/components/DetailOverlay';
 import { EscanearQrButton, RegisterButton } from '@/shared/components/RecordActions';
@@ -28,11 +28,19 @@ function hydrate(row, lookups) {
   const activo = byId(lookups.activos, row.idActivo);
   const estado = byId(lookups.estados, row.idEstado);
   const responsable = byId(lookups.responsables, row.idResponsable);
+  const origenDesdeId =
+    row.idUbicacionOrigen != null
+      ? nombreUbicacion(byId(lookups.ubicaciones, row.idUbicacionOrigen))
+      : null;
+  const destinoDesdeId =
+    row.idUbicacionDestino != null
+      ? nombreUbicacion(byId(lookups.ubicaciones, row.idUbicacionDestino))
+      : null;
   return {
     ...row,
     activoNombre: activo?.nombre ?? `Activo #${row.idActivo}`,
-    origen: ruta.origen ?? '—',
-    destino: ruta.destino ?? '—',
+    origen: origenDesdeId ?? ruta.origen ?? '—',
+    destino: destinoDesdeId ?? ruta.destino ?? '—',
     estadoNombre: estado?.nombre ?? '—',
     responsableNombre: responsable?.nombreCompleto ?? '—',
   };

@@ -58,6 +58,19 @@ function duplicateNombre(records, nombre, currentId) {
   );
 }
 
+function duplicateDireccion(records, direccion, currentId) {
+  const needle = String(direccion ?? '')
+    .trim()
+    .toLowerCase();
+  if (!needle) return false;
+  return (records ?? []).some(
+    (item) =>
+      String(item.direccion ?? '')
+        .trim()
+        .toLowerCase() === needle && String(item.id) !== String(currentId),
+  );
+}
+
 export function validateSedeForm(values, paises = [], records = [], currentId) {
   const errors = {
     idEmpresa: requireSelect(values.idEmpresa, 'una empresa'),
@@ -79,6 +92,9 @@ export function validateSedeForm(values, paises = [], records = [], currentId) {
   );
   if (!errors.nombre && duplicateNombre(mismaEmpresa, values.nombre, currentId)) {
     errors.nombre = 'Ya existe una sede con el mismo nombre en esta empresa.';
+  }
+  if (!errors.direccion && duplicateDireccion(mismaEmpresa, values.direccion, currentId)) {
+    errors.direccion = 'Ya existe una sede con la misma dirección en esta empresa.';
   }
 
   return errors;

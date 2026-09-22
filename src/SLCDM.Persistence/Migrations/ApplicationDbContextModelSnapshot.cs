@@ -1140,6 +1140,11 @@ namespace SLCDM.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_sede_empresa_nombre");
 
+                    b.HasIndex("IdEmpresa", "Direccion")
+                        .IsUnique()
+                        .HasDatabaseName("ix_sede_empresa_direccion")
+                        .HasFilter("[direccion] IS NOT NULL AND [direccion] <> ''");
+
                     b.ToTable("sede", (string)null);
                 });
 

@@ -40,25 +40,31 @@ public sealed class GetAsignacionesQueryHandler : IQueryHandler<GetAsignacionesQ
 
         // La lista no trae las firmas: son varbinary(max) y en JSON (base64) revientan
         // activos, asignaciones y bajas. El PDF y el detalle las leen de la entidad.
-        var items = await itemsQuery
-            .OrderByDescending(a => a.FechaAsignacion)
-            .Select(a => new
-            {
-                a.Id,
-                a.IdActivo,
-                a.IdUsuario,
-                a.IdResponsable,
-                a.IdEstado,
-                a.IdTipoAsignacion,
-                a.FechaAsignacion,
-                a.FechaDevolucion,
-                a.Activa,
-                a.Observaciones,
-                a.FechaFirmaEntrega,
-                a.DocumentoPdfUrl,
-                a.DocumentoPdfGenerardoEn,
-                a.DocumentoPdfHash,
-            })
+        // Origen/destino de traslados viven en detalle_traslado (no en observaciones).
+        var items = await (
+                from a in itemsQuery
+                join d in _db.DetallesTraslado.AsNoTracking() on a.Id equals d.IdAsignacion into dj
+                from d in dj.DefaultIfEmpty()
+                orderby a.FechaAsignacion descending
+                select new
+                {
+                    a.Id,
+                    a.IdActivo,
+                    a.IdUsuario,
+                    a.IdResponsable,
+                    a.IdEstado,
+                    a.IdTipoAsignacion,
+                    a.FechaAsignacion,
+                    a.FechaDevolucion,
+                    a.Activa,
+                    a.Observaciones,
+                    a.FechaFirmaEntrega,
+                    a.DocumentoPdfUrl,
+                    a.DocumentoPdfGenerardoEn,
+                    a.DocumentoPdfHash,
+                    IdUbicacionOrigen = (int?)d.IdUbicacionOrigen,
+                    IdUbicacionDestino = (int?)d.IdUbicacionDestino,
+                })
             .ToListAsync(cancellationToken);
 
         return items
@@ -78,7 +84,9 @@ public sealed class GetAsignacionesQueryHandler : IQueryHandler<GetAsignacionesQ
                 null,
                 a.DocumentoPdfUrl,
                 a.DocumentoPdfGenerardoEn,
-                a.DocumentoPdfHash))
+                a.DocumentoPdfHash,
+                a.IdUbicacionOrigen,
+                a.IdUbicacionDestino))
             .ToList();
     }
 }

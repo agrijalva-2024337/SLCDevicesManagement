@@ -10,10 +10,13 @@ import {
   activosDeEmpresa,
   nombreUbicacion,
   responsablesDeEmpresa,
+  responsablesDeSede,
+  sedeIdDeResponsable,
   todayIsoDate,
 } from '@/features/inventario/trasladoRuta';
 import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import { asOptions, compactErrors, optionalText, requireSelect } from '@/shared/components/recordFormUtils';
+import { TIPO_ASIGNACION, nombresCatalogoIguales } from '@/shared/api/tipoAsignacion';
 import { byId } from '@/shared/utils/format';
 
 function initialValues(prefill, { activos, ubicaciones } = {}) {
@@ -118,10 +121,6 @@ export function AsignacionFormOverlay({
     () => responsablesDeEmpresa(responsables, areas, sedes, idEmpresaActiva),
     [areas, idEmpresaActiva, responsables, sedes],
   );
-  const responsableOptions = useMemo(
-    () => asOptions(responsablesFiltrados, 'nombreCompleto'),
-    [responsablesFiltrados],
-  );
   const activosElegibles = useMemo(
     () => activosDisponibles({ activos, ubicaciones, sedes, asignaciones, tipos, idEmpresaActiva }),
     [activos, asignaciones, idEmpresaActiva, sedes, tipos, ubicaciones],
@@ -134,7 +133,7 @@ export function AsignacionFormOverlay({
       open={open}
       title="Registrar asignación"
       kicker="Entrega"
-      hint="Entrega el activo a un responsable."
+      hint="El responsable debe ser de la misma sede que el activo. Solo un activo asignado por categoría."
       fields={(values) => {
         const elegibles = filtrarActivosPorSedeCategoria(
           activosElegibles,
@@ -149,6 +148,17 @@ export function AsignacionFormOverlay({
           !lockActivo && filtrosActivos && elegibles.length === 0
             ? 'No hay unidades disponibles de esta categoría en la sede seleccionada.'
             : undefined;
+        const activo = byId(activos, values.idActivo);
+        const ubicacionActivo = byId(ubicaciones, activo?.idUbicacion);
+        const idSedeActivo = ubicacionActivo?.idSede;
+        const responsablesMismaSede = responsablesDeSede(responsablesFiltrados, areas, idSedeActivo);
+        const responsableHint = activo
+          ? idSedeActivo == null
+            ? 'El activo no tiene ubicación/sede; no se puede asignar.'
+            : responsablesMismaSede.length === 0
+              ? 'No hay responsables habilitados en la sede del activo.'
+              : 'Solo responsables de la misma sede que la ubicación del activo.'
+          : 'Seleccione un activo para listar responsables de su sede.';
 
         return [
           ...(lockActivo
@@ -188,7 +198,8 @@ export function AsignacionFormOverlay({
             label: 'Responsable que recibe',
             type: 'select',
             required: true,
-            options: responsableOptions,
+            options: asOptions(responsablesMismaSede, 'nombreCompleto'),
+            hint: responsableHint,
           },
           { name: 'fecha', label: 'Fecha de entrega', type: 'date', required: true },
           {
@@ -230,10 +241,21 @@ export function AsignacionFormOverlay({
           idActivo = '';
         }
         const activo = byId(activos, idActivo);
+        const ubicacion = byId(ubicaciones, activo?.idUbicacion);
+        let idResponsable = next.idResponsable;
+        if (idResponsable) {
+          const responsable = byId(responsablesFiltrados, idResponsable);
+          const sedeResponsable = sedeIdDeResponsable(responsable, areas);
+          const sedeActivo = ubicacion?.idSede != null ? Number(ubicacion.idSede) : null;
+          if (!activo || sedeActivo == null || sedeResponsable !== sedeActivo) {
+            idResponsable = '';
+          }
+        }
         return {
           ...next,
           idActivo,
-          ubicacion: activo ? nombreUbicacion(byId(ubicaciones, activo.idUbicacion)) : '',
+          idResponsable,
+          ubicacion: activo ? nombreUbicacion(ubicacion) : '',
         };
       }}
       validate={(values) => {
@@ -250,6 +272,42 @@ export function AsignacionFormOverlay({
           errors.idActivo = 'El activo está en mantenimiento. Finalícelo antes de asignarlo.';
         } else if (activo && isActivoAsignado(activo, ctx)) {
           errors.idActivo = 'El activo ya tiene una asignación activa.';
+        } else if (activo && values.idResponsable) {
+          const ubicacion = byId(ubicaciones, activo.idUbicacion);
+          const sedeActivo = ubicacion?.idSede != null ? Number(ubicacion.idSede) : null;
+          const responsable = byId(responsables, values.idResponsable);
+          const sedeResponsable = sedeIdDeResponsable(responsable, areas);
+          if (sedeActivo == null || sedeResponsable == null || sedeActivo !== sedeResponsable) {
+            errors.idResponsable =
+              'El responsable debe pertenecer a la misma sede de la ubicación del activo.';
+          } else {
+            const idsTipoAsignacion = new Set(
+              (tipos ?? [])
+                .filter((t) => nombresCatalogoIguales(t.nombre, TIPO_ASIGNACION.Asignacion))
+                .map((t) => Number(t.id)),
+            );
+            const conflicto = (asignaciones ?? []).find((row) => {
+              if (!row.activa || Number(row.idResponsable) !== Number(values.idResponsable)) {
+                return false;
+              }
+              if (idsTipoAsignacion.size > 0 && !idsTipoAsignacion.has(Number(row.idTipoAsignacion))) {
+                return false;
+              }
+              const otro = byId(activos, row.idActivo);
+              return (
+                otro &&
+                Number(otro.idCategoriaActivo) === Number(activo.idCategoriaActivo) &&
+                Number(otro.id) !== Number(activo.id)
+              );
+            });
+            if (conflicto) {
+              const categoria = byId(categorias, activo.idCategoriaActivo);
+              const otroActivo = byId(activos, conflicto.idActivo);
+              const catNombre = categoria?.nombre ?? 'esta categoría';
+              const otroNombre = otroActivo?.nombre ?? `activo #${conflicto.idActivo}`;
+              errors.idResponsable = `Ya tiene un activo de «${catNombre}» asignado (${otroNombre}). Solo se permite uno por categoría.`;
+            }
+          }
         }
         return compactErrors(errors);
       }}
