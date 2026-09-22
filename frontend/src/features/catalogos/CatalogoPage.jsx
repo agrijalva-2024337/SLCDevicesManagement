@@ -20,6 +20,7 @@ const UbicacionesMapPage = lazy(() =>
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import * as areaService from '@/features/organizacion/areas/areaService';
+import { esCatalogoGlobal } from '@/shared/api/tipoAsignacion';
 import { DataTable } from '@/shared/components/DataTable';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { OverlayOutlet } from '@/shared/components/OverlayOutlet';
@@ -255,12 +256,18 @@ export function CatalogoPage() {
             edit: allowWrite ? { to: `${item.id}/editar` } : undefined,
             remove:
               allowWrite && maestro.hasHabilitado === false
-                ? {
-                    onClick: () => {
-                      setDeleteError(null);
-                      setPendingDelete(item);
-                    },
-                  }
+                ? esCatalogoGlobal(slug, item.nombre)
+                  ? {
+                      enabled: false,
+                      disabledReason:
+                        'Es un registro global del sistema. No se puede eliminar. Los que se registren después sí.',
+                    }
+                  : {
+                      onClick: () => {
+                        setDeleteError(null);
+                        setPendingDelete(item);
+                      },
+                    }
                 : undefined,
           })}
         />

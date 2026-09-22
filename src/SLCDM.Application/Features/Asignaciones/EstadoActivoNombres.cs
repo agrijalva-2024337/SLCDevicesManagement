@@ -15,6 +15,9 @@ public static class EstadoActivoNombres
 
     public const string DadoDeBaja = "Dado de baja";
 
+    /// <summary>Nombre legado que también es global y no se puede borrar.</summary>
+    public const string Activo = "Activo";
+
     public static readonly string[] Estandar =
     [
         Disponible,
@@ -22,6 +25,10 @@ public static class EstadoActivoNombres
         EnMantenimiento,
         DadoDeBaja
     ];
+
+    public static bool EsGlobal(string? nombre) =>
+        Estandar.Any(item => TipoAsignacionNombres.EsNombre(nombre, item))
+        || TipoAsignacionNombres.EsNombre(nombre, Activo);
 
     public static async Task<Estado> ObtenerRequeridoAsync(
         IApplicationDbContext db,
