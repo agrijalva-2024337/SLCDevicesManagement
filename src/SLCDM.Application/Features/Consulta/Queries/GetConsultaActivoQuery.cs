@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
+using SLCDM.Application.Common.Security;
 using SLCDM.Application.Features.Asignaciones;
 using SLCDM.Domain.Entities;
 
@@ -20,11 +21,16 @@ public sealed class GetConsultaActivoQueryValidator : AbstractValidator<GetConsu
 public sealed class GetConsultaActivoQueryHandler : IQueryHandler<GetConsultaActivoQuery, ConsultaActivoDto>
 {
     private readonly IApplicationDbContext _db;
+    private readonly ICurrentUserService _currentUser;
     private readonly IValidator<GetConsultaActivoQuery> _validator;
 
-    public GetConsultaActivoQueryHandler(IApplicationDbContext db, IValidator<GetConsultaActivoQuery> validator)
+    public GetConsultaActivoQueryHandler(
+        IApplicationDbContext db,
+        ICurrentUserService currentUser,
+        IValidator<GetConsultaActivoQuery> validator)
     {
         _db = db;
+        _currentUser = currentUser;
         _validator = validator;
     }
 
@@ -96,6 +102,8 @@ public sealed class GetConsultaActivoQueryHandler : IQueryHandler<GetConsultaAct
             }
         }
 
+        var verDetalleInterno = PuedeVerDetalleInterno(_currentUser);
+
         return new ConsultaActivoDto(
             activo.Id,
             activo.Nombre,
@@ -104,13 +112,25 @@ public sealed class GetConsultaActivoQueryHandler : IQueryHandler<GetConsultaAct
             activo.Modelo,
             activo.CategoriaActivo?.Nombre,
             empresa?.Nombre,
-            sede?.Nombre,
-            activo.Ubicacion?.Nombre,
-            nombreArea,
+            verDetalleInterno ? sede?.Nombre : null,
+            verDetalleInterno ? activo.Ubicacion?.Nombre : null,
+            verDetalleInterno ? nombreArea : null,
             nombreResponsable,
             estadoOperativo,
             ActivoEstadoOperativoNombreVisible(estadoOperativo),
-            activo.FechaVencimientoGarantia);
+            verDetalleInterno ? activo.FechaVencimientoGarantia : null);
+    }
+
+    private static bool PuedeVerDetalleInterno(ICurrentUserService user)
+    {
+        if (!user.IsAuthenticated || string.IsNullOrWhiteSpace(user.Role))
+        {
+            return false;
+        }
+
+        return user.IsAdministradorGeneral
+            || string.Equals(user.Role, Roles.AdministradorEmpresa, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(user.Role, Roles.OperadorInventario, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string ActivoEstadoOperativoNombreVisible(string estado) => estado switch

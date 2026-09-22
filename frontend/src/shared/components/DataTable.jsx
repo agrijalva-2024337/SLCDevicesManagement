@@ -38,7 +38,11 @@ function cellValue(column, row) {
 
 function cellText(column, row) {
   const value = cellValue(column, row);
-  if (value == null || value === false || value === '—') return '';
+  if (column.type === 'status') {
+    const on = value === true || value === 1 || value === '1' || value === 'true';
+    return on ? (column.activeLabel ?? 'Habilitado') : (column.inactiveLabel ?? 'Deshabilitado');
+  }
+  if (value == null || value === '—') return '';
   if (typeof value === 'boolean') return value ? 'Habilitado' : 'Deshabilitado';
   return String(value);
 }
