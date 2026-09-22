@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Validation;
+using SLCDM.Application.Features.Asignaciones;
 
 namespace SLCDM.Application.Features.Estados.Commands;
 
@@ -33,6 +34,12 @@ public sealed class DeleteEstadoCommandHandler : ICommandHandler<DeleteEstadoCom
 
         var entity = await _db.Estados.FirstOrDefaultAsync(e => e.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("Estado", command.Id);
+
+        if (EstadoActivoNombres.Estandar.Any(n => TipoAsignacionNombres.EsNombre(entity.Nombre, n)))
+        {
+            throw new ConflictException(
+                $"No se puede eliminar el estado estándar «{entity.Nombre}». Los flujos de movimiento dependen de ese registro.");
+        }
 
         var enAsignaciones = await _db.Asignaciones
             .IgnoreQueryFilters()

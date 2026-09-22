@@ -7,12 +7,98 @@ import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionSer
 import * as areaService from '@/features/organizacion/areas/areaService';
 import * as estadoService from '@/features/organizacion/estados/estadoService';
 import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
+import * as motivoBajaService from '@/features/bajas/motivoBajaService';
+import * as tipoMantenimientoService from '@/features/mantenimientos/tipoMantenimientoService';
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import { RolUsuario, rolUsuarioLabel } from '@/shared/api/contracts';
+import {
+  ESTADO_ACTIVO,
+  MOTIVO_BAJA,
+  TIPO_ASIGNACION,
+  TIPO_MANTENIMIENTO,
+  esNombreCatalogoEstandar,
+} from '@/shared/api/tipoAsignacion';
 import { asOptions, phoneField, requireSelect, validarCodigoTelefonico, validarCorreo, validarIdentificacionTributaria, validarIso2, validarIso3, validarMoneda, validarNombreEntidad, validarNombrePersona, validarPassword, validarTextoLibre, validarUsername } from '@/shared/components/recordFormUtils';
 import { phoneFormFields, phonePayload, validatePhoneFields } from '@/shared/utils/phoneNumber';
 import { buscarPorCodigoTelefonico, buscarPorIso2, buscarPorIso3, nombresPaisesIso } from '@/shared/validation/paisesIso';
+
+function nombreDescripcionGlobalMaestro({
+  service,
+  title,
+  singular,
+  newTitle,
+  kicker,
+  registerLabel,
+  hint,
+  emptyTitle,
+  emptyDescription,
+  estandarNombres,
+}) {
+  return {
+    service,
+    hasHabilitado: false,
+    scope: 'global',
+    title,
+    singular,
+    newTitle,
+    kicker,
+    registerLabel,
+    hint,
+    titleOf: (item) => item.nombre,
+    facts: (item) => [item.descripcion].filter(Boolean),
+    canDelete: (item) => !esNombreCatalogoEstandar(item?.nombre, estandarNombres),
+    listView: {
+      emptyTitle,
+      emptyDescription,
+      columns: () => [
+        { key: 'nombre', header: 'Nombre', primary: true },
+        { key: 'descripcion', header: 'Descripción' },
+      ],
+    },
+    empty: () => ({ nombre: '', descripcion: '' }),
+    toForm: (item) => ({
+      nombre: item.nombre ?? '',
+      descripcion: item.descripcion ?? '',
+    }),
+    fields: (_lookups, ctx = {}) => {
+      const lockNombre =
+        Boolean(ctx.editing) && esNombreCatalogoEstandar(ctx.record?.nombre, estandarNombres);
+      return [
+        {
+          name: 'nombre',
+          label: 'Nombre',
+          required: true,
+          maxLength: 50,
+          wide: true,
+          readOnly: lockNombre,
+          hint: lockNombre ? 'Nombre de catálogo estándar: no se puede renombrar.' : undefined,
+        },
+        { name: 'descripcion', label: 'Descripción', type: 'textarea', maxLength: 150 },
+      ];
+    },
+    validate(values, records = [], currentId) {
+      const errors = {
+        nombre: validarNombreEntidad(values.nombre, 'nombre', 50, { required: true }),
+        descripcion: validarTextoLibre(values.descripcion, 'descripción', 150, { required: false }),
+      };
+      if (!errors.nombre && duplicateNombre(records, values.nombre, currentId)) {
+        errors.nombre = `Ya existe un ${singular} con el mismo nombre.`;
+      }
+      return errors;
+    },
+    toPayload(values) {
+      return {
+        nombre: String(values.nombre ?? '').trim(),
+        descripcion: String(values.descripcion ?? '').trim() || null,
+      };
+    },
+    detail: (item) => [
+      { label: 'Nombre', value: item.nombre },
+      { label: 'Descripción', value: item.descripcion },
+    ],
+  };
+}
 
 function switchField() {
   return {
@@ -1043,29 +1129,59 @@ export const maestros = {
       ];
     },
   },
-  estados: nombreDescripcionMaestro({
-    service: estadoService,
-    title: 'Estados',
-    singular: 'estado',
-    newTitle: 'Nuevo estado',
-    kicker: 'Estado',
-    registerLabel: 'Registrar estado',
-    hint: 'El nombre es obligatorio y no puede repetirse dentro de la empresa.',
-    scope: 'empresa',
-    emptyTitle: 'No hay estados',
-    emptyDescription: 'Registre el primer estado.',
-  }),
-  'tipos-asignacion': nombreDescripcionMaestro({
-    service: tipoAsignacionService,
-    title: 'Tipos de asignación',
-    singular: 'tipo de asignación',
-    newTitle: 'Nuevo tipo de asignación',
-    kicker: 'Tipo de asignación',
+  estados: {
+    ...nombreDescripcionMaestro({
+      service: estadoService,
+      title: 'Estados',
+      singular: 'estado',
+      newTitle: 'Nuevo estado',
+      kicker: 'Estado',
+      registerLabel: 'Registrar estado',
+      hint: 'El nombre es obligatorio y no puede repetirse dentro de la empresa.',
+      scope: 'empresa',
+      emptyTitle: 'No hay estados',
+      emptyDescription: 'Registre el primer estado.',
+    }),
+    canDelete: (item) => !esNombreCatalogoEstandar(item?.nombre, ESTADO_ACTIVO),
+  },
+  'tipos-asignacion': {
+    ...nombreDescripcionMaestro({
+      service: tipoAsignacionService,
+      title: 'Tipos de asignación',
+      singular: 'tipo de asignación',
+      newTitle: 'Nuevo tipo de asignación',
+      kicker: 'Tipo de asignación',
+      registerLabel: 'Registrar tipo',
+      hint: 'El nombre es obligatorio y no puede repetirse dentro de la empresa.',
+      scope: 'empresa',
+      emptyTitle: 'No hay tipos de asignación',
+      emptyDescription: 'Registre el primer tipo.',
+    }),
+    canDelete: (item) => !esNombreCatalogoEstandar(item?.nombre, TIPO_ASIGNACION),
+  },
+  'tipos-mantenimiento': nombreDescripcionGlobalMaestro({
+    service: tipoMantenimientoService,
+    title: 'Tipos de mantenimiento',
+    singular: 'tipo de mantenimiento',
+    newTitle: 'Nuevo tipo de mantenimiento',
+    kicker: 'Tipo de mantenimiento',
     registerLabel: 'Registrar tipo',
-    hint: 'El nombre es obligatorio y no puede repetirse dentro de la empresa.',
-    scope: 'empresa',
-    emptyTitle: 'No hay tipos de asignación',
+    hint: 'El nombre es obligatorio y no puede repetirse.',
+    emptyTitle: 'No hay tipos de mantenimiento',
     emptyDescription: 'Registre el primer tipo.',
+    estandarNombres: TIPO_MANTENIMIENTO,
+  }),
+  'motivos-baja': nombreDescripcionGlobalMaestro({
+    service: motivoBajaService,
+    title: 'Motivos de baja',
+    singular: 'motivo de baja',
+    newTitle: 'Nuevo motivo de baja',
+    kicker: 'Motivo de baja',
+    registerLabel: 'Registrar motivo',
+    hint: 'El nombre es obligatorio y no puede repetirse.',
+    emptyTitle: 'No hay motivos de baja',
+    emptyDescription: 'Registre el primer motivo.',
+    estandarNombres: MOTIVO_BAJA,
   }),
 };
 

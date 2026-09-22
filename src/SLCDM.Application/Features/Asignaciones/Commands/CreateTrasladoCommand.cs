@@ -130,6 +130,17 @@ public sealed class CreateTrasladoCommandHandler : ICommandHandler<CreateTraslad
             throw new ConflictException("La ubicacion destino es la misma que la actual del activo.");
         }
 
+        // El traslado no cambia el estado operativo del activo; conserva el actual
+        // (o Disponible si aún no tenía estado) para el rastro en la asignación.
+        var idEstadoTraslado = activo.IdEstado;
+        if (idEstadoTraslado is null)
+        {
+            var estadoDisponible = await EstadoActivoNombres.ObtenerRequeridoAsync(
+                _db, EstadoActivoNombres.Disponible, idEmpresa, cancellationToken);
+            idEstadoTraslado = estadoDisponible.Id;
+            activo.IdEstado = estadoDisponible.Id;
+        }
+
         var fecha = command.FechaAsignacion == default ? DateTime.UtcNow : command.FechaAsignacion;
 
         var entity = new Asignacion
@@ -137,7 +148,7 @@ public sealed class CreateTrasladoCommandHandler : ICommandHandler<CreateTraslad
             IdActivo = command.IdActivo,
             IdUsuario = command.IdUsuario,
             IdResponsable = command.IdResponsable,
-            IdEstado = command.IdEstado,
+            IdEstado = idEstadoTraslado.Value,
             IdTipoAsignacion = tipo.Id,
             FechaAsignacion = fecha,
             // El traslado no "ocupa" el activo (TipoAsignacionNombres.EsTipoQueOcupaActivo

@@ -22,6 +22,27 @@ export const ESTADO_ACTIVO = {
   DadoDeBaja: 'Dado de baja',
 };
 
+/** Motivos sembrados en SeedCatalogosAddendum.sql (catálogo global). */
+export const MOTIVO_BAJA = {
+  Venta: 'Venta',
+  Desecho: 'Desecho',
+  Donacion: 'Donacion',
+  Perdida: 'Perdida',
+  Robo: 'Robo',
+  DanoIrreparable: 'Dano irreparable',
+  Otro: 'Otro',
+};
+
+/** Tipos sembrados en SeedCatalogosAddendum.sql (catálogo global). */
+export const TIPO_MANTENIMIENTO = {
+  Preventivo: 'Preventivo',
+  Correctivo: 'Correctivo',
+};
+
+export function esNombreCatalogoEstandar(nombre, estandarMap) {
+  return Object.values(estandarMap ?? {}).some((esperado) => nombresCatalogoIguales(nombre, esperado));
+}
+
 export class CatalogoIncompletoError extends Error {
   constructor(kind, nombre) {
     super(`Catálogo incompleto: no existe ${kind} «${nombre}».`);

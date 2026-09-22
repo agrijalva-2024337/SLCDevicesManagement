@@ -227,7 +227,9 @@ export function CatalogoPage() {
             view: { to: `${item.id}` },
             edit: allowWrite ? { to: `${item.id}/editar` } : undefined,
             remove:
-              allowWrite && maestro.hasHabilitado === false
+              allowWrite &&
+              maestro.hasHabilitado === false &&
+              maestro.canDelete?.(item) !== false
                 ? {
                     onClick: () => {
                       setDeleteError(null);

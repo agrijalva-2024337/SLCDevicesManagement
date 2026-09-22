@@ -2,18 +2,15 @@ import { tiposMantenimiento } from '@/features/mantenimientos/mocks/tiposManteni
 import { apiPaths } from '@/shared/api/paths';
 import { registerLoaderKey } from '@/shared/data/loaderKeys';
 import { listQueryKey, resourceFromEndpoint } from '@/shared/data/queryKeys';
-import { createReadService } from '@/shared/services/createMockCrudService';
+import { createMockCrudService } from '@/shared/services/createMockCrudService';
 
-const read = createReadService({
+const crud = createMockCrudService({
   endpoint: apiPaths.tiposMantenimiento,
   seed: tiposMantenimiento,
 });
 
-export async function getAll(params) {
-  const rows = await read.getAll(params);
-  return Array.isArray(rows) ? rows : [];
-}
+const RESOURCE = resourceFromEndpoint(apiPaths.tiposMantenimiento);
 
-registerLoaderKey(getAll, listQueryKey(resourceFromEndpoint(apiPaths.tiposMantenimiento), {}));
+export const { getAll, getById, create, update, remove } = crud;
 
-export const { getById } = read;
+registerLoaderKey(getAll, listQueryKey(RESOURCE, {}));

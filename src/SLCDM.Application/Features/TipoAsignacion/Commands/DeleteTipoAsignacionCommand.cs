@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Validation;
+using SLCDM.Application.Features.Asignaciones;
 
 namespace SLCDM.Application.Features.TiposAsignacion.Commands;
 
@@ -33,6 +34,12 @@ public sealed class DeleteTipoAsignacionCommandHandler : ICommandHandler<DeleteT
 
         var entity = await _db.TiposAsignacion.FirstOrDefaultAsync(t => t.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("TipoAsignacion", command.Id);
+
+        if (TipoAsignacionNombres.Estandar.Any(n => TipoAsignacionNombres.EsNombre(entity.Nombre, n)))
+        {
+            throw new ConflictException(
+                $"No se puede eliminar el tipo estándar «{entity.Nombre}». Los flujos de movimiento dependen de ese registro.");
+        }
 
         var enUso = await _db.Asignaciones
             .IgnoreQueryFilters()

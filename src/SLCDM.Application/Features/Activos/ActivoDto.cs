@@ -6,6 +6,7 @@ public sealed record ActivoDto(
     int IdCategoriaActivo,
     int IdProveedor,
     int IdUbicacion,
+    int? IdEstado,
     string Nombre,
     string? Descripcion,
     string? Marca,
