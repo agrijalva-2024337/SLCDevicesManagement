@@ -1,5 +1,10 @@
 using SLCDM.Agent;
 
+if (args.Any(a => string.Equals(a, "--instalar", StringComparison.OrdinalIgnoreCase)))
+{
+    Environment.Exit(Instalador.Ejecutar());
+}
+
 var builder = Host.CreateApplicationBuilder(args);
 
 var backendUrl = builder.Configuration["Backend:BaseUrl"]
