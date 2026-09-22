@@ -33,6 +33,12 @@
   "Frontend": {
     "PublicUrl": "https://TU-FRONTEND-EN-VERCEL.vercel.app"
   },
+  "Agent": {
+    "DownloadBaseUrl": "https://TU-API-PUBLICA.ejemplo.com",
+    "BackendPublicUrl": "https://TU-API-PUBLICA.ejemplo.com",
+    "PublishedExePath": "/app/agent/SLCDMAgente.exe",
+    "LinkExpiryHours": 24
+  },
   "Smtp": {
     "Enabled": true,
     "Host": "smtp.gmail.com",
