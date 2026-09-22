@@ -63,14 +63,12 @@ export function JornadasPage() {
       {
         key: 'fechaInicio',
         header: 'Inicio',
-        numeric: true,
         getValue: (row) => formatDate(row.fechaInicio),
         sortValue: (row) => row.fechaInicio,
       },
       {
         key: 'fechaCierre',
         header: 'Cierre',
-        numeric: true,
         getValue: (row) => formatDate(row.fechaCierre),
         sortValue: (row) => row.fechaCierre,
       },
