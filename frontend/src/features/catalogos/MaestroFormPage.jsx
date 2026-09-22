@@ -172,7 +172,10 @@ function MaestroFormEditor({ slug, id }) {
     recordId: id,
   };
   const initialValues = item ? maestro.toForm(item, lookups) : maestro.empty(lookups);
-  const baseFields = typeof maestro.fields === 'function' ? maestro.fields(lookups) : maestro.fields;
+  const baseFields =
+    typeof maestro.fields === 'function'
+      ? maestro.fields(lookups, { editing, record: item })
+      : maestro.fields;
 
   return (
     <RecordFormOverlay

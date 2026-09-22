@@ -28,6 +28,8 @@ export function canWriteCatalog(rol, resource) {
     resource === 'categorias' ||
     resource === 'estados' ||
     resource === 'tipos-asignacion' ||
+    resource === 'tipos-mantenimiento' ||
+    resource === 'motivos-baja' ||
     resource === 'redes-conocidas' ||
     resource === 'bitacora'
   ) {

@@ -1,8 +1,10 @@
 using FluentValidation;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Validation;
+using SLCDM.Application.Features.Asignaciones;
 using SLCDM.Domain.Entities;
 
 namespace SLCDM.Application.Features.Activos.Commands;
@@ -25,6 +27,7 @@ public sealed record CreateActivoCommand(
     string? NumeroFactura,
     DateTime FechaVencimientoGarantia,
     string? Observaciones);
+
 
 public sealed class CreateActivoCommandValidator : AbstractValidator<CreateActivoCommand>
 {
@@ -147,6 +150,14 @@ public sealed class CreateActivoCommandHandler : ICommandHandler<CreateActivoCom
         var entity = command.Adapt<Activo>();
         entity.TokenPublico = Guid.NewGuid().ToString("N")[..24];
         entity.Habilitado = true;
+
+        var idEmpresa = await AsignacionEmpresaRules.EmpresaIdDeUbicacionAsync(
+                _db, command.IdUbicacion, cancellationToken)
+            ?? throw new ConflictException("No se pudo determinar la empresa de la ubicacion.");
+        var estadoDisponible = await EstadoActivoNombres.ObtenerRequeridoAsync(
+            _db, EstadoActivoNombres.Disponible, idEmpresa, cancellationToken);
+        entity.IdEstado = estadoDisponible.Id;
+
         _db.Activos.Add(entity);
         await _db.SaveChangesAsync(cancellationToken);
         return entity.Id;

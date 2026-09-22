@@ -38,6 +38,18 @@ export const administracion = [
     minRol: RolUsuario.AdministradorEmpresa,
   },
   {
+    slug: 'tipos-mantenimiento',
+    label: 'Tipos de mantenimiento',
+    icon: 'pi pi-wrench',
+    minRol: RolUsuario.AdministradorEmpresa,
+  },
+  {
+    slug: 'motivos-baja',
+    label: 'Motivos de baja',
+    icon: 'pi pi-trash',
+    minRol: RolUsuario.AdministradorEmpresa,
+  },
+  {
     slug: 'redes-conocidas',
     label: 'Redes Wi-Fi',
     icon: 'pi pi-wifi',
@@ -162,6 +174,8 @@ export function getPageKicker(pathname) {
   if (pathname.startsWith('/app/catalogos/categorias')) return 'Administración';
   if (pathname.startsWith('/app/catalogos/estados')) return 'Administración';
   if (pathname.startsWith('/app/catalogos/tipos-asignacion')) return 'Administración';
+  if (pathname.startsWith('/app/catalogos/tipos-mantenimiento')) return 'Administración';
+  if (pathname.startsWith('/app/catalogos/motivos-baja')) return 'Administración';
   if (pathname.startsWith('/app/catalogos/redes-conocidas')) return 'Administración';
   if (pathname.startsWith('/app/catalogos')) return 'Catálogo';
   if (

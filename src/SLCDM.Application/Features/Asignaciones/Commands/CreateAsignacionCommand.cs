@@ -54,16 +54,27 @@ public sealed class CreateAsignacionCommandValidator : AbstractValidator<CreateA
 
         RuleFor(x => x.IdTipoAsignacion)
             .RequiredId("id tipo asignacion")
-            .MustAsync(async (id, ct) => await db.TiposAsignacion.AnyAsync(t => t.Id == id, ct))
-            .WithMessage("No se encontro un tipo de asignacion con el id informado.");
+            .MustAsync(async (cmd, id, ct) =>
+            {
+                var tipo = await db.TiposAsignacion.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id, ct);
+                if (tipo is null || !TipoAsignacionNombres.EsNombre(tipo.Nombre, TipoAsignacionNombres.Asignacion))
+                {
+                    return false;
+                }
+
+                var empresaActivo = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(db, cmd.IdActivo, ct);
+                return empresaActivo is not null && tipo.IdEmpresa == empresaActivo.Value;
+            })
+            .WithMessage("El tipo de asignacion debe ser «Asignacion» de la misma empresa del activo.");
 
         RuleFor(x => x)
             .MustAsync(async (cmd, ct) => !await ActivoBajaRules.EstaDadoDeBajaAsync(db, cmd.IdActivo, ct))
             .WithMessage(ActivoBajaRules.MensajeActivoDadoDeBaja);
 
-        // BE-14: solo el tipo "Asignacion" ocupa el activo; un activo, una activa.
+        // Entrega: un activo, una asignacion activa.
         RuleFor(x => x)
-            .MustAsync(async (cmd, ct) => !await ActivoTieneAsignacionActivaSiAplica(db, cmd, ct))
+            .MustAsync(async (cmd, ct) =>
+                !await db.Asignaciones.AnyAsync(a => a.IdActivo == cmd.IdActivo && a.Activa, ct))
             .WithMessage("El activo ya tiene una asignacion activa. Un activo solo puede tener una asignacion activa a la vez.");
 
         RuleFor(x => x.Observaciones)
@@ -95,25 +106,6 @@ public sealed class CreateAsignacionCommandValidator : AbstractValidator<CreateA
             })
             .WithMessage("El responsable debe pertenecer a la misma empresa del activo.");
     }
-
-    private static async Task<bool> ActivoTieneAsignacionActivaSiAplica(
-        IApplicationDbContext db,
-        CreateAsignacionCommand command,
-        CancellationToken cancellationToken)
-    {
-        var tipo = await db.TiposAsignacion
-            .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.Id == command.IdTipoAsignacion, cancellationToken);
-
-        if (tipo is null || !TipoAsignacionNombres.EsTipoQueOcupaActivo(tipo.Nombre))
-        {
-            return false;
-        }
-
-        return await db.Asignaciones.AnyAsync(
-            a => a.IdActivo == command.IdActivo && a.Activa,
-            cancellationToken);
-    }
 }
 
 public sealed class CreateAsignacionCommandHandler : ICommandHandler<CreateAsignacionCommand, int>
@@ -136,12 +128,15 @@ public sealed class CreateAsignacionCommandHandler : ICommandHandler<CreateAsign
     {
         await _validator.ValidateAndThrowAsync(command, cancellationToken);
 
-        var tipo = await _db.TiposAsignacion
-            .AsNoTracking()
-            .FirstAsync(t => t.Id == command.IdTipoAsignacion, cancellationToken);
+        var idEmpresa = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(_db, command.IdActivo, cancellationToken)
+            ?? throw new ConflictException("No se pudo determinar la empresa del activo.");
 
-        if (TipoAsignacionNombres.EsTipoQueOcupaActivo(tipo.Nombre)
-            && await _db.Asignaciones.AnyAsync(a => a.IdActivo == command.IdActivo && a.Activa, cancellationToken))
+        var tipo = await TipoAsignacionNombres.ObtenerRequeridoAsync(
+            _db, TipoAsignacionNombres.Asignacion, idEmpresa, cancellationToken);
+        var estadoAsignado = await EstadoActivoNombres.ObtenerRequeridoAsync(
+            _db, EstadoActivoNombres.Asignado, idEmpresa, cancellationToken);
+
+        if (await _db.Asignaciones.AnyAsync(a => a.IdActivo == command.IdActivo && a.Activa, cancellationToken))
         {
             throw new ConflictException(
                 "El activo ya tiene una asignacion activa. Un activo solo puede tener una asignacion activa a la vez.");
@@ -153,6 +148,8 @@ public sealed class CreateAsignacionCommandHandler : ICommandHandler<CreateAsign
         }
 
         var entity = command.Adapt<Asignacion>();
+        entity.IdTipoAsignacion = tipo.Id;
+        entity.IdEstado = estadoAsignado.Id;
         entity.Activa = true;
         if (entity.FechaAsignacion == default)
         {
@@ -168,16 +165,7 @@ public sealed class CreateAsignacionCommandHandler : ICommandHandler<CreateAsign
 
         var activo = await _db.Activos.FirstAsync(a => a.Id == command.IdActivo, cancellationToken);
         activo.IdUbicacion = command.IdUbicacion;
-
-        var idEmpresa = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(_db, command.IdActivo, cancellationToken)
-            ?? throw new ConflictException("No se pudo determinar la empresa del activo.");
-
-        var nombreEstado = TipoAsignacionNombres.EsNombre(tipo.Nombre, TipoAsignacionNombres.Mantenimiento)
-            ? EstadoActivoNombres.EnMantenimiento
-            : EstadoActivoNombres.Asignado;
-        var estadoActivo = await EstadoActivoNombres.ObtenerRequeridoAsync(
-            _db, nombreEstado, idEmpresa, cancellationToken);
-        activo.IdEstado = estadoActivo.Id;
+        activo.IdEstado = estadoAsignado.Id;
 
         await _db.SaveChangesAsync(cancellationToken);
 

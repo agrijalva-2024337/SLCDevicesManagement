@@ -23,6 +23,23 @@ export const ESTADO_ACTIVO = {
   DadoDeBaja: 'Dado de baja',
 };
 
+/** Motivos sembrados en SeedCatalogosAddendum.sql (catálogo global). */
+export const MOTIVO_BAJA = {
+  Venta: 'Venta',
+  Desecho: 'Desecho',
+  Donacion: 'Donacion',
+  Perdida: 'Perdida',
+  Robo: 'Robo',
+  DanoIrreparable: 'Dano irreparable',
+  Otro: 'Otro',
+};
+
+/** Tipos sembrados en SeedCatalogosAddendum.sql (catálogo global). */
+export const TIPO_MANTENIMIENTO = {
+  Preventivo: 'Preventivo',
+  Correctivo: 'Correctivo',
+};
+
 const ESTADOS_GLOBALES = [
   ESTADO_ACTIVO.Activo,
   ESTADO_ACTIVO.Disponible,
@@ -33,7 +50,15 @@ const ESTADOS_GLOBALES = [
 
 export function esCatalogoGlobal(slug, nombre) {
   const lista =
-    slug === 'estados' ? ESTADOS_GLOBALES : slug === 'tipos-asignacion' ? Object.values(TIPO_ASIGNACION) : null;
+    slug === 'estados'
+      ? ESTADOS_GLOBALES
+      : slug === 'tipos-asignacion'
+        ? Object.values(TIPO_ASIGNACION)
+        : slug === 'tipos-mantenimiento'
+          ? Object.values(TIPO_MANTENIMIENTO)
+          : slug === 'motivos-baja'
+            ? Object.values(MOTIVO_BAJA)
+            : null;
   if (!lista) return false;
   return lista.some((item) => nombresCatalogoIguales(nombre, item));
 }

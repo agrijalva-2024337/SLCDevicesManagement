@@ -32,21 +32,26 @@ export function filtrarPorTipoId(rows, idTipo) {
   return (rows ?? []).filter((row) => Number(row.idTipoAsignacion) === Number(idTipo));
 }
 
-/** Selector puro: resuelve el tipo por nombre dentro del catálogo ya cargado. */
+/** Selector puro: resuelve todos los ids de tipo con ese nombre (multi-empresa). */
 export function filtrarPorNombreTipo(rows, tipos, nombreTipo) {
-  const tipo = (tipos ?? []).find((item) =>
-    String(item?.nombre ?? '')
-      .trim()
-      .replaceAll('ó', 'o')
-      .replaceAll('Ó', 'o')
-      .toLowerCase() ===
-    String(nombreTipo ?? '')
-      .trim()
-      .replaceAll('ó', 'o')
-      .replaceAll('Ó', 'o')
-      .toLowerCase(),
+  const ids = new Set(
+    (tipos ?? [])
+      .filter((item) =>
+        String(item?.nombre ?? '')
+          .trim()
+          .replaceAll('ó', 'o')
+          .replaceAll('Ó', 'o')
+          .toLowerCase() ===
+        String(nombreTipo ?? '')
+          .trim()
+          .replaceAll('ó', 'o')
+          .replaceAll('Ó', 'o')
+          .toLowerCase(),
+      )
+      .map((item) => Number(item.id)),
   );
-  return filtrarPorTipoId(rows, tipo?.id);
+  if (ids.size === 0) return [];
+  return (rows ?? []).filter((row) => ids.has(Number(row.idTipoAsignacion)));
 }
 
 export async function listarEntregas(rows) {
