@@ -63,7 +63,6 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<DetalleBaja> DetallesBaja => Set<DetalleBaja>();
     public DbSet<DetalleTraslado> DetallesTraslado => Set<DetalleTraslado>();
     public DbSet<DispositivoToken> DispositivosToken => Set<DispositivoToken>();
-    public DbSet<InstaladorAgenteToken> InstaladoresAgenteToken => Set<InstaladorAgenteToken>();
     public DbSet<RedConocida> RedesConocidas => Set<RedConocida>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

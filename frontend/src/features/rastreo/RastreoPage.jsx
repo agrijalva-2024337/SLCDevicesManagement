@@ -1,13 +1,11 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router';
-import { useAuth } from '@/features/auth/useAuth';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import { filtrarPorEmpresaDeUbicacion, nombreUbicacion } from '@/features/inventario/trasladoRuta';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
-import { formatHaceCuanto, generarLinkInstalador, listarRastreo, mapsUrlDe } from '@/features/rastreo/rastreoService';
+import { formatHaceCuanto, listarRastreo, mapsUrlDe } from '@/features/rastreo/rastreoService';
 import { DataTable } from '@/shared/components/DataTable';
-import { DetailOverlay } from '@/shared/components/DetailOverlay';
 import { listQueryKey } from '@/shared/data/queryKeys';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useResource } from '@/shared/hooks/useResource';
@@ -39,20 +37,12 @@ export function RastreoPage() {
   const [params] = useSearchParams();
   const vista = resolveVista(params.get('vista'));
   const { idActiva } = useEmpresaActiva();
-  const { canWrite } = useAuth();
-  const allowWrite = canWrite('rastreo');
   const load = useCallback(() => listarRastreo(), []);
   const { rows, isLoading, errorMessage } = useCatalogCollection(load, {
     key: listQueryKey('rastreo'),
   });
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
-
-  const [linkOpen, setLinkOpen] = useState(false);
-  const [linkUrl, setLinkUrl] = useState('');
-  const [linkBusy, setLinkBusy] = useState(false);
-  const [linkError, setLinkError] = useState(null);
-  const [copied, setCopied] = useState(false);
 
   const tableRows = useMemo(
     () =>
@@ -82,32 +72,6 @@ export function RastreoPage() {
     () => (vista === 'fuera-de-rango' ? tableRows.filter((row) => row.fueraDeRango) : tableRows),
     [tableRows, vista],
   );
-
-  async function onGenerarLink() {
-    setLinkBusy(true);
-    setLinkError(null);
-    setCopied(false);
-    try {
-      const data = await generarLinkInstalador();
-      setLinkUrl(data?.url ?? '');
-      setLinkOpen(true);
-    } catch (err) {
-      setLinkError(err?.response?.data?.detail ?? err?.message ?? 'No se pudo generar el link.');
-      setLinkOpen(true);
-    } finally {
-      setLinkBusy(false);
-    }
-  }
-
-  async function onCopiar() {
-    if (!linkUrl) return;
-    try {
-      await navigator.clipboard.writeText(linkUrl);
-      setCopied(true);
-    } catch {
-      setCopied(false);
-    }
-  }
 
   if (errorMessage) {
     return (
@@ -152,19 +116,6 @@ export function RastreoPage() {
             ? 'Cuando un equipo salga del lugar asignado, aparecerá aquí.'
             : 'Cuando un equipo envíe señal, aparecerá aquí.'
         }
-        primaryAction={
-          allowWrite ? (
-            <button
-              type="button"
-              className="app-btn app-btn--primary"
-              disabled={linkBusy}
-              onClick={onGenerarLink}
-            >
-              <i className="pi pi-download" aria-hidden="true" />
-              {linkBusy ? 'Generando…' : 'Generar link de instalación del agente'}
-            </button>
-          ) : null
-        }
         renderRowActions={(row) =>
           row.mapsUrl ? (
             <a
@@ -181,46 +132,6 @@ export function RastreoPage() {
           )
         }
       />
-
-      <DetailOverlay
-        open={linkOpen}
-        title="Link de instalación del agente"
-        kicker="Rastreo"
-        onClose={() => {
-          setLinkOpen(false);
-          setLinkError(null);
-          setCopied(false);
-        }}
-      >
-        {linkError ? (
-          <div className="app-feedback app-feedback--error" role="alert">
-            {linkError}
-          </div>
-        ) : (
-          <>
-            <p className="text-base text-navy">
-              Este link vence en 24 horas y sirve para cualquier equipo que necesites activar en ese
-              tiempo.
-            </p>
-            <label className="mt-4 block text-sm font-medium text-navy" htmlFor="instalador-link-url">
-              URL de descarga
-            </label>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <input
-                id="instalador-link-url"
-                className="app-input min-w-0 flex-1"
-                type="text"
-                value={linkUrl}
-                readOnly
-              />
-              <button type="button" className="app-btn app-btn--primary" onClick={onCopiar}>
-                <i className="pi pi-copy" aria-hidden="true" />
-                {copied ? 'Copiado' : 'Copiar'}
-              </button>
-            </div>
-          </>
-        )}
-      </DetailOverlay>
     </section>
   );
 }
