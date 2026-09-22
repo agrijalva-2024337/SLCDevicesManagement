@@ -348,8 +348,8 @@ export const maestros = {
         { key: 'habilitado', header: 'Estado', type: 'status' },
       ],
     },
-    empty: ({ idEmpresa, idEmpresaActiva } = {}) => ({
-      idEmpresa: idEmpresaActiva == null || idEmpresaActiva === '' ? String(idEmpresa ?? '') : String(idEmpresaActiva),
+    empty: ({ idEmpresaActiva } = {}) => ({
+      idEmpresa: idEmpresaActiva == null || idEmpresaActiva === '' ? '' : String(idEmpresaActiva),
       nombre: '',
       descripcion: '',
       habilitado: true,
@@ -360,29 +360,23 @@ export const maestros = {
       descripcion: item.descripcion ?? '',
       habilitado: Boolean(item.habilitado),
     }),
-    fields: ({ empresas = [], rol, editing } = {}) => [
-      ...(rol === RolUsuario.AdministradorGeneral && !editing
-        ? [{ name: 'idEmpresa', label: 'Empresa', type: 'select', required: true, options: asOptions(empresas) }]
-        : []),
+    fields: () => [
       { name: 'nombre', label: 'Nombre', required: true, maxLength: 100, wide: true },
       { name: 'descripcion', label: 'Descripción', type: 'textarea', maxLength: 200 },
       switchField(),
     ],
-    validate(values, _records, _id, { rol } = {}) {
+    validate(values) {
       return {
-        idEmpresa:
-          rol === RolUsuario.AdministradorGeneral ? requireSelect(values.idEmpresa, 'una empresa') : null,
         nombre: validarNombreEntidad(values.nombre, 'nombre', 100, { required: true }),
         descripcion: validarTextoLibre(values.descripcion, 'descripción', 200, { required: false }),
       };
     },
-    toPayload(values, { idEmpresaActiva } = {}) {
-      const idEmpresa =
-        values.idEmpresa === '' || values.idEmpresa == null
-          ? idEmpresaActiva == null || idEmpresaActiva === ''
-            ? null
-            : Number(idEmpresaActiva)
-          : Number(values.idEmpresa);
+    toPayload(values, { idEmpresaActiva, editing } = {}) {
+      const idEmpresa = editing
+        ? Number(values.idEmpresa)
+        : idEmpresaActiva == null || idEmpresaActiva === ''
+          ? null
+          : Number(idEmpresaActiva);
       return {
         idEmpresa,
         nombre: values.nombre.trim(),

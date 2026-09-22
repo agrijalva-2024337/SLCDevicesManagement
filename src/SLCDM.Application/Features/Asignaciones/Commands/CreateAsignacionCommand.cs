@@ -77,6 +77,30 @@ public sealed class CreateAsignacionCommandValidator : AbstractValidator<CreateA
                 !await db.Asignaciones.AnyAsync(a => a.IdActivo == cmd.IdActivo && a.Activa, ct))
             .WithMessage("El activo ya tiene una asignacion activa. Un activo solo puede tener una asignacion activa a la vez.");
 
+        // Un responsable: como máximo un activo activo por categoría.
+        RuleFor(x => x)
+            .CustomAsync(async (cmd, context, ct) =>
+            {
+                var (ok, mensaje) = await AsignacionResponsableRules.PuedeAsignarCategoriaAsync(
+                    db, cmd.IdResponsable, cmd.IdActivo, ct);
+                if (!ok)
+                {
+                    context.AddFailure(mensaje ?? AsignacionResponsableRules.MensajeConflictoCategoria);
+                }
+            });
+
+        // El responsable debe ser de la misma sede que la ubicación del activo.
+        RuleFor(x => x)
+            .CustomAsync(async (cmd, context, ct) =>
+            {
+                var (ok, mensaje) = await AsignacionResponsableRules.PuedeAsignarMismaSedeAsync(
+                    db, cmd.IdResponsable, cmd.IdUbicacion, ct);
+                if (!ok)
+                {
+                    context.AddFailure(mensaje ?? AsignacionResponsableRules.MensajeSedeDistinta);
+                }
+            });
+
         RuleFor(x => x.Observaciones)
             .MaximumLength(300).WithMessage("El campo observaciones no debe superar los 300 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.Observaciones));
@@ -140,6 +164,20 @@ public sealed class CreateAsignacionCommandHandler : ICommandHandler<CreateAsign
         {
             throw new ConflictException(
                 "El activo ya tiene una asignacion activa. Un activo solo puede tener una asignacion activa a la vez.");
+        }
+
+        var (puedeCategoria, mensajeCategoria) = await AsignacionResponsableRules.PuedeAsignarCategoriaAsync(
+            _db, command.IdResponsable, command.IdActivo, cancellationToken);
+        if (!puedeCategoria)
+        {
+            throw new ConflictException(mensajeCategoria ?? AsignacionResponsableRules.MensajeConflictoCategoria);
+        }
+
+        var (puedeSede, mensajeSede) = await AsignacionResponsableRules.PuedeAsignarMismaSedeAsync(
+            _db, command.IdResponsable, command.IdUbicacion, cancellationToken);
+        if (!puedeSede)
+        {
+            throw new ConflictException(mensajeSede ?? AsignacionResponsableRules.MensajeSedeDistinta);
         }
 
         if (await ActivoBajaRules.EstaDadoDeBajaAsync(_db, command.IdActivo, cancellationToken))

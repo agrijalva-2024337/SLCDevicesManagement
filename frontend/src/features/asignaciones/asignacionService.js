@@ -94,6 +94,27 @@ async function assertActivoLibre(idActivo) {
   }
 }
 
+async function assertResponsableLibreEnCategoria(idResponsable, idActivo) {
+  const idTipoAsignacion = await getIdTipoAsignacion(TIPO_ASIGNACION.Asignacion);
+  const [activo, rows] = await Promise.all([activoService.getById(idActivo), getAll()]);
+  const conflicto = (rows ?? []).find((row) => {
+    if (!row.activa || Number(row.idResponsable) !== Number(idResponsable)) return false;
+    if (Number(row.idTipoAsignacion) !== Number(idTipoAsignacion)) return false;
+    if (Number(row.idActivo) === Number(idActivo)) return false;
+    return true;
+  });
+  if (!conflicto) return;
+
+  const otro = await activoService.getById(conflicto.idActivo).catch(() => null);
+  if (!otro || Number(otro.idCategoriaActivo) !== Number(activo.idCategoriaActivo)) return;
+
+  const error = new Error(
+    `El responsable ya tiene un activo de esa categoría asignado (${otro.nombre ?? `#${conflicto.idActivo}`}). Solo se permite uno por categoría.`,
+  );
+  error.fieldErrors = { idResponsable: error.message };
+  throw error;
+}
+
 export async function entregar({
   idActivo,
   idUsuario,
@@ -104,6 +125,7 @@ export async function entregar({
   firmaRecibe,
 }) {
   await assertActivoLibre(idActivo);
+  await assertResponsableLibreEnCategoria(idResponsable, idActivo);
   const idTipoAsignacion = await getIdTipoAsignacion(TIPO_ASIGNACION.Asignacion);
   const idEstado = await getIdEstado(ESTADO_ACTIVO.Asignado);
   const activo = await activoService.getById(idActivo);
