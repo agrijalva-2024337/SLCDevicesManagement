@@ -6,7 +6,11 @@ import {
   isActivoDeBaja,
   isActivoEnMantenimiento,
 } from '@/features/activos/activoAcciones';
-import { nombreUbicacion } from '@/features/inventario/trasladoRuta';
+import {
+  activosDeEmpresa,
+  nombreUbicacion,
+  responsablesDeEmpresa,
+} from '@/features/inventario/trasladoRuta';
 import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import { asOptions, compactErrors, optionalText, requireSelect, requireText } from '@/shared/components/recordFormUtils';
 import { byId } from '@/shared/utils/format';
@@ -29,9 +33,11 @@ export function MantenimientoFormOverlay({
   ubicaciones,
   sedes,
   responsables,
+  areas = [],
   tiposMantenimiento = [],
   asignaciones = [],
   tipos = [],
+  idEmpresaActiva,
   onSave,
   onClose,
 }) {
@@ -39,20 +45,29 @@ export function MantenimientoFormOverlay({
   const ctx = { asignaciones, tipos };
   const activosElegibles = useMemo(
     () =>
-      (activos ?? []).filter((item) => {
-        const lookup = {
-          asignaciones,
-          tipos,
-          tipoIds: indexTipos(tipos),
-          asignacionesPorActivo: indexAsignacionesActivas(asignaciones),
-        };
-        return (
-          !isActivoDeBaja(item, lookup) &&
-          !isActivoEnMantenimiento(item, lookup) &&
-          !isActivoAsignado(item, lookup)
-        );
-      }),
-    [activos, asignaciones, tipos],
+      activosDeEmpresa(
+        (activos ?? []).filter((item) => {
+          const lookup = {
+            asignaciones,
+            tipos,
+            tipoIds: indexTipos(tipos),
+            asignacionesPorActivo: indexAsignacionesActivas(asignaciones),
+          };
+          return (
+            !isActivoDeBaja(item, lookup) &&
+            !isActivoEnMantenimiento(item, lookup) &&
+            !isActivoAsignado(item, lookup)
+          );
+        }),
+        ubicaciones,
+        sedes,
+        idEmpresaActiva,
+      ),
+    [activos, asignaciones, idEmpresaActiva, sedes, tipos, ubicaciones],
+  );
+  const responsablesFiltrados = useMemo(
+    () => responsablesDeEmpresa(responsables, areas, sedes, idEmpresaActiva),
+    [areas, idEmpresaActiva, responsables, sedes],
   );
   const initialValues = useMemo(() => {
     const idActivo = prefill?.idActivo ? String(prefill.idActivo) : '';
@@ -77,7 +92,7 @@ export function MantenimientoFormOverlay({
         required: true,
         readOnly: lockActivo,
         options: asOptions(lockActivo ? (activos ?? []) : activosElegibles, 'nombre'),
-        hint: 'Solo activos libres, sin asignación ni mantenimiento abierto.',
+        hint: 'Solo activos libres de la empresa activa.',
       },
       {
         name: 'sede',
@@ -91,10 +106,7 @@ export function MantenimientoFormOverlay({
         label: 'Responsable',
         type: 'select',
         required: true,
-        options: asOptions(
-          (responsables ?? []).filter((item) => item.habilitado !== false),
-          'nombreCompleto',
-        ),
+        options: asOptions(responsablesFiltrados, 'nombreCompleto'),
       },
       { name: 'fecha', label: 'Fecha de apertura', type: 'date', required: true },
       {
@@ -125,7 +137,7 @@ export function MantenimientoFormOverlay({
         wide: true,
       },
     ],
-    [activos, activosElegibles, lockActivo, responsables, tiposMantenimiento],
+    [activos, activosElegibles, lockActivo, responsablesFiltrados, tiposMantenimiento],
   );
 
   return (

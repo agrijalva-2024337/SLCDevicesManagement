@@ -9,6 +9,7 @@ import * as activoService from '@/features/activos/activoService';
 import { activosVistaPath } from '@/features/activos/activosVistas';
 import * as asignacionService from '@/features/asignaciones/asignacionService';
 import * as categoriaService from '@/features/catalogos/categorias/categoriaService';
+import * as paisService from '@/features/catalogos/paises/paisService';
 import * as proveedorService from '@/features/catalogos/proveedores/proveedorService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import { useAuth } from '@/features/auth/useAuth';
@@ -84,9 +85,10 @@ export function ActivoDetallePage() {
   const proveedores = useResource(proveedorService.getAll, { enabled: editando });
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
+  const paises = useResource(paisService.getAll);
   const estados = useResource(estadoService.getAll);
   const responsables = useResource(responsableService.getAll);
-  const areas = useResource(areaService.getAll, { enabled: movimiento === 'baja' });
+  const areas = useResource(areaService.getAll);
   const tipos = useResource(tipoAsignacionService.getAll);
   const asignaciones = useResource(asignacionService.getAll);
   const motivos = useResource(motivoBajaService.getAll, { enabled: movimiento === 'baja' });
@@ -104,6 +106,7 @@ export function ActivoDetallePage() {
 
   const ubicacion = byId(ubicaciones.data, activo?.idUbicacion);
   const sede = byId(sedes.data, ubicacion?.idSede);
+  const pais = byId(paises.data, sede?.idPais);
   const empresa = byId(empresas, sede?.idEmpresa);
   const categoria = byId(categorias.data, activo?.idCategoriaActivo);
   const proveedor = byId(proveedores.data, activo?.idProveedor);
@@ -233,6 +236,7 @@ export function ActivoDetallePage() {
             <DetailField label="Serie / etiqueta" value={activo.numeroSerie} />
             <DetailField label="Empresa" value={empresa?.nombre} />
             <DetailField label="Sede" value={sede?.nombre} />
+            <DetailField label="País" value={pais?.nombre} />
             <DetailField label="Categoría" value={categoria?.nombre} />
             <DetailField label="Proveedor" value={proveedor?.nombre} />
             <DetailField label="Ubicación asignada" value={nombreUbicacion(ubicacion)} />
@@ -397,6 +401,7 @@ export function ActivoDetallePage() {
           records={activos.data}
           categorias={categorias.data}
           proveedores={proveedores.data}
+          paises={paises.data}
           ubicaciones={ubicaciones.data}
           sedes={sedes.data}
           idEmpresaActiva={idActiva}
@@ -416,6 +421,7 @@ export function ActivoDetallePage() {
         ubicaciones={ubicaciones.data}
         sedes={sedes.data}
         responsables={responsables.data}
+        areas={areas.data}
         asignaciones={asignaciones.data}
         tipos={tipos.data}
         idEmpresaActiva={idActiva}
@@ -441,9 +447,11 @@ export function ActivoDetallePage() {
         ubicaciones={ubicaciones.data}
         sedes={sedes.data}
         responsables={responsables.data}
+        areas={areas.data}
         tiposMantenimiento={tiposMantenimiento.data}
         asignaciones={asignaciones.data}
         tipos={tipos.data}
+        idEmpresaActiva={idActiva}
         onClose={() => setMovimiento(null)}
         onSave={async (values) => {
           await mantenimientoService.registrar({

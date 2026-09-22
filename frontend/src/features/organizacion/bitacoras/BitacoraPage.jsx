@@ -120,7 +120,10 @@ export function BitacoraPage() {
         ? mapped
         : mapped.filter((row) => {
             const usuario = byId(usuarios.data, row.idUsuario);
-            return usuario != null && Number(usuario.idEmpresa) === Number(idActiva);
+            if (!usuario) return false;
+            const ids = usuario.idsEmpresas ?? usuario.empresasAutorizadas ?? [];
+            if (ids.length > 0) return ids.map(Number).includes(Number(idActiva));
+            return usuario.idEmpresa != null && Number(usuario.idEmpresa) === Number(idActiva);
           });
 
     return scoped.filter((row) => {

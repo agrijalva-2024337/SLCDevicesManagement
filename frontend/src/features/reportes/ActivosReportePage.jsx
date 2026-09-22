@@ -2,9 +2,11 @@ import { useCallback, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import * as categoriaService from '@/features/catalogos/categorias/categoriaService';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
+import * as areaService from '@/features/organizacion/areas/areaService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import * as reporteService from '@/features/reportes/reporteService';
+import { responsablesDeEmpresa } from '@/features/inventario/trasladoRuta';
 import { ESTADO_OPERATIVO, ESTADO_OPERATIVO_LABEL, ESTADO_OPERATIVO_TONE } from '@/shared/api/contracts';
 import { DataTable } from '@/shared/components/DataTable';
 import { PageHeader } from '@/shared/components/PageHeader';
@@ -33,11 +35,16 @@ export function ActivosReportePage() {
 
   const sedes = useResource(sedeService.getAll);
   const categorias = useResource(categoriaService.getAll);
+  const areas = useResource(areaService.getAll);
   const responsables = useResource(responsableService.getAll);
   const sedesEmpresa = useMemo(() => {
     if (idActiva == null || idActiva === '') return sedes.data ?? [];
     return (sedes.data ?? []).filter((sede) => Number(sede.idEmpresa) === Number(idActiva));
   }, [idActiva, sedes.data]);
+  const responsablesEmpresa = useMemo(
+    () => responsablesDeEmpresa(responsables.data, areas.data, sedes.data, idActiva),
+    [areas.data, idActiva, responsables.data, sedes.data],
+  );
   const [empresaVista, setEmpresaVista] = useState(idActiva);
   if (empresaVista !== idActiva) {
     setEmpresaVista(idActiva);
@@ -147,7 +154,7 @@ export function ActivosReportePage() {
           Responsable
           <select className="app-input" value={idResponsable} onChange={cambiarFiltro(setIdResponsable)}>
             <option value="">Todos</option>
-            {(responsables.data ?? []).map((responsable) => (
+            {responsablesEmpresa.map((responsable) => (
               <option key={responsable.id} value={responsable.id}>
                 {responsable.nombreCompleto}
               </option>

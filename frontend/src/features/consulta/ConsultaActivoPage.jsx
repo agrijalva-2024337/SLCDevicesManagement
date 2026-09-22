@@ -1,7 +1,9 @@
 import { useCallback } from 'react';
 import { Link, useParams } from 'react-router';
+import { useAuth } from '@/features/auth/useAuth';
 import { ConsultaShell } from '@/features/consulta/ConsultaShell';
 import * as consultaPublicaService from '@/features/consulta/consultaPublicaService';
+import { RolUsuario } from '@/shared/api/contracts';
 import { DetailField } from '@/shared/components/DetailOverlay';
 import { ToneBadge } from '@/shared/components/StatusBadge';
 import { detailQueryKey } from '@/shared/data/queryKeys';
@@ -19,6 +21,8 @@ function estadoTone(nombre) {
 
 export function ConsultaActivoPage() {
   const { codigo } = useParams();
+  const { rol } = useAuth();
+  const verDetalleInterno = rol != null && rol >= RolUsuario.OperadorInventario;
   const load = useCallback(() => consultaPublicaService.getFichaPublica(codigo), [codigo]);
   const { data, isLoading, errorMessage } = useResource(load, {
     key: detailQueryKey('consulta', codigo),
@@ -41,7 +45,11 @@ export function ConsultaActivoPage() {
       ) : ficha ? (
         <>
           <h1 className="consulta-title">{ficha.nombre}</h1>
-          <p className="consulta-lead">Datos públicos del equipo. No se muestra costo, factura ni historial.</p>
+          <p className="consulta-lead">
+            {verDetalleInterno
+              ? 'Consulta con sesión de inventario. Incluye sede, ubicación, área y garantía.'
+              : 'Datos públicos del equipo. No se muestra sede, ubicación, área, garantía, costo, factura ni historial.'}
+          </p>
 
           <div className="consulta-card">
             <div className="app-fields-plain consulta-grid">
@@ -55,11 +63,17 @@ export function ConsultaActivoPage() {
                 value={[ficha.marca, ficha.modelo].filter(Boolean).join(' ')}
               />
               <DetailField label="Empresa" value={ficha.empresa} />
-              <DetailField label="Sede" value={ficha.sede} />
-              <DetailField label="Ubicación" value={ficha.ubicacion} />
-              <DetailField label="Área" value={ficha.area} />
+              {verDetalleInterno ? (
+                <>
+                  <DetailField label="Sede" value={ficha.sede} />
+                  <DetailField label="Ubicación" value={ficha.ubicacion} />
+                  <DetailField label="Área" value={ficha.area} />
+                </>
+              ) : null}
               <DetailField label="Responsable" value={ficha.responsable} />
-              <DetailField label="Garantía hasta" value={formatDate(ficha.garantiaHasta)} />
+              {verDetalleInterno ? (
+                <DetailField label="Garantía hasta" value={formatDate(ficha.garantiaHasta)} />
+              ) : null}
               <div className="sm:col-span-2">
                 <DetailField label="Descripción" value={ficha.descripcion} />
               </div>

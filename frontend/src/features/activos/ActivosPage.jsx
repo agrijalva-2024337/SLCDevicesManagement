@@ -97,6 +97,7 @@ const ACTIVO_COLUMNS = [
   { key: 'categoriaNombre', header: 'Categoría' },
   { key: 'ubicacionNombre', header: 'Ubicación' },
   { key: 'sedeNombre', header: 'Sede' },
+  { key: 'paisNombre', header: 'País' },
   { key: 'responsableNombre', header: 'Responsable' },
   {
     key: 'estadoNombre',
@@ -122,12 +123,15 @@ export function ActivosPage() {
   const overlayForm = crud.isForm;
   const overlayBaja = movimiento?.tipo === 'baja';
   const overlayMant = movimiento?.tipo === 'mantenimiento';
+  const overlayTraslado = movimiento?.tipo === 'traslado';
   const categorias = useResource(categoriaService.getAll);
   const proveedores = useResource(proveedorService.getAll, { enabled: overlayForm });
-  const paises = useResource(paisService.getAll, { enabled: overlayForm });
+  const paises = useResource(paisService.getAll);
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
-  const areas = useResource(areaService.getAll, { enabled: overlayBaja });
+  const areas = useResource(areaService.getAll, {
+    enabled: overlayBaja || overlayMant || overlayTraslado,
+  });
   const empresas = useResource(empresaService.getAll);
   const estados = useResource(estadoService.getAll);
   const responsables = useResource(responsableService.getAll);
@@ -174,10 +178,12 @@ export function ActivosPage() {
         const vigente = asignacionActivaDe(row, asignacionesPorActivo);
         const idEmpresa = empresaIdDeActivo(row, ubicaciones.data, sedes.data);
         const idSede = sedeIdDeActivo(row, ubicaciones.data, sedes.data);
+        const sede = byId(sedes.data, idSede);
         return {
           ...row,
           idSede,
-          sedeNombre: byId(sedes.data, idSede)?.nombre ?? '—',
+          sedeNombre: sede?.nombre ?? '—',
+          paisNombre: byId(paises.data, sede?.idPais)?.nombre ?? '—',
           categoriaNombre: byId(categorias.data, row.idCategoriaActivo)?.nombre ?? '—',
           empresaNombre: byId(empresas.data, idEmpresa)?.nombre ?? '—',
           ubicacionNombre: nombreUbicacion(byId(ubicaciones.data, row.idUbicacion)),
@@ -192,6 +198,7 @@ export function ActivosPage() {
       categorias.data,
       ctx,
       empresas.data,
+      paises.data,
       responsables.data,
       scopedRows,
       sedes.data,
@@ -292,7 +299,7 @@ export function ActivosPage() {
         columns={ACTIVO_COLUMNS}
         rows={tableRows}
         loading={isLoading}
-        searchPlaceholder="Buscar por nombre, marca, modelo, número de serie, empresa, categoría, sede o responsable"
+        searchPlaceholder="Buscar por nombre, marca, modelo, número de serie, empresa, categoría, sede, país o responsable"
         statusFilter={{
           key: 'estadoNombre',
           label: 'Estado',
@@ -355,6 +362,7 @@ export function ActivosPage() {
             ubicaciones={ubicaciones.data}
             sedes={sedes.data}
             responsables={responsables.data}
+            areas={areas.data}
             asignaciones={asignaciones.data}
             tipos={tipos.data}
             idEmpresaActiva={idActiva}
@@ -386,9 +394,11 @@ export function ActivosPage() {
             ubicaciones={ubicaciones.data}
             sedes={sedes.data}
             responsables={responsables.data}
+            areas={areas.data}
             tiposMantenimiento={tiposMantenimiento.data}
             asignaciones={asignaciones.data}
             tipos={tipos.data}
+            idEmpresaActiva={idActiva}
             onClose={() => setMovimiento(null)}
             onSave={async (values) => {
               await mantenimientoService.registrar({

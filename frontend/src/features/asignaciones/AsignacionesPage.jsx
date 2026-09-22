@@ -9,6 +9,7 @@ import * as categoriaService from '@/features/catalogos/categorias/categoriaServ
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import { empresaIdDeActivo, nombreUbicacion } from '@/features/inventario/trasladoRuta';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
+import * as areaService from '@/features/organizacion/areas/areaService';
 import * as estadoService from '@/features/organizacion/estados/estadoService';
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
@@ -97,6 +98,7 @@ export function AsignacionesPage() {
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
   const categorias = useResource(categoriaService.getAll);
+  const areas = useResource(areaService.getAll);
   const estados = useResource(estadoService.getAll);
   const responsables = useResource(responsableService.getAll);
   const tipos = useResource(tipoAsignacionService.getAll);
@@ -304,8 +306,10 @@ export function AsignacionesPage() {
         sedes={lookups.sedes}
         categorias={categorias.data}
         responsables={lookups.responsables}
+        areas={areas.data}
         asignaciones={asignacionesRows}
         tipos={tipos.data}
+        idEmpresaActiva={idActiva}
         onClose={crud.close}
         onSave={async (values) => {
           await asignacionService.entregar({
