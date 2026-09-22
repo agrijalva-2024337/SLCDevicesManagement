@@ -2,9 +2,11 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using SLCDM.Api.Authentication;
 using SLCDM.Api.Extensions;
 using SLCDM.Application.Common.Interfaces;
+using SLCDM.Application.Common.Options;
 using SLCDM.Application.Common.Security;
 using SLCDM.Application.Features.Dispositivos;
 using SLCDM.Application.Features.Dispositivos.Commands;
@@ -18,26 +20,35 @@ public sealed class DispositivosController : ApiControllerBase
     private readonly ICommandHandler<AutoRegistrarDispositivoCommand, DispositivoTokenDto> _autoRegistrar;
     private readonly ICommandHandler<RevocarDispositivoCommand> _revocar;
     private readonly ICommandHandler<RegistrarUbicacionCommand> _ping;
+    private readonly ICommandHandler<CreateInstaladorAgenteTokenCommand, CreateInstaladorAgenteTokenResult> _crearInstaladorLink;
+    private readonly ICommandHandler<DescargarInstaladorAgenteCommand, InstaladorAgenteZipDto> _descargarInstalador;
     private readonly IQueryHandler<GetDispositivosFueraDeRangoQuery, IReadOnlyList<DispositivoFueraDeRangoDto>> _fueraDeRango;
     private readonly IQueryHandler<GetDispositivosRastreoQuery, IReadOnlyList<DispositivoRastreoDto>> _rastreo;
     private readonly IQueryHandler<GetRastreoByActivoQuery, DispositivoRastreoDto> _rastreoByActivo;
+    private readonly AgentOptions _agentOptions;
 
     public DispositivosController(
         ICommandHandler<RegistrarDispositivoCommand, DispositivoTokenDto> registrar,
         ICommandHandler<AutoRegistrarDispositivoCommand, DispositivoTokenDto> autoRegistrar,
         ICommandHandler<RevocarDispositivoCommand> revocar,
         ICommandHandler<RegistrarUbicacionCommand> ping,
+        ICommandHandler<CreateInstaladorAgenteTokenCommand, CreateInstaladorAgenteTokenResult> crearInstaladorLink,
+        ICommandHandler<DescargarInstaladorAgenteCommand, InstaladorAgenteZipDto> descargarInstalador,
         IQueryHandler<GetDispositivosFueraDeRangoQuery, IReadOnlyList<DispositivoFueraDeRangoDto>> fueraDeRango,
         IQueryHandler<GetDispositivosRastreoQuery, IReadOnlyList<DispositivoRastreoDto>> rastreo,
-        IQueryHandler<GetRastreoByActivoQuery, DispositivoRastreoDto> rastreoByActivo)
+        IQueryHandler<GetRastreoByActivoQuery, DispositivoRastreoDto> rastreoByActivo,
+        IOptions<AgentOptions> agentOptions)
     {
         _registrar = registrar;
         _autoRegistrar = autoRegistrar;
         _revocar = revocar;
         _ping = ping;
+        _crearInstaladorLink = crearInstaladorLink;
+        _descargarInstalador = descargarInstalador;
         _fueraDeRango = fueraDeRango;
         _rastreo = rastreo;
         _rastreoByActivo = rastreoByActivo;
+        _agentOptions = agentOptions.Value;
     }
 
     [HttpGet("fuera-de-rango")]
@@ -106,5 +117,54 @@ public sealed class DispositivosController : ApiControllerBase
             cancellationToken);
         return NoContent();
     }
+
+    /// <summary>
+    /// Genera un link temporal (24h) para que IT comparta la descarga del agente sin login.
+    /// </summary>
+    [HttpPost("instalador/generar-link")]
+    [Authorize(Roles = Roles.EscrituraOperativa)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<object>> GenerarLinkInstalador(CancellationToken cancellationToken)
+    {
+        var result = await _crearInstaladorLink.HandleAsync(
+            new CreateInstaladorAgenteTokenCommand(),
+            cancellationToken);
+
+        var baseUrl = ResolveDownloadBaseUrl();
+        var url = $"{baseUrl}/api/Dispositivos/instalador/{result.Token}";
+
+        return Ok(new { url, expiraEn = result.ExpiraEn });
+    }
+
+    /// <summary>
+    /// Descarga anónima del ZIP del instalador. El token vence; la InstallKey no va en la URL.
+    /// </summary>
+    [HttpGet("instalador/{token}")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingExtensions.InstaladorPolicy)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DescargarInstalador(
+        string token,
+        CancellationToken cancellationToken)
+    {
+        var requestBase = $"{Request.Scheme}://{Request.Host.Value}".TrimEnd('/');
+        var zip = await _descargarInstalador.HandleAsync(
+            new DescargarInstaladorAgenteCommand(token, requestBase),
+            cancellationToken);
+
+        return File(zip.Content, "application/zip", zip.FileName);
+    }
+
+    private string ResolveDownloadBaseUrl()
+    {
+        if (!string.IsNullOrWhiteSpace(_agentOptions.DownloadBaseUrl))
+        {
+            return _agentOptions.DownloadBaseUrl.TrimEnd('/');
+        }
+
+        return $"{Request.Scheme}://{Request.Host.Value}".TrimEnd('/');
+    }
 }
+
 public sealed record DevicePingRequest(string? Bssid, decimal? Latitud = null, decimal? Longitud = null);
