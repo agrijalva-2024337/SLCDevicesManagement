@@ -23,6 +23,9 @@ public static class TipoAsignacionNombres
         Baja
     ];
 
+    public static bool EsGlobal(string? nombre) =>
+        Estandar.Any(item => EsNombre(nombre, item));
+
     public static string Normalizar(string? nombre)
     {
         if (string.IsNullOrWhiteSpace(nombre))

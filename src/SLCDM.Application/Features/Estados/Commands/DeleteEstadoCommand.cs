@@ -35,10 +35,10 @@ public sealed class DeleteEstadoCommandHandler : ICommandHandler<DeleteEstadoCom
         var entity = await _db.Estados.FirstOrDefaultAsync(e => e.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("Estado", command.Id);
 
-        if (EstadoActivoNombres.Estandar.Any(n => TipoAsignacionNombres.EsNombre(entity.Nombre, n)))
+        if (EstadoActivoNombres.EsGlobal(entity.Nombre))
         {
             throw new ConflictException(
-                $"No se puede eliminar el estado estándar «{entity.Nombre}». Los flujos de movimiento dependen de ese registro.");
+                "No se puede eliminar este estado porque es global del sistema. Solo se pueden eliminar los estados que se registren despues.");
         }
 
         var enAsignaciones = await _db.Asignaciones

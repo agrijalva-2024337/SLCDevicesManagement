@@ -35,10 +35,10 @@ public sealed class DeleteTipoAsignacionCommandHandler : ICommandHandler<DeleteT
         var entity = await _db.TiposAsignacion.FirstOrDefaultAsync(t => t.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("TipoAsignacion", command.Id);
 
-        if (TipoAsignacionNombres.Estandar.Any(n => TipoAsignacionNombres.EsNombre(entity.Nombre, n)))
+        if (TipoAsignacionNombres.EsGlobal(entity.Nombre))
         {
             throw new ConflictException(
-                $"No se puede eliminar el tipo estándar «{entity.Nombre}». Los flujos de movimiento dependen de ese registro.");
+                "No se puede eliminar este tipo de asignacion porque es global del sistema. Solo se pueden eliminar los tipos que se registren despues.");
         }
 
         var enUso = await _db.Asignaciones

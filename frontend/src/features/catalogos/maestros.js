@@ -13,11 +13,10 @@ import * as usuarioService from '@/features/organizacion/usuarios/usuarioService
 import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import { RolUsuario, rolUsuarioLabel } from '@/shared/api/contracts';
 import {
-  ESTADO_ACTIVO,
   MOTIVO_BAJA,
-  TIPO_ASIGNACION,
   TIPO_MANTENIMIENTO,
-  esNombreCatalogoEstandar,
+  esCatalogoGlobal,
+  nombresCatalogoIguales,
 } from '@/shared/api/tipoAsignacion';
 import { asOptions, phoneField, requireSelect, validarCodigoTelefonico, validarCorreo, validarIdentificacionTributaria, validarIso2, validarIso3, validarMoneda, validarNombreEntidad, validarNombrePersona, validarPassword, validarTextoLibre, validarUsername } from '@/shared/components/recordFormUtils';
 import { phoneFormFields, phonePayload, validatePhoneFields } from '@/shared/utils/phoneNumber';
@@ -33,6 +32,7 @@ function nombreDescripcionGlobalMaestro({
   hint,
   emptyTitle,
   emptyDescription,
+  slug,
   estandarNombres,
 }) {
   return {
@@ -47,7 +47,6 @@ function nombreDescripcionGlobalMaestro({
     hint,
     titleOf: (item) => item.nombre,
     facts: (item) => [item.descripcion].filter(Boolean),
-    canDelete: (item) => !esNombreCatalogoEstandar(item?.nombre, estandarNombres),
     listView: {
       emptyTitle,
       emptyDescription,
@@ -63,7 +62,9 @@ function nombreDescripcionGlobalMaestro({
     }),
     fields: (_lookups, ctx = {}) => {
       const lockNombre =
-        Boolean(ctx.editing) && esNombreCatalogoEstandar(ctx.record?.nombre, estandarNombres);
+        Boolean(ctx.editing) &&
+        (esCatalogoGlobal(slug, ctx.record?.nombre) ||
+          Object.values(estandarNombres ?? {}).some((n) => nombresCatalogoIguales(ctx.record?.nombre, n)));
       return [
         {
           name: 'nombre',
@@ -1129,36 +1130,30 @@ export const maestros = {
       ];
     },
   },
-  estados: {
-    ...nombreDescripcionMaestro({
-      service: estadoService,
-      title: 'Estados',
-      singular: 'estado',
-      newTitle: 'Nuevo estado',
-      kicker: 'Estado',
-      registerLabel: 'Registrar estado',
-      hint: 'El nombre es obligatorio y no puede repetirse dentro de la empresa.',
-      scope: 'empresa',
-      emptyTitle: 'No hay estados',
-      emptyDescription: 'Registre el primer estado.',
-    }),
-    canDelete: (item) => !esNombreCatalogoEstandar(item?.nombre, ESTADO_ACTIVO),
-  },
-  'tipos-asignacion': {
-    ...nombreDescripcionMaestro({
-      service: tipoAsignacionService,
-      title: 'Tipos de asignación',
-      singular: 'tipo de asignación',
-      newTitle: 'Nuevo tipo de asignación',
-      kicker: 'Tipo de asignación',
-      registerLabel: 'Registrar tipo',
-      hint: 'El nombre es obligatorio y no puede repetirse dentro de la empresa.',
-      scope: 'empresa',
-      emptyTitle: 'No hay tipos de asignación',
-      emptyDescription: 'Registre el primer tipo.',
-    }),
-    canDelete: (item) => !esNombreCatalogoEstandar(item?.nombre, TIPO_ASIGNACION),
-  },
+  estados: nombreDescripcionMaestro({
+    service: estadoService,
+    title: 'Estados',
+    singular: 'estado',
+    newTitle: 'Nuevo estado',
+    kicker: 'Estado',
+    registerLabel: 'Registrar estado',
+    hint: 'El nombre es obligatorio y no puede repetirse dentro de la empresa.',
+    scope: 'empresa',
+    emptyTitle: 'No hay estados',
+    emptyDescription: 'Registre el primer estado.',
+  }),
+  'tipos-asignacion': nombreDescripcionMaestro({
+    service: tipoAsignacionService,
+    title: 'Tipos de asignación',
+    singular: 'tipo de asignación',
+    newTitle: 'Nuevo tipo de asignación',
+    kicker: 'Tipo de asignación',
+    registerLabel: 'Registrar tipo',
+    hint: 'El nombre es obligatorio y no puede repetirse dentro de la empresa.',
+    scope: 'empresa',
+    emptyTitle: 'No hay tipos de asignación',
+    emptyDescription: 'Registre el primer tipo.',
+  }),
   'tipos-mantenimiento': nombreDescripcionGlobalMaestro({
     service: tipoMantenimientoService,
     title: 'Tipos de mantenimiento',
@@ -1169,6 +1164,7 @@ export const maestros = {
     hint: 'El nombre es obligatorio y no puede repetirse.',
     emptyTitle: 'No hay tipos de mantenimiento',
     emptyDescription: 'Registre el primer tipo.',
+    slug: 'tipos-mantenimiento',
     estandarNombres: TIPO_MANTENIMIENTO,
   }),
   'motivos-baja': nombreDescripcionGlobalMaestro({
@@ -1181,6 +1177,7 @@ export const maestros = {
     hint: 'El nombre es obligatorio y no puede repetirse.',
     emptyTitle: 'No hay motivos de baja',
     emptyDescription: 'Registre el primer motivo.',
+    slug: 'motivos-baja',
     estandarNombres: MOTIVO_BAJA,
   }),
 };
