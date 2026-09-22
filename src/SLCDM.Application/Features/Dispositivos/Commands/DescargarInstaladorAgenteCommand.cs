@@ -46,7 +46,15 @@ public sealed class DescargarInstaladorAgenteCommandHandler
             throw new NotFoundException("Instalador", command.Token);
         }
 
+        // IgnoreQueryFilters: esta consulta es intencionalmente anónima (descarga sin login).
+        // InstaladorAgenteToken tiene una FK requerida a Usuario, y EF Core propaga
+        // automáticamente el filtro multi-tenant de Usuario hacia acá aunque no se
+        // toque la navegación — sin esto, CUALQUIER lectura anónima devuelve vacío
+        // siempre, sin importar si el token es válido.
+        // Seguridad: el control de acceso real es el token (24 chars aleatorios) +
+        // la validación manual de ExpiraEn/Revocado que sigue abajo, no el filtro de empresa.
         var entity = await _db.InstaladoresAgenteToken
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(t => t.Token == token, cancellationToken);
 
         // Misma respuesta opaca (404) si no existe, venció o está revocado.
