@@ -49,9 +49,7 @@ public sealed class UsuarioCredencialesCorreoService : IUsuarioCredencialesCorre
                   <li><strong>Correo:</strong> {Html(to)}</li>
                   <li><strong>Contraseña:</strong> {Html(password)}</li>
                 </ul>
-                <p>Puede iniciar sesión con el usuario o el correo en <a href="{Html(loginUrl)}">{Html(loginUrl)}</a>.</p>
-                <p>Le recomendamos cambiar la contraseña después del primer ingreso.</p>
-                """;
+                <p>Puede iniciar sesión con el usuario o el correo en <a href="{Html(loginUrl)}">{Html(loginUrl)}</a>.</p>                """;
 
             await _email.SendAsync(
                 to,
