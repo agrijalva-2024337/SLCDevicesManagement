@@ -16,11 +16,27 @@ export const TIPO_ASIGNACION = {
 };
 
 export const ESTADO_ACTIVO = {
+  Activo: 'Activo',
   Disponible: 'Disponible',
   Asignado: 'Asignado',
   EnMantenimiento: 'En mantenimiento',
   DadoDeBaja: 'Dado de baja',
 };
+
+const ESTADOS_GLOBALES = [
+  ESTADO_ACTIVO.Activo,
+  ESTADO_ACTIVO.Disponible,
+  ESTADO_ACTIVO.Asignado,
+  ESTADO_ACTIVO.EnMantenimiento,
+  ESTADO_ACTIVO.DadoDeBaja,
+];
+
+export function esCatalogoGlobal(slug, nombre) {
+  const lista =
+    slug === 'estados' ? ESTADOS_GLOBALES : slug === 'tipos-asignacion' ? Object.values(TIPO_ASIGNACION) : null;
+  if (!lista) return false;
+  return lista.some((item) => nombresCatalogoIguales(nombre, item));
+}
 
 export class CatalogoIncompletoError extends Error {
   constructor(kind, nombre) {

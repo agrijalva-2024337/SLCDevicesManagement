@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Validation;
+using SLCDM.Application.Features.Asignaciones;
 
 namespace SLCDM.Application.Features.Estados.Commands;
 
@@ -33,6 +34,12 @@ public sealed class DeleteEstadoCommandHandler : ICommandHandler<DeleteEstadoCom
 
         var entity = await _db.Estados.FirstOrDefaultAsync(e => e.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("Estado", command.Id);
+
+        if (EstadoActivoNombres.EsGlobal(entity.Nombre))
+        {
+            throw new ConflictException(
+                "No se puede eliminar este estado porque es global del sistema. Solo se pueden eliminar los estados que se registren despues.");
+        }
 
         var enAsignaciones = await _db.Asignaciones
             .IgnoreQueryFilters()
