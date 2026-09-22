@@ -33,6 +33,25 @@ builder.Services.AddControllers();
 builder.Services.AddSwaggerWithBearer();
 builder.Services.Configure<SLCDM.Application.Common.Options.DeviceTrackingOptions>(
     builder.Configuration.GetSection(SLCDM.Application.Common.Options.DeviceTrackingOptions.SectionName));
+builder.Services.Configure<SLCDM.Application.Common.Options.AgentOptions>(
+    builder.Configuration.GetSection(SLCDM.Application.Common.Options.AgentOptions.SectionName));
+builder.Services.PostConfigure<SLCDM.Application.Common.Options.AgentOptions>(options =>
+{
+    // Mantener agent/publish/SLCDMAgente.exe actualizado a mano con:
+    //   dotnet publish agent/SLCDM.Agent.csproj -c Release -o agent/publish
+    // No hay build automático del agente en esta feature.
+    if (string.IsNullOrWhiteSpace(options.PublishedExePath))
+    {
+        options.PublishedExePath = Path.Combine(
+            "..", "..", "agent", "publish", "SLCDMAgente.exe");
+    }
+
+    if (!Path.IsPathRooted(options.PublishedExePath))
+    {
+        options.PublishedExePath = Path.GetFullPath(
+            Path.Combine(builder.Environment.ContentRootPath, options.PublishedExePath));
+    }
+});
 builder.Services.Configure<SLCDM.Application.Common.Options.SmtpOptions>(
     builder.Configuration.GetSection(SLCDM.Application.Common.Options.SmtpOptions.SectionName));
 builder.Services.AddSingleton<SLCDM.Application.Common.Interfaces.IEmailSender, SLCDM.Api.Email.SmtpEmailSender>();

@@ -19,6 +19,19 @@ export async function listarRastreo() {
   return response.data;
 }
 
+export async function generarLinkInstalador() {
+  if (env.useApiMock) {
+    await wait(300);
+    return {
+      url: 'http://localhost:5080/api/Dispositivos/instalador/mocktoken01234567890123',
+      expiraEn: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    };
+  }
+
+  const response = await httpClient.post(apiPaths.dispositivos.generarLinkInstalador);
+  return response.data;
+}
+
 export function mapsUrlDe(ubicacion) {
   const lat = Number(ubicacion?.latitud);
   const lng = Number(ubicacion?.longitud);
