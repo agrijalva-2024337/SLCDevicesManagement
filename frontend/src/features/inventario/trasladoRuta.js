@@ -1,3 +1,5 @@
+import { byId } from '@/shared/utils/format';
+
 const RUTA_RE = /Traslado\s+(.+?)\s+→\s+(.+?)(?:\.|$)/;
 
 export function formatTrasladoObservaciones({ origen, destino, detalle }) {
@@ -23,7 +25,7 @@ export function nombreUbicacion(ubicacion) {
 
 export function empresaIdDeUbicacion(ubicacion, sedes) {
   if (!ubicacion) return null;
-  const sede = (sedes ?? []).find((item) => Number(item.id) === Number(ubicacion.idSede));
+  const sede = byId(sedes, ubicacion.idSede);
   return sede ? Number(sede.idEmpresa) : null;
 }
 
@@ -36,17 +38,14 @@ export function ubicacionesDeEmpresa(ubicaciones, sedes, idEmpresa) {
 
 export function empresaIdDeActivo(activo, ubicaciones, sedes) {
   if (!activo?.idUbicacion) return null;
-  const ubicacion = (ubicaciones ?? []).find((item) => Number(item.id) === Number(activo.idUbicacion));
-  return empresaIdDeUbicacion(ubicacion, sedes);
+  return empresaIdDeUbicacion(byId(ubicaciones, activo.idUbicacion), sedes);
 }
 
 export function sedeIdDeActivo(activo, ubicaciones, sedes) {
   if (!activo?.idUbicacion) return null;
-  const ubicacion = (ubicaciones ?? []).find(
-    (item) => Number(item.id) === Number(activo.idUbicacion),
-  );
+  const ubicacion = byId(ubicaciones, activo.idUbicacion);
   if (!ubicacion) return null;
-  const sede = (sedes ?? []).find((item) => Number(item.id) === Number(ubicacion.idSede));
+  const sede = byId(sedes, ubicacion.idSede);
   return sede ? Number(sede.id) : null;
 }
 
@@ -54,32 +53,40 @@ export function filtrarPorEmpresaDeActivo(rows, idEmpresa, activos, ubicaciones,
   if (idEmpresa == null || idEmpresa === '') return rows ?? [];
   const wanted = Number(idEmpresa);
   return (rows ?? []).filter((row) => {
-    const activo = (activos ?? []).find((item) => Number(item.id) === Number(row.idActivo));
+    const activo = byId(activos, row.idActivo);
     return empresaIdDeActivo(activo, ubicaciones, sedes) === wanted;
   });
 }
 
-export function filtrarPorEmpresaDeUbicacion(rows, idEmpresa, ubicaciones, sedes, campo = 'idUbicacion') {
+export function filtrarPorEmpresaDeUbicacion(
+  rows,
+  idEmpresa,
+  ubicaciones,
+  sedes,
+  campo = 'idUbicacion',
+) {
   if (idEmpresa == null || idEmpresa === '') return rows ?? [];
   const wanted = Number(idEmpresa);
   return (rows ?? []).filter((row) => {
-    const ubicacion = (ubicaciones ?? []).find((item) => Number(item.id) === Number(row[campo]));
+    const ubicacion = byId(ubicaciones, row[campo]);
     return empresaIdDeUbicacion(ubicacion, sedes) === wanted;
   });
 }
 
 export function empresaIdDeResponsable(responsable, areas, sedes) {
   if (!responsable?.idArea) return null;
-  const area = (areas ?? []).find((item) => Number(item.id) === Number(responsable.idArea));
+  const area = byId(areas, responsable.idArea);
   if (!area) return null;
-  const sede = (sedes ?? []).find((item) => Number(item.id) === Number(area.idSede));
+  const sede = byId(sedes, area.idSede);
   return sede ? Number(sede.idEmpresa) : null;
 }
 
 export function activosDeEmpresa(activos, ubicaciones, sedes, idEmpresa) {
   if (idEmpresa == null || idEmpresa === '') return activos ?? [];
   const wanted = Number(idEmpresa);
-  return (activos ?? []).filter((activo) => empresaIdDeActivo(activo, ubicaciones, sedes) === wanted);
+  return (activos ?? []).filter(
+    (activo) => empresaIdDeActivo(activo, ubicaciones, sedes) === wanted,
+  );
 }
 
 export function responsablesDeEmpresa(responsables, areas, sedes, idEmpresa) {
@@ -106,8 +113,8 @@ export function todayIsoDate() {
 
 export function initialTrasladoValues(prefill, { activos, ubicaciones } = {}) {
   const idActivo = prefill?.idActivo ? String(prefill.idActivo) : '';
-  const activo = (activos ?? []).find((item) => Number(item.id) === Number(idActivo));
-  const ubicacion = (ubicaciones ?? []).find((item) => Number(item.id) === Number(activo?.idUbicacion));
+  const activo = byId(activos, idActivo);
+  const ubicacion = byId(ubicaciones, activo?.idUbicacion);
   return {
     idActivo,
     origen: idActivo ? nombreUbicacion(ubicacion) : '',

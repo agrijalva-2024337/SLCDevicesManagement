@@ -1,7 +1,18 @@
-import { cloneElement, Fragment, isValidElement, useEffect, useId, useMemo, useRef, useState } from 'react';
+import {
+  cloneElement,
+  Fragment,
+  isValidElement,
+  startTransition,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { ExportExcelButton } from '@/shared/components/RecordActions';
 import { RowIconActions } from '@/shared/components/RowIconActions';
-import { matchesSearch } from '@/shared/utils/search';
+import { foldSearch, matchesTokens, searchTokens } from '@/shared/utils/search';
 import '@/shared/styles/data-table.css';
 
 const BOOLEAN_STATUS_OPTIONS = [
@@ -49,12 +60,14 @@ function sortValue(column, row) {
   return cellValue(column, row);
 }
 
+const TEXT_COLLATOR = new Intl.Collator('es', { numeric: true, sensitivity: 'base' });
+
 function compareValues(left, right) {
   if (left == null && right == null) return 0;
   if (left == null) return 1;
   if (right == null) return -1;
   if (typeof left === 'number' && typeof right === 'number') return left - right;
-  return String(left).localeCompare(String(right), 'es', { numeric: true, sensitivity: 'base' });
+  return TEXT_COLLATOR.compare(String(left), String(right));
 }
 
 function expandColumns(columns) {
@@ -277,6 +290,44 @@ function ExpandChevron({ open }) {
   );
 }
 
+function SearchField({ placeholder, onDebounced }) {
+  const searchId = useId();
+  const [liveQuery, setLiveQuery] = useState('');
+  const onDebouncedRef = useRef(onDebounced);
+
+  useEffect(() => {
+    onDebouncedRef.current = onDebounced;
+  });
+
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      startTransition(() => {
+        onDebouncedRef.current(liveQuery);
+      });
+    }, 280);
+    return () => window.clearTimeout(handle);
+  }, [liveQuery]);
+
+  return (
+    <div className="data-table-search">
+      <label className="data-table-sr" htmlFor={searchId}>
+        Buscar
+      </label>
+      <input
+        id={searchId}
+        type="search"
+        className="app-input"
+        placeholder={placeholder}
+        value={liveQuery}
+        onChange={(event) => {
+          setLiveQuery(event.target.value);
+        }}
+        autoComplete="off"
+      />
+    </div>
+  );
+}
+
 function TablePager({ page, pageCount, from, to, total, onPageChange }) {
   return (
     <div className="data-table-pager">
@@ -337,10 +388,11 @@ export function DataTable({
   renderExpandedContent,
   initialFilters,
 }) {
-  const searchId = useId();
   const filterIdBase = useId();
-  const [liveQuery, setLiveQuery] = useState('');
   const [query, setQuery] = useState('');
+  const [searchResetKey, setSearchResetKey] = useState(0);
+  const queryRef = useRef('');
+  const onPageChangeRef = useRef(onPageChange);
   const [filterValues, setFilterValues] = useState(() => initialFilters ?? {});
   const [internalPage, setInternalPage] = useState(1);
   const [internalSort, setInternalSort] = useState({
@@ -352,7 +404,9 @@ export function DataTable({
   const canExpand = Boolean(expandable) || typeof renderExpandedContent === 'function';
   const withInlineActions =
     typeof getRowActions === 'function' || typeof renderRowActions === 'function';
-  const prevDebouncedQueryRef = useRef(query);
+  useEffect(() => {
+    onPageChangeRef.current = onPageChange;
+  });
 
   const displayColumns = useMemo(() => withStickyOffsets(expandColumns(columns)), [columns]);
   const toolbarFilters = useMemo(
@@ -363,32 +417,39 @@ export function DataTable({
   const activeSortDirection = onSortChange ? sortDirection : internalSort.direction;
   const currentPage = onPageChange ? (page ?? 1) : internalPage;
 
-  useEffect(() => {
-    const handle = window.setTimeout(() => {
-      setQuery(liveQuery);
-    }, 280);
-    return () => window.clearTimeout(handle);
-  }, [liveQuery]);
-
-  useEffect(() => {
-    if (prevDebouncedQueryRef.current === query) return;
-    prevDebouncedQueryRef.current = query;
-    if (onPageChange) onPageChange(1);
+  const applyQuery = useCallback((next) => {
+    if (queryRef.current === next) return;
+    queryRef.current = next;
+    setQuery(next);
+    const changePage = onPageChangeRef.current;
+    if (changePage) changePage(1);
     else setInternalPage(1);
-  }, [onPageChange, query]);
+  }, []);
+
+  const needleTokens = useMemo(() => searchTokens(query), [query]);
+  const searchIndex = useMemo(() => {
+    if (hideToolbar) return [];
+    const searchable = displayColumns.filter((column) => column.search !== false);
+    return rows.map((row) => {
+      let text = '';
+      for (const column of searchable) {
+        const part = foldSearch(cellText(column, row));
+        if (!part) continue;
+        text = text ? `${text} ${part}` : part;
+      }
+      return text;
+    });
+  }, [displayColumns, hideToolbar, rows]);
 
   const filtered = useMemo(() => {
     let next = rows;
     if (!hideToolbar) {
-      const needle = query.trim();
-      const searchable = displayColumns.filter((column) => column.search !== false);
-      next = rows.filter((row) => {
+      next = rows.filter((row, index) => {
         const passesFilters = toolbarFilters.every((filter) =>
           matchesFilter(row, filter, filterValues[filter.key] ?? 'all'),
         );
         if (!passesFilters) return false;
-        if (!needle) return true;
-        return searchable.some((column) => matchesSearch(cellText(column, row), needle));
+        return matchesTokens(searchIndex[index], needleTokens);
       });
     }
 
@@ -396,27 +457,32 @@ export function DataTable({
     const column = displayColumns.find((item) => item.key === activeSortKey);
     if (!column) return next;
     const direction = activeSortDirection === 'asc' ? 1 : -1;
-    return [...next].sort((left, right) => direction * compareValues(sortValue(column, left), sortValue(column, right)));
+    return [...next].sort(
+      (left, right) => direction * compareValues(sortValue(column, left), sortValue(column, right)),
+    );
   }, [
     activeSortDirection,
     activeSortKey,
     displayColumns,
     filterValues,
     hideToolbar,
-    query,
+    needleTokens,
     rows,
+    searchIndex,
     toolbarFilters,
   ]);
 
   const total = filtered.length;
   const pageCount = pageSize ? Math.max(1, Math.ceil(total / pageSize)) : 1;
   const safePage = Math.min(Math.max(1, currentPage), pageCount);
-  const paged = pageSize ? filtered.slice((safePage - 1) * pageSize, safePage * pageSize) : filtered;
+  const paged = pageSize
+    ? filtered.slice((safePage - 1) * pageSize, safePage * pageSize)
+    : filtered;
   const from = total === 0 ? 0 : (safePage - 1) * (pageSize ?? total) + 1;
   const to = pageSize ? Math.min(safePage * pageSize, total) : total;
 
   const hasFilters =
-    liveQuery.trim() !== '' ||
+    query.trim() !== '' ||
     toolbarFilters.some((filter) => (filterValues[filter.key] ?? 'all') !== 'all');
   const showTable = loading || paged.length > 0;
   const showEmpty = !loading && rows.length === 0;
@@ -438,8 +504,7 @@ export function DataTable({
   ) : null;
   const showHead = !hideHeader && (title || description || primaryAction || excelButton);
   const showToolbar = !hideToolbar;
-  const columnCount =
-    displayColumns.length + (canExpand ? 1 : 0) + (withInlineActions ? 1 : 0);
+  const columnCount = displayColumns.length + (canExpand ? 1 : 0) + (withInlineActions ? 1 : 0);
   const expandResetKey = `${query}\0${JSON.stringify(filterValues)}\0${safePage}\0${activeSortKey}\0${activeSortDirection}`;
   const [expandResetSeen, setExpandResetSeen] = useState(expandResetKey);
   if (expandResetSeen !== expandResetKey) {
@@ -453,7 +518,8 @@ export function DataTable({
   }
 
   function clearFilters() {
-    setLiveQuery('');
+    setSearchResetKey((current) => current + 1);
+    queryRef.current = '';
     setQuery('');
     setFilterValues({});
     setPage(1);
@@ -530,22 +596,11 @@ export function DataTable({
 
       {showToolbar ? (
         <div className="data-table-toolbar">
-          <div className="data-table-search">
-            <label className="data-table-sr" htmlFor={searchId}>
-              Buscar
-            </label>
-            <input
-              id={searchId}
-              type="search"
-              className="app-input"
-              placeholder={searchPlaceholder}
-              value={liveQuery}
-              onChange={(event) => {
-                setLiveQuery(event.target.value);
-              }}
-              autoComplete="off"
-            />
-          </div>
+          <SearchField
+            key={searchResetKey}
+            placeholder={searchPlaceholder}
+            onDebounced={applyQuery}
+          />
           {toolbarFilters.map((filter) => {
             const selectId = `${filterIdBase}-${filter.key}`;
             return (
@@ -558,7 +613,10 @@ export function DataTable({
                   className="app-input"
                   value={filterValues[filter.key] ?? 'all'}
                   onChange={(event) => {
-                    setFilterValues((current) => ({ ...current, [filter.key]: event.target.value }));
+                    setFilterValues((current) => ({
+                      ...current,
+                      [filter.key]: event.target.value,
+                    }));
                     setPage(1);
                   }}
                 >
@@ -572,14 +630,20 @@ export function DataTable({
             );
           })}
           <p className="data-table-count" aria-live="polite">
-            {loading ? 'Cargando…' : `${filtered.length} ${filtered.length === 1 ? 'registro' : 'registros'}`}
+            {loading
+              ? 'Cargando…'
+              : `${filtered.length} ${filtered.length === 1 ? 'registro' : 'registros'}`}
           </p>
         </div>
       ) : null}
 
       <div className="data-table-frame" style={frameStyle} aria-busy={loading || undefined}>
         {showTable ? (
-          <table className={`data-table${canExpand ? ' data-table--expandable' : ''}`} aria-label={title} style={tableStyle}>
+          <table
+            className={`data-table${canExpand ? ' data-table--expandable' : ''}`}
+            aria-label={title}
+            style={tableStyle}
+          >
             <thead>
               <tr>
                 {canExpand ? (
@@ -597,7 +661,11 @@ export function DataTable({
                       data-align={column.align ?? (column.numeric ? 'right' : 'left')}
                       data-pair={column.pair}
                       aria-sort={
-                        sorted ? (activeSortDirection === 'asc' ? 'ascending' : 'descending') : undefined
+                        sorted
+                          ? activeSortDirection === 'asc'
+                            ? 'ascending'
+                            : 'descending'
+                          : undefined
                       }
                       style={stickyStyle(column)}
                     >
@@ -675,7 +743,12 @@ export function DataTable({
                           );
                         })}
                         {withInlineActions ? (
-                          <td className="data-td-actions" data-slot="actions" data-label="Acciones" data-align="right">
+                          <td
+                            className="data-td-actions"
+                            data-slot="actions"
+                            data-label="Acciones"
+                            data-align="right"
+                          >
                             {typeof renderRowActions === 'function' ? (
                               renderRowActions(row)
                             ) : iconActions.length ? (
@@ -688,7 +761,10 @@ export function DataTable({
                         ) : null}
                       </tr>
                       {canExpand ? (
-                        <tr className={`data-table-expand-row${open ? ' is-open' : ''}`} aria-hidden={!open}>
+                        <tr
+                          className={`data-table-expand-row${open ? ' is-open' : ''}`}
+                          aria-hidden={!open}
+                        >
                           <td colSpan={columnCount} className="data-table-expand-cell">
                             <div
                               className={`data-table-expand-slot${open ? ' is-open' : ''}`}
@@ -698,7 +774,7 @@ export function DataTable({
                             >
                               <div className="data-table-expand-inner">
                                 <div className="data-table-expand-panel">
-                                  {typeof renderExpandedContent === 'function'
+                                  {open && typeof renderExpandedContent === 'function'
                                     ? renderExpandedContent(row)
                                     : null}
                                 </div>
