@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
+import { RouteFallback } from '@/app/RouteFallback';
 import { useAuth } from '@/features/auth/useAuth';
-import { ActivoFormOverlay } from '@/features/activos/ActivoFormOverlay';
 import {
   asignacionActivaDe,
   estadoNombreDeActivo,
@@ -16,13 +16,14 @@ import * as categoriaService from '@/features/catalogos/categorias/categoriaServ
 import * as paisService from '@/features/catalogos/paises/paisService';
 import * as proveedorService from '@/features/catalogos/proveedores/proveedorService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
-import { BajaFormOverlay } from '@/features/bajas/BajaFormOverlay';
 import * as bajaService from '@/features/bajas/bajaService';
 import * as motivoBajaService from '@/features/bajas/motivoBajaService';
-import { TrasladoFormOverlay } from '@/features/inventario/TrasladoFormOverlay';
-import { empresaIdDeActivo, nombreUbicacion, sedeIdDeActivo } from '@/features/inventario/trasladoRuta';
+import {
+  empresaIdDeActivo,
+  nombreUbicacion,
+  sedeIdDeActivo,
+} from '@/features/inventario/trasladoRuta';
 import * as trasladoService from '@/features/inventario/trasladoService';
-import { MantenimientoFormOverlay } from '@/features/mantenimientos/MantenimientoFormOverlay';
 import * as mantenimientoService from '@/features/mantenimientos/mantenimientoService';
 import * as tipoMantenimientoService from '@/features/mantenimientos/tipoMantenimientoService';
 import * as areaService from '@/features/organizacion/areas/areaService';
@@ -44,6 +45,27 @@ import { useResource } from '@/shared/hooks/useResource';
 import { byId } from '@/shared/utils/format';
 import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
 
+const ActivoFormOverlay = lazy(() =>
+  import('@/features/activos/ActivoFormOverlay').then((module) => ({
+    default: module.ActivoFormOverlay,
+  })),
+);
+const BajaFormOverlay = lazy(() =>
+  import('@/features/bajas/BajaFormOverlay').then((module) => ({
+    default: module.BajaFormOverlay,
+  })),
+);
+const TrasladoFormOverlay = lazy(() =>
+  import('@/features/inventario/TrasladoFormOverlay').then((module) => ({
+    default: module.TrasladoFormOverlay,
+  })),
+);
+const MantenimientoFormOverlay = lazy(() =>
+  import('@/features/mantenimientos/MantenimientoFormOverlay').then((module) => ({
+    default: module.MantenimientoFormOverlay,
+  })),
+);
+
 function estadoTone(nombre) {
   const key = String(nombre ?? '').toLowerCase();
   if (key.includes('baja')) return 'danger';
@@ -63,7 +85,9 @@ const ACTIVO_COLUMNS = [
       <div>
         <div>{row.nombre}</div>
         {row.marca || row.modelo ? (
-          <div className="text-xs text-text-muted">{[row.marca, row.modelo].filter(Boolean).join(' ')}</div>
+          <div className="text-xs text-text-muted">
+            {[row.marca, row.modelo].filter(Boolean).join(' ')}
+          </div>
         ) : null}
       </div>
     ),
@@ -185,21 +209,32 @@ export function ActivosPage() {
   const estadoInicial = params.get('estado');
   const estadoOptions = useMemo(() => {
     const names = [...new Set(tableRows.map((row) => row.estadoNombre).filter(Boolean))];
-    return [{ value: 'all', label: 'Todos' }, ...names.map((name) => ({ value: name, label: name }))];
+    return [
+      { value: 'all', label: 'Todos' },
+      ...names.map((name) => ({ value: name, label: name })),
+    ];
   }, [tableRows]);
 
   const categoriaOptions = useMemo(() => {
     const names = [
-      ...new Set(tableRows.map((row) => row.categoriaNombre).filter((name) => name && name !== '—')),
+      ...new Set(
+        tableRows.map((row) => row.categoriaNombre).filter((name) => name && name !== '—'),
+      ),
     ];
-    return [{ value: 'all', label: 'Todas' }, ...names.map((name) => ({ value: name, label: name }))];
+    return [
+      { value: 'all', label: 'Todas' },
+      ...names.map((name) => ({ value: name, label: name })),
+    ];
   }, [tableRows]);
 
   const sedeOptions = useMemo(() => {
     const names = [
       ...new Set(tableRows.map((row) => row.sedeNombre).filter((name) => name && name !== '—')),
     ];
-    return [{ value: 'all', label: 'Todas' }, ...names.map((name) => ({ value: name, label: name }))];
+    return [
+      { value: 'all', label: 'Todas' },
+      ...names.map((name) => ({ value: name, label: name })),
+    ];
   }, [tableRows]);
 
   async function refreshAll() {
@@ -256,7 +291,9 @@ export function ActivosPage() {
         primaryAction={
           <>
             <EscanearQrButton />
-            {allowWrite ? <RegisterButton label="Registrar activo" onClick={() => crud.openCreate()} /> : null}
+            {allowWrite ? (
+              <RegisterButton label="Registrar activo" onClick={() => crud.openCreate()} />
+            ) : null}
           </>
         }
         columns={ACTIVO_COLUMNS}
@@ -280,7 +317,9 @@ export function ActivosPage() {
             actions={
               allowWrite
                 ? getAccionesDisponibles(row, ctx)
-                : getAccionesDisponibles(row, ctx).filter((item) => item.key === 'view' || item.key === 'qr')
+                : getAccionesDisponibles(row, ctx).filter(
+                    (item) => item.key === 'view' || item.key === 'qr',
+                  )
             }
             onAction={(action) => handleAccion(action, row)}
           />
@@ -288,122 +327,138 @@ export function ActivosPage() {
       />
 
       {crud.isForm ? (
-        <ActivoFormOverlay
-          open
-          editing={crud.isEdit}
-          record={crud.record}
-          records={rows}
-          categorias={categorias.data}
-          proveedores={proveedores.data}
-          paises={paises.data}
-          ubicaciones={ubicaciones.data}
-          sedes={sedes.data}
-          idEmpresaActiva={idActiva}
-          onClose={crud.close}
-          onSave={async (payload) => {
-            if (crud.isEdit) {
-              await activoService.update(crud.record.id, payload);
-            } else {
-              await activoService.create(payload);
-            }
-            await refreshAll();
-            return saveSuccessResult({ created: !crud.isEdit, entityLabel: 'activo' });
-          }}
-        />
+        <Suspense fallback={<RouteFallback />}>
+          <ActivoFormOverlay
+            open
+            editing={crud.isEdit}
+            record={crud.record}
+            records={rows}
+            categorias={categorias.data}
+            proveedores={proveedores.data}
+            paises={paises.data}
+            ubicaciones={ubicaciones.data}
+            sedes={sedes.data}
+            idEmpresaActiva={idActiva}
+            onClose={crud.close}
+            onSave={async (payload) => {
+              if (crud.isEdit) {
+                await activoService.update(crud.record.id, payload);
+              } else {
+                await activoService.create(payload);
+              }
+              await refreshAll();
+              return saveSuccessResult({ created: !crud.isEdit, entityLabel: 'activo' });
+            }}
+          />
+        </Suspense>
       ) : null}
 
-      <TrasladoFormOverlay
-        open={movimiento?.tipo === 'traslado'}
-        prefill={movimiento?.tipo === 'traslado' ? { idActivo: movimiento.idActivo } : null}
-        activos={rows}
-        ubicaciones={ubicaciones.data}
-        sedes={sedes.data}
-        responsables={responsables.data}
-        areas={areas.data}
-        asignaciones={asignaciones.data}
-        tipos={tipos.data}
-        idEmpresaActiva={idActiva}
-        onClose={() => setMovimiento(null)}
-        onSave={async (values) => {
-          await trasladoService.registrar({
-            idActivo: Number(values.idActivo),
-            idUbicacionDestino: Number(values.idUbicacionDestino),
-            idUsuario: usuario?.id,
-            idResponsable: Number(values.idResponsable),
-            fecha: values.fecha,
-            motivo: values.motivo,
-          });
-          await refreshAll();
-          return saveSuccessResult({ created: true, entityLabel: 'traslado' });
-        }}
-      />
+      {movimiento?.tipo === 'traslado' ? (
+        <Suspense fallback={<RouteFallback />}>
+          <TrasladoFormOverlay
+            open
+            prefill={movimiento?.tipo === 'traslado' ? { idActivo: movimiento.idActivo } : null}
+            activos={rows}
+            ubicaciones={ubicaciones.data}
+            sedes={sedes.data}
+            responsables={responsables.data}
+            areas={areas.data}
+            asignaciones={asignaciones.data}
+            tipos={tipos.data}
+            idEmpresaActiva={idActiva}
+            onClose={() => setMovimiento(null)}
+            onSave={async (values) => {
+              await trasladoService.registrar({
+                idActivo: Number(values.idActivo),
+                idUbicacionDestino: Number(values.idUbicacionDestino),
+                idUsuario: usuario?.id,
+                idResponsable: Number(values.idResponsable),
+                fecha: values.fecha,
+                motivo: values.motivo,
+              });
+              await refreshAll();
+              return saveSuccessResult({ created: true, entityLabel: 'traslado' });
+            }}
+          />
+        </Suspense>
+      ) : null}
 
-      <MantenimientoFormOverlay
-        open={movimiento?.tipo === 'mantenimiento'}
-        prefill={movimiento?.tipo === 'mantenimiento' ? { idActivo: movimiento.idActivo } : null}
-        activos={rows}
-        ubicaciones={ubicaciones.data}
-        sedes={sedes.data}
-        responsables={responsables.data}
-        areas={areas.data}
-        tiposMantenimiento={tiposMantenimiento.data}
-        asignaciones={asignaciones.data}
-        tipos={tipos.data}
-        idEmpresaActiva={idActiva}
-        onClose={() => setMovimiento(null)}
-        onSave={async (values) => {
-          await mantenimientoService.registrar({
-            idActivo: Number(values.idActivo),
-            idUsuario: usuario?.id,
-            idResponsable: Number(values.idResponsable),
-            fecha: values.fecha,
-            observaciones: values.observaciones,
-            idTipoMantenimiento: Number(values.idTipoMantenimiento),
-            descripcionProblema: values.descripcionProblema,
-          });
-          await refreshAll();
-          return saveSuccessResult({ created: true, entityLabel: 'mantenimiento' });
-        }}
-      />
-
-      <BajaFormOverlay
-        open={movimiento?.tipo === 'baja'}
-        prefill={movimiento?.tipo === 'baja' ? { idActivo: movimiento.idActivo } : null}
-        activos={rows}
-        motivos={motivos.data}
-        usuarios={usuarios.data}
-        usuariosUnavailableReason={canReadUsuarios ? null : usuarioService.USUARIOS_SIN_LECTURA}
-        responsables={responsables.data}
-        asignaciones={asignaciones.data}
-        tipos={tipos.data}
-        idEmpresaActiva={idActiva}
-        ubicaciones={ubicaciones.data}
-        sedes={sedes.data}
-        areas={areas.data}
-        onClose={() => setMovimiento(null)}
-        onSave={async (values) => {
-          try {
-            await bajaService.registrar({
-              idActivo: Number(values.idActivo),
-              idUsuario: usuario?.id,
-              idResponsable: Number(values.idResponsable),
-              idMotivoBaja: Number(values.idMotivoBaja),
-              idAutorizadoPor: Number(values.idAutorizadoPor),
-              fecha: values.fecha,
-              observaciones: values.observaciones,
-              firmaEntrega: values.firmaEntrega,
-              firmaRecibe: values.firmaRecibe,
-            });
-            await refreshAll();
-            return saveSuccessResult({ created: true, entityLabel: 'baja' });
-          } catch (error) {
-            if (error.response?.status === 409 || error.status === 409) {
-              setBanner({ message: error.message, variant: 'error' });
+      {movimiento?.tipo === 'mantenimiento' ? (
+        <Suspense fallback={<RouteFallback />}>
+          <MantenimientoFormOverlay
+            open
+            prefill={
+              movimiento?.tipo === 'mantenimiento' ? { idActivo: movimiento.idActivo } : null
             }
-            throw error;
-          }
-        }}
-      />
+            activos={rows}
+            ubicaciones={ubicaciones.data}
+            sedes={sedes.data}
+            responsables={responsables.data}
+            areas={areas.data}
+            tiposMantenimiento={tiposMantenimiento.data}
+            asignaciones={asignaciones.data}
+            tipos={tipos.data}
+            idEmpresaActiva={idActiva}
+            onClose={() => setMovimiento(null)}
+            onSave={async (values) => {
+              await mantenimientoService.registrar({
+                idActivo: Number(values.idActivo),
+                idUsuario: usuario?.id,
+                idResponsable: Number(values.idResponsable),
+                fecha: values.fecha,
+                observaciones: values.observaciones,
+                idTipoMantenimiento: Number(values.idTipoMantenimiento),
+                descripcionProblema: values.descripcionProblema,
+              });
+              await refreshAll();
+              return saveSuccessResult({ created: true, entityLabel: 'mantenimiento' });
+            }}
+          />
+        </Suspense>
+      ) : null}
+
+      {movimiento?.tipo === 'baja' ? (
+        <Suspense fallback={<RouteFallback />}>
+          <BajaFormOverlay
+            open
+            prefill={movimiento?.tipo === 'baja' ? { idActivo: movimiento.idActivo } : null}
+            activos={rows}
+            motivos={motivos.data}
+            usuarios={usuarios.data}
+            usuariosUnavailableReason={canReadUsuarios ? null : usuarioService.USUARIOS_SIN_LECTURA}
+            responsables={responsables.data}
+            asignaciones={asignaciones.data}
+            tipos={tipos.data}
+            idEmpresaActiva={idActiva}
+            ubicaciones={ubicaciones.data}
+            sedes={sedes.data}
+            areas={areas.data}
+            onClose={() => setMovimiento(null)}
+            onSave={async (values) => {
+              try {
+                await bajaService.registrar({
+                  idActivo: Number(values.idActivo),
+                  idUsuario: usuario?.id,
+                  idResponsable: Number(values.idResponsable),
+                  idMotivoBaja: Number(values.idMotivoBaja),
+                  idAutorizadoPor: Number(values.idAutorizadoPor),
+                  fecha: values.fecha,
+                  observaciones: values.observaciones,
+                  firmaEntrega: values.firmaEntrega,
+                  firmaRecibe: values.firmaRecibe,
+                });
+                await refreshAll();
+                return saveSuccessResult({ created: true, entityLabel: 'baja' });
+              } catch (error) {
+                if (error.response?.status === 409 || error.status === 409) {
+                  setBanner({ message: error.message, variant: 'error' });
+                }
+                throw error;
+              }
+            }}
+          />
+        </Suspense>
+      ) : null}
     </section>
   );
 }

@@ -4,7 +4,10 @@ import { useAuth } from '@/features/auth/useAuth';
 import { SinPermiso } from '@/features/auth/RutaProtegida';
 import { getMaestro, nameById } from '@/features/catalogos/maestros';
 import { useCatalogoSlug } from '@/features/catalogos/useCatalogoSlug';
-import { filterRowsByEmpresa, useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
+import {
+  filterRowsByEmpresa,
+  useEmpresaActiva,
+} from '@/features/organizacion/empresas/useEmpresaActiva';
 import { PaisesGrid } from '@/features/catalogos/paises/PaisesGrid';
 import * as paisService from '@/features/catalogos/paises/paisService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
@@ -21,11 +24,16 @@ import { DataTable } from '@/shared/components/DataTable';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { OverlayOutlet } from '@/shared/components/OverlayOutlet';
 import { PageHeader } from '@/shared/components/PageHeader';
-import { ExportExcelButton, RecordActions, RegisterButton } from '@/shared/components/RecordActions';
+import {
+  ExportExcelButton,
+  RecordActions,
+  RegisterButton,
+} from '@/shared/components/RecordActions';
 import { RecordCard } from '@/shared/components/RecordCard';
 import { catalogListQueryKey } from '@/shared/data/queryKeys';
 import { useCatalogCollection } from '@/shared/hooks/useCatalogCollection';
 import { useResource } from '@/shared/hooks/useResource';
+import { byId } from '@/shared/utils/format';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 import MagicBento from '@/shared/vendor/react-bits/MagicBento';
 
@@ -60,13 +68,18 @@ export function CatalogoPage() {
     if (!maestro?.service?.getAll || !canList) return [];
     return maestro.service.getAll();
   };
-  const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(loadAll, {
-    key: catalogKey,
-  });
+  const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(
+    loadAll,
+    {
+      key: catalogKey,
+    },
+  );
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  const empresas = useResource(empresaService.getAll, { enabled: neededLookups.includes('empresas') });
+  const empresas = useResource(empresaService.getAll, {
+    enabled: neededLookups.includes('empresas'),
+  });
   const sedes = useResource(sedeService.getAll, { enabled: needsSedes });
   const areas = useResource(areaService.getAll, { enabled: neededLookups.includes('areas') });
   const paises = useResource(paisService.getAll, { enabled: neededLookups.includes('paises') });
@@ -88,16 +101,31 @@ export function CatalogoPage() {
     }),
     [areas.data, empresas.data, paises.data, sedes.data, ubicaciones.data],
   );
+  const tableColumns = useMemo(
+    () => (maestro?.listView ? maestro.listView.columns(lookups) : []),
+    [lookups, maestro],
+  );
+  const tableFilters = useMemo(
+    () =>
+      typeof maestro?.listView?.filters === 'function'
+        ? maestro.listView.filters(lookups)
+        : undefined,
+    [lookups, maestro],
+  );
+  const statusFilter = useMemo(
+    () => (maestro?.hasHabilitado === false ? undefined : { key: 'habilitado' }),
+    [maestro],
+  );
 
   const items = useMemo(() => {
     const withSede = rows.map((row) => {
       if (row.idSede != null) return row;
       if (row.idArea != null) {
-        const area = (areas.data ?? []).find((item) => Number(item.id) === Number(row.idArea));
+        const area = byId(areas.data, row.idArea);
         return area ? { ...row, idSede: area.idSede } : row;
       }
       if (row.idUbicacion == null) return row;
-      const ubicacion = (ubicaciones.data ?? []).find((item) => Number(item.id) === Number(row.idUbicacion));
+      const ubicacion = byId(ubicaciones.data, row.idUbicacion);
       return ubicacion ? { ...row, idSede: ubicacion.idSede } : row;
     });
     if (maestro?.scope === 'global') {
@@ -105,16 +133,13 @@ export function CatalogoPage() {
     }
     return filterRowsByEmpresa(withSede, idActiva, { sedes: sedes.data });
   }, [areas.data, idActiva, maestro, rows, sedes.data, ubicaciones.data]);
-  const outletContext = useMemo(
-    () => ({ reload, rows, lookups }),
-    [reload, rows, lookups],
-  );
+  const outletContext = useMemo(() => ({ reload, rows, lookups }), [reload, rows, lookups]);
 
   const ubicacionesMapItems = useMemo(() => {
     if (slug !== 'ubicaciones') return items;
     return items.map((item) => {
-      const sede = (sedes.data ?? []).find((row) => Number(row.id) === Number(item.idSede));
-      const pais = (paises.data ?? []).find((row) => Number(row.id) === Number(sede?.idPais));
+      const sede = byId(sedes.data, item.idSede);
+      const pais = byId(paises.data, sede?.idPais);
       return {
         ...item,
         direccion: sede?.direccion,
@@ -189,8 +214,8 @@ export function CatalogoPage() {
             }
           }}
         >
-          Se eliminará permanentemente la ubicación <strong>{pendingDelete?.nombre}</strong>. Esta acción
-          no se puede revertir.
+          Se eliminará permanentemente la ubicación <strong>{pendingDelete?.nombre}</strong>. Esta
+          acción no se puede revertir.
         </ConfirmDialog>
         <OverlayOutlet context={outletContext} />
       </>
@@ -214,13 +239,15 @@ export function CatalogoPage() {
         <DataTable
           title={maestro.title}
           description={maestro.description}
-          primaryAction={allowWrite ? <RegisterButton to="nueva" label={maestro.registerLabel} /> : null}
-          columns={maestro.listView.columns(lookups)}
+          primaryAction={
+            allowWrite ? <RegisterButton to="nueva" label={maestro.registerLabel} /> : null
+          }
+          columns={tableColumns}
           rows={items}
           loading={isLoading}
           searchPlaceholder={`Buscar en ${maestro.title.toLowerCase()}`}
-          statusFilter={maestro.hasHabilitado === false ? undefined : { key: 'habilitado' }}
-          filters={typeof maestro.listView.filters === 'function' ? maestro.listView.filters(lookups) : undefined}
+          statusFilter={statusFilter}
+          filters={tableFilters}
           emptyTitle={maestro.listView.emptyTitle}
           emptyDescription={maestro.listView.emptyDescription}
           getRowActions={(item) => ({
@@ -263,8 +290,9 @@ export function CatalogoPage() {
             }
           }}
         >
-          ¿Eliminar {maestro.singular} <strong>{pendingDelete ? maestro.titleOf(pendingDelete) : ''}</strong>?
-          Esta acción no se puede deshacer.
+          ¿Eliminar {maestro.singular}{' '}
+          <strong>{pendingDelete ? maestro.titleOf(pendingDelete) : ''}</strong>? Esta acción no se
+          puede deshacer.
         </ConfirmDialog>
         <OverlayOutlet context={outletContext} />
       </section>
@@ -282,7 +310,10 @@ export function CatalogoPage() {
             <ExportExcelButton
               title={maestro.title}
               columns={[
-                { header: maestro.singular ?? 'Registro', getValue: (item) => maestro.titleOf(item) },
+                {
+                  header: maestro.singular ?? 'Registro',
+                  getValue: (item) => maestro.titleOf(item),
+                },
                 {
                   header: 'Detalle',
                   getValue: (item) => (maestro.facts?.(item, lookups) ?? []).join(' · '),
@@ -291,7 +322,8 @@ export function CatalogoPage() {
                   ? null
                   : {
                       header: 'Estado',
-                      getValue: (item) => (item.habilitado === false ? 'Deshabilitado' : 'Habilitado'),
+                      getValue: (item) =>
+                        item.habilitado === false ? 'Deshabilitado' : 'Habilitado',
                     },
               ].filter(Boolean)}
               rows={items}
