@@ -1,4 +1,5 @@
 import { TIPO_ASIGNACION, nombresCatalogoIguales } from '@/shared/api/tipoAsignacion';
+import { byId } from '@/shared/utils/format';
 
 function idsDeTipo(tipos, nombre) {
   return new Set(
@@ -50,7 +51,8 @@ export function asignacionActivaDe(activo, asignaciones) {
     return asignaciones.get(Number(activo?.id)) ?? null;
   }
   return (
-    (asignaciones ?? []).find((row) => Number(row.idActivo) === Number(activo?.id) && row.activa) ?? null
+    (asignaciones ?? []).find((row) => Number(row.idActivo) === Number(activo?.id) && row.activa) ??
+    null
   );
 }
 
@@ -75,15 +77,18 @@ export function isActivoDeBaja(activo, ctx = {}) {
   return Boolean(row && ids.has(Number(row.idTipoAsignacion)));
 }
 
-export function estadoNombreDeActivo(activo, { asignaciones = [], estados = [], asignacionesPorActivo } = {}) {
+export function estadoNombreDeActivo(
+  activo,
+  { asignaciones = [], estados = [], asignacionesPorActivo } = {},
+) {
   if (activo?.idEstado != null && activo.idEstado !== '') {
-    return (estados ?? []).find((item) => Number(item.id) === Number(activo.idEstado))?.nombre ?? null;
+    return byId(estados, activo.idEstado)?.nombre ?? null;
   }
   const activa = asignacionesPorActivo
     ? (asignacionesPorActivo.get(Number(activo?.id)) ?? null)
     : (asignaciones ?? []).find((row) => Number(row.idActivo) === Number(activo?.id) && row.activa);
   if (!activa) return 'Disponible';
-  return (estados ?? []).find((item) => Number(item.id) === Number(activa.idEstado))?.nombre ?? '—';
+  return byId(estados, activa.idEstado)?.nombre ?? '—';
 }
 
 export function getAccionesDisponibles(activo, ctx = {}) {

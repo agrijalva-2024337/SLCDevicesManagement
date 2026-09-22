@@ -181,7 +181,7 @@ const Scanner = ({
       alpha: true,
       premultipliedAlpha: true,
       antialias: false,
-      dpr: Math.min(window.devicePixelRatio || 1, 2),
+      dpr: Math.min(window.devicePixelRatio || 1, 1.25),
     });
 
     const gl = renderer.gl;
@@ -255,7 +255,10 @@ const Scanner = ({
 
     const onMouseMove = (e) => {
       const rect = canvas.getBoundingClientRect();
-      targetMouse = [(e.clientX - rect.left) / rect.width, 1.0 - (e.clientY - rect.top) / rect.height];
+      targetMouse = [
+        (e.clientX - rect.left) / rect.width,
+        1.0 - (e.clientY - rect.top) / rect.height,
+      ];
       targetMouseActive = 1;
     };
     const onMouseLeave = () => {
@@ -267,9 +270,13 @@ const Scanner = ({
     let raf = 0;
     let isVisible = true;
     let isPageVisible = !document.hidden;
+    let lastFrame = 0;
     const t0 = performance.now();
 
     const loop = (t) => {
+      raf = requestAnimationFrame(loop);
+      if (t - lastFrame < 32) return;
+      lastFrame = t;
       program.uniforms.iTime.value = (t - t0) * 0.001;
 
       if (!mouseEnabledRef.current) {
@@ -283,7 +290,6 @@ const Scanner = ({
       program.uniforms.uMouseActive.value = mouseActive;
 
       renderer.render({ scene: mesh });
-      raf = requestAnimationFrame(loop);
     };
 
     const tryStart = () => {

@@ -1,3 +1,5 @@
+using System.IO.Compression;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using SLCDM.Api.Authentication;
 using SLCDM.Api.Extensions;
@@ -15,6 +17,18 @@ builder.Services.AddDeviceTokenAuthentication();
 builder.Services.AddRateLimitingPolicies();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddProblemDetails();
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
 builder.Services.AddControllers();
 builder.Services.AddSwaggerWithBearer();
 builder.Services.Configure<SLCDM.Application.Common.Options.DeviceTrackingOptions>(
@@ -70,6 +84,7 @@ using (var scope = app.Services.CreateScope())
     await DataSeeder.SeedAsync(db, passwordHasher, configuration);
 }
 
+app.UseResponseCompression();
 app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
