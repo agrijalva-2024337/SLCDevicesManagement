@@ -23,7 +23,7 @@ import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
 
 /** Catálogos que siempre pertenecen a una sola empresa (no se registran con "Todas"). */
-const REQUIERE_EMPRESA_ACTIVA = new Set(['proveedores', 'estados', 'tipos-asignacion']);
+const REQUIERE_EMPRESA_ACTIVA = new Set(['proveedores', 'estados', 'tipos-asignacion', 'usuarios']);
 
 function enabledRecords(list) {
   return (list ?? []).filter((item) => item.habilitado !== false);

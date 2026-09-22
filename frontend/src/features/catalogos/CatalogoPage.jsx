@@ -58,6 +58,7 @@ export function CatalogoPage() {
   const catalogKey = catalogListQueryKey(slug);
   const loadAll = async () => {
     if (!maestro?.service?.getAll || !canList) return [];
+    // Usuarios (admin general): siempre el listado completo, sin filtrar por empresa activa.
     return maestro.service.getAll();
   };
   const { rows, isLoading, errorMessage, banner, setBanner, reload } = useCatalogCollection(loadAll, {
