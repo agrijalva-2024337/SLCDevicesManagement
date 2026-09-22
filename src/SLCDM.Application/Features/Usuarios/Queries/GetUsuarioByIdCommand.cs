@@ -19,11 +19,16 @@ public sealed class GetUsuarioByIdQueryValidator : AbstractValidator<GetUsuarioB
 public sealed class GetUsuarioByIdQueryHandler : IQueryHandler<GetUsuarioByIdQuery, UsuarioDto>
 {
     private readonly IApplicationDbContext _db;
+    private readonly ICurrentUserService _currentUser;
     private readonly IValidator<GetUsuarioByIdQuery> _validator;
 
-    public GetUsuarioByIdQueryHandler(IApplicationDbContext db, IValidator<GetUsuarioByIdQuery> validator)
+    public GetUsuarioByIdQueryHandler(
+        IApplicationDbContext db,
+        ICurrentUserService currentUser,
+        IValidator<GetUsuarioByIdQuery> validator)
     {
         _db = db;
+        _currentUser = currentUser;
         _validator = validator;
     }
 
@@ -31,8 +36,11 @@ public sealed class GetUsuarioByIdQueryHandler : IQueryHandler<GetUsuarioByIdQue
     {
         await _validator.ValidateAndThrowAsync(query, cancellationToken);
 
-        var entity = await _db.Usuarios.AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == query.Id, cancellationToken)
+        var q = _currentUser.IsAdministradorGeneral
+            ? _db.Usuarios.IgnoreQueryFilters().AsNoTracking()
+            : _db.Usuarios.AsNoTracking();
+
+        var entity = await q.FirstOrDefaultAsync(u => u.Id == query.Id, cancellationToken)
             ?? throw new NotFoundException("Usuario", query.Id);
 
         var mapped = await UsuarioDtoMapper.MapAsync(_db, [entity], cancellationToken);

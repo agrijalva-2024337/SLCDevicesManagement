@@ -704,13 +704,13 @@ export const maestros = {
   usuarios: {
     service: usuarioService,
     requiresWriteToList: true,
-    scope: 'global',
+    scope: 'empresa',
     title: 'Usuarios',
     singular: 'usuario',
     newTitle: 'Nuevo usuario',
     kicker: 'Usuario',
     registerLabel: 'Registrar usuario',
-    hint: 'Nombres, apellidos, correo, usuario y rol son obligatorios. Al menos una empresa es obligatoria salvo para el administrador general.',
+    hint: 'Nombres, apellidos, correo, usuario y rol son obligatorios. La empresa se toma de la empresa activa.',
     description: 'Cuentas con acceso al sistema. Este listado es exclusivo del Administrador general.',
     lookups: ['empresas'],
     titleOf: usuarioNombre,
@@ -736,16 +736,24 @@ export const maestros = {
         { key: 'habilitado', header: 'Estado', type: 'status' },
       ],
     },
-    empty: ({ idEmpresa } = {}) => ({
-      idsEmpresas: idEmpresa == null || idEmpresa === '' ? [] : [String(idEmpresa)],
-      nombres: '',
-      apellidos: '',
-      correo: '',
-      username: '',
-      password: '',
-      rol: String(RolUsuario.OperadorInventario),
-      habilitado: true,
-    }),
+    empty: ({ idEmpresaActiva, idEmpresa } = {}) => {
+      const id =
+        idEmpresaActiva != null && idEmpresaActiva !== ''
+          ? idEmpresaActiva
+          : idEmpresa != null && idEmpresa !== ''
+            ? idEmpresa
+            : '';
+      return {
+        idsEmpresas: id === '' ? [] : [String(id)],
+        nombres: '',
+        apellidos: '',
+        correo: '',
+        username: '',
+        password: '',
+        rol: String(RolUsuario.OperadorInventario),
+        habilitado: true,
+      };
+    },
     toForm: (item) => ({
       idsEmpresas: (item.idsEmpresas ?? []).map(String),
       nombres: item.nombres ?? '',
@@ -756,19 +764,26 @@ export const maestros = {
       rol: String(item.rol ?? RolUsuario.OperadorInventario),
       habilitado: Boolean(item.habilitado),
     }),
-    fields: ({ empresas = [], rol, editing } = {}) => {
+    fields: ({ empresas = [], rol, editing, idEmpresaActiva } = {}) => {
       const lockEmpresa = rol != null && rol < RolUsuario.AdministradorGeneral;
+      const empresasDeActiva =
+        !editing && idEmpresaActiva != null && idEmpresaActiva !== ''
+          ? (empresas ?? []).filter((item) => Number(item.id) === Number(idEmpresaActiva))
+          : empresas;
       return [
         {
           name: 'idsEmpresas',
           label: 'Empresas',
           type: 'multiselect',
-          options: asOptions(empresas),
-          readOnly: lockEmpresa,
+          options: asOptions(empresasDeActiva),
+          readOnly: lockEmpresa || (!editing && idEmpresaActiva != null && idEmpresaActiva !== ''),
           emptyLabel: 'No hay empresas disponibles.',
-          hint: lockEmpresa
-            ? 'El usuario queda en su empresa.'
-            : 'Obligatorias salvo que el rol sea administrador general. Puede elegir varias en el menú.',
+          hint:
+            !editing && idEmpresaActiva != null && idEmpresaActiva !== ''
+              ? 'Se asigna a la empresa en la que estás trabajando.'
+              : lockEmpresa
+                ? 'El usuario queda en su empresa.'
+                : 'Obligatorias salvo que el rol sea administrador general. Puede elegir varias en el menú.',
         },
         { name: 'nombres', label: 'Nombres', required: true, maxLength: 100 },
         { name: 'apellidos', label: 'Apellidos', required: true, maxLength: 100 },
@@ -783,7 +798,7 @@ export const maestros = {
           required: !editing,
           hint: editing
             ? 'Deje vacío para no cambiar la clave. Generar rellena el campo.'
-            : 'Generar rellena el campo. Cópiala ahora: al guardar solo queda el hash.',
+            : 'Generar rellena el campo. Cópiela ahora: al guardar solo queda el hash.',
         },
         {
           name: 'rol',
@@ -844,9 +859,17 @@ export const maestros = {
 
       return errors;
     },
-    toPayload(values, { editing } = {}) {
+    toPayload(values, { editing, idEmpresaActiva } = {}) {
       const rol = Number(values.rol);
-      const idsEmpresas = (values.idsEmpresas ?? []).map(Number);
+      let idsEmpresas = (values.idsEmpresas ?? []).map(Number).filter((id) => Number.isFinite(id) && id > 0);
+      if (
+        !editing &&
+        rol !== RolUsuario.AdministradorGeneral &&
+        idEmpresaActiva != null &&
+        idEmpresaActiva !== ''
+      ) {
+        idsEmpresas = [Number(idEmpresaActiva)];
+      }
       const base = {
         idsEmpresas,
         nombres: values.nombres.trim(),

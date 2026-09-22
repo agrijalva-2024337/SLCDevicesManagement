@@ -17,7 +17,7 @@ internal static class UsuarioDtoMapper
         }
 
         var ids = items.Select(u => u.Id).ToList();
-        var filas = await db.UsuariosEmpresas.AsNoTracking()
+        var filas = await db.UsuariosEmpresas.IgnoreQueryFilters().AsNoTracking()
             .Where(ue => ids.Contains(ue.IdUsuario))
             .Select(ue => new { ue.IdUsuario, ue.IdEmpresa })
             .ToListAsync(cancellationToken);

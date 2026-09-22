@@ -82,17 +82,19 @@ function UserMenu() {
 export function Topbar({ sidebarOpen, onMenuToggle }) {
   const { pathname, search } = useLocation();
   const title = getPageTitle(pathname, search);
-  const { empresas, idActiva, canSwitchEmpresa, isAdminGeneral, isLoading, selectEmpresa } =
-    useEmpresaActiva();
+  const { empresas, idActiva, isLoading } = useEmpresaActiva();
   const nombreEmpresa = useMemo(() => {
+    if (isLoading) {
+      return 'Cargando empresa…';
+    }
     if (idActiva == null) {
-      return 'Todas las empresas';
+      return 'Sin empresa seleccionada';
     }
     return (
       empresas.find((empresa) => Number(empresa.id) === Number(idActiva))?.nombre
       ?? 'Empresa'
     );
-  }, [empresas, idActiva]);
+  }, [empresas, idActiva, isLoading]);
 
   return (
     <header className="app-topbar sticky top-0 z-20 flex h-[var(--header-height)] items-center justify-between">
@@ -113,40 +115,14 @@ export function Topbar({ sidebarOpen, onMenuToggle }) {
           <h1 className="truncate font-display text-base font-bold tracking-tight text-navy sm:text-xl">
             {title}
           </h1>
-          {canSwitchEmpresa ? null : (
-            <p className="app-empresa-activa truncate" title={nombreEmpresa}>
-              <i className="pi pi-building" aria-hidden="true" />
-              <span>{nombreEmpresa}</span>
-            </p>
-          )}
+          <p className="app-empresa-activa truncate" title={nombreEmpresa}>
+            <i className="pi pi-building" aria-hidden="true" />
+            <span>{nombreEmpresa}</span>
+          </p>
         </div>
       </div>
 
       <div className="flex shrink-0 items-center gap-3">
-        {canSwitchEmpresa ? (
-          <div className="app-empresa-select">
-            <label className="sr-only" htmlFor="topbar-empresa">
-              Empresa activa
-            </label>
-            <select
-              id="topbar-empresa"
-              className="app-input"
-              value={idActiva ?? ''}
-              disabled={isLoading}
-              onChange={(event) => {
-                const value = event.target.value;
-                selectEmpresa(value === '' ? null : Number(value));
-              }}
-            >
-              {isAdminGeneral ? <option value="">Todas las empresas</option> : null}
-              {empresas.map((empresa) => (
-                <option key={empresa.id} value={empresa.id}>
-                  {empresa.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : null}
         <ThemeToggle />
         <UserMenu />
       </div>

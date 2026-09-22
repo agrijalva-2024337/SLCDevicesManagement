@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { useAuth } from '@/features/auth/useAuth';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import * as empresaService from '@/features/organizacion/empresas/empresaService';
+import { RolUsuario } from '@/shared/api/contracts';
 import { getValidationErrors } from '@/shared/api/errors';
 import { enforceRequired } from '@/shared/utils/fieldErrors';
 import { getErrorMessage } from '@/shared/utils/getErrorMessage';
@@ -14,8 +15,15 @@ function normalizeAutorizadas(raw) {
   return raw.map((id) => Number(id)).filter((id) => Number.isFinite(id));
 }
 
-function resolveEmpresasLista(autorizadas, catalogo) {
-  const byId = new Map((catalogo ?? []).map((empresa) => [Number(empresa.id), empresa]));
+function resolveEmpresasLista(autorizadas, catalogo, { todas = false } = {}) {
+  const rows = (catalogo ?? []).filter((empresa) => empresa.habilitado !== false);
+  if (todas) {
+    return rows.map((empresa) => ({
+      id: Number(empresa.id),
+      nombre: empresa.nombre?.trim() ? empresa.nombre : `Empresa #${empresa.id}`,
+    }));
+  }
+  const byId = new Map(rows.map((empresa) => [Number(empresa.id), empresa]));
   return autorizadas.map((id) => {
     const found = byId.get(Number(id));
     return {
@@ -42,6 +50,7 @@ export function useLoginFlow() {
   const [saving, setSaving] = useState(false);
 
   const [idsAutorizados, setIdsAutorizados] = useState([]);
+  const [listarTodasEmpresas, setListarTodasEmpresas] = useState(false);
   const [empresas, setEmpresas] = useState([]);
   const [empresasLoading, setEmpresasLoading] = useState(false);
   const [empresasError, setEmpresasError] = useState(null);
@@ -52,15 +61,15 @@ export function useLoginFlow() {
     navigate('/app', { replace: true });
   }, [navigate]);
 
-  const cargarEmpresas = useCallback(async (autorizadas) => {
+  const cargarEmpresas = useCallback(async (autorizadas, todas = false) => {
     setEmpresasLoading(true);
     setEmpresasError(null);
     try {
       const catalogo = await empresaService.getAll();
       const rows = Array.isArray(catalogo) ? catalogo : (catalogo?.data ?? []);
-      setEmpresas(resolveEmpresasLista(autorizadas, rows));
+      setEmpresas(resolveEmpresasLista(autorizadas, rows, { todas }));
     } catch (error) {
-      setEmpresas(resolveEmpresasLista(autorizadas, []));
+      setEmpresas(resolveEmpresasLista(autorizadas, [], { todas }));
       setEmpresasError(getErrorMessage(error) || 'No se pudieron cargar las empresas.');
     } finally {
       setEmpresasLoading(false);
@@ -68,11 +77,14 @@ export function useLoginFlow() {
   }, []);
 
   useEffect(() => {
-    if (paso !== 'empresa' || idsAutorizados.length < 2) {
+    if (paso !== 'empresa') {
       return;
     }
-    void cargarEmpresas(idsAutorizados);
-  }, [paso, idsAutorizados, cargarEmpresas]);
+    if (!listarTodasEmpresas && idsAutorizados.length < 2) {
+      return;
+    }
+    void cargarEmpresas(idsAutorizados, listarTodasEmpresas);
+  }, [paso, idsAutorizados, listarTodasEmpresas, cargarEmpresas]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -94,10 +106,20 @@ export function useLoginFlow() {
 
     try {
       const session = await login({ emailOrUsername: correo, password: clave });
-      const autorizadas = normalizeAutorizadas(session?.usuario?.empresasAutorizadas);
+      const usuario = session?.usuario;
+      const autorizadas = normalizeAutorizadas(usuario?.empresasAutorizadas);
+      const esAdminGeneral = Number(usuario?.rol) === RolUsuario.AdministradorGeneral;
+
+      if (esAdminGeneral) {
+        setIdsAutorizados(autorizadas);
+        setListarTodasEmpresas(true);
+        setPaso('empresa');
+        return;
+      }
 
       if (autorizadas.length > 1) {
         setIdsAutorizados(autorizadas);
+        setListarTodasEmpresas(false);
         setPaso('empresa');
         return;
       }
@@ -134,6 +156,7 @@ export function useLoginFlow() {
     logout();
     setPaso('credenciales');
     setIdsAutorizados([]);
+    setListarTodasEmpresas(false);
     setEmpresas([]);
     setEmpresasError(null);
     setSeleccionandoId(null);
@@ -141,7 +164,7 @@ export function useLoginFlow() {
   }
 
   function handleRetryEmpresas() {
-    void cargarEmpresas(idsAutorizados);
+    void cargarEmpresas(idsAutorizados, listarTodasEmpresas);
   }
 
   return {
