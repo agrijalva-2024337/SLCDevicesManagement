@@ -177,7 +177,6 @@ export function BajasPage() {
       ) : null}
       <DataTable
         title="Bajas"
-        description="Retiro definitivo de activos."
         primaryAction={
           <>
             <EscanearQrButton />

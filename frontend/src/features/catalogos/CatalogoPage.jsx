@@ -129,7 +129,7 @@ export function CatalogoPage() {
   if (!maestro) {
     return (
       <section>
-        <PageHeader title="Catálogo" description="Este maestro aún no está disponible." />
+        <PageHeader title="Catálogo" />
         <div className="app-feedback app-feedback--empty">No hay un maestro para esta ruta.</div>
       </section>
     );
@@ -142,7 +142,7 @@ export function CatalogoPage() {
   if (errorMessage) {
     return (
       <section>
-        <PageHeader title={maestro.title} description={maestro.description} />
+        <PageHeader title={maestro.title} />
         <div className="app-feedback app-feedback--error" role="alert">
           {errorMessage}
         </div>
@@ -214,7 +214,6 @@ export function CatalogoPage() {
         <CatalogBanner banner={banner} />
         <DataTable
           title={maestro.title}
-          description={maestro.description}
           primaryAction={allowWrite ? <RegisterButton to="nueva" label={maestro.registerLabel} /> : null}
           columns={maestro.listView.columns(lookups)}
           rows={items}
@@ -277,7 +276,6 @@ export function CatalogoPage() {
       <CatalogBanner banner={banner} />
       <PageHeader
         title={maestro.title}
-        description={maestro.description}
         actions={
           <>
             <ExportExcelButton

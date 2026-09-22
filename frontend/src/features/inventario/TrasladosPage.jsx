@@ -144,7 +144,6 @@ export function TrasladosPage() {
       ) : null}
       <DataTable
         title="Traslados"
-        description="Movimientos entre ubicaciones de la misma empresa."
         primaryAction={
           <>
             <EscanearQrButton />
@@ -163,7 +162,7 @@ export function TrasladosPage() {
           options: estadoOptions,
         }}
         emptyTitle="No hay traslados"
-        emptyDescription="Registre el primer traslado eligiendo un destino de la empresa activa."
+        emptyDescription="Registre el primer traslado."
         getRowActions={(row) => ({
           view: { onClick: () => crud.openView(row) },
         })}

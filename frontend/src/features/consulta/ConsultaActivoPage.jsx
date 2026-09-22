@@ -45,11 +45,6 @@ export function ConsultaActivoPage() {
       ) : ficha ? (
         <>
           <h1 className="consulta-title">{ficha.nombre}</h1>
-          <p className="consulta-lead">
-            {verDetalleInterno
-              ? 'Consulta con sesión de inventario. Incluye sede, ubicación, área y garantía.'
-              : 'Datos públicos del equipo. No se muestra sede, ubicación, área, garantía, costo, factura ni historial.'}
-          </p>
 
           <div className="consulta-card">
             <div className="app-fields-plain consulta-grid">

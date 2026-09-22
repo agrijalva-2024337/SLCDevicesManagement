@@ -78,9 +78,7 @@ function SedeFormEditor({ id }) {
     return (
       <DetailOverlay open title="Selecciona una empresa" kicker="Registrar sede" onClose={close}>
         <p className="text-base text-navy">
-          Selecciona una empresa específica en la barra superior antes de registrar una sede. Con
-          &apos;Todas las empresas&apos; seleccionada no se puede saber a cuál pertenece el registro
-          nuevo.
+          Inicia sesión eligiendo una empresa antes de registrar una sede.
         </p>
       </DetailOverlay>
     );
@@ -105,7 +103,7 @@ function SedeFormEditor({ id }) {
       title={editing ? item.nombre : 'Nueva sede'}
       kicker={editing ? 'Editar registro' : 'Registrar sede'}
       badge={editing ? <StatusBadge active={Boolean(initialValues.habilitado)} /> : null}
-      hint="La sede pertenece a la empresa activa y a un país. El nombre es obligatorio."
+      hint="El nombre es obligatorio."
       fields={sedeFields({
         paises: paisesDeEmpresa(paisesList, idActiva),
       })}

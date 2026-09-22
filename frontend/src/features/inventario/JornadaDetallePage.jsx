@@ -179,7 +179,7 @@ export function JornadaDetallePage() {
     <section>
       <PageHeader
         title={sede?.nombre ?? `Jornada #${jornada?.id}`}
-        description={jornada?.observaciones || 'Hoja de conteo agrupada por ubicación.'}
+        description={jornada?.observaciones || undefined}
         actions={
           <>
             <StatusBadge

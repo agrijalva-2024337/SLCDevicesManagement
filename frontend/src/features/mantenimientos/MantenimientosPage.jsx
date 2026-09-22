@@ -162,7 +162,6 @@ export function MantenimientosPage() {
       ) : null}
       <DataTable
         title="Mantenimientos"
-        description="Órdenes de mantenimiento abiertas y cerradas."
         primaryAction={
           <>
             <EscanearQrButton />

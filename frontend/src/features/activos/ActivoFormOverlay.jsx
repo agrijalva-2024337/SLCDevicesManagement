@@ -229,7 +229,6 @@ export function ActivoFormOverlay({
         type: 'select',
         required: true,
         options: categoriaOptions,
-        hint: 'Solo categorías de la empresa activa.',
       },
       {
         name: 'idProveedor',
@@ -237,9 +236,6 @@ export function ActivoFormOverlay({
         type: 'select',
         required: true,
         options: proveedorOptions,
-        hint: editing
-          ? 'Solo se puede corregir por un proveedor de la misma empresa. Para mover el activo a otra empresa, contacta a un Administrador general.'
-          : 'Solo proveedores de la empresa activa.',
       },
       {
         name: 'idUbicacion',
@@ -248,9 +244,7 @@ export function ActivoFormOverlay({
         required: true,
         readOnly: Boolean(editing),
         options: ubicacionOptions,
-        hint: editing
-          ? 'Para cambiar la ubicación de un activo, usa Traslado.'
-          : 'Empresa y sede se derivan de la ubicación.',
+        hint: editing ? 'Para cambiar la ubicación de un activo, usa Traslado.' : undefined,
       },
       { name: 'marca', label: 'Marca', maxLength: 100 },
       { name: 'modelo', label: 'Modelo', maxLength: 100 },
@@ -258,7 +252,6 @@ export function ActivoFormOverlay({
         name: 'numeroSerie',
         label: 'Número de serie',
         maxLength: 100,
-        hint: 'Serie del fabricante (placa de fábrica).',
       },
       { name: 'fechaCompra', label: 'Fecha de compra', type: 'date', required: true },
       {
@@ -267,14 +260,12 @@ export function ActivoFormOverlay({
         type: 'number',
         min: 0,
         step: '0.01',
-        hint: 'Hasta dos decimales, con punto. Ejemplo: 1250.50. Máximo 9999999999.99',
       },
       {
         name: 'moneda',
         label: 'Moneda',
         type: 'select',
         options: monedaOptions,
-        hint: 'Se arma con las monedas de los países ya registrados en el catálogo de Países.',
       },
       { name: 'numeroFactura', label: 'Número de factura', maxLength: 50 },
       {

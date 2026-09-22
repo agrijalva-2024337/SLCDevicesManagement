@@ -45,7 +45,6 @@ export function JornadaFormOverlay({
         type: 'select',
         required: true,
         options: asOptions(responsables),
-        hint: 'Solo usuarios con rol operador de inventario.',
       });
     }
 

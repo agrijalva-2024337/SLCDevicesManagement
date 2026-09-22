@@ -274,7 +274,7 @@ export function UbicacionesMapPage({ items, loading = false, onDelete }) {
             {!showEmpty && !showNoResults ? (
               <table className="ubicaciones-table">
                 <caption className="ubicaciones-sr">
-                  Ubicaciones. Las coordenadas se muestran bajo el nombre.
+                  Ubicaciones
                 </caption>
                 <thead>
                   <tr>

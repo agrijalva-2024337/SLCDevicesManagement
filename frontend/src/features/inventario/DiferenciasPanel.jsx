@@ -62,21 +62,12 @@ export function DiferenciasPanel({ jornadaId, cerrado, refreshKey }) {
     <div className="mt-6">
       <DataTable
         title="Diferencias"
-        description={
-          cerrado
-            ? 'Reporte definitivo de la jornada cerrada.'
-            : 'Vista parcial. El reporte queda definitivo al cerrar la jornada.'
-        }
         columns={columns}
         rows={rows}
         loading={isLoading}
         searchPlaceholder="Buscar por activo o tipo"
         emptyTitle="Sin diferencias"
-        emptyDescription={
-          cerrado
-            ? 'El conteo coincidió con los activos esperados de la sede.'
-            : 'Todavía no hay faltantes, no encontrados ni mal estado.'
-        }
+        emptyDescription={cerrado ? 'Sin diferencias en esta jornada.' : 'Todavía no hay diferencias.'}
       />
     </div>
   );

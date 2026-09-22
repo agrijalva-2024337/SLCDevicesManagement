@@ -33,7 +33,6 @@ export function EscanearActivoPage() {
     <section>
       <PageHeader
         title="Escanear código QR"
-        description="Apunte la cámara a la etiqueta del equipo o suba una foto del código. Al reconocerlo se abre la ficha del activo."
         actions={
           <Link to="/app/activos" className="app-btn app-btn--ghost">
             <i className="pi pi-arrow-left" aria-hidden="true" />

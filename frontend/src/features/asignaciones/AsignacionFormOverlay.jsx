@@ -148,7 +148,7 @@ export function AsignacionFormOverlay({
         const activoHint =
           !lockActivo && filtrosActivos && elegibles.length === 0
             ? 'No hay unidades disponibles de esta categoría en la sede seleccionada.'
-            : 'Solo activos libres de la empresa activa.';
+            : undefined;
 
         return [
           ...(lockActivo
@@ -159,14 +159,12 @@ export function AsignacionFormOverlay({
                   label: 'Sede',
                   type: 'select',
                   options: sedeOptions,
-                  hint: 'Filtra las unidades disponibles por sede.',
                 },
                 {
                   name: 'idCategoriaFiltro',
                   label: 'Categoría',
                   type: 'select',
                   options: categoriaOptions,
-                  hint: 'Filtra las unidades disponibles por categoría.',
                 },
               ]),
           {
