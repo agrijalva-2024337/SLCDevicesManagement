@@ -124,9 +124,7 @@ function MaestroFormEditor({ slug, id }) {
         onClose={close}
       >
         <p className="text-base text-navy">
-          Selecciona una empresa específica en la barra superior antes de registrar un(a){' '}
-          {maestro.singular}. Con &apos;Todas las empresas&apos; seleccionada no se puede saber a
-          cuál pertenece el registro nuevo.
+          Inicia sesión eligiendo una empresa antes de registrar un(a) {maestro.singular}.
         </p>
       </DetailOverlay>
     );

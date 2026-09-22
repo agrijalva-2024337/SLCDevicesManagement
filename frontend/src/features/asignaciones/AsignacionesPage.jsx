@@ -191,7 +191,6 @@ export function AsignacionesPage() {
       ) : null}
       <DataTable
         title="Asignaciones"
-        description="Entrega y devolución de activos a un responsable."
         primaryAction={
           <>
             <EscanearQrButton />

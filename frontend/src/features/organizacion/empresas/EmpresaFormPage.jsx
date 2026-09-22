@@ -98,7 +98,7 @@ function EmpresaFormEditor({ id }) {
       title={editing ? item.nombre : 'Nueva empresa'}
       kicker={editing ? 'Editar registro' : 'Registrar empresa'}
       badge={editing ? <StatusBadge active={Boolean(initialValues.habilitado)} /> : null}
-      hint="Complete el registro corporativo. Nombre e identificación tributaria son obligatorios."
+      hint="Nombre e identificación tributaria son obligatorios."
       fields={empresaFields(paisesList)}
       initialValues={initialValues}
       submitLabel={editing ? 'Guardar cambios' : 'Registrar empresa'}

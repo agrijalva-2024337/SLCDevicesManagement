@@ -106,7 +106,6 @@ export function RastreoPage() {
 
       <DataTable
         title={vista === 'fuera-de-rango' ? 'Equipos fuera de rango' : 'Rastreo de equipos'}
-        description="Última ubicación detectada por el agente. Las coordenadas salen de la ubicación; el mapa abre Google Maps."
         columns={RASTREO_COLUMNS}
         rows={visibleRows}
         loading={isLoading}

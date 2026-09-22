@@ -88,7 +88,6 @@ export function SedesPage() {
       <CatalogBanner banner={banner} />
       <DataTable
         title="Sedes"
-        description="Instalaciones físicas de cada empresa."
         primaryAction={allowWrite ? <RegisterButton to="nueva" label="Registrar sede" /> : null}
         columns={columns}
         rows={scopedRows}
@@ -96,7 +95,7 @@ export function SedesPage() {
         searchPlaceholder="Buscar por nombre, empresa o dirección"
         statusFilter={{ key: 'habilitado' }}
         emptyTitle="No hay sedes"
-        emptyDescription="Registre la primera sede para vincularla a una empresa."
+        emptyDescription="Registre la primera sede."
         getRowActions={(sede) => ({
           view: { to: `${sede.id}` },
           edit: allowWrite ? { to: `${sede.id}/editar` } : undefined,

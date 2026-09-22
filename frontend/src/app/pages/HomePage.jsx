@@ -10,10 +10,7 @@ export function HomePage() {
 
   return (
     <section>
-      <PageHeader
-        title="SLCDevicesManagement"
-        description="Inicio de la consola de inventario."
-      />
+      <PageHeader title="SLCDevicesManagement" />
 
       <div className="app-fields">
         <StatCard label="Entorno" value={env.useApiMock ? 'Demostración' : 'En línea'} hint="Modo de operación actual" />

@@ -228,7 +228,6 @@ export function BitacoraPage() {
       </div>
       <DataTable
         title="Bitácora"
-        description="Registro de auditoría. Filtre por usuario, entidad, fecha y tipo."
         columns={BITACORA_COLUMNS}
         rows={tableRows}
         loading={isLoading}
