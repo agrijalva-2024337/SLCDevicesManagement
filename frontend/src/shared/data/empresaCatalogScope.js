@@ -1,6 +1,7 @@
 /**
- * Etiqueta cliente de catálogos globales (estado / tipo asignación) por empresa.
- * El backend sigue siendo global; el front filtra y recuerda el vínculo en localStorage.
+ * Etiqueta cliente de catálogos Estado / Tipo_Asignacion por empresa.
+ * El backend ya es por empresa (IdEmpresa + query filters); el front
+ * puede enriquecer mocks incompletos con el vínculo en localStorage.
  */
 const STORAGE_KEY = 'slcdm_catalogo_empresa_scope';
 

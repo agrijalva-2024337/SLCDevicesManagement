@@ -287,7 +287,6 @@ export function ActivosPage() {
       ) : null}
       <DataTable
         title="Activos"
-        description="Parque tecnológico. Empresa y sede se leen de la ubicación."
         primaryAction={
           <>
             <EscanearQrButton />
@@ -311,7 +310,7 @@ export function ActivosPage() {
         ]}
         initialFilters={estadoInicial ? { estadoNombre: estadoInicial } : undefined}
         emptyTitle="No hay activos"
-        emptyDescription="Registre el primer activo para armar el parque."
+        emptyDescription="Registre el primer activo."
         renderRowActions={(row) => (
           <RowIconActions
             actions={

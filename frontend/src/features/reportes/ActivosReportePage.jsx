@@ -96,7 +96,6 @@ export function ActivosReportePage() {
     <section>
       <PageHeader
         title="Activos detallados"
-        description="Listado paginado de activos con filtros de estado, sede, categoría y responsable."
         actions={
           <Link to="/app/reportes" className="app-btn app-btn--ghost">
             Volver a reportes
@@ -165,7 +164,6 @@ export function ActivosReportePage() {
 
       <DataTable
         title="Resultado"
-        description={`Filas ${skip + 1}–${skip + (rows.length || 0)}.`}
         columns={[
           { key: 'nombre', header: 'Activo', primary: true },
           { key: 'numeroSerie', header: 'Serie', mono: true },

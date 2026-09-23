@@ -583,3 +583,29 @@
 [data-theme='dark'] .ubicaciones-table td {
   border-bottom-color: rgb(232 234 244 / 0.22);
 }
+
+.rastreo-map-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted, #475569);
+}
+
+.rastreo-map-legend__dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  margin-right: 4px;
+}
+
+.rastreo-map-legend__dot--ok {
+  background: #22c55e;
+}
+
+.rastreo-map-legend__dot--alerta {
+  background: #ef4444;
+  margin-left: 0.75rem;
+}

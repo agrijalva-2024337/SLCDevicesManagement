@@ -23,7 +23,13 @@ import { getErrorMessage } from '@/shared/utils/getErrorMessage';
 import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
 
 /** Catálogos que siempre pertenecen a una sola empresa (no se registran con "Todas"). */
-const REQUIERE_EMPRESA_ACTIVA = new Set(['proveedores', 'estados', 'tipos-asignacion']);
+const REQUIERE_EMPRESA_ACTIVA = new Set([
+  'categorias',
+  'proveedores',
+  'estados',
+  'tipos-asignacion',
+  'usuarios',
+]);
 
 function enabledRecords(list) {
   return (list ?? []).filter((item) => item.habilitado !== false);
@@ -124,9 +130,7 @@ function MaestroFormEditor({ slug, id }) {
         onClose={close}
       >
         <p className="text-base text-navy">
-          Selecciona una empresa específica en la barra superior antes de registrar un(a){' '}
-          {maestro.singular}. Con &apos;Todas las empresas&apos; seleccionada no se puede saber a
-          cuál pertenece el registro nuevo.
+          Inicia sesión eligiendo una empresa antes de registrar un(a) {maestro.singular}.
         </p>
       </DetailOverlay>
     );
@@ -174,7 +178,10 @@ function MaestroFormEditor({ slug, id }) {
     recordId: id,
   };
   const initialValues = item ? maestro.toForm(item, lookups) : maestro.empty(lookups);
-  const baseFields = typeof maestro.fields === 'function' ? maestro.fields(lookups) : maestro.fields;
+  const baseFields =
+    typeof maestro.fields === 'function'
+      ? maestro.fields(lookups, { editing, record: item })
+      : maestro.fields;
 
   return (
     <RecordFormOverlay

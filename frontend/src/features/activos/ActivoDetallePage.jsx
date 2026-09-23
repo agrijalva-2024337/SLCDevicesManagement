@@ -211,7 +211,6 @@ export function ActivoDetallePage() {
     <section>
       <PageHeader
         title={activo.nombre}
-        description="Detalle, QR e historial. Puede registrar un movimiento desde aquí."
         actions={
           <>
             <Link to="/app/escanear" className="app-btn app-btn--ghost">
@@ -356,7 +355,6 @@ export function ActivoDetallePage() {
       <div className="mt-6">
         <DataTable
           title="Historial de movimientos"
-          description="Asignaciones, traslados, mantenimientos y bajas registrados sobre este activo."
           columns={[
             { key: 'tipoNombre', header: 'Tipo', primary: true },
             { key: 'responsableNombre', header: 'Responsable' },
@@ -378,7 +376,7 @@ export function ActivoDetallePage() {
           loading={asignaciones.isLoading}
           searchPlaceholder="Buscar por tipo o responsable"
           emptyTitle="Sin movimientos"
-          emptyDescription="Cuando se registre una entrega, traslado o baja aparecerá en esta lista."
+          emptyDescription="Sin movimientos registrados."
           renderRowActions={(row) =>
             row.documentoPdfUrl ? (
               <DescargarActaButton

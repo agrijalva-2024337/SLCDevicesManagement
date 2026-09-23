@@ -36,6 +36,14 @@ public sealed class GetAsignacionByIdQueryHandler : IQueryHandler<GetAsignacionB
             .FirstOrDefaultAsync(a => a.Id == query.Id, cancellationToken)
             ?? throw new NotFoundException("Asignacion", query.Id);
 
-        return entity.Adapt<AsignacionDto>();
+        var detalle = await _db.DetallesTraslado.AsNoTracking()
+            .FirstOrDefaultAsync(d => d.IdAsignacion == query.Id, cancellationToken);
+
+        var dto = entity.Adapt<AsignacionDto>();
+        return dto with
+        {
+            IdUbicacionOrigen = detalle?.IdUbicacionOrigen,
+            IdUbicacionDestino = detalle?.IdUbicacionDestino,
+        };
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Validation;
+using SLCDM.Application.Features.Asignaciones;
 
 namespace SLCDM.Application.Features.TiposAsignacion.Commands;
 
@@ -60,8 +61,16 @@ public sealed class UpdateTipoAsignacionCommandHandler : ICommandHandler<UpdateT
         var entity = await _db.TiposAsignacion.FirstOrDefaultAsync(t => t.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("TipoAsignacion", command.Id);
 
+        var nombreNuevo = command.Nombre.Trim();
+        if (TipoAsignacionNombres.Estandar.Any(n => TipoAsignacionNombres.EsNombre(entity.Nombre, n))
+            && !TipoAsignacionNombres.EsNombre(entity.Nombre, nombreNuevo))
+        {
+            throw new ConflictException(
+                $"No se puede renombrar el tipo estándar «{entity.Nombre}». Los flujos de movimiento dependen de ese nombre.");
+        }
+
         command.Adapt(entity);
-        entity.Nombre = command.Nombre.Trim();
+        entity.Nombre = nombreNuevo;
 
         await _db.SaveChangesAsync(cancellationToken);
     }

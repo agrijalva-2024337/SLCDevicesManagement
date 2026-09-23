@@ -39,12 +39,20 @@ public sealed class DevolverAsignacionCommandHandler : ICommandHandler<DevolverA
     {
         await _validator.ValidateAndThrowAsync(command, cancellationToken);
 
-        var entity = await _db.Asignaciones.FirstOrDefaultAsync(a => a.Id == command.Id, cancellationToken)
+        var entity = await _db.Asignaciones
+            .Include(a => a.TipoAsignacion)
+            .FirstOrDefaultAsync(a => a.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("Asignacion", command.Id);
 
         if (!entity.Activa)
         {
             throw new ConflictException("La asignacion no esta activa.");
+        }
+
+        if (!TipoAsignacionNombres.EsNombre(entity.TipoAsignacion?.Nombre, TipoAsignacionNombres.Asignacion))
+        {
+            throw new ConflictException(
+                "Solo se puede devolver una entrega (tipo Asignacion). Use el flujo de cierre correspondiente para mantenimiento o baja.");
         }
 
         var informacionAnterior = $"activa=true; fecha_devolucion=";

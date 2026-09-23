@@ -105,7 +105,6 @@ export async function registrar({
   fecha,
   motivo,
 }) {
-  const idEstado = await getIdEstado(ESTADO_ACTIVO.Asignado);
   const { activo, origenNombre, idUbicacionOrigen } = await leerOrigen(idActivo);
 
   if (Number(idUbicacionDestino) === Number(idUbicacionOrigen)) {
@@ -113,6 +112,12 @@ export async function registrar({
     error.fieldErrors = { idUbicacionDestino: 'El destino no puede ser igual al origen.' };
     throw error;
   }
+
+  // El traslado no cambia el estado operativo: reutiliza el actual (o Disponible).
+  const idEstado =
+    activo?.idEstado != null && activo.idEstado !== ''
+      ? Number(activo.idEstado)
+      : await getIdEstado(ESTADO_ACTIVO.Disponible);
 
   const ubicaciones = await ubicacionService.getAll();
   const destino = byId(ubicaciones, idUbicacionDestino);

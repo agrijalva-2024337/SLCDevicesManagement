@@ -18,11 +18,16 @@ public sealed class GetUsuariosQueryValidator : AbstractValidator<GetUsuariosQue
 public sealed class GetUsuariosQueryHandler : IQueryHandler<GetUsuariosQuery, IReadOnlyList<UsuarioDto>>
 {
     private readonly IApplicationDbContext _db;
+    private readonly ICurrentUserService _currentUser;
     private readonly IValidator<GetUsuariosQuery> _validator;
 
-    public GetUsuariosQueryHandler(IApplicationDbContext db, IValidator<GetUsuariosQuery> validator)
+    public GetUsuariosQueryHandler(
+        IApplicationDbContext db,
+        ICurrentUserService currentUser,
+        IValidator<GetUsuariosQuery> validator)
     {
         _db = db;
+        _currentUser = currentUser;
         _validator = validator;
     }
 
@@ -32,7 +37,11 @@ public sealed class GetUsuariosQueryHandler : IQueryHandler<GetUsuariosQuery, IR
     {
         await _validator.ValidateAndThrowAsync(query, cancellationToken);
 
-        var q = _db.Usuarios.AsNoTracking();
+        // Admin general: sin filtro de empresa (incluye usuarios recién creados / sin vínculo).
+        var q = _currentUser.IsAdministradorGeneral
+            ? _db.Usuarios.IgnoreQueryFilters().AsNoTracking()
+            : _db.Usuarios.AsNoTracking();
+
         if (!query.IncluirInhabilitados)
         {
             q = q.Where(u => u.Habilitado);

@@ -1,15 +1,19 @@
 import { TIPO_ASIGNACION, nombresCatalogoIguales } from '@/shared/api/tipoAsignacion';
 import { byId } from '@/shared/utils/format';
 
-function idDeTipo(tipos, nombre) {
-  return (tipos ?? []).find((item) => nombresCatalogoIguales(item.nombre, nombre))?.id ?? null;
+function idsDeTipo(tipos, nombre) {
+  return new Set(
+    (tipos ?? [])
+      .filter((item) => nombresCatalogoIguales(item.nombre, nombre))
+      .map((item) => Number(item.id)),
+  );
 }
 
 export function indexTipos(tipos) {
   return {
-    asignacion: idDeTipo(tipos, TIPO_ASIGNACION.Asignacion),
-    mantenimiento: idDeTipo(tipos, TIPO_ASIGNACION.Mantenimiento),
-    baja: idDeTipo(tipos, TIPO_ASIGNACION.Baja),
+    asignacion: idsDeTipo(tipos, TIPO_ASIGNACION.Asignacion),
+    mantenimiento: idsDeTipo(tipos, TIPO_ASIGNACION.Mantenimiento),
+    baja: idsDeTipo(tipos, TIPO_ASIGNACION.Baja),
   };
 }
 
@@ -22,15 +26,17 @@ export function indexAsignacionesActivas(asignaciones) {
   return byActivo;
 }
 
-function tipoIdDe(ctx, kind) {
-  if (ctx?.tipoIds?.[kind] != null) return ctx.tipoIds[kind];
+function tipoIdsDe(ctx, kind) {
+  const fromIndex = ctx?.tipoIds?.[kind];
+  if (fromIndex instanceof Set) return fromIndex;
+  if (fromIndex != null && fromIndex !== '') return new Set([Number(fromIndex)]);
   const nombre =
     kind === 'mantenimiento'
       ? TIPO_ASIGNACION.Mantenimiento
       : kind === 'baja'
         ? TIPO_ASIGNACION.Baja
         : TIPO_ASIGNACION.Asignacion;
-  return idDeTipo(ctx?.tipos, nombre);
+  return idsDeTipo(ctx?.tipos, nombre);
 }
 
 function activaDe(activo, ctx = {}) {
@@ -51,24 +57,24 @@ export function asignacionActivaDe(activo, asignaciones) {
 }
 
 export function isActivoAsignado(activo, ctx = {}) {
-  const idTipo = tipoIdDe(ctx, 'asignacion');
-  if (idTipo == null) return false;
+  const ids = tipoIdsDe(ctx, 'asignacion');
+  if (ids.size === 0) return false;
   const row = activaDe(activo, ctx);
-  return Boolean(row && Number(row.idTipoAsignacion) === Number(idTipo));
+  return Boolean(row && ids.has(Number(row.idTipoAsignacion)));
 }
 
 export function isActivoEnMantenimiento(activo, ctx = {}) {
-  const idTipo = tipoIdDe(ctx, 'mantenimiento');
-  if (idTipo == null) return false;
+  const ids = tipoIdsDe(ctx, 'mantenimiento');
+  if (ids.size === 0) return false;
   const row = activaDe(activo, ctx);
-  return Boolean(row && Number(row.idTipoAsignacion) === Number(idTipo));
+  return Boolean(row && ids.has(Number(row.idTipoAsignacion)));
 }
 
 export function isActivoDeBaja(activo, ctx = {}) {
-  const idTipo = tipoIdDe(ctx, 'baja');
-  if (idTipo == null) return false;
+  const ids = tipoIdsDe(ctx, 'baja');
+  if (ids.size === 0) return false;
   const row = activaDe(activo, ctx);
-  return Boolean(row && Number(row.idTipoAsignacion) === Number(idTipo));
+  return Boolean(row && ids.has(Number(row.idTipoAsignacion)));
 }
 
 export function estadoNombreDeActivo(

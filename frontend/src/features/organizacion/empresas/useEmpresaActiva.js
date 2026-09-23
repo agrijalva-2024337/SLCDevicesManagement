@@ -39,12 +39,13 @@ export function filterRowsByEmpresa(rows, idEmpresa, { idField = 'idEmpresa', se
     if (idField === 'id') {
       return Number(row.id) === wanted;
     }
-    if (row[idField] != null && row[idField] !== '') {
-      return Number(row[idField]) === wanted;
-    }
+    // Usuarios multiempresa: priorizar idsEmpresas sobre idEmpresa (solo la primera).
     const idsEmpresas = row.idsEmpresas ?? row.empresasAutorizadas;
     if (Array.isArray(idsEmpresas) && idsEmpresas.length > 0) {
       return idsEmpresas.map(Number).includes(wanted);
+    }
+    if (row[idField] != null && row[idField] !== '') {
+      return Number(row[idField]) === wanted;
     }
     if (row.idSede != null && Array.isArray(sedes)) {
       const sede = sedes.find((item) => Number(item.id) === Number(row.idSede));
@@ -71,9 +72,9 @@ export function EmpresaActivaProvider({ children }) {
     () => normalizeEmpresasAutorizadas(empresasAutorizadas),
     [empresasAutorizadas],
   );
-  // Selector para AdminGeneral o cualquier usuario con más de una empresa del backend.
-  const canSwitchEmpresa = isAdminGeneral || autorizadas.length > 1;
-  const isLocked = !canSwitchEmpresa;
+  // La empresa se elige al iniciar sesión; no hay cambio desde la barra.
+  const canSwitchEmpresa = false;
+  const isLocked = true;
 
   const empresasResource = useResource(empresaService.getAll, {
     enabled: isReady && Boolean(usuario),
@@ -110,34 +111,25 @@ export function EmpresaActivaProvider({ children }) {
   }, [autorizadas, empresasResource.data, idEmpresa, isAdminGeneral]);
 
   const idActiva = useMemo(() => {
-    if (isLocked) {
-      if (autorizadas.length === 1) {
-        return autorizadas[0];
+    if (selectedId != null) {
+      if (empresasResource.isLoading) {
+        return selectedId;
       }
-      return idEmpresa;
+      if (empresasValidas.some((empresa) => Number(empresa.id) === Number(selectedId))) {
+        return selectedId;
+      }
     }
 
-    if (selectedId == null) {
-      // AdminGeneral: null = todas. Multi-empresa: default a la primera autorizada.
-      return isAdminGeneral ? null : (autorizadas[0] ?? idEmpresa ?? null);
+    if (autorizadas.length === 1) {
+      return autorizadas[0];
     }
 
-    if (empresasResource.isLoading) {
-      return selectedId;
-    }
-
-    return empresasValidas.some((empresa) => Number(empresa.id) === Number(selectedId))
-      ? selectedId
-      : isAdminGeneral
-        ? null
-        : (autorizadas[0] ?? idEmpresa ?? null);
+    return idEmpresa ?? null;
   }, [
     autorizadas,
     empresasResource.isLoading,
     empresasValidas,
     idEmpresa,
-    isAdminGeneral,
-    isLocked,
     selectedId,
   ]);
 

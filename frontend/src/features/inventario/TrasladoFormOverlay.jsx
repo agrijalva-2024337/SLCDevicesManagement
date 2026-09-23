@@ -64,14 +64,12 @@ export function TrasladoFormOverlay({
         required: true,
         readOnly: lockActivo,
         options: asOptions(lockActivo ? (activos ?? []) : activosElegibles, 'nombre'),
-        hint: 'Solo activos de la empresa activa. El origen es la ubicación actual.',
       },
       {
         name: 'origen',
         label: 'Origen',
         type: 'text',
         readOnly: true,
-        hint: 'Ubicación actual, leída antes de guardar.',
       },
       {
         name: 'idUbicacionDestino',
@@ -79,7 +77,6 @@ export function TrasladoFormOverlay({
         type: 'select',
         required: true,
         options: asOptions(destinos),
-        hint: 'Solo ubicaciones de la empresa activa.',
       },
       {
         name: 'idResponsable',

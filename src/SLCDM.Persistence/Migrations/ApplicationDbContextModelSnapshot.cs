@@ -766,7 +766,7 @@ namespace SLCDM.Persistence.Migrations
 
                     b.ToTable("historial_activo", null, t =>
                         {
-                            t.HasCheckConstraint("ck_historial_activo_una_sola_fuente", "([id_asignacion] IS NOT NULL AND [id_detalle_activo] IS NULL) OR ([id_asignacion] IS NULL AND [id_detalle_activo] IS NOT NULL)");
+                            t.HasCheckConstraint("ck_historial_activo_una_sola_fuente", "[id_asignacion] IS NULL OR [id_detalle_activo] IS NULL");
                         });
                 });
 
@@ -812,6 +812,53 @@ namespace SLCDM.Persistence.Migrations
                     b.HasIndex("IdSede");
 
                     b.ToTable("historico_inventario", (string)null);
+                });
+
+            modelBuilder.Entity("SLCDM.Domain.Entities.InstaladorAgenteToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_instalador_agente_token");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("creado_en");
+
+                    b.Property<DateTime>("ExpiraEn")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("expira_en");
+
+                    b.Property<int>("IdUsuarioCreador")
+                        .HasColumnType("int")
+                        .HasColumnName("id_usuario_creador");
+
+                    b.Property<bool>("Revocado")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("revocado");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("token");
+
+                    b.Property<DateTime?>("UsadoEn")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("usado_en");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdUsuarioCreador");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.ToTable("instalador_agente_token", (string)null);
                 });
 
             modelBuilder.Entity("SLCDM.Domain.Entities.MotivoBaja", b =>
@@ -1092,6 +1139,11 @@ namespace SLCDM.Persistence.Migrations
                     b.HasIndex("IdEmpresa", "Nombre")
                         .IsUnique()
                         .HasDatabaseName("ix_sede_empresa_nombre");
+
+                    b.HasIndex("IdEmpresa", "Direccion")
+                        .IsUnique()
+                        .HasDatabaseName("ix_sede_empresa_direccion")
+                        .HasFilter("[direccion] IS NOT NULL AND [direccion] <> ''");
 
                     b.ToTable("sede", (string)null);
                 });
@@ -1575,6 +1627,17 @@ namespace SLCDM.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Sede");
+                });
+
+            modelBuilder.Entity("SLCDM.Domain.Entities.InstaladorAgenteToken", b =>
+                {
+                    b.HasOne("SLCDM.Domain.Entities.Usuario", "UsuarioCreador")
+                        .WithMany()
+                        .HasForeignKey("IdUsuarioCreador")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("UsuarioCreador");
                 });
 
             modelBuilder.Entity("SLCDM.Domain.Entities.Proveedor", b =>

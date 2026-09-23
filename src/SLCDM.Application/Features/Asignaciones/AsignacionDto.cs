@@ -16,7 +16,9 @@ public sealed record AsignacionDto(
     byte[]? FirmaRecibe,
     string? DocumentoPdfUrl,
     DateTime? DocumentoPdfGeneradoEn,
-    string? DocumentoPdfHash
+    string? DocumentoPdfHash,
+    int? IdUbicacionOrigen = null,
+    int? IdUbicacionDestino = null
 );
 
 public sealed record AsignacionHistorialDto(

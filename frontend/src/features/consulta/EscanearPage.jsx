@@ -18,9 +18,6 @@ export function EscanearPage() {
   return (
     <ConsultaShell>
       <h1 className="consulta-title">Escanear código QR</h1>
-      <p className="consulta-lead">
-        Apunte la cámara al código pegado en el equipo o suba una foto. No necesita iniciar sesión.
-      </p>
 
       <div className="consulta-card">
         <QrScanner onDetect={abrirFicha} />

@@ -7,49 +7,41 @@ const INFORMES = [
   {
     id: 'inventario-general',
     titulo: 'Inventario general',
-    descripcion: 'Totales por empresa: disponibles, asignados, mantenimiento, baja y costo.',
     to: '/app',
   },
   {
     id: 'activos-por-sede',
     titulo: 'Activos por sede',
-    descripcion: 'Parque agregado por sede de la empresa activa.',
     to: '/app',
   },
   {
     id: 'activos-por-ubicacion',
     titulo: 'Activos por ubicación',
-    descripcion: 'Mismo recuento, agrupado por sitio físico.',
     to: '/app',
   },
   {
     id: 'activos-por-categoria',
     titulo: 'Activos por categoría',
-    descripcion: 'Distribución del parque por categoría de activo.',
     to: '/app',
   },
   {
     id: 'activos-por-responsable',
     titulo: 'Activos por responsable',
-    descripcion: 'Asignaciones vigentes agrupadas por responsable.',
     to: '/app',
   },
   {
     id: 'activos',
     titulo: 'Activos detallados',
-    descripcion: 'Listado paginado con filtros de estado, sede, categoría y responsable.',
     to: '/app/reportes/activos',
   },
   {
     id: 'garantias-por-vencer',
     titulo: 'Garantías por vencer',
-    descripcion: 'Activos cuya garantía vence en 30, 60 o 90 días.',
     to: '/app',
   },
   {
     id: 'diferencias-inventario',
     titulo: 'Diferencias de inventario',
-    descripcion: 'Solo jornadas cerradas. Faltante, no encontrado y mal estado.',
     to: '/app',
   },
 ];
@@ -81,7 +73,7 @@ export function ReportesPage() {
   const filtered = useMemo(() => {
     const needle = query.trim();
     if (!needle) return INFORMES;
-    return INFORMES.filter((item) => matchesSearch(`${item.titulo} ${item.descripcion}`, needle));
+    return INFORMES.filter((item) => matchesSearch(item.titulo, needle));
   }, [query]);
 
   return (
@@ -92,7 +84,6 @@ export function ReportesPage() {
             <i className="pi pi-chart-bar" aria-hidden />
             Reportes
           </h2>
-          <p className="report-lead">Ocho informes operativos del inventario.</p>
         </div>
 
         <div className="report-toolbar">
@@ -142,7 +133,6 @@ export function ReportesPage() {
                 <PdfMark />
                 <span className="report-card-copy">
                   <span className="report-card-title">{item.titulo}</span>
-                  <span className="report-card-desc">{item.descripcion}</span>
                 </span>
               </Link>
               <div className="report-card-foot">

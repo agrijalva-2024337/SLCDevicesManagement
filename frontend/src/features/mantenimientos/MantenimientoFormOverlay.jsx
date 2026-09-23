@@ -92,7 +92,6 @@ export function MantenimientoFormOverlay({
         required: true,
         readOnly: lockActivo,
         options: asOptions(lockActivo ? (activos ?? []) : activosElegibles, 'nombre'),
-        hint: 'Solo activos libres de la empresa activa.',
       },
       {
         name: 'sede',

@@ -18,7 +18,9 @@ internal static class ActivoEstadoOperativo
 
     public static bool TryNormalizar(string? raw, out string estado)
     {
-        var n = TipoAsignacionNombres.Normalizar(raw).ToLowerInvariant();
+        var n = TipoAsignacionNombres.Normalizar(raw)
+            .Replace(" ", string.Empty, StringComparison.Ordinal)
+            .ToLowerInvariant();
         estado = n switch
         {
             Disponible or "disponibles" => Disponible,
@@ -34,7 +36,7 @@ internal static class ActivoEstadoOperativo
     {
         Asignado => "Asignado",
         Mantenimiento => "En mantenimiento",
-        Baja => "Baja",
+        Baja => "Dado de baja",
         _ => "Disponible"
     };
 }

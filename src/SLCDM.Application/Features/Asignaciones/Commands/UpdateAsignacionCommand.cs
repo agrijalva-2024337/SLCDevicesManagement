@@ -59,7 +59,10 @@ public sealed class UpdateAsignacionCommandHandler : ICommandHandler<UpdateAsign
         var entity = await _db.Asignaciones.FirstOrDefaultAsync(a => a.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("Asignacion", command.Id);
 
+        // El tipo de movimiento no se reclasifica por update: cada flujo tiene su endpoint.
+        var idTipoOriginal = entity.IdTipoAsignacion;
         command.Adapt(entity);
+        entity.IdTipoAsignacion = idTipoOriginal;
         await _db.SaveChangesAsync(cancellationToken);
     }
 }

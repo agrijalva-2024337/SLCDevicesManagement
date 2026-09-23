@@ -1,9 +1,10 @@
 import { byId } from '@/shared/utils/format';
 
-const RUTA_RE = /Traslado\s+(.+?)\s+→\s+(.+?)(?:\.|$)/;
+// Acepta flecha Unicode o ASCII: observaciones es varchar y → suele guardarse como "?".
+const RUTA_RE = /Traslado\s+(.+?)\s+(?:→|->|\?)\s+(.+?)(?:\.|$)/;
 
 export function formatTrasladoObservaciones({ origen, destino, detalle }) {
-  const ruta = `Traslado ${origen} → ${destino}`;
+  const ruta = `Traslado ${origen} -> ${destino}`;
   const extra = String(detalle ?? '').trim();
   if (!extra) return ruta;
   return `${ruta}. ${extra}`.slice(0, 300);
@@ -79,6 +80,19 @@ export function empresaIdDeResponsable(responsable, areas, sedes) {
   if (!area) return null;
   const sede = byId(sedes, area.idSede);
   return sede ? Number(sede.idEmpresa) : null;
+}
+
+export function sedeIdDeResponsable(responsable, areas) {
+  if (!responsable?.idArea) return null;
+  const area = byId(areas, responsable.idArea);
+  return area?.idSede != null ? Number(area.idSede) : null;
+}
+
+export function responsablesDeSede(responsables, areas, idSede) {
+  const habilitados = (responsables ?? []).filter((item) => item.habilitado !== false);
+  if (idSede == null || idSede === '') return habilitados;
+  const wanted = Number(idSede);
+  return habilitados.filter((item) => sedeIdDeResponsable(item, areas) === wanted);
 }
 
 export function activosDeEmpresa(activos, ubicaciones, sedes, idEmpresa) {

@@ -35,7 +35,7 @@ export function SinPermiso({ compact = false, onClose }) {
 
   return (
     <section>
-      <PageHeader title="Sin permiso" description="Esta pantalla requiere un perfil con más privilegios." />
+      <PageHeader title="Sin permiso" />
       <div className="app-feedback app-feedback--empty" role="status">
         {body}
       </div>

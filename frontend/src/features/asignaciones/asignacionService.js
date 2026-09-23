@@ -32,21 +32,26 @@ export function filtrarPorTipoId(rows, idTipo) {
   return (rows ?? []).filter((row) => Number(row.idTipoAsignacion) === Number(idTipo));
 }
 
-/** Selector puro: resuelve el tipo por nombre dentro del catálogo ya cargado. */
+/** Selector puro: resuelve todos los ids de tipo con ese nombre (multi-empresa). */
 export function filtrarPorNombreTipo(rows, tipos, nombreTipo) {
-  const tipo = (tipos ?? []).find((item) =>
-    String(item?.nombre ?? '')
-      .trim()
-      .replaceAll('ó', 'o')
-      .replaceAll('Ó', 'o')
-      .toLowerCase() ===
-    String(nombreTipo ?? '')
-      .trim()
-      .replaceAll('ó', 'o')
-      .replaceAll('Ó', 'o')
-      .toLowerCase(),
+  const ids = new Set(
+    (tipos ?? [])
+      .filter((item) =>
+        String(item?.nombre ?? '')
+          .trim()
+          .replaceAll('ó', 'o')
+          .replaceAll('Ó', 'o')
+          .toLowerCase() ===
+        String(nombreTipo ?? '')
+          .trim()
+          .replaceAll('ó', 'o')
+          .replaceAll('Ó', 'o')
+          .toLowerCase(),
+      )
+      .map((item) => Number(item.id)),
   );
-  return filtrarPorTipoId(rows, tipo?.id);
+  if (ids.size === 0) return [];
+  return (rows ?? []).filter((row) => ids.has(Number(row.idTipoAsignacion)));
 }
 
 export async function listarEntregas(rows) {
@@ -89,6 +94,27 @@ async function assertActivoLibre(idActivo) {
   }
 }
 
+async function assertResponsableLibreEnCategoria(idResponsable, idActivo) {
+  const idTipoAsignacion = await getIdTipoAsignacion(TIPO_ASIGNACION.Asignacion);
+  const [activo, rows] = await Promise.all([activoService.getById(idActivo), getAll()]);
+  const conflicto = (rows ?? []).find((row) => {
+    if (!row.activa || Number(row.idResponsable) !== Number(idResponsable)) return false;
+    if (Number(row.idTipoAsignacion) !== Number(idTipoAsignacion)) return false;
+    if (Number(row.idActivo) === Number(idActivo)) return false;
+    return true;
+  });
+  if (!conflicto) return;
+
+  const otro = await activoService.getById(conflicto.idActivo).catch(() => null);
+  if (!otro || Number(otro.idCategoriaActivo) !== Number(activo.idCategoriaActivo)) return;
+
+  const error = new Error(
+    `El responsable ya tiene un activo de esa categoría asignado (${otro.nombre ?? `#${conflicto.idActivo}`}). Solo se permite uno por categoría.`,
+  );
+  error.fieldErrors = { idResponsable: error.message };
+  throw error;
+}
+
 export async function entregar({
   idActivo,
   idUsuario,
@@ -99,6 +125,7 @@ export async function entregar({
   firmaRecibe,
 }) {
   await assertActivoLibre(idActivo);
+  await assertResponsableLibreEnCategoria(idResponsable, idActivo);
   const idTipoAsignacion = await getIdTipoAsignacion(TIPO_ASIGNACION.Asignacion);
   const idEstado = await getIdEstado(ESTADO_ACTIVO.Asignado);
   const activo = await activoService.getById(idActivo);

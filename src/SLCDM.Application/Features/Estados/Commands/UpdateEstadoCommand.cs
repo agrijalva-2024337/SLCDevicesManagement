@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Validation;
+using SLCDM.Application.Features.Asignaciones;
 
 namespace SLCDM.Application.Features.Estados.Commands;
 
@@ -60,8 +61,16 @@ public sealed class UpdateEstadoCommandHandler : ICommandHandler<UpdateEstadoCom
         var entity = await _db.Estados.FirstOrDefaultAsync(e => e.Id == command.Id, cancellationToken)
             ?? throw new NotFoundException("Estado", command.Id);
 
+        var nombreNuevo = command.Nombre.Trim();
+        if (EstadoActivoNombres.Estandar.Any(n => TipoAsignacionNombres.EsNombre(entity.Nombre, n))
+            && !TipoAsignacionNombres.EsNombre(entity.Nombre, nombreNuevo))
+        {
+            throw new ConflictException(
+                $"No se puede renombrar el estado estándar «{entity.Nombre}». Los flujos de movimiento dependen de ese nombre.");
+        }
+
         command.Adapt(entity);
-        entity.Nombre = command.Nombre.Trim();
+        entity.Nombre = nombreNuevo;
 
         await _db.SaveChangesAsync(cancellationToken);
     }

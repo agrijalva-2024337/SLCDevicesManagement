@@ -25,9 +25,6 @@ export function SeleccionEmpresaStep({
   return (
     <div className="mt-6" aria-busy={busy || undefined}>
       <h2 className="landing-auth-title text-[1.35rem]">¿Con qué empresa quieres trabajar?</h2>
-      <p className="landing-auth-lead">
-        Puedes cambiar de empresa después desde el selector de la barra superior.
-      </p>
 
       {loading ? (
         <div

@@ -1,6 +1,7 @@
 import { usuarios } from '@/features/organizacion/mocks/usuarios';
 import { apiPaths } from '@/shared/api/paths';
 import { env } from '@/shared/config/env';
+import { invalidateAfterMutation } from '@/shared/data/mutationInvalidation';
 import { createMockCrudService } from '@/shared/services/createMockCrudService';
 import httpClient from '@/shared/services/httpClient';
 
@@ -70,6 +71,7 @@ export async function create(data) {
   }
 
   const response = await httpClient.post(apiPaths.usuarios, payload);
+  invalidateAfterMutation('usuarios');
   return {
     id: Number(response.data?.id),
     passwordGenerada: response.data?.passwordGenerada ?? null,

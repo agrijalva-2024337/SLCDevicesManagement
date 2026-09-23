@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Interfaces;
+using SLCDM.Domain.Enums;
 
 namespace SLCDM.Application.Features.Asignaciones;
 
@@ -61,6 +62,18 @@ internal static class AsignacionEmpresaRules
         if (!idEmpresa.HasValue)
         {
             return false;
+        }
+
+        // Admin general opera con empresa elegida al login; no exige vínculo UsuarioEmpresa.
+        var esAdminGeneral = await db.Usuarios
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .AnyAsync(
+                u => u.Id == idUsuario && u.Rol == RolUsuario.AdministradorGeneral,
+                cancellationToken);
+        if (esAdminGeneral)
+        {
+            return true;
         }
 
         return await db.UsuariosEmpresas

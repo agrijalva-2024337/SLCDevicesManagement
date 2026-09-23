@@ -95,7 +95,6 @@ export function BajaFormOverlay({
         required: true,
         readOnly: lockActivo,
         options: asOptions(lockActivo ? (activos ?? []) : activosElegibles, 'nombre'),
-        hint: 'Solo activos libres de la empresa activa.',
       },
       {
         name: 'idMotivoBaja',
@@ -114,7 +113,7 @@ export function BajaFormOverlay({
         required: !usuariosUnavailableReason,
         readOnly: Boolean(usuariosUnavailableReason),
         options: usuarioOptions,
-        hint: usuariosUnavailableReason || 'Solo usuarios de la empresa activa.',
+        hint: usuariosUnavailableReason || undefined,
       });
     }
 
@@ -125,7 +124,6 @@ export function BajaFormOverlay({
         type: 'select',
         required: true,
         options: asOptions(responsablesFiltrados, 'nombreCompleto'),
-        hint: 'Solo responsables de la empresa activa.',
       },
       { name: 'fecha', label: 'Fecha', type: 'date', required: true },
       {

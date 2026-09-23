@@ -70,7 +70,6 @@ export function EmpresasPage() {
       <CatalogBanner banner={banner} />
       <DataTable
         title="Empresas"
-        description="Registro corporativo."
         primaryAction={allowCreate ? <RegisterButton to="nueva" label="Registrar empresa" /> : null}
         columns={columns}
         rows={rows}
