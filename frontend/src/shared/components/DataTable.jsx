@@ -369,17 +369,30 @@ function SearchField({ placeholder, onDebounced }) {
   );
 }
 
-function TablePager({
-  page,
-  pageCount,
-  from,
-  to,
-  total,
-  onPageChange,
-  rowsPerPage,
-  onRowsPerPageChange,
-  pageSizeId,
-}) {
+function PageSizeSelect({ id, value, onChange }) {
+  return (
+    <div className="data-table-page-size">
+      <label className="data-table-sr" htmlFor={id}>
+        Registros por página
+      </label>
+      <select
+        id={id}
+        className="app-input data-table-page-size-select"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        aria-label="Registros por página"
+      >
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="all">Todos</option>
+      </select>
+    </div>
+  );
+}
+
+function TablePager({ page, pageCount, from, to, total, onPageChange }) {
   const showNav = pageCount > 1;
   return (
     <div className="data-table-pager">
@@ -387,26 +400,6 @@ function TablePager({
         <p className="data-table-pager-count">
           {from}–{to} de {total}
         </p>
-        {onRowsPerPageChange ? (
-          <div className="data-table-page-size">
-            <label className="data-table-sr" htmlFor={pageSizeId}>
-              Registros por página
-            </label>
-            <select
-              id={pageSizeId}
-              className="app-input data-table-page-size-select"
-              value={rowsPerPage}
-              onChange={(event) => onRowsPerPageChange(event.target.value)}
-              aria-label="Registros por página"
-            >
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-              <option value="all">Todos</option>
-            </select>
-          </div>
-        ) : null}
       </div>
       {showNav ? (
         <div className="data-table-pager-nav">
@@ -741,11 +734,23 @@ export function DataTable({
               </div>
             );
           })}
-          <p className="data-table-count" aria-live="polite">
-            {loading
-              ? 'Cargando…'
-              : `${filtered.length} ${filtered.length === 1 ? 'registro' : 'registros'}`}
-          </p>
+          <div className="data-table-toolbar-end">
+            <p className="data-table-count" aria-live="polite">
+              {loading
+                ? 'Cargando…'
+                : `${filtered.length} ${filtered.length === 1 ? 'registro' : 'registros'}`}
+            </p>
+            {!loading && total > 0 ? (
+              <PageSizeSelect
+                id={pageSizeId}
+                value={rowsPerPage}
+                onChange={(value) => {
+                  setRowsPerPage(value);
+                  setPage(1);
+                }}
+              />
+            ) : null}
+          </div>
         </div>
       ) : null}
 
@@ -948,12 +953,6 @@ export function DataTable({
           to={to}
           total={total}
           onPageChange={setPage}
-          rowsPerPage={rowsPerPage}
-          pageSizeId={pageSizeId}
-          onRowsPerPageChange={(value) => {
-            setRowsPerPage(value);
-            setPage(1);
-          }}
         />
       ) : null}
     </section>
