@@ -314,15 +314,17 @@ export function ActivosPage() {
         renderRowActions={(row) => (
           <RowIconActions
             actions={
-              allowWrite
+              (allowWrite
                 ? getAccionesDisponibles(row, ctx)
                 : getAccionesDisponibles(row, ctx).filter(
                     (item) => item.key === 'view' || item.key === 'qr',
                   )
+              ).filter((item) => item.key !== 'view')
             }
             onAction={(action) => handleAccion(action, row)}
           />
         )}
+        onRowDoubleClick={(row) => navigate(`/app/activos/${row.id}`)}
       />
 
       {crud.isForm ? (

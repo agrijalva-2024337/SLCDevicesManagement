@@ -17,7 +17,7 @@ import { formatMoney } from '@/shared/utils/format';
 const TAKE = 100;
 
 const ESTADO_FILTRO = [
-  { value: '', label: 'Todos' },
+  { value: '', label: 'Todos · Estado' },
   ...Object.values(ESTADO_OPERATIVO).map((value) => ({
     value,
     label: ESTADO_OPERATIVO_LABEL[value],
@@ -123,7 +123,7 @@ export function ActivosReportePage() {
         <label className="grid gap-1 text-sm">
           Sede
           <select className="app-input" value={idSede} onChange={cambiarFiltro(setIdSede)}>
-            <option value="">Todas</option>
+            <option value="">Todas · Sede</option>
             {sedesEmpresa.map((sede) => (
               <option key={sede.id} value={sede.id}>
                 {sede.nombre}
@@ -134,7 +134,7 @@ export function ActivosReportePage() {
         <label className="grid gap-1 text-sm">
           Categoría
           <select className="app-input" value={idCategoriaActivo} onChange={cambiarFiltro(setIdCategoriaActivo)}>
-            <option value="">Todas</option>
+            <option value="">Todas · Categoría</option>
             {(categorias.data ?? [])
               .filter(
                 (categoria) =>
@@ -152,7 +152,7 @@ export function ActivosReportePage() {
         <label className="grid gap-1 text-sm">
           Responsable
           <select className="app-input" value={idResponsable} onChange={cambiarFiltro(setIdResponsable)}>
-            <option value="">Todos</option>
+            <option value="">Todos · Responsable</option>
             {responsablesEmpresa.map((responsable) => (
               <option key={responsable.id} value={responsable.id}>
                 {responsable.nombreCompleto}
