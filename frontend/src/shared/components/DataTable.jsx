@@ -23,16 +23,16 @@ const BOOLEAN_STATUS_OPTIONS = [
 ];
 
 function isBareAllLabel(label) {
-  return /^(todos|todas)$/i.test(String(label ?? '').trim());
+  return /^(todos|todas)(\s|$|·)/i.test(String(label ?? '').trim());
 }
 
+/** Opción vacía del select: solo el nombre del filtro (Estado, Categoría…). */
 function describeAllOption(filterLabel, optionLabel) {
+  const name = String(filterLabel ?? '').trim();
+  if (name) return name;
   const raw = String(optionLabel ?? '').trim();
-  if (raw && !isBareAllLabel(raw)) {
-    return raw;
-  }
-  const name = String(filterLabel ?? '').trim() || 'filtro';
-  return `Todos · ${name}`;
+  if (raw && !isBareAllLabel(raw)) return raw;
+  return 'Todos';
 }
 
 function withDescribedOptions(filter) {
