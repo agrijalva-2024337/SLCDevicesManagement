@@ -15,7 +15,9 @@ import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionSer
 import { useAuth } from '@/features/auth/useAuth';
 import { BajaFormOverlay } from '@/features/bajas/BajaFormOverlay';
 import * as bajaService from '@/features/bajas/bajaService';
+import { parseDetalleBaja } from '@/features/bajas/detalleBajaParser';
 import * as motivoBajaService from '@/features/bajas/motivoBajaService';
+import * as historialActivoService from '@/features/activos/historialActivoService';
 import * as consultaPublicaService from '@/features/consulta/consultaPublicaService';
 import { TrasladoFormOverlay } from '@/features/inventario/TrasladoFormOverlay';
 import { nombreUbicacion } from '@/features/inventario/trasladoRuta';
@@ -32,6 +34,7 @@ import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import { formatHaceCuanto, listarRastreo, mapsUrlDe } from '@/features/rastreo/rastreoService';
 import { RolUsuario } from '@/shared/api/contracts';
+import { TIPO_ASIGNACION, nombresCatalogoIguales } from '@/shared/api/tipoAsignacion';
 import { DataTable } from '@/shared/components/DataTable';
 import { DetailField } from '@/shared/components/DetailOverlay';
 import { PageHeader } from '@/shared/components/PageHeader';
@@ -97,8 +100,9 @@ export function ActivoDetallePage() {
   });
   const usuarios = useResource(loadUsuarios, {
     key: listQueryKey('usuarios', { idEmpresa: idActiva || undefined }),
-    enabled: canReadUsuarios && movimiento === 'baja',
+    enabled: canReadUsuarios,
   });
+  const historial = useResource(historialActivoService.getAll);
   const rastreo = useResource(listarRastreo, { key: listQueryKey('rastreo') });
 
   const activo = activoRes.data?.id ? activoRes.data : null;
@@ -143,24 +147,52 @@ export function ActivoDetallePage() {
     };
   }, [id, rastreo.data, ubicaciones.data]);
 
+  const detallePorAsignacion = useMemo(() => {
+    const map = new Map();
+    for (const item of historial.data ?? []) {
+      const parsed = parseDetalleBaja(item.informacionNueva);
+      if (parsed && item.idAsignacion != null) {
+        map.set(Number(item.idAsignacion), parsed);
+      }
+    }
+    return map;
+  }, [historial.data]);
+
   const movimientos = useMemo(
     () =>
       (asignaciones.data ?? [])
         .filter((row) => Number(row.idActivo) === Number(id))
         .map((row) => {
+          const tipoNombre = byId(tipos.data, row.idTipoAsignacion)?.nombre ?? 'Movimiento';
           const registrador = byId(usuarios.data, row.idUsuario);
+          const registradoPor = registrador
+            ? [registrador.nombres, registrador.apellidos].filter(Boolean).join(' ')
+            : '—';
+          const detalle = detallePorAsignacion.get(Number(row.id));
+          const autorizador = detalle?.idAutorizadoPor
+            ? byId(usuarios.data, detalle.idAutorizadoPor)
+            : null;
+          const autorizadoNombre = autorizador
+            ? [autorizador.nombres, autorizador.apellidos].filter(Boolean).join(' ')
+            : nombresCatalogoIguales(tipoNombre, TIPO_ASIGNACION.Baja)
+              ? registradoPor
+              : '—';
+          const esTraslado = nombresCatalogoIguales(tipoNombre, TIPO_ASIGNACION.Traslado);
+          const esBaja = nombresCatalogoIguales(tipoNombre, TIPO_ASIGNACION.Baja);
           return {
             ...row,
-            tipoNombre: byId(tipos.data, row.idTipoAsignacion)?.nombre ?? 'Movimiento',
-            responsableNombre: byId(responsables.data, row.idResponsable)?.nombreCompleto ?? '—',
-            registradoPor: registrador
-              ? [registrador.nombres, registrador.apellidos].filter(Boolean).join(' ')
-              : '—',
+            tipoNombre,
+            responsableNombre:
+              esTraslado || esBaja
+                ? '—'
+                : byId(responsables.data, row.idResponsable)?.nombreCompleto ?? '—',
+            autorizadoNombre: esBaja ? autorizadoNombre : '—',
+            registradoPor,
             estadoVista: row.activa ? 'Activo' : 'Cerrado',
           };
         })
         .sort((left, right) => new Date(right.fechaAsignacion) - new Date(left.fechaAsignacion)),
-    [asignaciones.data, id, responsables.data, tipos.data, usuarios.data],
+    [asignaciones.data, detallePorAsignacion, id, responsables.data, tipos.data, usuarios.data],
   );
 
   const activoActual = useMemo(() => (activo ? [activo] : []), [activo]);
@@ -358,7 +390,8 @@ export function ActivoDetallePage() {
           columns={[
             { key: 'tipoNombre', header: 'Tipo', primary: true },
             { key: 'responsableNombre', header: 'Responsable' },
-            { key: 'registradoPor', header: 'Registró' },
+            { key: 'autorizadoNombre', header: 'Autorizado por' },
+            { key: 'registradoPor', header: 'Registrado por' },
             {
               key: 'fechaAsignacion',
               header: 'Fecha',
@@ -374,7 +407,7 @@ export function ActivoDetallePage() {
           ]}
           rows={movimientos}
           loading={asignaciones.isLoading}
-          searchPlaceholder="Buscar por tipo o responsable"
+          searchPlaceholder="Buscar por tipo, responsable, autorizante o quien registró"
           emptyTitle="Sin movimientos"
           emptyDescription="Sin movimientos registrados."
           renderRowActions={(row) =>

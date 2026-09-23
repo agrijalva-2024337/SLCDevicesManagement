@@ -141,6 +141,8 @@ public sealed class CreateBajaCommandHandler : ICommandHandler<CreateBajaCommand
             token.Revocado = true;
         }
 
+        entity.DocumentoPdfUrl = $"/api/Asignaciones/{entity.Id}/pdf";
+
         await _db.SaveChangesAsync(cancellationToken);
 
         _db.HistorialActivos.Add(new HistorialActivo
