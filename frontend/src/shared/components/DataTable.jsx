@@ -21,6 +21,32 @@ const BOOLEAN_STATUS_OPTIONS = [
   { value: 'false', label: 'Deshabilitado' },
 ];
 
+function isBareAllLabel(label) {
+  return /^(todos|todas)$/i.test(String(label ?? '').trim());
+}
+
+function describeAllOption(filterLabel, optionLabel) {
+  const raw = String(optionLabel ?? '').trim();
+  if (raw && !isBareAllLabel(raw)) {
+    return raw;
+  }
+  const name = String(filterLabel ?? '').trim() || 'filtro';
+  return `Todos · ${name}`;
+}
+
+function withDescribedOptions(filter) {
+  const options = (filter.options ?? BOOLEAN_STATUS_OPTIONS).map((option) => {
+    if (option.value !== 'all' && option.value !== '') {
+      return option;
+    }
+    return {
+      ...option,
+      label: describeAllOption(filter.label, option.label),
+    };
+  });
+  return { ...filter, options };
+}
+
 const BADGE_TONES = {
   success: 'data-badge data-badge--on',
   warning: 'data-badge data-badge--warn',
@@ -113,21 +139,25 @@ function stickyStyle(column) {
 function normalizeFilters(statusFilter, filters) {
   const list = [];
   if (statusFilter) {
-    list.push({
-      key: statusFilter.key ?? 'status',
-      label: statusFilter.label ?? 'Estado',
-      getValue: statusFilter.getValue,
-      options: statusFilter.options ?? BOOLEAN_STATUS_OPTIONS,
-    });
+    list.push(
+      withDescribedOptions({
+        key: statusFilter.key ?? 'status',
+        label: statusFilter.label ?? 'Estado',
+        getValue: statusFilter.getValue,
+        options: statusFilter.options ?? BOOLEAN_STATUS_OPTIONS,
+      }),
+    );
   }
   if (Array.isArray(filters)) {
     for (const filter of filters) {
-      list.push({
-        key: filter.key,
-        label: filter.label ?? filter.key,
-        getValue: filter.getValue,
-        options: filter.options ?? BOOLEAN_STATUS_OPTIONS,
-      });
+      list.push(
+        withDescribedOptions({
+          key: filter.key,
+          label: filter.label ?? filter.key,
+          getValue: filter.getValue,
+          options: filter.options ?? BOOLEAN_STATUS_OPTIONS,
+        }),
+      );
     }
   }
   return list;
