@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { DataCard } from '@/shared/components/DataCard';
 
 export function DetailOverlay({
   open,
@@ -115,11 +116,15 @@ export function SaveFlash({ message }) {
   );
 }
 
-export function DetailField({ label, value }) {
+export function DetailField({ label, value, wide, variant, accent, className }) {
   return (
-    <div className="app-field">
-      <p className="app-field-label">{label}</p>
-      <div className="app-field-value">{value || '—'}</div>
-    </div>
+    <DataCard
+      label={label}
+      value={value}
+      wide={wide}
+      variant={variant}
+      accent={accent}
+      className={className}
+    />
   );
 }

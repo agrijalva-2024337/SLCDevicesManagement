@@ -49,28 +49,30 @@ export function ConsultaActivoPage() {
           <div className="consulta-card">
             <div className="app-fields-plain consulta-grid">
               <DetailField
+                variant="plain"
                 label="Estado"
                 value={ficha.estado ? <ToneBadge tone={estadoTone(ficha.estado)}>{ficha.estado}</ToneBadge> : null}
               />
-              <DetailField label="Categoría" value={ficha.categoria} />
+              <DetailField variant="plain" label="Categoría" value={ficha.categoria} />
               <DetailField
+                variant="plain"
                 label="Marca / modelo"
                 value={[ficha.marca, ficha.modelo].filter(Boolean).join(' ')}
               />
-              <DetailField label="Empresa" value={ficha.empresa} />
+              <DetailField variant="plain" label="Empresa" value={ficha.empresa} />
               {verDetalleInterno ? (
                 <>
-                  <DetailField label="Sede" value={ficha.sede} />
-                  <DetailField label="Ubicación" value={ficha.ubicacion} />
-                  <DetailField label="Área" value={ficha.area} />
+                  <DetailField variant="plain" label="Sede" value={ficha.sede} />
+                  <DetailField variant="plain" label="Ubicación" value={ficha.ubicacion} />
+                  <DetailField variant="plain" label="Área" value={ficha.area} />
                 </>
               ) : null}
-              <DetailField label="Responsable" value={ficha.responsable} />
+              <DetailField variant="plain" label="Responsable" value={ficha.responsable} />
               {verDetalleInterno ? (
-                <DetailField label="Garantía hasta" value={formatDate(ficha.garantiaHasta)} />
+                <DetailField variant="plain" label="Garantía hasta" value={formatDate(ficha.garantiaHasta)} />
               ) : null}
               <div className="sm:col-span-2">
-                <DetailField label="Descripción" value={ficha.descripcion} />
+                <DetailField variant="plain" label="Descripción" value={ficha.descripcion} />
               </div>
             </div>
           </div>
