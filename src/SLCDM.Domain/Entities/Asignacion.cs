@@ -18,8 +18,11 @@ public class Asignacion : SLCDM.Domain.Common.BaseEntity
     [ForeignKey("IdUsuario")]
     public Usuario? Usuario { get; set; }
 
-    [Required(ErrorMessage = "El campo responsable es obligatorio")]
-    public int IdResponsable { get; set; }
+    /// <summary>
+    /// Quien recibe el activo (entrega/mantenimiento). Nulo en traslado/baja,
+    /// donde quien actúa queda en <see cref="IdUsuario"/>.
+    /// </summary>
+    public int? IdResponsable { get; set; }
 
     [ForeignKey("IdResponsable")]
     public Responsable? Responsable { get; set; }

@@ -34,6 +34,12 @@ public sealed class AsignacionCorreoService : IAsignacionCorreoService
                 return;
             }
 
+            if (asignacion.IdResponsable is null)
+            {
+                _logger.LogInformation("No se envio el acta {Id}: la operacion no tiene responsable (usuario).", idAsignacion);
+                return;
+            }
+
             var responsable = await _db.Responsables.AsNoTracking().IgnoreQueryFilters()
                 .FirstOrDefaultAsync(r => r.Id == asignacion.IdResponsable, cancellationToken);
             var to = responsable?.Correo?.Trim();

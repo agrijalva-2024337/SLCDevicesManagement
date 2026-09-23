@@ -179,7 +179,7 @@ internal static class ActivoReporteConsulta
         return ActivoEstadoOperativo.Disponible;
     }
 
-    private static async Task<IReadOnlyDictionary<int, int>> ResponsableAsignadoPorActivoAsync(
+    private static async Task<IReadOnlyDictionary<int, int?>> ResponsableAsignadoPorActivoAsync(
         IApplicationDbContext db,
         CancellationToken cancellationToken)
     {

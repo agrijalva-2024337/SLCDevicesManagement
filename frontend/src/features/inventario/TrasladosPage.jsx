@@ -5,10 +5,9 @@ import * as asignacionService from '@/features/asignaciones/asignacionService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import * as estadoService from '@/features/organizacion/estados/estadoService';
-import * as areaService from '@/features/organizacion/areas/areaService';
-import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
+import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import { TrasladoFormOverlay } from '@/features/inventario/TrasladoFormOverlay';
 import * as trasladoService from '@/features/inventario/trasladoService';
 import { parseTrasladoRuta, filtrarPorEmpresaDeActivo, nombreUbicacion } from '@/features/inventario/trasladoRuta';
@@ -23,11 +22,16 @@ import { useResource } from '@/shared/hooks/useResource';
 import { formatDate, byId } from '@/shared/utils/format';
 import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
 
+function nombreUsuario(usuario) {
+  if (!usuario) return '—';
+  return [usuario.nombres, usuario.apellidos].filter(Boolean).join(' ') || usuario.correo || '—';
+}
+
 function hydrate(row, lookups) {
   const ruta = parseTrasladoRuta(row.observaciones);
   const activo = byId(lookups.activos, row.idActivo);
   const estado = byId(lookups.estados, row.idEstado);
-  const responsable = byId(lookups.responsables, row.idResponsable);
+  const registrado = byId(lookups.usuarios, row.idUsuario);
   const origenDesdeId =
     row.idUbicacionOrigen != null
       ? nombreUbicacion(byId(lookups.ubicaciones, row.idUbicacionOrigen))
@@ -42,7 +46,7 @@ function hydrate(row, lookups) {
     origen: origenDesdeId ?? ruta.origen ?? '—',
     destino: destinoDesdeId ?? ruta.destino ?? '—',
     estadoNombre: estado?.nombre ?? '—',
-    responsableNombre: responsable?.nombreCompleto ?? '—',
+    registradoPorNombre: nombreUsuario(registrado),
   };
 }
 
@@ -70,9 +74,8 @@ export function TrasladosPage() {
   const activos = useResource(activoService.getAll);
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
-  const areas = useResource(areaService.getAll);
   const estados = useResource(estadoService.getAll);
-  const responsables = useResource(responsableService.getAll);
+  const usuarios = useResource(usuarioService.getAll);
   const tipos = useResource(tipoAsignacionService.getAll);
 
   const rows = useMemo(
@@ -86,9 +89,9 @@ export function TrasladosPage() {
       ubicaciones: ubicaciones.data,
       sedes: sedes.data,
       estados: estados.data,
-      responsables: responsables.data,
+      usuarios: usuarios.data,
     }),
-    [activos.data, ubicaciones.data, sedes.data, estados.data, responsables.data],
+    [activos.data, ubicaciones.data, sedes.data, estados.data, usuarios.data],
   );
 
   const tableRows = useMemo(
@@ -113,7 +116,7 @@ export function TrasladosPage() {
         header: 'Origen',
         pairWith: { key: 'destino', header: 'Destino' },
       },
-      { key: 'responsableNombre', header: 'Responsable' },
+      { key: 'registradoPorNombre', header: 'Registrado por' },
       {
         key: 'fechaAsignacion',
         header: 'Fecha',
@@ -163,7 +166,7 @@ export function TrasladosPage() {
         columns={columns}
         rows={tableRows}
         loading={isLoading}
-        searchPlaceholder="Buscar por activo, origen, destino o responsable"
+        searchPlaceholder="Buscar por activo, origen, destino o quien registró"
         statusFilter={{
           key: 'estadoNombre',
           label: 'Estado',
@@ -190,7 +193,7 @@ export function TrasladosPage() {
         {crud.record ? (
           <div className="app-fields">
             <DetailField label="Activo" value={crud.record.activoNombre} />
-            <DetailField label="Responsable" value={crud.record.responsableNombre} />
+            <DetailField label="Registrado por" value={crud.record.registradoPorNombre} />
             <DetailField label="Origen" value={crud.record.origen} />
             <DetailField label="Destino" value={crud.record.destino} />
             <DetailField label="Fecha" value={formatDate(crud.record.fechaAsignacion)} />
@@ -208,8 +211,7 @@ export function TrasladosPage() {
         activos={lookups.activos}
         ubicaciones={lookups.ubicaciones}
         sedes={lookups.sedes}
-        responsables={lookups.responsables}
-        areas={areas.data}
+        usuarioActual={usuario}
         asignaciones={asignacionesRows}
         tipos={tipos.data}
         idEmpresaActiva={idActiva}
@@ -219,7 +221,6 @@ export function TrasladosPage() {
             idActivo: Number(values.idActivo),
             idUbicacionDestino: Number(values.idUbicacionDestino),
             idUsuario: usuario?.id,
-            idResponsable: Number(values.idResponsable),
             fecha: values.fecha,
             motivo: values.motivo,
           });

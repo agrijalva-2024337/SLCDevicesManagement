@@ -101,7 +101,6 @@ export async function registrar({
   idActivo,
   idUbicacionDestino,
   idUsuario,
-  idResponsable,
   fecha,
   motivo,
 }) {
@@ -131,7 +130,6 @@ export async function registrar({
   const created = await persistir({
     idActivo: Number(idActivo),
     idUsuario: Number(idUsuario),
-    idResponsable: Number(idResponsable),
     idEstado,
     idUbicacionDestino: Number(idUbicacionDestino),
     fechaAsignacion: fecha,

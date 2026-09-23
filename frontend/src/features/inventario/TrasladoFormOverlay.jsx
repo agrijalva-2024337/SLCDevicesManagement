@@ -6,10 +6,14 @@ import {
   activosDeEmpresa,
   initialTrasladoValues,
   nombreUbicacion,
-  responsablesDeEmpresa,
   ubicacionesDeEmpresa,
 } from '@/features/inventario/trasladoRuta';
 import { byId } from '@/shared/utils/format';
+
+function nombreUsuario(usuario) {
+  if (!usuario) return '—';
+  return [usuario.nombres, usuario.apellidos].filter(Boolean).join(' ') || usuario.correo || `Usuario #${usuario.id}`;
+}
 
 export function TrasladoFormOverlay({
   open,
@@ -17,8 +21,7 @@ export function TrasladoFormOverlay({
   activos,
   ubicaciones,
   sedes,
-  responsables,
-  areas = [],
+  usuarioActual,
   asignaciones = [],
   tipos = [],
   idEmpresaActiva,
@@ -40,10 +43,6 @@ export function TrasladoFormOverlay({
         idEmpresaActiva,
       ),
     [activos, asignaciones, idEmpresaActiva, sedes, tipos, ubicaciones],
-  );
-  const responsablesFiltrados = useMemo(
-    () => responsablesDeEmpresa(responsables, areas, sedes, idEmpresaActiva),
-    [areas, idEmpresaActiva, responsables, sedes],
   );
   const initialValues = useMemo(
     () => initialTrasladoValues(prefill, { activos, ubicaciones }),
@@ -79,11 +78,11 @@ export function TrasladoFormOverlay({
         options: asOptions(destinos),
       },
       {
-        name: 'idResponsable',
-        label: 'Responsable',
-        type: 'select',
-        required: true,
-        options: asOptions(responsablesFiltrados, 'nombreCompleto'),
+        name: 'registradoPor',
+        label: 'Registrado por',
+        type: 'text',
+        readOnly: true,
+        hint: 'Usuario que registra el traslado.',
       },
       { name: 'fecha', label: 'Fecha', type: 'date', required: true },
       {
@@ -95,7 +94,7 @@ export function TrasladoFormOverlay({
         hint: 'Por qué se mueve el activo.',
       },
     ],
-    [activos, activosElegibles, destinos, lockActivo, responsablesFiltrados],
+    [activos, activosElegibles, destinos, lockActivo],
   );
 
   return (
@@ -104,14 +103,18 @@ export function TrasladoFormOverlay({
       open={open}
       title="Registrar traslado"
       kicker="Inventario"
-      hint="El origen es la ubicación actual del activo y no se edita."
+      hint="El origen es la ubicación actual del activo y no se edita. Quien registra queda como el usuario en sesión."
       fields={fields}
-      initialValues={initialValues}
+      initialValues={{
+        ...initialValues,
+        registradoPor: nombreUsuario(usuarioActual),
+      }}
       deriveValues={(next) => {
         const activo = byId(activos, next.idActivo);
         return {
           ...next,
           origen: activo ? nombreUbicacion(byId(ubicaciones, activo.idUbicacion)) : '',
+          registradoPor: nombreUsuario(usuarioActual),
         };
       }}
       validate={(values) => {
@@ -119,10 +122,12 @@ export function TrasladoFormOverlay({
         const errors = {
           idActivo: requireSelect(values.idActivo, 'un activo'),
           idUbicacionDestino: requireSelect(values.idUbicacionDestino, 'una ubicación destino'),
-          idResponsable: requireSelect(values.idResponsable, 'un responsable'),
           fecha: requireSelect(values.fecha, 'una fecha'),
           motivo: optionalText(values.motivo, 'motivo', 300),
         };
+        if (!usuarioActual?.id) {
+          errors.registradoPor = 'No se pudo determinar el usuario en sesión.';
+        }
         if (activo && isActivoDeBaja(activo, ctx)) {
           errors.idActivo = 'El activo está dado de baja. No se traslada ni se envía a mantenimiento.';
         } else if (activo && isActivoEnMantenimiento(activo, ctx)) {
