@@ -15,7 +15,7 @@ public class AsignacionConfiguration : IEntityTypeConfiguration<Asignacion>
 
         builder.Property(a => a.IdActivo).HasColumnName("id_activo").IsRequired();
         builder.Property(a => a.IdUsuario).HasColumnName("id_usuario").IsRequired();
-        builder.Property(a => a.IdResponsable).HasColumnName("id_responsable").IsRequired();
+        builder.Property(a => a.IdResponsable).HasColumnName("id_responsable");
         builder.Property(a => a.IdEstado).HasColumnName("id_estado").IsRequired();
         builder.Property(a => a.IdTipoAsignacion).HasColumnName("id_tipo_asignacion").IsRequired();
 

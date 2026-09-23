@@ -14,6 +14,7 @@ export function MultiSelectDropdown({
   const listId = useId();
   const rootRef = useRef(null);
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const selected = useMemo(() => (Array.isArray(value) ? value.map(String) : []), [value]);
 
   const selectedLabels = useMemo(() => {
@@ -21,11 +22,31 @@ export function MultiSelectDropdown({
     return selected.map((idValue) => byValue.get(idValue) ?? idValue);
   }, [options, selected]);
 
+  const filtered = useMemo(() => {
+    const needle = String(query ?? '')
+      .normalize('NFD')
+      .replace(/\p{M}/gu, '')
+      .toLowerCase()
+      .trim();
+    const rows = options ?? [];
+    if (!needle) return rows;
+    return rows.filter((option) => {
+      const haystack = `${option.label ?? ''} ${option.value ?? ''}`
+        .normalize('NFD')
+        .replace(/\p{M}/gu, '')
+        .toLowerCase();
+      return haystack.includes(needle);
+    });
+  }, [options, query]);
+
   const summary =
     selectedLabels.length === 0 ? placeholder : selectedLabels.join(', ');
 
   useEffect(() => {
-    if (!open) return undefined;
+    if (!open) {
+      setQuery('');
+      return undefined;
+    }
 
     function handlePointerDown(event) {
       if (!rootRef.current?.contains(event.target)) {
@@ -85,34 +106,45 @@ export function MultiSelectDropdown({
       </button>
 
       {open ? (
-        <ul id={listId} className="app-multiselect-menu" role="listbox" aria-multiselectable="true">
-          {(options ?? []).length === 0 ? (
-            <li className="app-multiselect-empty" role="presentation">
-              {emptyLabel}
-            </li>
-          ) : (
-            (options ?? []).map((option) => {
-              const optionValue = String(option.value);
-              const isSelected = selected.includes(optionValue);
-              const optionDisabled = Boolean(option.disabled);
-              return (
-                <li key={optionValue} role="option" aria-selected={isSelected}>
-                  <button
-                    type="button"
-                    className={`app-multiselect-option ${isSelected ? 'is-selected' : ''}`}
-                    disabled={disabled || optionDisabled}
-                    onClick={() => toggleOption(optionValue, optionDisabled)}
-                  >
-                    <span className="app-multiselect-check" aria-hidden="true">
-                      {isSelected ? '✓' : ''}
-                    </span>
-                    <span>{option.label}</span>
-                  </button>
-                </li>
-              );
-            })
-          )}
-        </ul>
+        <div className="app-multiselect-panel">
+          <input
+            type="search"
+            className="app-input app-multiselect-search"
+            value={query}
+            placeholder="Escriba para buscar…"
+            autoComplete="off"
+            onChange={(event) => setQuery(event.target.value)}
+            onClick={(event) => event.stopPropagation()}
+          />
+          <ul id={listId} className="app-multiselect-menu" role="listbox" aria-multiselectable="true">
+            {filtered.length === 0 ? (
+              <li className="app-multiselect-empty" role="presentation">
+                {emptyLabel}
+              </li>
+            ) : (
+              filtered.map((option) => {
+                const optionValue = String(option.value);
+                const isSelected = selected.includes(optionValue);
+                const optionDisabled = Boolean(option.disabled);
+                return (
+                  <li key={optionValue} role="option" aria-selected={isSelected}>
+                    <button
+                      type="button"
+                      className={`app-multiselect-option ${isSelected ? 'is-selected' : ''}`}
+                      disabled={disabled || optionDisabled}
+                      onClick={() => toggleOption(optionValue, optionDisabled)}
+                    >
+                      <span className="app-multiselect-check" aria-hidden="true">
+                        {isSelected ? '✓' : ''}
+                      </span>
+                      <span>{option.label}</span>
+                    </button>
+                  </li>
+                );
+              })
+            )}
+          </ul>
+        </div>
       ) : null}
     </div>
   );

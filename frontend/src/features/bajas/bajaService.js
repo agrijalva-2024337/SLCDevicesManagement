@@ -26,7 +26,6 @@ export async function getById(id) {
 function toCommand({
   idActivo,
   idUsuario,
-  idResponsable,
   idEstado,
   idMotivoBaja,
   idAutorizadoPor,
@@ -40,7 +39,6 @@ function toCommand({
   return {
     idActivo: Number(idActivo),
     idUsuario: Number(idUsuario),
-    idResponsable: Number(idResponsable),
     idEstado: Number(idEstado),
     idMotivoBaja: Number(idMotivoBaja),
     idAutorizadoPor: Number(idAutorizadoPor),
@@ -85,7 +83,7 @@ async function aplicarEfectosMock({ activo, command, idAsignacion }) {
     tipoOperacion: 'Baja',
     descripcion: 'Baja de activo',
     informacionAnterior: `id_activo=${command.idActivo}`,
-    informacionNueva: `id_motivo_baja=${command.idMotivoBaja}; id_autorizado_por=${command.idAutorizadoPor}; id_responsable=${command.idResponsable}`,
+    informacionNueva: `id_motivo_baja=${command.idMotivoBaja}; id_autorizado_por=${command.idAutorizadoPor}; id_usuario=${command.idUsuario}`,
   });
 }
 

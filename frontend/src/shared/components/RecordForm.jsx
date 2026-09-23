@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MultiSelectDropdown } from '@/shared/components/MultiSelectDropdown';
 import { PhoneInput } from '@/shared/components/PhoneInput';
+import { SearchableSelect } from '@/shared/components/SearchableSelect';
 import { SignaturePad } from '@/shared/components/SignaturePad';
 import { generateTemporaryPassword } from '@/shared/utils/generateTemporaryPassword';
 
@@ -122,21 +123,30 @@ export function SchemaForm({
         if (field.type === 'select') {
           return (
             <FormField key={field.name} id={id} label={field.label} required={field.required} error={errors[field.name]} hint={field.hint} hintTone={field.hintTone} wide={wide}>
-              <select
-                id={id}
-                className={controlClass(errors[field.name])}
-                value={values[field.name] ?? ''}
-                disabled={Boolean(field.readOnly)}
-                onChange={(event) => setField(field.name, event.target.value)}
-                onBlur={() => blurField(field.name)}
-              >
-                <option value="">{field.placeholder ?? 'Seleccione…'}</option>
-                {field.options.map((option) => (
-                  <option key={option.value} value={option.value} disabled={Boolean(option.disabled)}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              {field.readOnly ? (
+                <input
+                  id={id}
+                  type="text"
+                  className={controlClass(errors[field.name])}
+                  value={
+                    field.options?.find((option) => String(option.value) === String(values[field.name] ?? ''))
+                      ?.label ?? values[field.name] ?? ''
+                  }
+                  readOnly
+                />
+              ) : (
+                <SearchableSelect
+                  id={id}
+                  options={field.options ?? []}
+                  value={values[field.name] ?? ''}
+                  error={Boolean(errors[field.name])}
+                  placeholder={field.placeholder ?? 'Seleccione…'}
+                  searchPlaceholder={field.searchPlaceholder ?? 'Escriba para buscar…'}
+                  emptyLabel={field.emptyLabel ?? 'Sin resultados.'}
+                  onChange={(next) => setField(field.name, next)}
+                  onBlur={() => blurField(field.name)}
+                />
+              )}
             </FormField>
           );
         }

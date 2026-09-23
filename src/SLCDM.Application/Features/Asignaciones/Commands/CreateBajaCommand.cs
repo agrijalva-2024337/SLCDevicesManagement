@@ -10,7 +10,6 @@ namespace SLCDM.Application.Features.Asignaciones.Commands;
 public sealed record CreateBajaCommand(
     int IdActivo,
     int IdUsuario,
-    int IdResponsable,
     int IdEstado,
     int IdMotivoBaja,
     int IdAutorizadoPor,
@@ -30,11 +29,6 @@ public sealed class CreateBajaCommandValidator : AbstractValidator<CreateBajaCom
             .RequiredId("id usuario")
             .MustAsync(async (id, ct) => await db.Usuarios.AnyAsync(u => u.Id == id, ct))
             .WithMessage("No se encontro un usuario con el id informado.");
-
-        RuleFor(x => x.IdResponsable)
-            .RequiredId("id responsable")
-            .MustAsync(async (id, ct) => await db.Responsables.AnyAsync(r => r.Id == id, ct))
-            .WithMessage("No se encontro un responsable con el id informado.");
 
         RuleFor(x => x.IdEstado)
             .RequiredId("id estado")
@@ -67,15 +61,6 @@ public sealed class CreateBajaCommandValidator : AbstractValidator<CreateBajaCom
             .MustAsync(async (cmd, ct) =>
             {
                 var empresaActivo = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(db, cmd.IdActivo, ct);
-                var empresaResponsable = await AsignacionEmpresaRules.EmpresaIdDeResponsableAsync(db, cmd.IdResponsable, ct);
-                return AsignacionEmpresaRules.EmpresasCoinciden(empresaActivo, empresaResponsable);
-            })
-            .WithMessage("El responsable debe pertenecer a la misma empresa del activo.");
-
-        RuleFor(x => x)
-            .MustAsync(async (cmd, ct) =>
-            {
-                var empresaActivo = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(db, cmd.IdActivo, ct);
                 return await AsignacionEmpresaRules.UsuarioPerteneceAEmpresaAsync(
                     db, cmd.IdAutorizadoPor, empresaActivo, ct);
             })
@@ -87,16 +72,13 @@ public sealed class CreateBajaCommandHandler : ICommandHandler<CreateBajaCommand
 {
     private readonly IApplicationDbContext _db;
     private readonly IValidator<CreateBajaCommand> _validator;
-    private readonly IAsignacionCorreoService _correo;
 
     public CreateBajaCommandHandler(
         IApplicationDbContext db,
-        IValidator<CreateBajaCommand> validator,
-        IAsignacionCorreoService correo)
+        IValidator<CreateBajaCommand> validator)
     {
         _db = db;
         _validator = validator;
-        _correo = correo;
     }
 
     public async Task<int> HandleAsync(CreateBajaCommand command, CancellationToken cancellationToken = default)
@@ -129,7 +111,7 @@ public sealed class CreateBajaCommandHandler : ICommandHandler<CreateBajaCommand
         {
             IdActivo = command.IdActivo,
             IdUsuario = command.IdUsuario,
-            IdResponsable = command.IdResponsable,
+            IdResponsable = null,
             IdEstado = command.IdEstado,
             IdTipoAsignacion = tipo.Id,
             FechaAsignacion = fecha,
@@ -169,11 +151,10 @@ public sealed class CreateBajaCommandHandler : ICommandHandler<CreateBajaCommand
             Descripcion = "Baja de activo",
             InformacionAnterior = $"id_activo={command.IdActivo}",
             InformacionNueva =
-                $"id_motivo_baja={command.IdMotivoBaja}; id_autorizado_por={command.IdAutorizadoPor}; id_responsable={command.IdResponsable}"
+                $"id_motivo_baja={command.IdMotivoBaja}; id_autorizado_por={command.IdAutorizadoPor}; id_usuario={command.IdUsuario}"
         });
         await _db.SaveChangesAsync(cancellationToken);
 
-        await _correo.NotificarResponsableAsync(entity.Id, cancellationToken);
         return entity.Id;
     }
 

@@ -250,7 +250,7 @@ namespace SLCDM.Persistence.Migrations
                         .HasColumnType("int")
                         .HasColumnName("id_estado");
 
-                    b.Property<int>("IdResponsable")
+                    b.Property<int?>("IdResponsable")
                         .HasColumnType("int")
                         .HasColumnName("id_responsable");
 
@@ -1416,8 +1416,7 @@ namespace SLCDM.Persistence.Migrations
                     b.HasOne("SLCDM.Domain.Entities.Responsable", "Responsable")
                         .WithMany()
                         .HasForeignKey("IdResponsable")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("SLCDM.Domain.Entities.TipoAsignacion", "TipoAsignacion")
                         .WithMany()

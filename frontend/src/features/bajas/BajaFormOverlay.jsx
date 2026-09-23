@@ -8,7 +8,6 @@ import {
 } from '@/features/activos/activoAcciones';
 import {
   activosDeEmpresa,
-  responsablesDeEmpresa,
   todayIsoDate,
   usuariosDeEmpresa,
 } from '@/features/inventario/trasladoRuta';
@@ -22,7 +21,7 @@ import {
 import { byId } from '@/shared/utils/format';
 
 function usuarioNombre(usuario) {
-  if (!usuario) return `Usuario`;
+  if (!usuario) return 'Usuario';
   return [usuario.nombres, usuario.apellidos].filter(Boolean).join(' ') || usuario.correo || `Usuario ${usuario.id}`;
 }
 
@@ -35,13 +34,11 @@ export function BajaFormOverlay({
   usuariosUnavailableReason,
   permiteElegirAutorizador = true,
   usuarioActual,
-  responsables,
   asignaciones = [],
   tipos = [],
   idEmpresaActiva,
   ubicaciones = [],
   sedes = [],
-  areas = [],
   onSave,
   onClose,
 }) {
@@ -68,10 +65,6 @@ export function BajaFormOverlay({
         idEmpresaActiva,
       ),
     [activos, asignaciones, idEmpresaActiva, sedes, tipos, ubicaciones],
-  );
-  const responsablesFiltrados = useMemo(
-    () => responsablesDeEmpresa(responsables, areas, sedes, idEmpresaActiva),
-    [areas, idEmpresaActiva, responsables, sedes],
   );
   const usuariosFiltrados = useMemo(
     () => usuariosDeEmpresa(usuarios, idEmpresaActiva),
@@ -103,6 +96,13 @@ export function BajaFormOverlay({
         required: true,
         options: asOptions(motivos ?? []),
       },
+      {
+        name: 'registradoPor',
+        label: 'Registrado por',
+        type: 'text',
+        readOnly: true,
+        hint: 'Usuario que registra la baja.',
+      },
     ];
 
     if (permiteElegirAutorizador) {
@@ -118,13 +118,6 @@ export function BajaFormOverlay({
     }
 
     base.push(
-      {
-        name: 'idResponsable',
-        label: 'Responsable',
-        type: 'select',
-        required: true,
-        options: asOptions(responsablesFiltrados, 'nombreCompleto'),
-      },
       { name: 'fecha', label: 'Fecha', type: 'date', required: true },
       {
         name: 'observaciones',
@@ -154,7 +147,6 @@ export function BajaFormOverlay({
     lockActivo,
     motivos,
     permiteElegirAutorizador,
-    responsablesFiltrados,
     usuarioOptions,
     usuariosUnavailableReason,
   ]);
@@ -167,24 +159,28 @@ export function BajaFormOverlay({
       kicker="Operaciones"
       hint={
         permiteElegirAutorizador
-          ? 'Indique el motivo y quien autoriza la baja.'
-          : 'Indique el motivo de la baja. Quien autoriza queda registrado como usted.'
+          ? 'Indique el motivo y quien autoriza la baja. Quien registra queda como el usuario en sesión.'
+          : 'Indique el motivo de la baja. Quien registra y quien autoriza quedan registrados como usted.'
       }
       fields={fields}
       initialValues={{
         idActivo: prefill?.idActivo ? String(prefill.idActivo) : '',
         idMotivoBaja: '',
+        registradoPor: usuarioNombre(usuarioActual),
         idAutorizadoPor: permiteElegirAutorizador
           ? prefill?.idAutorizadoPor
             ? String(prefill.idAutorizadoPor)
             : ''
           : idAutorizadoPorFijo,
-        idResponsable: prefill?.idResponsable ? String(prefill.idResponsable) : '',
         fecha: todayIsoDate(),
         observaciones: '',
         firmaEntrega: '',
         firmaRecibe: '',
       }}
+      deriveValues={(next) => ({
+        ...next,
+        registradoPor: usuarioNombre(usuarioActual),
+      })}
       validate={(values) => {
         const activo = byId(activos, values.idActivo);
         const errors = {
@@ -195,10 +191,12 @@ export function BajaFormOverlay({
             : idAutorizadoPorFijo
               ? null
               : 'No se pudo determinar el usuario actual.',
-          idResponsable: requireSelect(values.idResponsable, 'un responsable'),
           fecha: requireSelect(values.fecha, 'una fecha'),
           observaciones: optionalText(values.observaciones, 'observaciones', 300),
         };
+        if (!usuarioActual?.id) {
+          errors.registradoPor = 'No se pudo determinar el usuario en sesión.';
+        }
         if (activo && isActivoDeBaja(activo, ctx)) {
           errors.idActivo = 'El activo ya esta dado de baja.';
         } else if (activo && (isActivoAsignado(activo, ctx) || isActivoEnMantenimiento(activo, ctx))) {

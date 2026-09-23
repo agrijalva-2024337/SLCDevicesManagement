@@ -10,7 +10,6 @@ import * as historialActivoService from '@/features/activos/historialActivoServi
 import * as asignacionService from '@/features/asignaciones/asignacionService';
 import * as ubicacionService from '@/features/catalogos/ubicaciones/ubicacionService';
 import { filtrarPorEmpresaDeActivo } from '@/features/inventario/trasladoRuta';
-import * as areaService from '@/features/organizacion/areas/areaService';
 import { useEmpresaActiva } from '@/features/organizacion/empresas/useEmpresaActiva';
 import * as sedeService from '@/features/organizacion/sedes/sedeService';
 import { RolUsuario } from '@/shared/api/contracts';
@@ -25,7 +24,6 @@ import { listQueryKey } from '@/shared/data/queryKeys';
 import { useResource } from '@/shared/hooks/useResource';
 import { byId, formatDate } from '@/shared/utils/format';
 import { saveSuccessResult } from '@/shared/components/SaveSuccessPanel';
-import * as responsableService from '@/features/organizacion/responsables/responsableService';
 import * as tipoAsignacionService from '@/features/organizacion/tiposAsignacion/tipoAsignacionService';
 import * as usuarioService from '@/features/organizacion/usuarios/usuarioService';
 import * as estadoService from '@/features/organizacion/estados/estadoService';
@@ -92,7 +90,6 @@ export function BajasPage() {
   const activos = useResource(activoService.getAll);
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
-  const areas = useResource(areaService.getAll);
   const motivos = useResource(motivoBajaService.getAll);
   const loadUsuarios = useCallback(
     () => usuarioService.getAllIfAllowed(permiteElegirAutorizador, { idEmpresa: idActiva || undefined }),
@@ -102,7 +99,6 @@ export function BajasPage() {
     key: listQueryKey('usuarios', { idEmpresa: idActiva || undefined }),
     enabled: permiteElegirAutorizador,
   });
-  const responsables = useResource(responsableService.getAll);
   const estados = useResource(estadoService.getAll);
   const tipos = useResource(tipoAsignacionService.getAll);
   const historial = useResource(historialActivoService.getAll);
@@ -224,13 +220,11 @@ export function BajasPage() {
         usuariosUnavailableReason={permiteElegirAutorizador ? null : usuarioService.USUARIOS_SIN_LECTURA}
         permiteElegirAutorizador={permiteElegirAutorizador}
         usuarioActual={usuario}
-        responsables={responsables.data}
         asignaciones={asignacionesRows}
         tipos={tipos.data}
         idEmpresaActiva={idActiva}
         ubicaciones={ubicaciones.data}
         sedes={sedes.data}
-        areas={areas.data}
         onClose={crud.close}
         onSave={async (values) => {
           try {
@@ -240,7 +234,6 @@ export function BajasPage() {
             await bajaService.registrar({
               idActivo: Number(values.idActivo),
               idUsuario: usuario?.id,
-              idResponsable: Number(values.idResponsable),
               idMotivoBaja: Number(values.idMotivoBaja),
               idAutorizadoPor,
               fecha: values.fecha,

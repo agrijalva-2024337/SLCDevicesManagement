@@ -360,8 +360,7 @@ export function ActivosPage() {
             activos={rows}
             ubicaciones={ubicaciones.data}
             sedes={sedes.data}
-            responsables={responsables.data}
-            areas={areas.data}
+            usuarioActual={usuario}
             asignaciones={asignaciones.data}
             tipos={tipos.data}
             idEmpresaActiva={idActiva}
@@ -371,7 +370,6 @@ export function ActivosPage() {
                 idActivo: Number(values.idActivo),
                 idUbicacionDestino: Number(values.idUbicacionDestino),
                 idUsuario: usuario?.id,
-                idResponsable: Number(values.idResponsable),
                 fecha: values.fecha,
                 motivo: values.motivo,
               });
@@ -425,20 +423,19 @@ export function ActivosPage() {
             motivos={motivos.data}
             usuarios={usuarios.data}
             usuariosUnavailableReason={canReadUsuarios ? null : usuarioService.USUARIOS_SIN_LECTURA}
-            responsables={responsables.data}
+            permiteElegirAutorizador={canReadUsuarios}
+            usuarioActual={usuario}
             asignaciones={asignaciones.data}
             tipos={tipos.data}
             idEmpresaActiva={idActiva}
             ubicaciones={ubicaciones.data}
             sedes={sedes.data}
-            areas={areas.data}
             onClose={() => setMovimiento(null)}
             onSave={async (values) => {
               try {
                 await bajaService.registrar({
                   idActivo: Number(values.idActivo),
                   idUsuario: usuario?.id,
-                  idResponsable: Number(values.idResponsable),
                   idMotivoBaja: Number(values.idMotivoBaja),
                   idAutorizadoPor: Number(values.idAutorizadoPor),
                   fecha: values.fecha,

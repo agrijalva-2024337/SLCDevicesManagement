@@ -10,7 +10,6 @@ namespace SLCDM.Application.Features.Asignaciones.Commands;
 public sealed record CreateTrasladoCommand(
     int IdActivo,
     int IdUsuario,
-    int IdResponsable,
     int IdEstado,
     int IdUbicacionDestino,
     DateTime FechaAsignacion,
@@ -30,11 +29,6 @@ public sealed class CreateTrasladoCommandValidator : AbstractValidator<CreateTra
             .RequiredId("id usuario")
             .MustAsync(async (id, ct) => await db.Usuarios.AnyAsync(u => u.Id == id, ct))
             .WithMessage("No se encontro un usuario con el id informado.");
-
-        RuleFor(x => x.IdResponsable)
-             .RequiredId("id responsable")
-             .MustAsync(async (id, ct) => await db.Responsables.AnyAsync(r => r.Id == id, ct))
-             .WithMessage("No se encontro un responsable con el id informado.");
 
         RuleFor(x => x.IdEstado)
            .RequiredId("id estado")
@@ -70,15 +64,6 @@ public sealed class CreateTrasladoCommandValidator : AbstractValidator<CreateTra
                 return await AsignacionEmpresaRules.UsuarioPerteneceAEmpresaAsync(db, cmd.IdUsuario, empresaActivo, ct);
             })
             .WithMessage("El usuario debe pertenecer a la misma empresa del activo.");
-
-        RuleFor(x => x)
-            .MustAsync(async (cmd, ct) =>
-            {
-                var empresaActivo = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(db, cmd.IdActivo, ct);
-                var empresaResponsable = await AsignacionEmpresaRules.EmpresaIdDeResponsableAsync(db, cmd.IdResponsable, ct);
-                return AsignacionEmpresaRules.EmpresasCoinciden(empresaActivo, empresaResponsable);
-            })
-            .WithMessage("El responsable debe pertenecer a la misma empresa del activo.");
     }
 }
 
@@ -147,7 +132,7 @@ public sealed class CreateTrasladoCommandHandler : ICommandHandler<CreateTraslad
         {
             IdActivo = command.IdActivo,
             IdUsuario = command.IdUsuario,
-            IdResponsable = command.IdResponsable,
+            IdResponsable = null,
             IdEstado = idEstadoTraslado.Value,
             IdTipoAsignacion = tipo.Id,
             FechaAsignacion = fecha,

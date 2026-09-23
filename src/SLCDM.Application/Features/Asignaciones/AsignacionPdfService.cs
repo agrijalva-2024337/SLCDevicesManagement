@@ -92,8 +92,10 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
             .Include(a => a.Proveedor)
             .FirstOrDefaultAsync(a => a.Id == asignacion.IdActivo, cancellationToken);
 
-        var responsable = await _db.Responsables.AsNoTracking().IgnoreQueryFilters()
-            .FirstOrDefaultAsync(r => r.Id == asignacion.IdResponsable, cancellationToken);
+        var responsable = asignacion.IdResponsable is int idResponsable
+            ? await _db.Responsables.AsNoTracking().IgnoreQueryFilters()
+                .FirstOrDefaultAsync(r => r.Id == idResponsable, cancellationToken)
+            : null;
 
         var area = responsable is not null
             ? await _db.Areas.AsNoTracking().IgnoreQueryFilters()
@@ -112,7 +114,8 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
         var quienEntrega = usuarioEntrega is null
             ? $"Usuario #{asignacion.IdUsuario}"
             : $"{usuarioEntrega.Nombres} {usuarioEntrega.Apellidos}".Trim();
-        var quienRecibe = responsable?.NombreCompleto ?? $"Responsable #{asignacion.IdResponsable}";
+        var quienRecibe = responsable?.NombreCompleto
+            ?? (esBaja ? quienEntrega : $"Responsable #{asignacion.IdResponsable}");
         var empresaNombre = string.IsNullOrWhiteSpace(empresa?.Nombre) ? "SLC Trade" : empresa!.Nombre;
 
         // QR embebido -> ficha de consulta publica (BE-31, ya existe). No estaba
