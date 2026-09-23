@@ -34,6 +34,11 @@ public sealed class Worker : BackgroundService
                 }
 
                 var coords = UbicacionEquipo.Leer();
+                if (coords is null)
+                {
+                    PermisoUbicacionPrompt.MostrarSiHaceFalta(); // no hace nada si ya se mostró antes
+                }
+
                 var bssid = ObtenerBssidConectado();
                 if (bssid is null && coords is null)
                 {
