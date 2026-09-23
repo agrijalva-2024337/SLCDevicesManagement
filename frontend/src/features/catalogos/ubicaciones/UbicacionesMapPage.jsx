@@ -13,7 +13,9 @@ import 'leaflet/dist/leaflet.css';
 
 const DEFAULT_CENTER = [14.6349, -90.5069];
 const DEFAULT_ZOOM = 8;
-const SINGLE_ZOOM = 16;
+const SINGLE_ZOOM = 18;
+const MAX_ZOOM = 22;
+const MIN_ZOOM = 3;
 
 function MapResize() {
   const map = useMap();
@@ -116,13 +118,18 @@ function LocationsMap({ points, selectedId, hoveredId, onMarkerClick, markerRefs
     <MapContainer
       center={DEFAULT_CENTER}
       zoom={DEFAULT_ZOOM}
+      minZoom={MIN_ZOOM}
+      maxZoom={MAX_ZOOM}
       style={{ height: '100%', width: '100%' }}
       zoomControl
       scrollWheelZoom
+      doubleClickZoom
     >
       <TileLayer
         attribution='&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${mapTilerKey}`}
+        maxZoom={MAX_ZOOM}
+        maxNativeZoom={22}
       />
       <MapResize />
       <MapCamera points={points} selected={selected} />

@@ -1561,9 +1561,20 @@ a.app-btn--danger {
 
 @media (max-width: 639.98px) {
   .app-overlay {
-    max-height: min(90dvh, 100%);
+    max-height: min(94dvh, 100%);
+    width: 100%;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
+  }
+
+  .app-overlay-head,
+  .app-overlay-body {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .app-overlay-body {
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
   }
 }
 
