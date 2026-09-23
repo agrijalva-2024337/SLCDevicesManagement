@@ -71,7 +71,12 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
 
         var tipo = asignacion.TipoAsignacion?.Nombre ?? "Movimiento";
         var esBaja = TipoAsignacionNombres.EsNombre(tipo, TipoAsignacionNombres.Baja);
-        var fileName = esBaja ? $"acta-baja-{asignacion.Id}.pdf" : $"acta-entrega-{asignacion.Id}.pdf";
+        var esTraslado = TipoAsignacionNombres.EsNombre(tipo, TipoAsignacionNombres.Traslado);
+        var fileName = esBaja
+            ? $"acta-baja-{asignacion.Id}.pdf"
+            : esTraslado
+                ? $"acta-traslado-{asignacion.Id}.pdf"
+                : $"acta-entrega-{asignacion.Id}.pdf";
 
         var actaGuardada = await _db.AsignacionDocumentosPdf.AsNoTracking()
             .FirstOrDefaultAsync(d => d.IdAsignacion == idAsignacion, cancellationToken);
@@ -105,17 +110,66 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
         var usuarioEntrega = await _db.Usuarios.AsNoTracking().IgnoreQueryFilters()
             .FirstOrDefaultAsync(u => u.Id == asignacion.IdUsuario, cancellationToken);
 
+        Usuario? autorizadoPor = null;
+        if (esBaja)
+        {
+            var detalleBaja = await _db.DetallesBaja.AsNoTracking()
+                .FirstOrDefaultAsync(d => d.IdAsignacion == idAsignacion, cancellationToken);
+            if (detalleBaja is not null)
+            {
+                autorizadoPor = await _db.Usuarios.AsNoTracking().IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(u => u.Id == detalleBaja.IdAutorizadoPor, cancellationToken);
+            }
+        }
+
         var empresa = activo?.Proveedor is not null
             ? await _db.Empresas.AsNoTracking().IgnoreQueryFilters()
                 .FirstOrDefaultAsync(e => e.Id == activo.Proveedor.IdEmpresa, cancellationToken)
             : null;
 
-        var titulo = esBaja ? "Acta de baja de activo" : "Acta de entrega de equipo";
+        var titulo = esBaja
+            ? "Acta de baja de activo"
+            : esTraslado
+                ? "Acta de traslado de activo"
+                : "Acta de entrega de equipo";
         var quienEntrega = usuarioEntrega is null
             ? $"Usuario #{asignacion.IdUsuario}"
             : $"{usuarioEntrega.Nombres} {usuarioEntrega.Apellidos}".Trim();
-        var quienRecibe = responsable?.NombreCompleto
-            ?? (esBaja ? quienEntrega : $"Responsable #{asignacion.IdResponsable}");
+        // Baja: IdAutorizadoPor (usuario). Traslado: quien registró. Entrega: responsable que recibe.
+        string etiquetaDestinatario;
+        string quienDestinatario;
+        string? cargoDestinatario;
+        string dpiTexto;
+        string departamentoTexto;
+        if (esBaja)
+        {
+            etiquetaDestinatario = "Autorizado por";
+            quienDestinatario = autorizadoPor is null
+                ? quienEntrega
+                : $"{autorizadoPor.Nombres} {autorizadoPor.Apellidos}".Trim();
+            cargoDestinatario = "Autorizado por";
+            dpiTexto = "____________________________";
+            departamentoTexto = "—";
+        }
+        else if (esTraslado)
+        {
+            etiquetaDestinatario = "Registrado por";
+            quienDestinatario = quienEntrega;
+            cargoDestinatario = "Registrado por";
+            dpiTexto = "____________________________";
+            departamentoTexto = "—";
+        }
+        else
+        {
+            etiquetaDestinatario = "Para";
+            quienDestinatario = responsable?.NombreCompleto
+                ?? $"Responsable #{asignacion.IdResponsable}";
+            cargoDestinatario = responsable?.Cargo;
+            dpiTexto = string.IsNullOrWhiteSpace(responsable?.Dpi)
+                ? "____________________________"
+                : FormatearDpi(responsable.Dpi);
+            departamentoTexto = string.IsNullOrWhiteSpace(area?.Nombre) ? "—" : area!.Nombre;
+        }
         var empresaNombre = string.IsNullOrWhiteSpace(empresa?.Nombre) ? "SLC Trade" : empresa!.Nombre;
 
         // QR embebido -> ficha de consulta publica (BE-31, ya existe). No estaba
@@ -180,8 +234,8 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
                         row.RelativeItem().PaddingLeft(16).Column(datos =>
                         {
                             datos.Spacing(2);
-                            datos.Item().Text($"Para: {quienRecibe}").FontSize(9.5f).Bold();
-                            datos.Item().Text($"Departamento: {(string.IsNullOrWhiteSpace(area?.Nombre) ? "—" : area!.Nombre)}").FontSize(9.5f).Bold();
+                            datos.Item().Text($"{etiquetaDestinatario}: {quienDestinatario}").FontSize(9.5f).Bold();
+                            datos.Item().Text($"Departamento: {departamentoTexto}").FontSize(9.5f).Bold();
                             datos.Item().Text($"Fecha: {asignacion.FechaAsignacion:dd/MM/yyyy}").FontSize(9.5f).Bold();
                         });
 
@@ -198,10 +252,12 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
                     // -- Parrafo introductorio --
                     col.Item().PaddingTop(4).Text(esBaja
                         ? "Estimado, por este medio se hace constar la baja / devolución de este equipo, el cual deja de estar bajo su responsabilidad y cuidado a partir de esta fecha."
-                        : "Estimado, por este medio se hace constar la entrega de este equipo el cual estará bajo su responsabilidad y cuidado.");
+                        : esTraslado
+                            ? "Estimado, por este medio se hace constar el traslado de este equipo a la ubicación de destino indicada."
+                            : "Estimado, por este medio se hace constar la entrega de este equipo el cual estará bajo su responsabilidad y cuidado.");
 
                     // -- Prohibiciones (solo aplica a entregas activas) --
-                    if (!esBaja)
+                    if (!esBaja && !esTraslado)
                     {
                         col.Item().PaddingTop(2).Text("Al utilizar este equipo está prohibido:").Bold();
                         foreach (var regla in Prohibiciones)
@@ -215,6 +271,11 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
                     var motivo = string.IsNullOrWhiteSpace(asignacion.Observaciones)
                         ? "—"
                         : asignacion.Observaciones!.Trim();
+                    var etiquetaMotivo = esBaja
+                        ? "Motivo de baja"
+                        : esTraslado
+                            ? "Motivo de traslado"
+                            : "Motivo de entrega";
 
                     col.Item().PaddingTop(6).Table(table =>
                     {
@@ -227,22 +288,29 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
                         FilaCampo(table, "Especificaciones de hardware", Texto(activo?.EspecificacionesHardware));
                         FilaCampo(table, "Periféricos adicionales", Texto(activo?.PerifericosAdicionales));
                         FilaCampo(table, "Estado", Texto(asignacion.Estado?.Nombre));
-                        FilaCampo(table, esBaja ? "Motivo de baja" : "Motivo de entrega", motivo);
+                        FilaCampo(table, etiquetaMotivo, motivo);
                     });
 
                     // -- Parrafo de aceptacion --
-                    var dpiTexto = string.IsNullOrWhiteSpace(responsable?.Dpi)
-                        ? "____________________________"
-                        : FormatearDpi(responsable.Dpi);
-                    col.Item().PaddingTop(6).Text($"Yo: {quienRecibe}     DPI: {dpiTexto}");
+                    col.Item().PaddingTop(6).Text($"Yo: {quienDestinatario}     DPI: {dpiTexto}");
                     col.Item().Text(esBaja
                         ? "Hago constar la devolución del equipo y accesorios detallados en esta acta, entregándolos en el estado descrito, salvo el desgaste de uso normal. Confirmo que a partir de esta fecha dejo de tener responsabilidad alguna sobre el mismo."
-                        : "Acepto seguir las instrucciones detalladas en esta entrega, así como también que el equipo y accesorios de hardware quedan bajo mi estricta responsabilidad. Estoy anuente y acepto hacerme responsable por cualquier tipo de daño o pérdida que se cause al equipo entregado, en caso aún aplique el deducible por garantía y en caso la garantía ya no aplique debo absorber el costo total. Además, estoy consciente de que al retirarme de la empresa debo devolver el equipo con los hardware detallados en esta entrega y en el estado que fueron entregados con desgaste de uso normal."
+                        : esTraslado
+                            ? "Hago constar el traslado del equipo y accesorios detallados en esta acta hacia la ubicación de destino indicada."
+                            : "Acepto seguir las instrucciones detalladas en esta entrega, así como también que el equipo y accesorios de hardware quedan bajo mi estricta responsabilidad. Estoy anuente y acepto hacerme responsable por cualquier tipo de daño o pérdida que se cause al equipo entregado, en caso aún aplique el deducible por garantía y en caso la garantía ya no aplique debo absorber el costo total. Además, estoy consciente de que al retirarme de la empresa debo devolver el equipo con los hardware detallados en esta entrega y en el estado que fueron entregados con desgaste de uso normal."
                     ).FontSize(8.5f);
 
                     // -- Firmas --
                     col.Item().PaddingTop(18)
-                        .Element(c => DrawFirmas(c, esBaja, quienEntrega, quienRecibe, responsable?.Cargo, asignacion.FirmaEntrega, asignacion.FirmaRecibe));
+                        .Element(c => DrawFirmas(
+                            c,
+                            esBaja,
+                            esTraslado,
+                            quienEntrega,
+                            quienDestinatario,
+                            cargoDestinatario,
+                            asignacion.FirmaEntrega,
+                            asignacion.FirmaRecibe));
                 });
 
                 page.Footer().Column(col =>
@@ -342,9 +410,20 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
     }
 
     private static void DrawFirmas(
-        IContainer container, bool esBaja, string quienEntrega, string quienRecibe, string? cargoRecibe,
-        byte[]? firmaEntrega, byte[]? firmaRecibe)
+        IContainer container,
+        bool esBaja,
+        bool esTraslado,
+        string quienEntrega,
+        string quienDestinatario,
+        string? cargoDestinatario,
+        byte[]? firmaEntrega,
+        byte[]? firmaRecibe)
     {
+        var etiquetaIzquierda = esBaja || esTraslado ? "Registrado por" : "Quien entrega";
+        var etiquetaDerecha = string.IsNullOrWhiteSpace(cargoDestinatario)
+            ? (esBaja ? "Autorizado por" : esTraslado ? "Registrado por" : "Quien recibe")
+            : cargoDestinatario;
+
         container.Row(firmas =>
         {
             firmas.RelativeItem().PaddingRight(18).Column(left =>
@@ -352,16 +431,14 @@ public sealed class AsignacionPdfService : IAsignacionPdfService
                 DrawFirma(left, firmaEntrega);
                 left.Item().PaddingTop(2).LineHorizontal(0.75f).LineColor(Colors.Grey.Darken1);
                 left.Item().AlignCenter().Text(quienEntrega).FontSize(8).Bold();
-                left.Item().AlignCenter().Text(esBaja ? "Quien registra" : "Quien entrega").FontSize(7).FontColor(Colors.Grey.Darken1);
+                left.Item().AlignCenter().Text(etiquetaIzquierda).FontSize(7).FontColor(Colors.Grey.Darken1);
             });
             firmas.RelativeItem().PaddingLeft(14).Column(right =>
             {
                 DrawFirma(right, firmaRecibe);
                 right.Item().PaddingTop(2).LineHorizontal(0.75f).LineColor(Colors.Grey.Darken1);
-                right.Item().AlignCenter().Text(quienRecibe).FontSize(8).Bold();
-                right.Item().AlignCenter().Text(string.IsNullOrWhiteSpace(cargoRecibe)
-                    ? (esBaja ? "Quien autoriza" : "Quien recibe")
-                    : cargoRecibe).FontSize(7).FontColor(Colors.Grey.Darken1);
+                right.Item().AlignCenter().Text(quienDestinatario).FontSize(8).Bold();
+                right.Item().AlignCenter().Text(etiquetaDerecha).FontSize(7).FontColor(Colors.Grey.Darken1);
             });
         });
     }
