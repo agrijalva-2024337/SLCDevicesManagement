@@ -362,30 +362,65 @@ function SearchField({ placeholder, onDebounced }) {
   );
 }
 
-function TablePager({ page, pageCount, from, to, total, onPageChange }) {
+function TablePager({
+  page,
+  pageCount,
+  from,
+  to,
+  total,
+  onPageChange,
+  rowsPerPage,
+  onRowsPerPageChange,
+  pageSizeId,
+}) {
+  const showNav = pageCount > 1;
   return (
     <div className="data-table-pager">
-      <p className="data-table-pager-count">
-        {from}–{to} de {total}
-      </p>
-      <div className="data-table-pager-nav">
-        <button
-          type="button"
-          className="app-btn app-btn--ghost app-btn--sm"
-          disabled={page <= 1}
-          onClick={() => onPageChange(page - 1)}
-        >
-          Anterior
-        </button>
-        <button
-          type="button"
-          className="app-btn app-btn--ghost app-btn--sm"
-          disabled={page >= pageCount}
-          onClick={() => onPageChange(page + 1)}
-        >
-          Siguiente
-        </button>
+      <div className="data-table-pager-meta">
+        <p className="data-table-pager-count">
+          {from}–{to} de {total}
+        </p>
+        {onRowsPerPageChange ? (
+          <div className="data-table-page-size">
+            <label className="data-table-sr" htmlFor={pageSizeId}>
+              Registros por página
+            </label>
+            <select
+              id={pageSizeId}
+              className="app-input data-table-page-size-select"
+              value={rowsPerPage}
+              onChange={(event) => onRowsPerPageChange(event.target.value)}
+              aria-label="Registros por página"
+            >
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+              <option value="all">Todos</option>
+            </select>
+          </div>
+        ) : null}
       </div>
+      {showNav ? (
+        <div className="data-table-pager-nav">
+          <button
+            type="button"
+            className="app-btn app-btn--ghost app-btn--sm"
+            disabled={page <= 1}
+            onClick={() => onPageChange(page - 1)}
+          >
+            Anterior
+          </button>
+          <button
+            type="button"
+            className="app-btn app-btn--ghost app-btn--sm"
+            disabled={page >= pageCount}
+            onClick={() => onPageChange(page + 1)}
+          >
+            Siguiente
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -407,7 +442,7 @@ export function DataTable({
   hideHeader = false,
   hideToolbar = false,
   exportExcel = true,
-  pageSize = 25,
+  pageSize = 10,
   page,
   onPageChange,
   sortKey,
@@ -423,12 +458,16 @@ export function DataTable({
   initialFilters,
 }) {
   const filterIdBase = useId();
+  const pageSizeId = useId();
   const [query, setQuery] = useState('');
   const [searchResetKey, setSearchResetKey] = useState(0);
   const queryRef = useRef('');
   const onPageChangeRef = useRef(onPageChange);
   const [filterValues, setFilterValues] = useState(() => initialFilters ?? {});
   const [internalPage, setInternalPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(() =>
+    pageSize == null || pageSize === 0 ? 'all' : String(pageSize),
+  );
   const [internalSort, setInternalSort] = useState({
     key: defaultSortKey ?? null,
     direction: defaultSortDirection,
@@ -441,6 +480,8 @@ export function DataTable({
   useEffect(() => {
     onPageChangeRef.current = onPageChange;
   });
+
+  const effectivePageSize = rowsPerPage === 'all' ? null : Number(rowsPerPage);
 
   const displayColumns = useMemo(() => withStickyOffsets(expandColumns(columns)), [columns]);
   const toolbarFilters = useMemo(
@@ -507,13 +548,13 @@ export function DataTable({
   ]);
 
   const total = filtered.length;
-  const pageCount = pageSize ? Math.max(1, Math.ceil(total / pageSize)) : 1;
+  const pageCount = effectivePageSize ? Math.max(1, Math.ceil(total / effectivePageSize)) : 1;
   const safePage = Math.min(Math.max(1, currentPage), pageCount);
-  const paged = pageSize
-    ? filtered.slice((safePage - 1) * pageSize, safePage * pageSize)
+  const paged = effectivePageSize
+    ? filtered.slice((safePage - 1) * effectivePageSize, safePage * effectivePageSize)
     : filtered;
-  const from = total === 0 ? 0 : (safePage - 1) * (pageSize ?? total) + 1;
-  const to = pageSize ? Math.min(safePage * pageSize, total) : total;
+  const from = total === 0 ? 0 : (safePage - 1) * (effectivePageSize ?? total) + 1;
+  const to = effectivePageSize ? Math.min(safePage * effectivePageSize, total) : total;
 
   const hasFilters =
     query.trim() !== '' ||
@@ -521,7 +562,7 @@ export function DataTable({
   const showTable = loading || paged.length > 0;
   const showEmpty = !loading && rows.length === 0;
   const showNoResults = !loading && rows.length > 0 && filtered.length === 0;
-  const showPager = Boolean(pageSize) && !loading && total > 0;
+  const showPager = !loading && total > 0;
   const excelColumns = useMemo(
     () =>
       displayColumns
@@ -860,6 +901,12 @@ export function DataTable({
           to={to}
           total={total}
           onPageChange={setPage}
+          rowsPerPage={rowsPerPage}
+          pageSizeId={pageSizeId}
+          onRowsPerPageChange={(value) => {
+            setRowsPerPage(value);
+            setPage(1);
+          }}
         />
       ) : null}
     </section>
