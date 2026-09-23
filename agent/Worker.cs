@@ -33,11 +33,9 @@ public sealed class Worker : BackgroundService
                     _logger.LogInformation("Dispositivo auto-registrado.");
                 }
 
-                var coords = UbicacionEquipo.Leer();
-                if (coords is null)
-                {
-                    PermisoUbicacionPrompt.MostrarSiHaceFalta(); // no hace nada si ya se mostró antes
-                }
+                var coords = await UbicacionNavegador.LeerAsync() is { } webCoords
+                    ? ((decimal Latitud, decimal Longitud)?)(webCoords.Lat, webCoords.Lng)
+                    : UbicacionEquipo.Leer(); // respaldo: metodo viejo (System.Device.Location)
 
                 var bssid = ObtenerBssidConectado();
                 if (bssid is null && coords is null)
