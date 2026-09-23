@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useNavigate } from 'react-router';
 import { ExportExcelButton } from '@/shared/components/RecordActions';
 import { RowIconActions } from '@/shared/components/RowIconActions';
 import { foldSearch, matchesTokens, searchTokens } from '@/shared/utils/search';
@@ -272,7 +273,7 @@ const ICON_ACTION_META = {
 
 function iconActionsFromRow(actions) {
   if (!actions) return [];
-  return ['view', 'verify', 'create', 'edit', 'remove']
+  return ['verify', 'create', 'edit', 'remove']
     .filter((key) => actions[key])
     .map((key) => ({
       key,
@@ -283,6 +284,12 @@ function iconActionsFromRow(actions) {
       enabled: actions[key].enabled,
       disabledReason: actions[key].disabledReason,
     }));
+}
+
+function resolveViewAction(actions) {
+  if (!actions?.view) return null;
+  if (actions.view.enabled === false) return null;
+  return actions.view;
 }
 
 function SkeletonRows({ columns, withActions, expandable }) {
@@ -456,7 +463,9 @@ export function DataTable({
   renderRowActions,
   renderExpandedContent,
   initialFilters,
+  onRowDoubleClick,
 }) {
+  const navigate = useNavigate();
   const filterIdBase = useId();
   const pageSizeId = useId();
   const [query, setQuery] = useState('');
@@ -627,6 +636,34 @@ export function DataTable({
     toggleExpand(id);
   }
 
+  function openRowFicha(row) {
+    if (typeof onRowDoubleClick === 'function') {
+      onRowDoubleClick(row);
+      return;
+    }
+    if (typeof getRowActions !== 'function') return;
+    const view = resolveViewAction(getRowActions(row));
+    if (!view) return;
+    if (typeof view.onClick === 'function') {
+      view.onClick();
+      return;
+    }
+    if (view.to) {
+      navigate(view.to);
+    }
+  }
+
+  function handleRowDoubleClick(event, row) {
+    if (event.target.closest('button, a, input, select, textarea, label')) return;
+    openRowFicha(row);
+  }
+
+  function rowCanOpenFicha(row) {
+    if (typeof onRowDoubleClick === 'function') return true;
+    if (typeof getRowActions !== 'function') return false;
+    return Boolean(resolveViewAction(getRowActions(row)));
+  }
+
   function handleRowKeyDown(event, id) {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -780,6 +817,7 @@ export function DataTable({
                   const id = rowId(row, index);
                   const open = expandedId === id;
                   const panelId = panelIdFor(id);
+                  const canOpenFicha = rowCanOpenFicha(row);
                   const iconActions =
                     typeof renderRowActions !== 'function' && typeof getRowActions === 'function'
                       ? iconActionsFromRow(getRowActions(row))
@@ -788,12 +826,21 @@ export function DataTable({
                     <Fragment key={id}>
                       <tr
                         data-row-id={id}
-                        className={open ? 'is-expanded' : undefined}
-                        tabIndex={canExpand ? 0 : undefined}
+                        className={[
+                          open ? 'is-expanded' : '',
+                          canOpenFicha ? 'data-table-row--openable' : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ') || undefined}
+                        tabIndex={canExpand || canOpenFicha ? 0 : undefined}
                         role={canExpand ? 'button' : undefined}
+                        title={canOpenFicha ? 'Doble clic para ver la ficha' : undefined}
                         aria-expanded={canExpand ? open : undefined}
                         aria-controls={canExpand ? panelId : undefined}
                         onClick={canExpand ? (event) => handleRowClick(event, id) : undefined}
+                        onDoubleClick={
+                          canOpenFicha ? (event) => handleRowDoubleClick(event, row) : undefined
+                        }
                         onKeyDown={canExpand ? (event) => handleRowKeyDown(event, id) : undefined}
                       >
                         {canExpand ? (

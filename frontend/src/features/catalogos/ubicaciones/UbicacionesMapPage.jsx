@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import L from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import { useAuth } from '@/features/auth/useAuth';
@@ -165,6 +165,7 @@ function SkeletonRows() {
 }
 
 export function UbicacionesMapPage({ items, loading = false, onDelete }) {
+  const navigate = useNavigate();
   const searchId = useId();
   const pageSizeId = useId();
   const { canWrite } = useAuth();
@@ -183,10 +184,6 @@ export function UbicacionesMapPage({ items, loading = false, onDelete }) {
     const handle = window.setTimeout(() => setQuery(liveQuery), 280);
     return () => window.clearTimeout(handle);
   }, [liveQuery]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [query, rowsPerPage]);
 
   const filtered = useMemo(() => {
     const needle = query.trim();
@@ -261,7 +258,10 @@ export function UbicacionesMapPage({ items, loading = false, onDelete }) {
                 className="app-input"
                 placeholder="Buscar por nombre o descripción"
                 value={liveQuery}
-                onChange={(event) => setLiveQuery(event.target.value)}
+                onChange={(event) => {
+                  setLiveQuery(event.target.value);
+                  setPage(1);
+                }}
                 autoComplete="off"
               />
             </div>
@@ -279,7 +279,10 @@ export function UbicacionesMapPage({ items, loading = false, onDelete }) {
                   id={pageSizeId}
                   className="app-input ubicaciones-page-size-select"
                   value={rowsPerPage}
-                  onChange={(event) => setRowsPerPage(event.target.value)}
+                  onChange={(event) => {
+                    setRowsPerPage(event.target.value);
+                    setPage(1);
+                  }}
                   aria-label="Registros por página"
                 >
                   <option value="5">5</option>
@@ -345,9 +348,14 @@ export function UbicacionesMapPage({ items, loading = false, onDelete }) {
                           className={selected ? 'is-selected' : undefined}
                           tabIndex={0}
                           aria-selected={selected}
+                          title="Clic para ver en el mapa. Doble clic para abrir la ficha."
                           onMouseEnter={() => setHoveredId(item.id)}
                           onMouseLeave={() => setHoveredId((current) => (current === item.id ? null : current))}
                           onClick={() => selectFromTable(item)}
+                          onDoubleClick={(event) => {
+                            if (event.target.closest('a, button')) return;
+                            navigate(`${item.id}`);
+                          }}
                           onKeyDown={(event) => {
                             if (event.key === 'Enter' || event.key === ' ') {
                               event.preventDefault();
@@ -375,14 +383,6 @@ export function UbicacionesMapPage({ items, loading = false, onDelete }) {
                           </td>
                           <td data-align="right" onClick={(event) => event.stopPropagation()}>
                             <div className="ubicaciones-actions">
-                              <Link
-                                to={`${item.id}`}
-                                className="ubicaciones-action"
-                                title="Ver"
-                                aria-label={`Ver ${item.nombre}`}
-                              >
-                                <i className="pi pi-eye" aria-hidden="true" />
-                              </Link>
                               {allowWrite ? (
                                 <Link
                                   to={`${item.id}/editar`}
