@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import L from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import { useAuth } from '@/features/auth/useAuth';
@@ -13,7 +13,9 @@ import 'leaflet/dist/leaflet.css';
 
 const DEFAULT_CENTER = [14.6349, -90.5069];
 const DEFAULT_ZOOM = 8;
-const SINGLE_ZOOM = 16;
+const SINGLE_ZOOM = 18;
+const MAX_ZOOM = 22;
+const MIN_ZOOM = 3;
 
 function MapResize() {
   const map = useMap();
@@ -116,13 +118,18 @@ function LocationsMap({ points, selectedId, hoveredId, onMarkerClick, markerRefs
     <MapContainer
       center={DEFAULT_CENTER}
       zoom={DEFAULT_ZOOM}
+      minZoom={MIN_ZOOM}
+      maxZoom={MAX_ZOOM}
       style={{ height: '100%', width: '100%' }}
       zoomControl
       scrollWheelZoom
+      doubleClickZoom
     >
       <TileLayer
         attribution='&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${mapTilerKey}`}
+        maxZoom={MAX_ZOOM}
+        maxNativeZoom={22}
       />
       <MapResize />
       <MapCamera points={points} selected={selected} />
@@ -158,13 +165,17 @@ function SkeletonRows() {
 }
 
 export function UbicacionesMapPage({ items, loading = false, onDelete }) {
+  const navigate = useNavigate();
   const searchId = useId();
+  const pageSizeId = useId();
   const { canWrite } = useAuth();
   const allowWrite = canWrite('ubicaciones');
   const [liveQuery, setLiveQuery] = useState('');
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
+  const [rowsPerPage, setRowsPerPage] = useState('10');
+  const [page, setPage] = useState(1);
   const markerRefs = useRef({});
   const rowRefs = useRef({});
   const resolved = useResolvedPositions(items);
@@ -179,6 +190,15 @@ export function UbicacionesMapPage({ items, loading = false, onDelete }) {
     if (!needle) return resolved;
     return resolved.filter((item) => matchesSearch([item.nombre, item.descripcion].join(' '), needle));
   }, [query, resolved]);
+
+  const effectivePageSize = rowsPerPage === 'all' ? null : Number(rowsPerPage);
+  const pageCount = effectivePageSize ? Math.max(1, Math.ceil(filtered.length / effectivePageSize)) : 1;
+  const safePage = Math.min(Math.max(1, page), pageCount);
+  const paged = effectivePageSize
+    ? filtered.slice((safePage - 1) * effectivePageSize, safePage * effectivePageSize)
+    : filtered;
+  const from = filtered.length === 0 ? 0 : (safePage - 1) * (effectivePageSize ?? filtered.length) + 1;
+  const to = effectivePageSize ? Math.min(safePage * effectivePageSize, filtered.length) : filtered.length;
 
   const mapped = useMemo(() => filtered.filter((item) => item.position), [filtered]);
   const activeSelectedId = filtered.some((item) => item.id === selectedId) ? selectedId : null;
@@ -238,7 +258,10 @@ export function UbicacionesMapPage({ items, loading = false, onDelete }) {
                 className="app-input"
                 placeholder="Buscar por nombre o descripción"
                 value={liveQuery}
-                onChange={(event) => setLiveQuery(event.target.value)}
+                onChange={(event) => {
+                  setLiveQuery(event.target.value);
+                  setPage(1);
+                }}
                 autoComplete="off"
               />
             </div>
@@ -247,6 +270,29 @@ export function UbicacionesMapPage({ items, loading = false, onDelete }) {
                 ? 'Cargando…'
                 : `${filtered.length} ${filtered.length === 1 ? 'registro' : 'registros'}`}
             </p>
+            {!loading && filtered.length > 0 ? (
+              <div className="ubicaciones-page-size">
+                <label className="ubicaciones-sr" htmlFor={pageSizeId}>
+                  Registros por página
+                </label>
+                <select
+                  id={pageSizeId}
+                  className="app-input ubicaciones-page-size-select"
+                  value={rowsPerPage}
+                  onChange={(event) => {
+                    setRowsPerPage(event.target.value);
+                    setPage(1);
+                  }}
+                  aria-label="Registros por página"
+                >
+                  <option value="5">5</option>
+                  <option value="10">10</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                  <option value="all">Todos</option>
+                </select>
+              </div>
+            ) : null}
           </div>
 
           <div className="ubicaciones-table-wrap">
@@ -290,7 +336,7 @@ export function UbicacionesMapPage({ items, loading = false, onDelete }) {
                   {loading ? (
                     <SkeletonRows />
                   ) : (
-                    filtered.map((item) => {
+                    paged.map((item) => {
                       const selected = activeSelectedId === item.id;
                       return (
                         <tr
@@ -302,9 +348,14 @@ export function UbicacionesMapPage({ items, loading = false, onDelete }) {
                           className={selected ? 'is-selected' : undefined}
                           tabIndex={0}
                           aria-selected={selected}
+                          title="Clic para ver en el mapa. Doble clic para abrir la ficha."
                           onMouseEnter={() => setHoveredId(item.id)}
                           onMouseLeave={() => setHoveredId((current) => (current === item.id ? null : current))}
                           onClick={() => selectFromTable(item)}
+                          onDoubleClick={(event) => {
+                            if (event.target.closest('a, button')) return;
+                            navigate(`${item.id}`);
+                          }}
                           onKeyDown={(event) => {
                             if (event.key === 'Enter' || event.key === ' ') {
                               event.preventDefault();
@@ -332,14 +383,6 @@ export function UbicacionesMapPage({ items, loading = false, onDelete }) {
                           </td>
                           <td data-align="right" onClick={(event) => event.stopPropagation()}>
                             <div className="ubicaciones-actions">
-                              <Link
-                                to={`${item.id}`}
-                                className="ubicaciones-action"
-                                title="Ver"
-                                aria-label={`Ver ${item.nombre}`}
-                              >
-                                <i className="pi pi-eye" aria-hidden="true" />
-                              </Link>
                               {allowWrite ? (
                                 <Link
                                   to={`${item.id}/editar`}
@@ -369,6 +412,33 @@ export function UbicacionesMapPage({ items, loading = false, onDelete }) {
                   )}
                 </tbody>
               </table>
+            ) : null}
+            {!loading && filtered.length > 0 ? (
+              <div className="ubicaciones-pager">
+                <p className="ubicaciones-pager-count">
+                  {from}–{to} de {filtered.length}
+                </p>
+                {pageCount > 1 ? (
+                  <div className="ubicaciones-pager-nav">
+                    <button
+                      type="button"
+                      className="app-btn app-btn--ghost app-btn--sm"
+                      disabled={safePage <= 1}
+                      onClick={() => setPage(safePage - 1)}
+                    >
+                      Anterior
+                    </button>
+                    <button
+                      type="button"
+                      className="app-btn app-btn--ghost app-btn--sm"
+                      disabled={safePage >= pageCount}
+                      onClick={() => setPage(safePage + 1)}
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                ) : null}
+              </div>
             ) : null}
           </div>
         </div>

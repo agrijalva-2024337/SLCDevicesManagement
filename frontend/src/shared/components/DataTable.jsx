@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useNavigate } from 'react-router';
 import { ExportExcelButton } from '@/shared/components/RecordActions';
 import { RowIconActions } from '@/shared/components/RowIconActions';
 import { foldSearch, matchesTokens, searchTokens } from '@/shared/utils/search';
@@ -20,6 +21,32 @@ const BOOLEAN_STATUS_OPTIONS = [
   { value: 'true', label: 'Habilitado' },
   { value: 'false', label: 'Deshabilitado' },
 ];
+
+function isBareAllLabel(label) {
+  return /^(todos|todas)$/i.test(String(label ?? '').trim());
+}
+
+function describeAllOption(filterLabel, optionLabel) {
+  const raw = String(optionLabel ?? '').trim();
+  if (raw && !isBareAllLabel(raw)) {
+    return raw;
+  }
+  const name = String(filterLabel ?? '').trim() || 'filtro';
+  return `Todos · ${name}`;
+}
+
+function withDescribedOptions(filter) {
+  const options = (filter.options ?? BOOLEAN_STATUS_OPTIONS).map((option) => {
+    if (option.value !== 'all' && option.value !== '') {
+      return option;
+    }
+    return {
+      ...option,
+      label: describeAllOption(filter.label, option.label),
+    };
+  });
+  return { ...filter, options };
+}
 
 const BADGE_TONES = {
   success: 'data-badge data-badge--on',
@@ -113,21 +140,25 @@ function stickyStyle(column) {
 function normalizeFilters(statusFilter, filters) {
   const list = [];
   if (statusFilter) {
-    list.push({
-      key: statusFilter.key ?? 'status',
-      label: statusFilter.label ?? 'Estado',
-      getValue: statusFilter.getValue,
-      options: statusFilter.options ?? BOOLEAN_STATUS_OPTIONS,
-    });
+    list.push(
+      withDescribedOptions({
+        key: statusFilter.key ?? 'status',
+        label: statusFilter.label ?? 'Estado',
+        getValue: statusFilter.getValue,
+        options: statusFilter.options ?? BOOLEAN_STATUS_OPTIONS,
+      }),
+    );
   }
   if (Array.isArray(filters)) {
     for (const filter of filters) {
-      list.push({
-        key: filter.key,
-        label: filter.label ?? filter.key,
-        getValue: filter.getValue,
-        options: filter.options ?? BOOLEAN_STATUS_OPTIONS,
-      });
+      list.push(
+        withDescribedOptions({
+          key: filter.key,
+          label: filter.label ?? filter.key,
+          getValue: filter.getValue,
+          options: filter.options ?? BOOLEAN_STATUS_OPTIONS,
+        }),
+      );
     }
   }
   return list;
@@ -242,7 +273,7 @@ const ICON_ACTION_META = {
 
 function iconActionsFromRow(actions) {
   if (!actions) return [];
-  return ['view', 'verify', 'create', 'edit', 'remove']
+  return ['verify', 'create', 'edit', 'remove']
     .filter((key) => actions[key])
     .map((key) => ({
       key,
@@ -253,6 +284,12 @@ function iconActionsFromRow(actions) {
       enabled: actions[key].enabled,
       disabledReason: actions[key].disabledReason,
     }));
+}
+
+function resolveViewAction(actions) {
+  if (!actions?.view) return null;
+  if (actions.view.enabled === false) return null;
+  return actions.view;
 }
 
 function SkeletonRows({ columns, withActions, expandable }) {
@@ -332,30 +369,65 @@ function SearchField({ placeholder, onDebounced }) {
   );
 }
 
-function TablePager({ page, pageCount, from, to, total, onPageChange }) {
+function TablePager({
+  page,
+  pageCount,
+  from,
+  to,
+  total,
+  onPageChange,
+  rowsPerPage,
+  onRowsPerPageChange,
+  pageSizeId,
+}) {
+  const showNav = pageCount > 1;
   return (
     <div className="data-table-pager">
-      <p className="data-table-pager-count">
-        {from}–{to} de {total}
-      </p>
-      <div className="data-table-pager-nav">
-        <button
-          type="button"
-          className="app-btn app-btn--ghost app-btn--sm"
-          disabled={page <= 1}
-          onClick={() => onPageChange(page - 1)}
-        >
-          Anterior
-        </button>
-        <button
-          type="button"
-          className="app-btn app-btn--ghost app-btn--sm"
-          disabled={page >= pageCount}
-          onClick={() => onPageChange(page + 1)}
-        >
-          Siguiente
-        </button>
+      <div className="data-table-pager-meta">
+        <p className="data-table-pager-count">
+          {from}–{to} de {total}
+        </p>
+        {onRowsPerPageChange ? (
+          <div className="data-table-page-size">
+            <label className="data-table-sr" htmlFor={pageSizeId}>
+              Registros por página
+            </label>
+            <select
+              id={pageSizeId}
+              className="app-input data-table-page-size-select"
+              value={rowsPerPage}
+              onChange={(event) => onRowsPerPageChange(event.target.value)}
+              aria-label="Registros por página"
+            >
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+              <option value="all">Todos</option>
+            </select>
+          </div>
+        ) : null}
       </div>
+      {showNav ? (
+        <div className="data-table-pager-nav">
+          <button
+            type="button"
+            className="app-btn app-btn--ghost app-btn--sm"
+            disabled={page <= 1}
+            onClick={() => onPageChange(page - 1)}
+          >
+            Anterior
+          </button>
+          <button
+            type="button"
+            className="app-btn app-btn--ghost app-btn--sm"
+            disabled={page >= pageCount}
+            onClick={() => onPageChange(page + 1)}
+          >
+            Siguiente
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -377,7 +449,7 @@ export function DataTable({
   hideHeader = false,
   hideToolbar = false,
   exportExcel = true,
-  pageSize = 25,
+  pageSize = 10,
   page,
   onPageChange,
   sortKey,
@@ -391,14 +463,20 @@ export function DataTable({
   renderRowActions,
   renderExpandedContent,
   initialFilters,
+  onRowDoubleClick,
 }) {
+  const navigate = useNavigate();
   const filterIdBase = useId();
+  const pageSizeId = useId();
   const [query, setQuery] = useState('');
   const [searchResetKey, setSearchResetKey] = useState(0);
   const queryRef = useRef('');
   const onPageChangeRef = useRef(onPageChange);
   const [filterValues, setFilterValues] = useState(() => initialFilters ?? {});
   const [internalPage, setInternalPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(() =>
+    pageSize == null || pageSize === 0 ? 'all' : String(pageSize),
+  );
   const [internalSort, setInternalSort] = useState({
     key: defaultSortKey ?? null,
     direction: defaultSortDirection,
@@ -411,6 +489,8 @@ export function DataTable({
   useEffect(() => {
     onPageChangeRef.current = onPageChange;
   });
+
+  const effectivePageSize = rowsPerPage === 'all' ? null : Number(rowsPerPage);
 
   const displayColumns = useMemo(() => withStickyOffsets(expandColumns(columns)), [columns]);
   const toolbarFilters = useMemo(
@@ -477,13 +557,13 @@ export function DataTable({
   ]);
 
   const total = filtered.length;
-  const pageCount = pageSize ? Math.max(1, Math.ceil(total / pageSize)) : 1;
+  const pageCount = effectivePageSize ? Math.max(1, Math.ceil(total / effectivePageSize)) : 1;
   const safePage = Math.min(Math.max(1, currentPage), pageCount);
-  const paged = pageSize
-    ? filtered.slice((safePage - 1) * pageSize, safePage * pageSize)
+  const paged = effectivePageSize
+    ? filtered.slice((safePage - 1) * effectivePageSize, safePage * effectivePageSize)
     : filtered;
-  const from = total === 0 ? 0 : (safePage - 1) * (pageSize ?? total) + 1;
-  const to = pageSize ? Math.min(safePage * pageSize, total) : total;
+  const from = total === 0 ? 0 : (safePage - 1) * (effectivePageSize ?? total) + 1;
+  const to = effectivePageSize ? Math.min(safePage * effectivePageSize, total) : total;
 
   const hasFilters =
     query.trim() !== '' ||
@@ -491,7 +571,7 @@ export function DataTable({
   const showTable = loading || paged.length > 0;
   const showEmpty = !loading && rows.length === 0;
   const showNoResults = !loading && rows.length > 0 && filtered.length === 0;
-  const showPager = Boolean(pageSize) && !loading && total > 0;
+  const showPager = !loading && total > 0;
   const excelColumns = useMemo(
     () =>
       displayColumns
@@ -554,6 +634,34 @@ export function DataTable({
   function handleRowClick(event, id) {
     if (event.target.closest('button, a, input, select, textarea, label')) return;
     toggleExpand(id);
+  }
+
+  function openRowFicha(row) {
+    if (typeof onRowDoubleClick === 'function') {
+      onRowDoubleClick(row);
+      return;
+    }
+    if (typeof getRowActions !== 'function') return;
+    const view = resolveViewAction(getRowActions(row));
+    if (!view) return;
+    if (typeof view.onClick === 'function') {
+      view.onClick();
+      return;
+    }
+    if (view.to) {
+      navigate(view.to);
+    }
+  }
+
+  function handleRowDoubleClick(event, row) {
+    if (event.target.closest('button, a, input, select, textarea, label')) return;
+    openRowFicha(row);
+  }
+
+  function rowCanOpenFicha(row) {
+    if (typeof onRowDoubleClick === 'function') return true;
+    if (typeof getRowActions !== 'function') return false;
+    return Boolean(resolveViewAction(getRowActions(row)));
   }
 
   function handleRowKeyDown(event, id) {
@@ -709,6 +817,7 @@ export function DataTable({
                   const id = rowId(row, index);
                   const open = expandedId === id;
                   const panelId = panelIdFor(id);
+                  const canOpenFicha = rowCanOpenFicha(row);
                   const iconActions =
                     typeof renderRowActions !== 'function' && typeof getRowActions === 'function'
                       ? iconActionsFromRow(getRowActions(row))
@@ -717,12 +826,21 @@ export function DataTable({
                     <Fragment key={id}>
                       <tr
                         data-row-id={id}
-                        className={open ? 'is-expanded' : undefined}
-                        tabIndex={canExpand ? 0 : undefined}
+                        className={[
+                          open ? 'is-expanded' : '',
+                          canOpenFicha ? 'data-table-row--openable' : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ') || undefined}
+                        tabIndex={canExpand || canOpenFicha ? 0 : undefined}
                         role={canExpand ? 'button' : undefined}
+                        title={canOpenFicha ? 'Doble clic para ver la ficha' : undefined}
                         aria-expanded={canExpand ? open : undefined}
                         aria-controls={canExpand ? panelId : undefined}
                         onClick={canExpand ? (event) => handleRowClick(event, id) : undefined}
+                        onDoubleClick={
+                          canOpenFicha ? (event) => handleRowDoubleClick(event, row) : undefined
+                        }
                         onKeyDown={canExpand ? (event) => handleRowKeyDown(event, id) : undefined}
                       >
                         {canExpand ? (
@@ -830,6 +948,12 @@ export function DataTable({
           to={to}
           total={total}
           onPageChange={setPage}
+          rowsPerPage={rowsPerPage}
+          pageSizeId={pageSizeId}
+          onRowsPerPageChange={(value) => {
+            setRowsPerPage(value);
+            setPage(1);
+          }}
         />
       ) : null}
     </section>
