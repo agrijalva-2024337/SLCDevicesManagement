@@ -415,6 +415,18 @@
 
 [data-theme='dark'] .data-table-expand-panel {
   border-top-color: rgb(232 234 244 / 0.22);
+  color: var(--text);
+}
+
+[data-theme='dark'] .data-table tbody tr.is-expanded td,
+[data-theme='dark'] .data-table tbody tr.is-expanded td.data-td--sticky {
+  background: rgb(232 234 244 / 0.08);
+}
+
+[data-theme='dark'] .data-table-expand-cell,
+[data-theme='dark'] .data-table tbody tr.data-table-expand-row td,
+[data-theme='dark'] .data-table tbody tr.data-table-expand-row:hover td {
+  background: rgb(232 234 244 / 0.05);
 }
 
 [data-theme='dark'] .data-td--sticky {
