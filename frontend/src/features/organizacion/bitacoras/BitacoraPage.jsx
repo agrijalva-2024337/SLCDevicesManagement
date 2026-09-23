@@ -135,7 +135,7 @@ export function BitacoraPage() {
 
   const usuarioOptions = useMemo(
     () => [
-      { value: 'all', label: canReadUsuarios ? 'Todos los usuarios' : 'Listado de usuarios no disponible' },
+      { value: 'all', label: canReadUsuarios ? 'Usuario' : 'Listado de usuarios no disponible' },
       ...(usuariosDeEmpresa ?? []).map((item) => ({
         value: String(item.id),
         label: usuarioNombre(item),
@@ -149,7 +149,7 @@ export function BitacoraPage() {
     if (entidadAfectada !== 'all' && !names.includes(entidadAfectada)) {
       names.unshift(entidadAfectada);
     }
-    return [{ value: 'all', label: 'Todas las entidades' }, ...names.map((name) => ({ value: name, label: name }))];
+    return [{ value: 'all', label: 'Entidad' }, ...names.map((name) => ({ value: name, label: name }))];
   }, [entidadAfectada, rows]);
 
   if (errorMessage) {
@@ -237,7 +237,7 @@ export function BitacoraPage() {
             key: 'tipoOperacion',
             label: 'Tipo',
             options: [
-              { value: 'all', label: 'Todos los tipos' },
+              { value: 'all', label: 'Tipo' },
               { value: String(TipoOperacionBitacora.Creacion), label: 'Creación' },
               { value: String(TipoOperacionBitacora.Modificacion), label: 'Modificación' },
               { value: String(TipoOperacionBitacora.Eliminacion), label: 'Eliminación' },
