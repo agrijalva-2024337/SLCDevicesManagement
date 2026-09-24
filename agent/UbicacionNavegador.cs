@@ -31,6 +31,10 @@ public static class UbicacionNavegador
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "SLCDM", "WebView2Profile");
 
+    private static string CarpetaHtml => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "SLCDM", "WebView2Html");
+
     private static string RutaMarcaPermisoPedido => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "SLCDM", "ubicacion-webview2-solicitada.flag");
@@ -51,8 +55,6 @@ public static class UbicacionNavegador
                     Text = "SLC Devices Management — Ubicación",
                     StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen,
                     ShowInTaskbar = primeraVez,
-                    // Primera vez: visible, para que la persona acepte el permiso del navegador.
-                    // Siguientes veces: invisible, ya no hace falta que nadie haga clic en nada.
                     Opacity = primeraVez ? 1 : 0,
                 };
                 if (!primeraVez)
@@ -66,7 +68,6 @@ public static class UbicacionNavegador
 
                 _ = InicializarYPedirAsync(webView, tcs);
 
-                // Bucle de mensajes de Windows Forms acotado a este hilo/ventana.
                 System.Windows.Forms.Application.Run(form);
             }
             catch
@@ -102,10 +103,20 @@ public static class UbicacionNavegador
             var entorno = await CoreWebView2Environment.CreateAsync(userDataFolder: CarpetaPerfil);
             await webView.EnsureCoreWebView2Async(entorno);
 
-            // Origen fijo y estable (no file://), para que el permiso quede
-            // guardado consistentemente en el perfil entre ejecuciones.
+            // IMPORTANTE: NavigateToString() carga el HTML en un origen "opaco"
+            // (parecido a about:blank), y Chromium NO concede permisos de
+            // geolocalizacion en ese tipo de origen -- por eso fallaba siempre.
+            // Hay que escribir el HTML a un archivo real y navegar a traves del
+            // host virtual, para que el permiso se pueda conceder y persistir.
+            Directory.CreateDirectory(CarpetaHtml);
+            var rutaHtml = Path.Combine(CarpetaHtml, "geo.html");
+            if (!File.Exists(rutaHtml))
+            {
+                await File.WriteAllTextAsync(rutaHtml, HtmlGeolocalizacion);
+            }
+
             webView.CoreWebView2.SetVirtualHostNameToFolderMapping(
-                "slcdm.local", Path.GetTempPath(), CoreWebView2HostResourceAccessKind.Allow);
+                "slcdm.local", CarpetaHtml, CoreWebView2HostResourceAccessKind.Allow);
 
             // Auto-conceder el permiso de ubicacion si el navegador ya lo tenia
             // guardado de una vez anterior (no vuelve a mostrar el popup).
@@ -134,11 +145,14 @@ public static class UbicacionNavegador
                     }
                     else
                     {
+                        Console.Error.WriteLine(
+                            $"[UbicacionNavegador] navigator.geolocation devolvio error: {datos.GetProperty("error").GetString()}");
                         tcs.TrySetResult(null);
                     }
                 }
-                catch
+                catch (Exception exMensaje)
                 {
+                    Console.Error.WriteLine($"[UbicacionNavegador] No se pudo parsear el mensaje del WebView2: {exMensaje}");
                     tcs.TrySetResult(null);
                 }
                 finally
@@ -147,10 +161,12 @@ public static class UbicacionNavegador
                 }
             };
 
-            webView.CoreWebView2.NavigateToString(HtmlGeolocalizacion);
+            // Navegar a traves del host virtual (origen real), no NavigateToString.
+            webView.CoreWebView2.Navigate("https://slcdm.local/geo.html");
         }
-        catch
+        catch (Exception ex)
         {
+            Console.Error.WriteLine($"[UbicacionNavegador] Fallo al inicializar WebView2: {ex}");
             tcs.TrySetResult(null);
             System.Windows.Forms.Application.Exit();
         }
