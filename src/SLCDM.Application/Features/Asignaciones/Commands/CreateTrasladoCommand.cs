@@ -101,6 +101,12 @@ public sealed class CreateTrasladoCommandHandler : ICommandHandler<CreateTraslad
             throw new ConflictException("El activo esta en mantenimiento. Finalice el mantenimiento antes de trasladarlo.");
         }
 
+        if (await ActivoAsignadoAsync(command.IdActivo, idEmpresa, cancellationToken))
+        {
+            throw new ConflictException(
+                "El activo tiene una asignacion activa. Devuelvalo antes de trasladarlo.");
+        }
+
         if (!await AsignacionEmpresaRules.MismaEmpresaAsync(_db, command.IdActivo, command.IdUbicacionDestino, cancellationToken))
         {
             throw new ConflictException(
@@ -173,7 +179,7 @@ public sealed class CreateTrasladoCommandHandler : ICommandHandler<CreateTraslad
 
         return entity.Id;
     }
-    
+
     private async Task<bool> ActivoEnMantenimientoAsync(
         int idActivo,
         int idEmpresa,
@@ -194,6 +200,29 @@ public sealed class CreateTrasladoCommandHandler : ICommandHandler<CreateTraslad
 
         return await _db.Asignaciones.AnyAsync(
             a => a.IdActivo == idActivo && a.Activa && idsMantenimiento.Contains(a.IdTipoAsignacion),
+            cancellationToken);
+    }
+
+    private async Task<bool> ActivoAsignadoAsync(
+        int idActivo,
+        int idEmpresa,
+        CancellationToken cancellationToken)
+    {
+        var tipos = await _db.TiposAsignacion.AsNoTracking()
+            .Where(t => t.IdEmpresa == idEmpresa)
+            .ToListAsync(cancellationToken);
+        var idsAsignacion = tipos
+            .Where(t => TipoAsignacionNombres.EsNombre(t.Nombre, TipoAsignacionNombres.Asignacion))
+            .Select(t => t.Id)
+            .ToList();
+
+        if (idsAsignacion.Count == 0)
+        {
+            return false;
+        }
+
+        return await _db.Asignaciones.AnyAsync(
+            a => a.IdActivo == idActivo && a.Activa && idsAsignacion.Contains(a.IdTipoAsignacion),
             cancellationToken);
     }
 }

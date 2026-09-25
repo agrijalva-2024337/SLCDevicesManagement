@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { RecordFormOverlay } from '@/shared/components/RecordFormOverlay';
 import { asOptions, compactErrors, optionalText, requireSelect } from '@/shared/components/recordFormUtils';
-import { isActivoDeBaja, isActivoEnMantenimiento } from '@/features/activos/activoAcciones';
+import { isActivoAsignado, isActivoDeBaja, isActivoEnMantenimiento } from '@/features/activos/activoAcciones';
 import {
   activosDeEmpresa,
   initialTrasladoValues,
@@ -35,8 +35,9 @@ export function TrasladoFormOverlay({
       activosDeEmpresa(
         (activos ?? []).filter(
           (item) =>
-            !isActivoDeBaja(item, { asignaciones, tipos }) &&
-            !isActivoEnMantenimiento(item, { asignaciones, tipos }),
+            !isActivoDeBaja(item, ctx) &&
+            !isActivoEnMantenimiento(item, ctx) &&
+            !isActivoAsignado(item, ctx),
         ),
         ubicaciones,
         sedes,
@@ -132,6 +133,8 @@ export function TrasladoFormOverlay({
           errors.idActivo = 'El activo está dado de baja. No se traslada ni se envía a mantenimiento.';
         } else if (activo && isActivoEnMantenimiento(activo, ctx)) {
           errors.idActivo = 'El activo está en mantenimiento. Finalícelo antes de trasladarlo.';
+        } else if (activo && isActivoAsignado(activo, ctx)) {
+          errors.idActivo = 'El activo tiene una asignación activa. Devuélvalo antes de trasladarlo.';
         }
         if (
           activo &&
