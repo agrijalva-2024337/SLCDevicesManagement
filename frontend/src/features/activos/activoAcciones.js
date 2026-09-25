@@ -128,8 +128,14 @@ export function getAccionesDisponibles(activo, ctx = {}) {
       label: 'Trasladar',
       icon: 'pi pi-arrow-right-arrow-left',
       tone: 'view',
-      enabled: !baja && !mantenimiento,
-      disabledReason: baja ? `${bajaReason} No se puede trasladar.` : mantReason,
+      enabled: !baja && !mantenimiento && !asignado,
+      disabledReason: baja
+        ? `${bajaReason} No se puede trasladar.`
+        : mantenimiento
+          ? mantReason
+          : asignado
+            ? 'El activo tiene una asignación activa. Devuélvalo antes de trasladarlo.'
+            : undefined,
     },
     {
       key: 'maintenance',
