@@ -46,7 +46,8 @@ function hydrate(row, lookups) {
     origen: origenDesdeId ?? ruta.origen ?? '—',
     destino: destinoDesdeId ?? ruta.destino ?? '—',
     estadoNombre: estado?.nombre ?? '—',
-    registradoPorNombre: nombreUsuario(registrado),
+    registradoPorNombre:
+      (row.usuarioNombre && String(row.usuarioNombre).trim()) || nombreUsuario(registrado),
   };
 }
 
