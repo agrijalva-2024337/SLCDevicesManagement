@@ -18,7 +18,9 @@ public sealed record AsignacionDto(
     DateTime? DocumentoPdfGeneradoEn,
     string? DocumentoPdfHash,
     int? IdUbicacionOrigen = null,
-    int? IdUbicacionDestino = null
+    int? IdUbicacionDestino = null,
+    string? UsuarioNombre = null,
+    string? AutorizadoPorNombre = null
 );
 
 public sealed record AsignacionHistorialDto(

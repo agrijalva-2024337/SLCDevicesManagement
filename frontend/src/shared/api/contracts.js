@@ -191,6 +191,10 @@
  * @property {string | null} [documentoPdfGeneradoEn]
  * @property {string | null} [documentoPdfHash] HMAC-SHA256 hex del acta (servidor); en UI se normaliza
  * @property {string | null} [hashDocumento] alias de documentoPdfHash en la UI
+ * @property {number | null} [idUbicacionOrigen]
+ * @property {number | null} [idUbicacionDestino]
+ * @property {string | null} [usuarioNombre] quien registró el movimiento
+ * @property {string | null} [autorizadoPorNombre] solo bajas
  *
  * @typedef {object} VerificacionPdfDto
  * Resultado de `POST /api/Asignaciones/{id}/pdf/verificar`.
