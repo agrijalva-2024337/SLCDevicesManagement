@@ -158,8 +158,10 @@
  * @property {string | null} moneda
  * @property {string | null} numeroFactura
  * @property {string} fechaVencimientoGarantia
+ * @property {string | null} [codigoInterno]
  * @property {string | null} observaciones
- * @property {string | null} [tokenConsulta] código público del QR; [API] nombre por confirmar
+ * @property {string} [tokenPublico] token del QR público (`/consulta/{token}`)
+ * @property {string | null} [tokenConsulta] alias mock del token público
  *
  * @typedef {object} DispositivoRastreoDto
  * `GET /api/Dispositivos/rastreo`. Coordenadas salen de Ubicacion (asignada o detectada).

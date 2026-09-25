@@ -1213,7 +1213,8 @@ select.app-input {
   background: #0c1440;
 }
 
-/* Fichas de lectura pública: el dato se lee mejor como texto corrido. */
+/* Fichas de lectura (activo / consulta): el dato se lee mejor como texto corrido.
+   DataCard en variant=plain ya no usa .app-field; se refuerza el tipado aquí. */
 .app-fields-plain .app-field {
   border-radius: 0;
   padding: 0;
@@ -1228,6 +1229,10 @@ select.app-input {
 
 .app-fields-plain .app-field::before {
   content: none;
+}
+
+.app-fields-plain {
+  gap: 1.15rem 1.5rem;
 }
 
 .app-row {

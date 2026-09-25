@@ -85,7 +85,7 @@ export function ActivoDetallePage() {
   const qrRes = useResource(loadQr, { key: detailQueryKey('consultaQr', id), initialData: null });
   const activos = useResource(activoService.getAll, { enabled: editando });
   const categorias = useResource(categoriaService.getAll);
-  const proveedores = useResource(proveedorService.getAll, { enabled: editando });
+  const proveedores = useResource(proveedorService.getAll);
   const ubicaciones = useResource(ubicacionService.getAll);
   const sedes = useResource(sedeService.getAll);
   const paises = useResource(paisService.getAll);
@@ -261,45 +261,54 @@ export function ActivoDetallePage() {
         <div className="app-panel">
           <div className="app-fields app-fields-plain">
             <DetailField
+              variant="plain"
               label="Código interno"
               value={activo.codigoInterno || activo.numeroSerie || `A-${String(activo.id).padStart(5, '0')}`}
             />
-            <DetailField label="Serie / etiqueta" value={activo.numeroSerie} />
-            <DetailField label="Empresa" value={empresa?.nombre} />
-            <DetailField label="Sede" value={sede?.nombre} />
-            <DetailField label="País" value={pais?.nombre} />
-            <DetailField label="Categoría" value={categoria?.nombre} />
-            <DetailField label="Proveedor" value={proveedor?.nombre} />
-            <DetailField label="Ubicación asignada" value={nombreUbicacion(ubicacion)} />
-            <DetailField label="Área" value={areaActual?.nombre} />
-            <DetailField label="Responsable actual" value={responsableActual?.nombreCompleto} />
+            <DetailField variant="plain" label="Serie / etiqueta" value={activo.numeroSerie} />
+            <DetailField variant="plain" label="Empresa" value={empresa?.nombre} />
+            <DetailField variant="plain" label="Sede" value={sede?.nombre} />
+            <DetailField variant="plain" label="País" value={pais?.nombre} />
+            <DetailField variant="plain" label="Categoría" value={categoria?.nombre} />
+            <DetailField variant="plain" label="Proveedor" value={proveedor?.nombre} />
+            <DetailField variant="plain" label="Ubicación asignada" value={nombreUbicacion(ubicacion)} />
+            <DetailField variant="plain" label="Área" value={areaActual?.nombre} />
+            <DetailField variant="plain" label="Responsable actual" value={responsableActual?.nombreCompleto} />
             <DetailField
+              variant="plain"
               label="Estado"
               value={
                 estadoNombre ? <ToneBadge tone={estadoTone(estadoNombre)}>{estadoNombre}</ToneBadge> : null
               }
             />
-            <DetailField label="Marca / modelo" value={[activo.marca, activo.modelo].filter(Boolean).join(' ')} />
             <DetailField
+              variant="plain"
+              label="Marca / modelo"
+              value={[activo.marca, activo.modelo].filter(Boolean).join(' ')}
+            />
+            <DetailField
+              variant="plain"
               label="Compra"
               value={[formatDate(activo.fechaCompra), formatMoney(activo.costoAdquisicion, activo.moneda ?? 'GTQ')]
                 .filter((part) => part && part !== '—')
                 .join(' · ')}
             />
-            <DetailField label="Factura" value={activo.numeroFactura} />
-            <DetailField label="Garantía hasta" value={formatDate(activo.fechaVencimientoGarantia)} />
-            <div className="sm:col-span-2">
-              <DetailField label="Descripción" value={activo.descripcion} />
-            </div>
-            <div className="sm:col-span-2">
-              <DetailField label="Especificaciones de hardware" value={activo.especificacionesHardware} />
-            </div>
-            <div className="sm:col-span-2">
-              <DetailField label="Periféricos adicionales" value={activo.perifericosAdicionales} />
-            </div>
-            <div className="sm:col-span-2">
-              <DetailField label="Observaciones" value={activo.observaciones} />
-            </div>
+            <DetailField variant="plain" label="Factura" value={activo.numeroFactura} />
+            <DetailField variant="plain" label="Garantía hasta" value={formatDate(activo.fechaVencimientoGarantia)} />
+            <DetailField variant="plain" wide label="Descripción" value={activo.descripcion} />
+            <DetailField
+              variant="plain"
+              wide
+              label="Especificaciones de hardware"
+              value={activo.especificacionesHardware}
+            />
+            <DetailField
+              variant="plain"
+              wide
+              label="Periféricos adicionales"
+              value={activo.perifericosAdicionales}
+            />
+            <DetailField variant="plain" wide label="Observaciones" value={activo.observaciones} />
           </div>
         </div>
 
