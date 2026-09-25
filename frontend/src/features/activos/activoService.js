@@ -21,9 +21,9 @@ export async function create(data) {
 }
 
 /**
- * Resuelve lo que sale de un QR o de una búsqueda escrita. Acepta el token de
- * consulta, el número de serie o el id, porque las etiquetas viejas del parque
- * traen la serie impresa en vez del token.
+ * Resuelve lo que sale de un QR o de una búsqueda escrita. Acepta el token
+ * público del QR (`tokenPublico` / mock `tokenConsulta`), el código interno,
+ * el número de serie o el id numérico.
  */
 export async function buscarPorCodigo(codigo) {
   const needle = String(codigo ?? '').trim();
@@ -33,7 +33,8 @@ export async function buscarPorCodigo(codigo) {
   const igual = (value) => String(value ?? '').trim().toLowerCase() === needle.toLowerCase();
 
   return (
-    (lista ?? []).find((row) => igual(row.tokenConsulta)) ??
+    (lista ?? []).find((row) => igual(row.tokenPublico) || igual(row.tokenConsulta)) ??
+    (lista ?? []).find((row) => igual(row.codigoInterno)) ??
     (lista ?? []).find((row) => igual(row.numeroSerie)) ??
     (lista ?? []).find((row) => igual(row.id)) ??
     null

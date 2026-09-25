@@ -82,7 +82,9 @@ export async function getFichaPublica(codigo) {
       asignacionService.getAll(),
     ]);
 
-  const activo = (lista ?? []).find((row) => String(row.tokenConsulta) === needle);
+  const activo = (lista ?? []).find(
+    (row) => String(row.tokenPublico ?? row.tokenConsulta ?? '') === needle,
+  );
   if (!activo) throw notFound();
 
   const ubicacion = byId(ubicaciones, activo.idUbicacion);
