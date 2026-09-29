@@ -11,7 +11,8 @@ internal static class ActivoBajaRules
     public static async Task<bool> EstaDadoDeBajaAsync(
         IApplicationDbContext db,
         int idActivo,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool ignorarFiltrosEmpresa = false)
     {
         var idEmpresa = await AsignacionEmpresaRules.EmpresaIdDeActivoAsync(db, idActivo, cancellationToken);
         if (!idEmpresa.HasValue)
@@ -19,7 +20,17 @@ internal static class ActivoBajaRules
             return false;
         }
 
-        var tipos = await db.TiposAsignacion.AsNoTracking()
+        // Llamadas anonimas (p. ej. auto-registro del agente) no tienen empresas
+        // autorizadas: con los query filters activos no verian ningun tipo/asignacion.
+        var tiposQuery = db.TiposAsignacion.AsNoTracking();
+        var asignacionesQuery = db.Asignaciones.AsNoTracking();
+        if (ignorarFiltrosEmpresa)
+        {
+            tiposQuery = tiposQuery.IgnoreQueryFilters();
+            asignacionesQuery = asignacionesQuery.IgnoreQueryFilters();
+        }
+
+        var tipos = await tiposQuery
             .Where(t => t.IdEmpresa == idEmpresa.Value)
             .ToListAsync(cancellationToken);
         var idsBaja = tipos
@@ -32,7 +43,7 @@ internal static class ActivoBajaRules
             return false;
         }
 
-        return await db.Asignaciones.AnyAsync(
+        return await asignacionesQuery.AnyAsync(
             a => a.IdActivo == idActivo && a.Activa && idsBaja.Contains(a.IdTipoAsignacion),
             cancellationToken);
     }

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
 using SLCDM.Application.Common.Options;
+using SLCDM.Application.Features.Asignaciones;
 using SLCDM.Domain.Entities;
 
 namespace SLCDM.Application.Features.Dispositivos.Commands;
@@ -62,6 +63,11 @@ public sealed class AutoRegistrarDispositivoCommandHandler
         var activo = await _db.Activos.IgnoreQueryFilters()
             .FirstOrDefaultAsync(a => a.NumeroSerie == command.NumeroSerie, cancellationToken)
             ?? throw new NotFoundException("Activo con ese numero de serie", command.NumeroSerie);
+
+        if (await ActivoBajaRules.EstaDadoDeBajaAsync(_db, activo.Id, cancellationToken, ignorarFiltrosEmpresa: true))
+        {
+            throw new ConflictException("Este equipo esta dado de baja y no puede registrarse para rastreo.");
+        }
 
         var tokenExistente = await _db.DispositivosToken.IgnoreQueryFilters()
             .AnyAsync(d => d.IdActivo == activo.Id && !d.Revocado, cancellationToken);
