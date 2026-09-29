@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Exceptions;
 using SLCDM.Application.Common.Interfaces;
+using SLCDM.Application.Features.Asignaciones;
 
 namespace SLCDM.Application.Features.Dispositivos.Queries;
 
@@ -20,8 +21,10 @@ public sealed class GetRastreoByActivoQueryHandler
         GetRastreoByActivoQuery query,
         CancellationToken cancellationToken = default)
     {
+        var idsBaja = await ActivoBajaRules.IdsDadosDeBajaAsync(_db, cancellationToken);
+
         var dto = await _db.DispositivosToken.AsNoTracking()
-            .Where(d => !d.Revocado && d.IdActivo == query.IdActivo)
+            .Where(d => !d.Revocado && d.IdActivo == query.IdActivo && !idsBaja.Contains(d.IdActivo))
             .Select(d => new DispositivoRastreoDto(
                 d.Id,
                 d.IdActivo,

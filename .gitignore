@@ -42,3 +42,4 @@ appsettings.json
 src/SLCDM.Api/appsettings.json
 src/SLCDM.Api/appsettings.*.json
 !src/SLCDM.Api/appsettings.example.json
+agent/publish/

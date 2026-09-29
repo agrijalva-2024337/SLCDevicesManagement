@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SLCDM.Application.Common.Interfaces;
+using SLCDM.Application.Features.Asignaciones;
 
 namespace SLCDM.Application.Features.Dispositivos.Queries;
 
@@ -26,8 +27,10 @@ public sealed class GetDispositivosFueraDeRangoQueryHandler
         GetDispositivosFueraDeRangoQuery query,
         CancellationToken cancellationToken = default)
     {
+        var idsBaja = await ActivoBajaRules.IdsDadosDeBajaAsync(_db, cancellationToken);
+
         var items = await _db.DispositivosToken.AsNoTracking()
-            .Where(d => d.FueraDeRango && !d.Revocado)
+            .Where(d => d.FueraDeRango && !d.Revocado && !idsBaja.Contains(d.IdActivo))
             .Include(d => d.Activo)
             .Select(d => new DispositivoFueraDeRangoDto(
                 d.IdActivo,
