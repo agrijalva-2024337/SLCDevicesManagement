@@ -165,20 +165,27 @@ export function ActivoDetallePage() {
         .map((row) => {
           const tipoNombre = byId(tipos.data, row.idTipoAsignacion)?.nombre ?? 'Movimiento';
           const registrador = byId(usuarios.data, row.idUsuario);
-          const registradoPor = registrador
+          const registradoPorLookup = registrador
             ? [registrador.nombres, registrador.apellidos].filter(Boolean).join(' ')
-            : '—';
+            : '';
+          const registradoPor =
+            (row.usuarioNombre && String(row.usuarioNombre).trim()) || registradoPorLookup || '—';
           const detalle = detallePorAsignacion.get(Number(row.id));
           const autorizador = detalle?.idAutorizadoPor
             ? byId(usuarios.data, detalle.idAutorizadoPor)
             : null;
-          const autorizadoNombre = autorizador
+          const autorizadoLookup = autorizador
             ? [autorizador.nombres, autorizador.apellidos].filter(Boolean).join(' ')
-            : nombresCatalogoIguales(tipoNombre, TIPO_ASIGNACION.Baja)
-              ? registradoPor
-              : '—';
+            : '';
+          const autorizadoDesdeApi =
+            row.autorizadoPorNombre && String(row.autorizadoPorNombre).trim()
+              ? String(row.autorizadoPorNombre).trim()
+              : '';
           const esTraslado = nombresCatalogoIguales(tipoNombre, TIPO_ASIGNACION.Traslado);
           const esBaja = nombresCatalogoIguales(tipoNombre, TIPO_ASIGNACION.Baja);
+          const autorizadoNombre = esBaja
+            ? autorizadoDesdeApi || autorizadoLookup || (registradoPor !== '—' ? registradoPor : '—')
+            : '—';
           return {
             ...row,
             tipoNombre,
@@ -186,7 +193,7 @@ export function ActivoDetallePage() {
               esTraslado || esBaja
                 ? '—'
                 : byId(responsables.data, row.idResponsable)?.nombreCompleto ?? '—',
-            autorizadoNombre: esBaja ? autorizadoNombre : '—',
+            autorizadoNombre,
             registradoPor,
             estadoVista: row.activa ? 'Activo' : 'Cerrado',
           };

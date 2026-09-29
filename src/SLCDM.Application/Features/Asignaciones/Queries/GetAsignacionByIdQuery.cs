@@ -39,11 +39,34 @@ public sealed class GetAsignacionByIdQueryHandler : IQueryHandler<GetAsignacionB
         var detalle = await _db.DetallesTraslado.AsNoTracking()
             .FirstOrDefaultAsync(d => d.IdAsignacion == query.Id, cancellationToken);
 
+        var usuario = await _db.Usuarios.AsNoTracking().IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.Id == entity.IdUsuario, cancellationToken);
+
+        var detalleBaja = await _db.DetallesBaja.AsNoTracking()
+            .FirstOrDefaultAsync(d => d.IdAsignacion == query.Id, cancellationToken);
+
+        string? autorizadoPorNombre = null;
+        if (detalleBaja is not null)
+        {
+            var autorizado = await _db.Usuarios.AsNoTracking().IgnoreQueryFilters()
+                .FirstOrDefaultAsync(u => u.Id == detalleBaja.IdAutorizadoPor, cancellationToken);
+            if (autorizado is not null)
+            {
+                autorizadoPorNombre = $"{autorizado.Nombres} {autorizado.Apellidos}".Trim();
+            }
+        }
+
         var dto = entity.Adapt<AsignacionDto>();
+        var usuarioNombre = usuario is null
+            ? null
+            : $"{usuario.Nombres} {usuario.Apellidos}".Trim();
+
         return dto with
         {
             IdUbicacionOrigen = detalle?.IdUbicacionOrigen,
             IdUbicacionDestino = detalle?.IdUbicacionDestino,
+            UsuarioNombre = string.IsNullOrWhiteSpace(usuarioNombre) ? null : usuarioNombre,
+            AutorizadoPorNombre = string.IsNullOrWhiteSpace(autorizadoPorNombre) ? null : autorizadoPorNombre,
         };
     }
 }

@@ -60,11 +60,17 @@ function hydrate(row, lookups) {
   const autorizador = detalle?.idAutorizadoPor
     ? byId(lookups.usuarios, detalle.idAutorizadoPor)
     : byId(lookups.usuarios, row.idUsuario);
+  const autorizadoDesdeApi =
+    row.autorizadoPorNombre && String(row.autorizadoPorNombre).trim()
+      ? String(row.autorizadoPorNombre).trim()
+      : '';
+  const registradoDesdeApi =
+    row.usuarioNombre && String(row.usuarioNombre).trim() ? String(row.usuarioNombre).trim() : '';
   return {
     ...row,
     activoNombre: activo?.nombre ?? `Activo #${row.idActivo}`,
     motivoNombre: motivo?.nombre ?? '—',
-    autorizadoNombre: usuarioNombre(autorizador),
+    autorizadoNombre: autorizadoDesdeApi || usuarioNombre(autorizador) || registradoDesdeApi || '—',
     estadoNombre: estado?.nombre ?? '—',
   };
 }

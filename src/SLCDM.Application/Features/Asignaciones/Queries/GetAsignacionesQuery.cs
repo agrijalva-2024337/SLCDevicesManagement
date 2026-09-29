@@ -41,10 +41,18 @@ public sealed class GetAsignacionesQueryHandler : IQueryHandler<GetAsignacionesQ
         // La lista no trae las firmas: son varbinary(max) y en JSON (base64) revientan
         // activos, asignaciones y bajas. El PDF y el detalle las leen de la entidad.
         // Origen/destino de traslados viven en detalle_traslado (no en observaciones).
+        // UsuarioNombre / AutorizadoPorNombre se resuelven acá para que el historial
+        // no dependa de que el cliente pueda listar /api/Usuarios.
         var items = await (
                 from a in itemsQuery
                 join d in _db.DetallesTraslado.AsNoTracking() on a.Id equals d.IdAsignacion into dj
                 from d in dj.DefaultIfEmpty()
+                join u in _db.Usuarios.AsNoTracking().IgnoreQueryFilters() on a.IdUsuario equals u.Id into uj
+                from u in uj.DefaultIfEmpty()
+                join b in _db.DetallesBaja.AsNoTracking() on a.Id equals b.IdAsignacion into bj
+                from b in bj.DefaultIfEmpty()
+                join ua in _db.Usuarios.AsNoTracking().IgnoreQueryFilters() on b.IdAutorizadoPor equals ua.Id into uaj
+                from ua in uaj.DefaultIfEmpty()
                 orderby a.FechaAsignacion descending
                 select new
                 {
@@ -64,6 +72,12 @@ public sealed class GetAsignacionesQueryHandler : IQueryHandler<GetAsignacionesQ
                     a.DocumentoPdfHash,
                     IdUbicacionOrigen = (int?)d.IdUbicacionOrigen,
                     IdUbicacionDestino = (int?)d.IdUbicacionDestino,
+                    UsuarioNombre = u == null
+                        ? null
+                        : ((u.Nombres + " " + u.Apellidos).Trim()),
+                    AutorizadoPorNombre = ua == null
+                        ? null
+                        : ((ua.Nombres + " " + ua.Apellidos).Trim()),
                 })
             .ToListAsync(cancellationToken);
 
@@ -86,7 +100,9 @@ public sealed class GetAsignacionesQueryHandler : IQueryHandler<GetAsignacionesQ
                 a.DocumentoPdfGenerardoEn,
                 a.DocumentoPdfHash,
                 a.IdUbicacionOrigen,
-                a.IdUbicacionDestino))
+                a.IdUbicacionDestino,
+                string.IsNullOrWhiteSpace(a.UsuarioNombre) ? null : a.UsuarioNombre,
+                string.IsNullOrWhiteSpace(a.AutorizadoPorNombre) ? null : a.AutorizadoPorNombre))
             .ToList();
     }
 }
