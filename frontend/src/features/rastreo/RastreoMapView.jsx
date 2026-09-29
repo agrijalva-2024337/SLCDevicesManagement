@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useRef } from 'react';
-import { Link } from 'react-router';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router';
 import L from 'leaflet';
-import { CircleMarker, MapContainer, Popup, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import 'leaflet.markercluster';
 import '@/features/catalogos/ubicaciones/ubicaciones.css';
 import 'leaflet/dist/leaflet.css';
 
@@ -83,8 +86,78 @@ function MapCamera({ puntos }) {
   return null;
 }
 
+function parrafo(texto, estilo) {
+  const p = document.createElement('p');
+  p.textContent = texto ?? '';
+  Object.assign(p.style, { marginBottom: '4px' }, estilo);
+  return p;
+}
+
+// Imperativo (no un <CircleMarker> de react-leaflet por punto): con cientos de equipos
+// es mucho más liviano y permite el agrupamiento automático de leaflet.markercluster.
+function ClusterMarkers({ puntos, onVerFicha }) {
+  const map = useMap();
+  const groupRef = useRef(null);
+
+  useEffect(() => {
+    const group = L.markerClusterGroup({
+      maxClusterRadius: 60,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+    });
+    groupRef.current = group;
+    map.addLayer(group);
+    return () => {
+      map.removeLayer(group);
+      groupRef.current = null;
+    };
+  }, [map]);
+
+  useEffect(() => {
+    const group = groupRef.current;
+    if (!group) return;
+    group.clearLayers();
+
+    const markers = puntos.map(({ row, punto }) => {
+      const marker = L.circleMarker([punto.lat, punto.lng], {
+        radius: 10,
+        color: row.fueraDeRango ? '#b91c1c' : '#15803d',
+        fillColor: row.fueraDeRango ? '#ef4444' : '#22c55e',
+        fillOpacity: 0.9,
+        weight: 2,
+      });
+
+      // textContent (no innerHTML): nombres de activos y ubicaciones son texto libre del usuario.
+      const popupNode = document.createElement('div');
+      popupNode.append(
+        parrafo(row.nombreActivo, { fontWeight: '600' }),
+        parrafo(punto.etiqueta),
+        parrafo(row.fueraDeRango ? 'Fuera de rango' : 'En ubicación'),
+      );
+      const link = document.createElement('a');
+      link.href = `/app/activos/${row.idActivo}`;
+      link.textContent = 'Ver ficha';
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        onVerFicha(row.idActivo);
+      });
+      popupNode.append(link);
+
+      marker.bindPopup(popupNode);
+      return marker;
+    });
+
+    group.addLayers(markers);
+  }, [puntos, onVerFicha]);
+
+  return null;
+}
+
 export function RastreoMapView({ rows }) {
   const mapTilerKey = String(import.meta.env.VITE_MAPTILER_KEY ?? '').trim();
+  const navigate = useNavigate();
+
+  const verFicha = useCallback((idActivo) => navigate(`/app/activos/${idActivo}`), [navigate]);
 
   const puntos = useMemo(
     () =>
@@ -136,26 +209,7 @@ export function RastreoMapView({ rows }) {
         />
         <MapResize />
         <MapCamera puntos={puntos} />
-        {puntos.map(({ row, punto }) => (
-          <CircleMarker
-            key={row.idActivo}
-            center={[punto.lat, punto.lng]}
-            radius={10}
-            pathOptions={{
-              color: row.fueraDeRango ? '#b91c1c' : '#15803d',
-              fillColor: row.fueraDeRango ? '#ef4444' : '#22c55e',
-              fillOpacity: 0.9,
-              weight: 2,
-            }}
-          >
-            <Popup>
-              <p style={{ fontWeight: 600, marginBottom: 4 }}>{row.nombreActivo}</p>
-              <p style={{ marginBottom: 4 }}>{punto.etiqueta}</p>
-              <p style={{ marginBottom: 4 }}>{row.fueraDeRango ? 'Fuera de rango' : 'En ubicación'}</p>
-              <Link to={`/app/activos/${row.idActivo}`}>Ver ficha</Link>
-            </Popup>
-          </CircleMarker>
-        ))}
+        <ClusterMarkers puntos={puntos} onVerFicha={verFicha} />
       </MapContainer>
     </div>
   );
